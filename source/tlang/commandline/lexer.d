@@ -40,10 +40,13 @@ public final class Lexer
             }
             else if(currentChar == ';' && !stringMode)
             {
-                /* Flush the current token */
-                currentTokens ~= currentToken;
-                currentToken = "";
-
+                /* Flush the current token (if one exists) */
+                if(currentToken.length)
+                {
+                    currentTokens ~= currentToken;
+                    currentToken = "";
+                }
+                
                 /* Add the ; token */
                 currentTokens ~= ";";
 
