@@ -16,6 +16,8 @@ void beginCompilation(string[] sourceFiles)
 
         /* TODO: Open source file */
         string sourceCode = "hello \"world\";";
+        // string sourceCode = "hello \"world\"|| ";
+        //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
         // string sourceCode = "hello;";
         Lexer currentLexer = new Lexer(sourceCode);
         currentLexer.performLex();
