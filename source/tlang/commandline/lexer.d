@@ -38,6 +38,17 @@ public final class Lexer
 
                 position++;
             }
+            else if(currentChar == ';' && !stringMode)
+            {
+                /* Flush the current token */
+                currentTokens ~= currentToken;
+                currentToken = "";
+
+                /* Add the ; token */
+                currentTokens ~= ";";
+
+                position++;
+            }
             else if(currentChar == '"')
             {
                 /* If we are not in string mode */
