@@ -34,7 +34,10 @@ public final class Lexer
         ulong position;
         char currentChar;
 
+        /* Whether we are in a string "we are here" or not */
         bool stringMode;
+
+        bool escapeMode;
 
         while(position < sourceCode.length)
         {
@@ -119,6 +122,30 @@ public final class Lexer
 
                 position++;
             }
+            else if(currentChar == '\\')
+            {
+                /* You can only use these in strings */
+                if(stringMode)
+                {
+                    /* Check if we have a next character */
+                    if(position+1 != sourceCode.length && isValidEscape(sourceCode[position+1]))
+                    {
+                        /* Add to the string */
+                        currentToken ~= "\\"~sourceCode[position+1];
+
+                        position += 2;
+                    }
+                    /* If we don't have a next character then raise error */
+                    else
+                    {
+                        gprintln("Unfinished escape sequence", DebugType.ERROR);
+                    }
+                }
+                else
+                {
+                    gprintln("Escape sequences can only be used within strings", DebugType.ERROR);
+                }
+            }
             else
             {
                 currentToken ~= currentChar;
@@ -150,6 +177,11 @@ public final class Lexer
                 character == '%' || character == '*' || character == '&' ||
                 character == '{' || character == '}' || character == '=' ||
                 character == '|' || character == '^' || character == '!';
+    }
+
+    public bool isValidEscape(char character)
+    {
+        return true; /* TODO: Implement me */
     }
 }
 
@@ -218,3 +250,15 @@ unittest
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == ["hello", ";"]);
 }
+
+/* Test input: `hello "world\""` */
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = "hello \"world\\\"\"";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == ["hello", "\"world\\\"\""]);
+}
+
