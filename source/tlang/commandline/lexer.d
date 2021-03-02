@@ -128,7 +128,7 @@ public final class Lexer
                 if(stringMode)
                 {
                     /* Check if we have a next character */
-                    if(position+1 != sourceCode.length && isValidEscape(sourceCode[position+1]))
+                    if(position+1 != sourceCode.length && isValidEscape_String(sourceCode[position+1]))
                     {
                         /* Add to the string */
                         currentToken ~= "\\"~sourceCode[position+1];
@@ -144,6 +144,43 @@ public final class Lexer
                 else
                 {
                     gprintln("Escape sequences can only be used within strings", DebugType.ERROR);
+                }
+            }
+            /* Character literal support */
+            else if(!stringMode && currentChar == '\'')
+            {
+                currentToken ~= "'";
+
+                /* Character literal must be next */
+                if(position+1 != sourceCode.length)
+                {
+                    /* TODO: Escape support for \' */
+
+                    /* Get the character */
+                    currentToken ~= ""~sourceCode[position+1];
+                    position++;
+
+
+                    /* Closing ' must be next */
+                    if(position+1 != sourceCode.length && sourceCode[position+1] == '\'')
+                    {
+                        /* Generate and add the token */
+                        currentToken ~= "'";
+                        currentTokens ~= currentToken;
+
+                        /* Flush the token */
+                        currentToken = "";
+
+                        position += 2;
+                    }
+                    else
+                    {
+                        gprintln("Was expecting closing ' when finishing character literal", DebugType.ERROR);
+                    }
+                }
+                else
+                {
+                    gprintln("EOSC reached when trying to get character literal", DebugType.ERROR);
                 }
             }
             else
@@ -168,7 +205,7 @@ public final class Lexer
         return tokens;
     }
 
-    /* TODO: We need to add pop functionality if we encounter || */
+    /* TODO: We need to add support for character literals */
     private bool isSpliter(char character)
     {
         return character == ';' || character == ',' || character == '(' ||
@@ -179,7 +216,8 @@ public final class Lexer
                 character == '|' || character == '^' || character == '!';
     }
 
-    public bool isValidEscape(char character)
+    /* Supported escapes \" */
+    public bool isValidEscape_String(char character)
     {
         return true; /* TODO: Implement me */
     }
@@ -261,4 +299,16 @@ unittest
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == ["hello", "\"world\\\"\""]);
 }
+
+/* Test input: `'c'` */
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = "'c'";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == ["'c'"]);
+}
+
 
