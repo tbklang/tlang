@@ -148,6 +148,7 @@ public final class Lexer
                 character == ')' || character == '[' || character == ']' ||
                 character == '+' || character == '-' || character == '/' ||
                 character == '%' || character == '*' || character == '&' ||
+                character == '{' || character == '}' || character == '=' ||
                 character == '|' || character == '^' || character == '!';
     }
 }
