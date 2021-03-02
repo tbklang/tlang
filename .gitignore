@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/tlang
+tlang.so
+tlang.dylib
+tlang.dll
+tlang.a
+tlang.lib
+tlang-test-*
+*.exe
+*.o
+*.obj
+*.lst

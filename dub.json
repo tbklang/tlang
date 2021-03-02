@@ -1,0 +1,9 @@
+{
+	"authors": [
+		"Tristan B. Kildaire"
+	],
+	"copyright": "Copyright © 2021, Tristan B. Kildaire",
+	"description": "The official Tristan language compiler project",
+	"license": "GPLv3",
+	"name": "tlang"
+}
