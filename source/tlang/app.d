@@ -6,6 +6,8 @@
 * SHOT!
 */
 
+module tlang;
+
 import std.stdio;
 
 void main()
