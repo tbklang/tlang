@@ -4,57 +4,6 @@ import std.container.slist;
 import gogga;
 import std.conv : to;
 
-/* Test input: `hello "world";` */
-unittest
-{
-    import std.algorithm.comparison;
-    string sourceCode = "hello \"world\";";
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
-    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello", "\"world\"",";"]);
-}
-
-/* Test input: `hello "world"|| ` */
-unittest
-{
-    import std.algorithm.comparison;
-    string sourceCode = "hello \"world\"|| ";
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
-    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello", "\"world\"","||"]);
-}
-
-/* Test input: `hello "world"||` */
-unittest
-{
-    import std.algorithm.comparison;
-    string sourceCode = "hello \"world\"||";
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
-    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello", "\"world\"","||"]);
-}
-
-/* Test input: `hello "world";` */
-unittest
-{
-    import std.algorithm.comparison;
-    string sourceCode = "hello \"world\";";
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
-    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello", "\"world\"",";"]);
-}
-
-
-
-
-  // string sourceCode = "hello \"world\"|| ";
-        //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
-        // string sourceCode = "hello;";
-
 public final class Lexer
 {
     /* The source to be lexed */
@@ -201,4 +150,59 @@ public final class Lexer
                 character == '%' || character == '*' || character == '&' ||
                 character == '|' || character == '^' || character == '!';
     }
+}
+
+/* Test input: `hello "world";` */
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = "hello \"world\";";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == ["hello", "\"world\"",";"]);
+}
+
+/* Test input: `hello "world"|| ` */
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = "hello \"world\"|| ";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == ["hello", "\"world\"","||"]);
+}
+
+/* Test input: `hello "world"||` */
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = "hello \"world\"||";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == ["hello", "\"world\"","||"]);
+}
+
+/* Test input: `     hello` */
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = " hello";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == ["hello"]);
+}
+
+/* Test input: `hello;` */
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = " hello;";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == ["hello", ";"]);
 }
