@@ -61,12 +61,12 @@ public final class Lexer
 
                 /* Check if we need to do combinators (e.g. for ||, &&) */
                 /* TODO: Second operand in condition out of bounds */
-                if(currentChar == '|' && sourceCode[position+1] == '|')
+                if(currentChar == '|' && (position+1) != sourceCode.length && sourceCode[position+1] == '|')
                 {
                     splitterToken = "||";
                     position += 2;
                 }
-                else if(currentChar == '&' && sourceCode[position+1] == '&')
+                else if(currentChar == '&' && (position+1) != sourceCode.length && sourceCode[position+1] == '&')
                 {
                     splitterToken = "&&";
                     position += 2;
@@ -183,6 +183,17 @@ unittest
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == ["hello", "\"world\"","||"]);
+}
+
+/* Test input: `hello "world"|` */
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = "hello \"world\";|";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == ["hello", "\"world\"",";", "|"]);
 }
 
 /* Test input: `     hello` */
