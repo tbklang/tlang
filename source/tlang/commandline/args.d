@@ -2,7 +2,11 @@ module commandline.args;
 
 import jcli;
 
-void parseCommandLine(string[] args)
+void parseCommandLine(string[] arguments)
 {
-    /* TODO: Parse command-line options here */
+    /* Create an instance of the JCLI command-line parser */
+    CommandLineInterface!(commandline.commands) commandLineSystem = new CommandLineInterface!(commandline.commands)();
+
+    /* Parse the command-line arguments */
+    commandLineSystem.parseAndExecute(arguments);
 }

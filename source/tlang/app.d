@@ -9,8 +9,13 @@
 module tlang;
 
 import std.stdio;
+import commandline.args;
 
-void main()
+void main(string[] args)
 {
-	
+	/* TODO: Replace with something else */
+    writeln("tlang NO_PUBLISH_RELEASE");
+
+    /* Parse the command-line arguments */
+    parseCommandLine(args);
 }
