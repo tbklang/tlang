@@ -38,7 +38,7 @@ public final class Lexer
 
                 position++;
             }
-            else if(currentChar == ';' && !stringMode)
+            else if(isSpliter(currentChar) && !stringMode)
             {
                 /* Flush the current token (if one exists) */
                 if(currentToken.length)
@@ -99,5 +99,15 @@ public final class Lexer
     public string[] getTokens()
     {
         return tokens;
+    }
+
+    /* TODO: We need to add pop functionality if we encounter || */
+    private bool isSpliter(char character)
+    {
+        return character == ';' || character == ',' || character == '(' ||
+                character == ')' || character == '[' || character == ']' ||
+                character == '+' || character == '-' || character == '/' ||
+                character == '%' || character == '*' || character == '&' ||
+                character == '|' || character == '^' || character == '!';
     }
 }

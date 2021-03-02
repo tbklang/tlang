@@ -15,8 +15,8 @@ void beginCompilation(string[] sourceFiles)
         gprintln("Performing tokenization on '"~sourceFile~"' ...");
 
         /* TODO: Open source file */
-        // string sourceCode = "hello \"world\";";
-        string sourceCode = "hello;";
+        string sourceCode = "hello \"world\";";
+        // string sourceCode = "hello;";
         Lexer currentLexer = new Lexer(sourceCode);
         currentLexer.performLex();
         
