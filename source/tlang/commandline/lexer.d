@@ -205,7 +205,6 @@ public final class Lexer
         return tokens;
     }
 
-    /* TODO: We need to add support for character literals */
     private bool isSpliter(char character)
     {
         return character == ';' || character == ',' || character == '(' ||
