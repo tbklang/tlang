@@ -83,9 +83,11 @@ public final class Lexer
             }
         }
 
-        /* When we end we don't flush the last token, flush it now */
-        currentTokens ~= currentToken;
-
+        /* If there was a token made at the end then flush it */
+        if(currentToken.length)
+        {
+            currentTokens ~= currentToken;
+        }
 
         tokens = currentTokens;
     }
