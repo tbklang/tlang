@@ -47,8 +47,8 @@ public final class Lexer
                     currentToken = "";
                 }
                 
-                /* Add the ; token */
-                currentTokens ~= ";";
+                /* Add the splitter token */
+                currentTokens ~= ""~currentChar;
 
                 position++;
             }
