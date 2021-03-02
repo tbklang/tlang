@@ -8,6 +8,7 @@ module commandline.commands;
 
 import jcli;
 import std.stdio;
+import compiler.compiler : beginCompilation;
 
 @Command("help", "Shows the help screen")
 struct helpCommand
@@ -31,5 +32,11 @@ struct compileCommand
     void onExecute()
     {
         writeln("Compiling source file: "~sourceFile);
+
+        /* TODO: Read file */
+        string sourceCode = "";
+
+
+        beginCompilation([sourceFile]);
     }
 }
