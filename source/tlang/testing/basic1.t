@@ -23,9 +23,15 @@ void main(int hello, byte d)
         print(1+1);   
     }
 
-    if(2)
+    if(2+222222/2)
     {
-        
+        while(1)
+        {
+            while(2)
+            {
+                
+            }
+        }   
     }
 }
 

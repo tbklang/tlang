@@ -24,6 +24,7 @@ public enum SymbolType
     OCURLY,
     CCURLY,
     IF,
+    WHILE,
     UNKNOWN
 }
 
@@ -100,6 +101,11 @@ public static SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "if") == 0)
     {
         return SymbolType.IF;
+    }
+    /* `while` */
+    else if(cmp(token, "while") == 0)
+    {
+        return SymbolType.WHILE;
     }
     /* Identifier check (TODO: Track vars) */
     else if (isAlpha(token))

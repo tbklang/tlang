@@ -83,6 +83,30 @@ public final class Parser
         gprintln("parseIf(): PARSING OF IF STTAMENT BODY DONE");
     }
 
+    private void parseWhile()
+    {
+        /* Expect an opening brace `(` */
+        expect(SymbolType.LBRACE, getCurrentToken());
+        nextToken();
+
+        /* Parse an expression (for the condition) */
+        parseExpression();
+        expect(SymbolType.RBRACE, getCurrentToken());
+
+        /* Openening { */
+        nextToken();
+        expect(SymbolType.OCURLY, getCurrentToken());
+
+        /* Parse the while' statement's body AND expect a closing curly */
+        parseBody();
+        expect(SymbolType.CCURLY, getCurrentToken());
+        nextToken();
+
+        gprintln("parseWhile(): PARSING OF WHILE STTAMENT BODY DONE");
+    }
+
+    
+
     private void parseBody()
     {
         /* TODO: Implement body parsing */
@@ -119,6 +143,12 @@ public final class Parser
             {
                 nextToken();
                 parseIf();
+            }
+            /* If it is a while loop */
+            else if(symbol == SymbolType.WHILE)
+            {
+                nextToken();
+                parseWhile();
             }
             /* If it is a function call */
             else if(symbol == SymbolType.IDENTIFIER)
