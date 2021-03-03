@@ -261,7 +261,19 @@ public final class Parser
             /* Get the next token */
             nextToken();
         }
-        /* TODO: Add funcCal symbol type */
+        /* If it is an identifier */
+        else if(symbol == SymbolType.IDENTIFIER)
+        {
+            string identifier = getCurrentToken().getToken();
+
+            nextToken();
+
+            /* If the symbol is `(` then function call */
+            if(getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
+            {
+                /* TODO: Implement function call */
+            }
+        }
         else
         {
             gprintln("parseExpression(): NO MATCH", DebugType.ERROR);
@@ -328,6 +340,19 @@ public final class Parser
         /* TODO: If we outta tokens we should not call this */
         // gprintln(getCurrentToken());
         gprintln("ParseTypedDec: Je suis fini");
+    }
+
+    private void parseStatement()
+    {
+        /* TODO: Implement parse statement */
+
+        /**
+        * TODO: We should remove the `;` from parseFuncCall
+        * And rather do the following here:
+        *
+        * 1. parseFuncCall()
+        * 2. expect(;)
+        */
     }
 
     private void parseFuncCall()
