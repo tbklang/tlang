@@ -28,9 +28,16 @@ public final class Token
 
 public final class Lexer
 {
-    /* The source to be lexed */
-    private string sourceCode;
-    private ulong line = 1;
+    /**
+    * Lexer state data
+    */
+    private string sourceCode; /* The source to be lexed */
+    private ulong line = 1; /* Current line */
+    private string[] currentTokens; /* Current token set */
+    private string currentToken; /* Current token */
+    private ulong position; /* Current column */
+    private char currentChar; /* Current character */
+    private bool stringMode; /* Whether we are in a string "we are here" or not */
 
     /* The tokens */
     private string[] tokens;
@@ -43,22 +50,7 @@ public final class Lexer
     /* Perform the lexing process */
     public void performLex()
     {
-        // SList!(string) tokenThing;
-        // tokenThing.insert("1");
-        // tokenThing.insert("2");
-        
-        // import std.stdio;
-        // writeln(tokenThing.front());
-        // writeln(tokenThing.front());
-        
-
-        string[] currentTokens;
-        string currentToken;
-        ulong position;
-        char currentChar;
-
-        /* Whether we are in a string "we are here" or not */
-        bool stringMode;
+       
 
         while(position < sourceCode.length)
         {
@@ -95,7 +87,7 @@ public final class Lexer
                     splitterToken = "&&";
                     position += 2;
                 }
-                else if (currentChar == '\n')
+                else if (currentChar == '\n') /* TODO: Unrelated!!!!!, but we shouldn't allow this bahevaipur in string mode */
                 {
                     line++;
 
@@ -107,8 +99,6 @@ public final class Lexer
                     position++;
                 }
                 
-                
-
 
                 /* Flush the current token (if one exists) */
                 if(currentToken.length)
