@@ -27,9 +27,9 @@ void main(int hello, byte d)
     {
         while(1)
         {
-            while(2)
+            while(2+2)
             {
-                
+
             }
         }   
     }

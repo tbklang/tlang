@@ -261,9 +261,11 @@ public final class Parser
             /* Get the next token */
             nextToken();
         }
+        /* TODO: Add funcCal symbol type */
         else
         {
-        
+            gprintln("parseExpression(): NO MATCH", DebugType.ERROR);
+            /* TODO: Something isn't right here */
         }
 
         gprintln("ParseExpression: Finished", DebugType.WARNING);
