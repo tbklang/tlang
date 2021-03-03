@@ -96,6 +96,11 @@ public static SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.TYPE;
     }
+    /* `if` */
+    else if(cmp(token, "if") == 0)
+    {
+        return SymbolType.IF;
+    }
     /* Identifier check (TODO: Track vars) */
     else if (isAlpha(token))
     {
@@ -136,11 +141,7 @@ public static SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.COMMA;
     }
-    /* `if` */
-    else if(cmp(token, "if") == 0)
-    {
-        return SymbolType.IF;
-    }
+    
 
     return SymbolType.UNKNOWN;
 }

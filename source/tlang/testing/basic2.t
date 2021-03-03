@@ -12,6 +12,12 @@ void main(int hello, ubyte bruh)
 
     if(1+1+21211)
     {
-
+        if(1-2+3*9939/3)
+        {
+            if(1)
+            {
+                int x;
+            }
+        }
     }
 }

@@ -69,6 +69,14 @@ public final class Parser
         /* Parse an expression */
         parseExpression();
         expect(SymbolType.RBRACE, getCurrentToken());
+
+        nextToken();
+        expect(SymbolType.OCURLY, getCurrentToken());
+
+        /* Parse the if' statement's body */
+        parseBody();
+        gprintln("PARSING OF IF STTAMENT BODY DONE");
+
     }
 
     private void parseBody()
@@ -82,6 +90,10 @@ public final class Parser
             Token tok = getCurrentToken();
             SymbolType symbol = getSymbolType(tok);
 
+            
+            gprintln("parseBody: SymbolType="~to!(string)(symbol));
+
+
             /* If it is a type */
             if (symbol == SymbolType.TYPE)
             {
@@ -91,6 +103,7 @@ public final class Parser
             /* If it is a branch */
             else if(symbol == SymbolType.IF)
             {
+                nextToken();
                 parseIf();
             }
             else if(symbol == SymbolType.CCURLY)
