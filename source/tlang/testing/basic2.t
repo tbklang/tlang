@@ -9,4 +9,9 @@ void main(int hello, ubyte bruh)
     ubyte y;
 
     ubyte k = 1;
+
+    if(1+1+21211)
+    {
+
+    }
 }

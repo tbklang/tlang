@@ -159,9 +159,11 @@ public final class Parser
         /* If it is a number literal */
         if(symbol == SymbolType.NUMBER_LITERAL)
         {
-            /* TODO: Mathcmetics operators */
-            bool isMathOp;
-            if(isMathOp)
+            /* Get the next token */
+            nextToken();
+
+            /* Check if the token is a mathematical operator */
+            if(isMathOp(getCurrentToken()))
             {
                 /* TODO:check math op */
                 nextToken();
@@ -171,7 +173,7 @@ public final class Parser
             }
             else
             {
-                nextToken();
+                
             }
         }
         else
@@ -220,6 +222,10 @@ public final class Parser
             /* Now parse an expression */
             parseExpression();
 
+            /**
+            * The symbol that returned us from `parseExpression` must
+            * be a semi-colon
+            */
             expect(SymbolType.SEMICOLON, getCurrentToken());
 
             nextToken();

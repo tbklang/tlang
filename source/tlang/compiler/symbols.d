@@ -145,6 +145,14 @@ public static SymbolType getSymbolType(Token tokenIn)
     return SymbolType.UNKNOWN;
 }
 
+public bool isMathOp(Token token)
+{
+    string tokenStr = token.getToken();
+
+    return tokenStr[0] == '+' || tokenStr[0] == '-' ||
+            tokenStr[0] == '*' || tokenStr[0] == '/';
+}
+
 /* Test: Character literal */
 unittest
 {
