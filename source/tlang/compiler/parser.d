@@ -72,7 +72,7 @@ public final class Parser
         /* TODO: Crash program if not */
         if(!isFine)
         {
-            gprintln("Expected symbol of type "~to!(string)(symbol)~" but got "~to!(string)(actualType)~" with "~token.toString());
+            gprintln("Expected symbol of type "~to!(string)(symbol)~" but got "~to!(string)(actualType)~" with "~token.toString(), DebugType.ERROR);
         }
     }
 
