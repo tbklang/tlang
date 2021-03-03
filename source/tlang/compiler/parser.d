@@ -68,6 +68,7 @@ public final class Parser
 
         /* Parse an expression */
         parseExpression();
+        expect(SymbolType.RBRACE, getCurrentToken());
     }
 
     private void parseBody()
@@ -153,8 +154,31 @@ public final class Parser
     {
         /* TODO: Implement expression parsing */
 
-        /* For testing we are just expeting a number */
-        expect(SymbolType.NUMBER_LITERAL, getCurrentToken());
+        SymbolType symbol = getSymbolType(getCurrentToken());
+
+        /* If it is a number literal */
+        if(symbol == SymbolType.NUMBER_LITERAL)
+        {
+            /* TODO: Mathcmetics operators */
+            bool isMathOp;
+            if(isMathOp)
+            {
+                /* TODO:check math op */
+                nextToken();
+
+                /* Parse an expression */
+                parseExpression();
+            }
+            else
+            {
+                nextToken();
+            }
+        }
+        else
+        {
+        
+        }
+
         gprintln("ParseExpression: Finished", DebugType.WARNING);
     }
 
@@ -196,7 +220,6 @@ public final class Parser
             /* Now parse an expression */
             parseExpression();
 
-            nextToken();
             expect(SymbolType.SEMICOLON, getCurrentToken());
 
             nextToken();
