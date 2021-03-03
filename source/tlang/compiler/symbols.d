@@ -23,6 +23,7 @@ public enum SymbolType
     COMMA,
     OCURLY,
     CCURLY,
+    IF,
     UNKNOWN
 }
 
@@ -134,6 +135,11 @@ public static SymbolType getSymbolType(Token tokenIn)
     else if (token[0] == ',')
     {
         return SymbolType.COMMA;
+    }
+    /* `if` */
+    else if(cmp(token, "if") == 0)
+    {
+        return SymbolType.IF;
     }
 
     return SymbolType.UNKNOWN;

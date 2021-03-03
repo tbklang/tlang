@@ -60,6 +60,16 @@ public final class Parser
         return tokens[tokenPtr];
     }
 
+    private void parseIf()
+    {
+        /* Expect an opening brace `(` */
+        expect(SymbolType.LBRACE, getCurrentToken());
+        nextToken();
+
+        /* Parse an expression */
+        parseExpression();
+    }
+
     private void parseBody()
     {
         /* TODO: Implement body parsing */
@@ -76,6 +86,11 @@ public final class Parser
             {
                 /* Might be a function, might be a variable */
                 parseTypedDeclaration();
+            }
+            /* If it is a branch */
+            else if(symbol == SymbolType.IF)
+            {
+                parseIf();
             }
             else if(symbol == SymbolType.CCURLY)
             {
@@ -228,23 +243,23 @@ public final class Parser
 /* Test: Character literal */
 unittest
 {
-    SymbolType symbol = Parser.getSymbolType("'c'");
+    SymbolType symbol = getSymbolType(new Token("'c'", 0, 0));
     assert(symbol == SymbolType.CHARACTER_LITERAL);
 }
 
 /* Test: String literals */
 unittest
 {
-    SymbolType symbol = Parser.getSymbolType("\"hello\"");
+    SymbolType symbol = getSymbolType(new Token("\"hello\"", 0, 0));
     assert(symbol == SymbolType.STRING_LITERAL);
 }
 
 /* Test: Number literals */
 unittest
 {
-    SymbolType symbol = Parser.getSymbolType("2121");
+    SymbolType symbol = getSymbolType(new Token("2121", 0, 0));
     assert(symbol == SymbolType.NUMBER_LITERAL);
 
-    symbol = Parser.getSymbolType("2121a");
+    symbol = getSymbolType(new Token("2121a", 0, 0));
     assert(symbol != SymbolType.NUMBER_LITERAL);
 }
