@@ -2,7 +2,7 @@ module compiler.parser;
 
 import gogga;
 import std.conv : to;
-import std.string : isNumeric;
+import std.string : isNumeric, cmp;
 import compiler.symbols : SymbolType;
 import compiler.lexer : Token;
 
@@ -15,8 +15,17 @@ public final class Parser
     private Token currentToken;
     private ulong tokenPtr;
 
-    public static SymbolType getSymbolType(string token)
+    public static bool isType(string tokenStr)
     {
+        return cmp(tokenStr, "byte") == 0 || cmp(tokenStr, "ubyte") == 0 ||
+                cmp(tokenStr, "short") == 0 || cmp(tokenStr, "ushort") == 0 ||
+                cmp(tokenStr, "int") == 0 || cmp(tokenStr, "uint") == 0 ||
+                cmp(tokenStr, "long") == 0 || cmp(tokenStr, "ulong") == 0;
+    }
+
+    public static SymbolType getSymbolType(Token tokenIn)
+    {
+        string token = tokenIn.getToken();
         /* TODO: Get symbol type of token */
 
         /* Character literal check */
@@ -39,20 +48,31 @@ public final class Parser
         {
             return SymbolType.NUMBER_LITERAL;
         }
+        /* Type name (TODO: Track user-defined types) */
+        else if(isType(token))
+        {
+            return SymbolType.TYPE;
+        }
+        /* Identifier check (TODO: Track vars) */
+        // else if()
+        // {
+
+        // }
 
         return SymbolType.UNKNOWN;
     }
 
-    public static void expect(SymbolType symbol, string token)
+    public static void expect(SymbolType symbol, Token token)
     {
         /* TODO: Do checking here to see if token is a type of given symbol */
-        bool isFine;
         SymbolType actualType = getSymbolType(token);
+        bool isFine = actualType == symbol;
+        
 
         /* TODO: Crash program if not */
         if(!isFine)
         {
-            gprintln("Expected symbol of type "~to!(string)(symbol)~" but got "~to!(string)(actualType)~" with "~token);
+            gprintln("Expected symbol of type "~to!(string)(symbol)~" but got "~to!(string)(actualType)~" with "~token.toString());
         }
     }
 
@@ -70,7 +90,7 @@ public final class Parser
     */
     private bool nextToken()
     {
-        if(tokenPtr < tokens.length)
+        if(hasTokens())
         {
             tokenPtr++;
             return true;
@@ -81,14 +101,35 @@ public final class Parser
         }
     }
 
+    private bool hasTokens()
+    {
+        return tokenPtr < tokens.length;
+    }
+
     private Token getCurrentToken()
     {
-        return currentToken;
+        return tokens[tokenPtr];
     }
 
     public void parse()
     {
         /* TODO: Do parsing here */
+
+        /* We can have an import or vardef or funcdef */
+        while(hasTokens())
+        {
+            /* Get the token */
+            Token tok = getCurrentToken();
+            SymbolType symbol = getSymbolType(tok);
+
+            /* If it is a type */
+            if(symbol == SymbolType.TYPE)
+            {
+                /* Expect an identifier */
+                nextToken();
+                expect(SymbolType.IDENTIFIER, getCurrentToken());
+            }
+        }
     }
 }
 
