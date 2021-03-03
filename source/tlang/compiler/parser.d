@@ -75,10 +75,15 @@ public final class Parser
         {
             return SymbolType.IDENTIFIER;
         }
-        /* Semi-colon check */
+        /* Semi-colon `;` check */
         else if (token[0] == ';')
         {
             return SymbolType.SEMICOLON;
+        }
+        /* Assign `=` check */
+        else if (token[0] == '=')
+        {
+            return SymbolType.ASSIGN;
         }
 
         return SymbolType.UNKNOWN;
@@ -136,7 +141,21 @@ public final class Parser
         return tokens[tokenPtr];
     }
 
-    private void parseVarDec()
+    private void parseFuncDef()
+    {
+        /* TODO: Implement function parsing */
+    }
+
+    private void parseExpression()
+    {
+        /* TODO: Implement expression parsing */
+
+        /* For testing we are just expeting a number */
+        expect(SymbolType.NUMBER_LITERAL, getCurrentToken());
+        gprintln("ParseExpression: Finished", DebugType.WARNING);
+    }
+
+    private void parseTypedDeclaration()
     {
         /* TODO: Save type */
         string type = getCurrentToken().getToken();
@@ -150,12 +169,40 @@ public final class Parser
 
 
         nextToken();
-        /* TODO: Check for `=` or `;` */
-        expect(SymbolType.SEMICOLON, getCurrentToken());
+        gprintln("ParseTypedDec: DecisionBtwn FuncDef/VarDef: "~getCurrentToken().getToken());
 
-        nextToken();
+        /* Check if it is `(` (func dec) */
+        SymbolType symbolType = getSymbolType(getCurrentToken());
+        gprintln("ParseTypedDec: SymbolType="~to!(string)(symbolType));
+        if(symbolType == SymbolType.LBRACE)
+        {
+            parseFuncDef();
+        }
+        /* Check for semi-colon (var dec) */
+        else if(symbolType == SymbolType.SEMICOLON)
+        {
+            nextToken();
+            gprintln("ParseTypedDec: VariableDeclaration: (Type: "~type~", Identifier: "~identifier~")", DebugType.WARNING);
+        }
+        /* Check for `=` (var dec) */
+        else if(symbolType == SymbolType.ASSIGN)
+        {
+            nextToken();
 
-        gprintln("VariableDeclaration: (Type: "~type~", Identifier: "~identifier~")", DebugType.WARNING);
+            /* Now parse an expression */
+            parseExpression();
+
+            nextToken();
+            expect(SymbolType.SEMICOLON, getCurrentToken());
+
+            nextToken();
+
+            gprintln("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "~type~", Identifier: "~identifier~")", DebugType.WARNING);
+        }
+
+
+       
+        gprintln("ParseTypedDec: Je suis fini");
     }
 
     public void parse()
@@ -172,7 +219,8 @@ public final class Parser
             /* If it is a type */
             if (symbol == SymbolType.TYPE)
             {
-                parseVarDec();
+                /* Might be a function, might be a variable */
+                parseTypedDeclaration();
             }
             else
             {

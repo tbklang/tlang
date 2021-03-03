@@ -15,6 +15,9 @@ public enum SymbolType
     STRING_LITERAL,
     TYPE,
     SEMICOLON,
+    LBRACE,
+    RBRACE,
+    ASSIGN,
     UNKNOWN
 }
 
