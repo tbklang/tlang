@@ -5,5 +5,6 @@ ubyte k = 1;
 
 void main(int hello)
 {
+    ubyte thing = "Hello";
     print("Hello world");
 }

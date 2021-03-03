@@ -189,6 +189,12 @@ public final class Parser
                 
             }
         }
+        /* If it is a string literal */
+        else if(symbol == SymbolType.STRING_LITERAL)
+        {
+            /* Get the next token */
+            nextToken();
+        }
         else
         {
         
@@ -276,7 +282,8 @@ public final class Parser
             }
             else
             {
-                // gprintln("Error");
+                gprintln("parse(): Geen idee", DebugType.ERROR);
+                exit(0);
             }
         }
     }
