@@ -66,17 +66,20 @@ public final class Parser
         expect(SymbolType.LBRACE, getCurrentToken());
         nextToken();
 
-        /* Parse an expression */
+        /* Parse an expression (for the condition) */
         parseExpression();
         expect(SymbolType.RBRACE, getCurrentToken());
 
+        /* Openening { */
         nextToken();
         expect(SymbolType.OCURLY, getCurrentToken());
 
-        /* Parse the if' statement's body */
+        /* Parse the if' statement's body AND expect a closing curly */
         parseBody();
-        gprintln("PARSING OF IF STTAMENT BODY DONE");
+        expect(SymbolType.CCURLY, getCurrentToken());
+        nextToken();
 
+        gprintln("parseIf(): PARSING OF IF STTAMENT BODY DONE");
     }
 
     private void parseBody()
@@ -91,7 +94,7 @@ public final class Parser
             SymbolType symbol = getSymbolType(tok);
 
             
-            gprintln("parseBody: SymbolType="~to!(string)(symbol));
+            gprintln("parseBody(): SymbolType="~to!(string)(symbol));
 
 
             /* If it is a type */
@@ -115,10 +118,21 @@ public final class Parser
             else if(symbol == SymbolType.CCURLY)
             {
                 // gprintln("Error");
-                nextToken();
+                // nextToken();
+                gprintln("parseBody(): Exiting body by }", DebugType.WARNING);
                 break;
             }
+            /* Error out */
+            else
+            {
+                gprintln("parseBody(): Unknown symbol: "~getCurrentToken().getToken(), DebugType.ERROR);
+            }
         }
+
+        gprintln("habba");
+
+        /* TODO: We can sometimes run out of tokens before getting our closing brace, we should fix that here */
+        
     }
 
     private void parseFuncDef()
@@ -150,8 +164,9 @@ public final class Parser
                 nextToken();
                 expect(SymbolType.OCURLY, getCurrentToken());
                 
-                /* Parse the body */
+                /* Parse the body (and it leaves ONLY when it gets the correct symbol, no expect needed) */
                 parseBody();
+                nextToken();
             }
             else if(getSymbolType(getCurrentToken()) == SymbolType.COMMA)
             {
@@ -160,7 +175,7 @@ public final class Parser
             else
             {
                 /* TODO: Error */
-                gprintln("Expecting either ) or ,", DebugType.ERROR);
+                gprintln("Expecting either ) or , but got "~getCurrentToken().getToken(), DebugType.ERROR);
                 exit(0);
             }
 
@@ -302,11 +317,15 @@ public final class Parser
             Token tok = getCurrentToken();
             SymbolType symbol = getSymbolType(tok);
 
+            gprintln("parse(): Token: "~tok.getToken());
+
             /* If it is a type */
             if (symbol == SymbolType.TYPE)
             {
                 /* Might be a function, might be a variable */
                 parseTypedDeclaration();
+
+                gprintln("parse()::woah: Current token: "~tok.getToken());
             }
             else
             {
