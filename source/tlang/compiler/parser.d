@@ -195,6 +195,9 @@ public final class Parser
         /* TODO: Implement function parsing */
         nextToken();
 
+        /* Count for number of parameters processed */
+        ulong parameterCount;
+
         /* Get command-line arguments */
         while(hasTokens())
         {
@@ -208,6 +211,8 @@ public final class Parser
             string identifier = getCurrentToken().getToken();
             nextToken();
 
+            parameterCount++;
+
             /* Check if RBRACE/ `)` */
             if(getSymbolType(getCurrentToken()) == SymbolType.RBRACE)
             {
@@ -219,7 +224,7 @@ public final class Parser
             }
             else if(getSymbolType(getCurrentToken()) == SymbolType.COMMA)
             {
-                
+                nextToken();
             }
             else
             {
@@ -229,6 +234,7 @@ public final class Parser
             }
 
             gprintln("ParseFuncDef: ParameterDec: (Type: "~type~", Identifier: "~identifier~")",DebugType.WARNING);
+            gprintln("ParseFuncDef: Parameter count: "~to!(string)(parameterCount));
         }
     }
 
