@@ -1,7 +1,7 @@
 int x;
 ubyte y;
 
-ubyte k = 1;
+ubyte k = 1+1;
 
 void main(int hello, ubyte bruh)
 {
@@ -17,6 +17,10 @@ void main(int hello, ubyte bruh)
             if(1)
             {
                 int x;
+                ubyte y;
+
+                ubyte k = 1+1;
+                int bababooey;
             }
         }
     }
