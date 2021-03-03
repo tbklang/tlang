@@ -28,7 +28,8 @@ public final class Token
 
     override string toString()
     {
-        return token~" at ("~to!(string)(line)~", "~to!(string)(column)~")";
+        /* TODO (Column number): Don't adjust here, do it maybe in the lexer itself */
+        return token~" at ("~to!(string)(line)~", "~to!(string)(column-token.length)~")";
     }
 
     public string getToken()
