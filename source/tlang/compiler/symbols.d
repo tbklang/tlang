@@ -144,3 +144,27 @@ public static SymbolType getSymbolType(Token tokenIn)
 
     return SymbolType.UNKNOWN;
 }
+
+/* Test: Character literal */
+unittest
+{
+    SymbolType symbol = getSymbolType(new Token("'c'", 0, 0));
+    assert(symbol == SymbolType.CHARACTER_LITERAL);
+}
+
+/* Test: String literals */
+unittest
+{
+    SymbolType symbol = getSymbolType(new Token("\"hello\"", 0, 0));
+    assert(symbol == SymbolType.STRING_LITERAL);
+}
+
+/* Test: Number literals */
+unittest
+{
+    SymbolType symbol = getSymbolType(new Token("2121", 0, 0));
+    assert(symbol == SymbolType.NUMBER_LITERAL);
+
+    symbol = getSymbolType(new Token("2121a", 0, 0));
+    assert(symbol != SymbolType.NUMBER_LITERAL);
+}
