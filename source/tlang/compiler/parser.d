@@ -106,6 +106,12 @@ public final class Parser
                 nextToken();
                 parseIf();
             }
+            /* If it is a function call */
+            else if(symbol == SymbolType.IDENTIFIER)
+            {
+                parseFuncCall();
+            }
+            /* If it is closing the body `}` */
             else if(symbol == SymbolType.CCURLY)
             {
                 // gprintln("Error");
@@ -260,6 +266,28 @@ public final class Parser
         /* TODO: If we outta tokens we should not call this */
         // gprintln(getCurrentToken());
         gprintln("ParseTypedDec: Je suis fini");
+    }
+
+    private void parseFuncCall()
+    {
+        gprintln("parseFuncCall(): Doing function call parsing");
+
+        nextToken();
+
+
+        /* Expect an opening brace `(` */
+        expect(SymbolType.LBRACE, getCurrentToken());
+        nextToken();
+
+        /* Parse an expression AND end on closing brace (expect) */
+        parseExpression();
+        expect(SymbolType.RBRACE, getCurrentToken());
+        nextToken();
+
+        /* Expect a semi-colon */
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+        nextToken();
+
     }
 
     /* Almost like parseBody but has more */
