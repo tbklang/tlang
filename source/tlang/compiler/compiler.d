@@ -4,6 +4,7 @@ import gogga;
 import std.conv : to;
 import compiler.lexer;
 import std.stdio : File;
+import compiler.parser;
 
 void beginCompilation(string[] sourceFiles)
 {
@@ -33,5 +34,9 @@ void beginCompilation(string[] sourceFiles)
         currentLexer.performLex();
         
         gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+
+        gprintln("Parsing tokens...");
+        Parser parser = new Parser(currentLexer.getTokens());
+        parser.parse();
     }
 }
