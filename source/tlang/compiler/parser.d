@@ -57,6 +57,7 @@ public final class Parser
 
     private Token getCurrentToken()
     {
+        /* TODO: Throw an exception here when we try get more than we can */
         return tokens[tokenPtr];
     }
 
@@ -86,6 +87,9 @@ public final class Parser
     {
         /* TODO: Implement body parsing */
         nextToken();
+
+        bool closedBeforeExit;
+
 
         while(hasTokens())
         {
@@ -120,6 +124,8 @@ public final class Parser
                 // gprintln("Error");
                 // nextToken();
                 gprintln("parseBody(): Exiting body by }", DebugType.WARNING);
+                
+                closedBeforeExit = true;
                 break;
             }
             /* Error out */
@@ -132,7 +138,11 @@ public final class Parser
         gprintln("habba");
 
         /* TODO: We can sometimes run out of tokens before getting our closing brace, we should fix that here */
-        
+        if(!closedBeforeExit)
+        {
+            gprintln("Expected closing } but ran out of tokens", DebugType.ERROR);
+            exit(0);
+        }
     }
 
     private void parseFuncDef()
