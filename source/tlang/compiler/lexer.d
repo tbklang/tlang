@@ -4,6 +4,28 @@ import std.container.slist;
 import gogga;
 import std.conv : to;
 
+/* TODO: Add Token type (which matches column and position too) */
+public final class Token
+{
+    /* The token */
+    private string token;
+
+    /* Line number information */
+    private ulong line, column;
+
+    this(string token, ulong line, ulong column)
+    {
+        this.token = token;
+        this.line = line;
+        this.column = column;
+    }
+
+    override string toString()
+    {
+        return token~" at ("~to!(string)(line)~", "~to!(string)(column)~")";
+    }
+}
+
 public final class Lexer
 {
     /* The source to be lexed */
