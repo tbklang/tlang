@@ -30,6 +30,7 @@ public final class Lexer
 {
     /* The source to be lexed */
     private string sourceCode;
+    private ulong line = 1;
 
     /* The tokens */
     private string[] tokens;
@@ -58,8 +59,6 @@ public final class Lexer
 
         /* Whether we are in a string "we are here" or not */
         bool stringMode;
-
-        bool escapeMode;
 
         while(position < sourceCode.length)
         {
@@ -96,6 +95,12 @@ public final class Lexer
                     splitterToken = "&&";
                     position += 2;
                 }
+                else if (currentChar == '\n')
+                {
+                    line++;
+
+                    position++;
+                }
                 else
                 {
                     splitterToken = ""~currentChar;
@@ -112,10 +117,11 @@ public final class Lexer
                     currentToken = "";
                 }
                 
-                /* Add the splitter token */
-                currentTokens ~= splitterToken;
-
-                gprintln("FInished process");
+                /* Add the splitter token (only if it isn't empty) */
+                if(splitterToken.length)
+                {
+                    currentTokens ~= splitterToken;
+                }
             }
             else if(currentChar == '"')
             {
@@ -234,7 +240,8 @@ public final class Lexer
                 character == '+' || character == '-' || character == '/' ||
                 character == '%' || character == '*' || character == '&' ||
                 character == '{' || character == '}' || character == '=' ||
-                character == '|' || character == '^' || character == '!';
+                character == '|' || character == '^' || character == '!' ||
+                character == '\n';
     }
 
     /* Supported escapes \" */
@@ -331,5 +338,18 @@ unittest
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == ["'c'"]);
 }
+
+/* Test input: `2121\n2121` */
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = "2121\n2121";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == ["2121", "2121"]);
+}
+
+
 
 /* TODO: Add more tests */
