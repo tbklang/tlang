@@ -7,4 +7,5 @@ void main(int hello)
 {
     ubyte thing = "Hello";
     print("Hello world");
+    print(1+1);
 }
