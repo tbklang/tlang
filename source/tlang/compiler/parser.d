@@ -21,7 +21,8 @@ public final class Parser
         return cmp(tokenStr, "byte") == 0 || cmp(tokenStr, "ubyte") == 0
             || cmp(tokenStr, "short") == 0 || cmp(tokenStr, "ushort") == 0
             || cmp(tokenStr, "int") == 0 || cmp(tokenStr, "uint") == 0
-            || cmp(tokenStr, "long") == 0 || cmp(tokenStr, "ulong") == 0;
+            || cmp(tokenStr, "long") == 0 || cmp(tokenStr, "ulong") == 0
+            || cmp(tokenStr, "void") == 0 ;
     }
 
     private static bool isAlpha(string token)
@@ -86,6 +87,19 @@ public final class Parser
         {
             return SymbolType.ASSIGN;
         }
+        /* Left-brace check */
+        else if (token[0] == '(')
+        {
+            return SymbolType.LBRACE;
+        }
+        /* Right-brace check */
+        else if (token[0] == ')')
+        {
+            return SymbolType.RBRACE;
+        }
+        
+        
+        
 
         return SymbolType.UNKNOWN;
     }
@@ -145,6 +159,22 @@ public final class Parser
     private void parseFuncDef()
     {
         /* TODO: Implement function parsing */
+        nextToken();
+
+        /* Get command-line arguments */
+        while(hasTokens())
+        {
+            /* Expect a type */
+            string type = getCurrentToken().getToken();
+            expect(SymbolType.TYPE, getCurrentToken());
+            nextToken();
+
+            /* Expect an identifier */
+            expect(SymbolType.IDENTIFIER, getCurrentToken());
+            string identifier = getCurrentToken().getToken();
+
+            gprintln("ParseFuncDef: ParameterDec: (Type: "~type~", Identifier: "~identifier~")",DebugType.WARNING);
+        }
     }
 
     private void parseExpression()
@@ -178,6 +208,7 @@ public final class Parser
         if(symbolType == SymbolType.LBRACE)
         {
             parseFuncDef();
+            
         }
         /* Check for semi-colon (var dec) */
         else if(symbolType == SymbolType.SEMICOLON)
@@ -207,7 +238,7 @@ public final class Parser
         }
 
 
-       
+        gprintln(getCurrentToken());
         gprintln("ParseTypedDec: Je suis fini");
     }
 

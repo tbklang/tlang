@@ -3,7 +3,7 @@ ubyte y;
 
 ubyte k = 1;
 
-void main(string hello)
+void main(int hello)
 {
     print("Hello world");
 }
