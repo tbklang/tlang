@@ -3,6 +3,7 @@ module compiler.compiler;
 import gogga;
 import std.conv : to;
 import compiler.lexer;
+import std.stdio : File;
 
 void beginCompilation(string[] sourceFiles)
 {
@@ -12,10 +13,19 @@ void beginCompilation(string[] sourceFiles)
     Lexer[] lexers;
     foreach(string sourceFile; sourceFiles)
     {
+        gprintln("Reading source file '"~sourceFile~"' ...");
+        File sourceFileFile;
+        sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+        ulong fileSize = sourceFileFile.size();
+        byte[] fileBytes;
+        fileBytes.length = fileSize;
+        fileBytes = sourceFileFile.rawRead(fileBytes);
+        sourceFileFile.close();
+
         gprintln("Performing tokenization on '"~sourceFile~"' ...");
 
         /* TODO: Open source file */
-        string sourceCode = "hello \"world\";";
+        string sourceCode = cast(string)fileBytes;
         // string sourceCode = "hello \"world\"|| ";
         //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
         // string sourceCode = "hello;";
