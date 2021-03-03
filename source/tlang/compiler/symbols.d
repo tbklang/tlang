@@ -13,6 +13,7 @@ public enum SymbolType
     NUMBER_LITERAL,
     CHARACTER_LITERAL,
     STRING_LITERAL,
+    TYPE,
     UNKNOWN
 }
 
