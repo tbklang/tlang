@@ -44,9 +44,10 @@ public final class Lexer
     */
     private string sourceCode; /* The source to be lexed */
     private ulong line = 1; /* Current line */
+    private ulong column = 1;
     private Token[] currentTokens; /* Current token set */
     private string currentToken; /* Current token */
-    private ulong position; /* Current column */
+    private ulong position; /* Current character position */
     private char currentChar; /* Current character */
     private bool stringMode; /* Whether we are in a string "we are here" or not */
 
@@ -75,10 +76,11 @@ public final class Lexer
                 /* TODO: Check if current token is fulled, then flush */
                 if(currentToken.length != 0)
                 {
-                    currentTokens ~= new Token(currentToken, line, position);
+                    currentTokens ~= new Token(currentToken, line, column);
                     currentToken = "";
                 }
 
+                column++;
                 position++;
             }
             else if(isSpliter(currentChar) && !stringMode)
@@ -91,22 +93,26 @@ public final class Lexer
                 if(currentChar == '|' && (position+1) != sourceCode.length && sourceCode[position+1] == '|')
                 {
                     splitterToken = "||";
+                    column += 2;
                     position += 2;
                 }
                 else if(currentChar == '&' && (position+1) != sourceCode.length && sourceCode[position+1] == '&')
                 {
                     splitterToken = "&&";
+                    column += 2;
                     position += 2;
                 }
                 else if (currentChar == '\n') /* TODO: Unrelated!!!!!, but we shouldn't allow this bahevaipur in string mode */
                 {
                     line++;
+                    column = 1;
 
                     position++;
                 }
                 else
                 {
                     splitterToken = ""~currentChar;
+                    column++;
                     position++;
                 }
                 
@@ -114,14 +120,14 @@ public final class Lexer
                 /* Flush the current token (if one exists) */
                 if(currentToken.length)
                 {
-                    currentTokens ~= new Token(currentToken, line, position);
+                    currentTokens ~= new Token(currentToken, line, column);
                     currentToken = "";
                 }
                 
                 /* Add the splitter token (only if it isn't empty) */
                 if(splitterToken.length)
                 {
-                    currentTokens ~= new Token(splitterToken, line, position);
+                    currentTokens ~= new Token(splitterToken, line, column);
                 }
             }
             else if(currentChar == '"')
@@ -142,13 +148,14 @@ public final class Lexer
                     currentToken ~= '"';
 
                     /* Flush the token */
-                    currentTokens ~= new Token(currentToken, line, position);
+                    currentTokens ~= new Token(currentToken, line, column);
                     currentToken = "";
 
                     /* Get out of string mode */
                     stringMode = false;
                 }
 
+                column++;
                 position++;
             }
             else if(currentChar == '\\')
@@ -162,6 +169,7 @@ public final class Lexer
                         /* Add to the string */
                         currentToken ~= "\\"~sourceCode[position+1];
 
+                        column += 2;
                         position += 2;
                     }
                     /* If we don't have a next character then raise error */
@@ -187,6 +195,7 @@ public final class Lexer
 
                     /* Get the character */
                     currentToken ~= ""~sourceCode[position+1];
+                    column++;
                     position++;
 
 
@@ -195,11 +204,12 @@ public final class Lexer
                     {
                         /* Generate and add the token */
                         currentToken ~= "'";
-                        currentTokens ~= new Token(currentToken, line, position);
+                        currentTokens ~= new Token(currentToken, line, column);
 
                         /* Flush the token */
                         currentToken = "";
 
+                        column += 2;
                         position += 2;
                     }
                     else
@@ -215,6 +225,7 @@ public final class Lexer
             else
             {
                 currentToken ~= currentChar;
+                column++;
                 position++;
             }
         }
@@ -222,7 +233,7 @@ public final class Lexer
         /* If there was a token made at the end then flush it */
         if(currentToken.length)
         {
-            currentTokens ~= new Token(currentToken, line, position);
+            currentTokens ~= new Token(currentToken, line, column);
         }
 
         tokens = currentTokens;
