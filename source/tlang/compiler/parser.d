@@ -88,6 +88,13 @@ public final class Parser
         /* TODO: Implement body parsing */
         nextToken();
 
+
+        /**
+        * If we were able to get a closing token, `}`, then
+        * this will be set to true, else it will be false by
+        * default which implies we ran out of tokens before
+        * we could close te body which is an error we do throw
+        */
         bool closedBeforeExit;
 
 
@@ -134,8 +141,6 @@ public final class Parser
                 gprintln("parseBody(): Unknown symbol: "~getCurrentToken().getToken(), DebugType.ERROR);
             }
         }
-
-        gprintln("habba");
 
         /* TODO: We can sometimes run out of tokens before getting our closing brace, we should fix that here */
         if(!closedBeforeExit)
