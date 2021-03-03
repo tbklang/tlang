@@ -97,6 +97,22 @@ public final class Parser
         {
             return SymbolType.RBRACE;
         }
+        /* Left-curly check */
+        else if (token[0] == '{')
+        {
+            return SymbolType.OCURLY;
+        }
+        /* Right-curly check */
+        else if (token[0] == '}')
+        {
+            return SymbolType.CCURLY;
+        }
+        /* Comma check */
+        else if (token[0] == ',')
+        {
+            return SymbolType.COMMA;
+        }
+        
         
         
         
@@ -133,17 +149,9 @@ public final class Parser
     * Returns true if successful, false otherwise
     * (if we have exhausted the tokens source)
     */
-    private bool nextToken()
+    private void nextToken()
     {
-        if (hasTokens())
-        {
-            tokenPtr++;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        tokenPtr++;
     }
 
     private bool hasTokens()
@@ -154,6 +162,32 @@ public final class Parser
     private Token getCurrentToken()
     {
         return tokens[tokenPtr];
+    }
+
+    private void parseBody()
+    {
+        /* TODO: Implement body parsing */
+        nextToken();
+
+        while(hasTokens())
+        {
+            /* Get the token */
+            Token tok = getCurrentToken();
+            SymbolType symbol = getSymbolType(tok);
+
+            /* If it is a type */
+            if (symbol == SymbolType.TYPE)
+            {
+                /* Might be a function, might be a variable */
+                parseTypedDeclaration();
+            }
+            else if(symbol == SymbolType.CCURLY)
+            {
+                // gprintln("Error");
+                nextToken();
+                break;
+            }
+        }
     }
 
     private void parseFuncDef()
@@ -172,6 +206,27 @@ public final class Parser
             /* Expect an identifier */
             expect(SymbolType.IDENTIFIER, getCurrentToken());
             string identifier = getCurrentToken().getToken();
+            nextToken();
+
+            /* Check if RBRACE/ `)` */
+            if(getSymbolType(getCurrentToken()) == SymbolType.RBRACE)
+            {
+                nextToken();
+                expect(SymbolType.OCURLY, getCurrentToken());
+                
+                /* Parse the body */
+                parseBody();
+            }
+            else if(getSymbolType(getCurrentToken()) == SymbolType.COMMA)
+            {
+                
+            }
+            else
+            {
+                /* TODO: Error */
+                gprintln("Expecting either ) or ,", DebugType.ERROR);
+                exit(0);
+            }
 
             gprintln("ParseFuncDef: ParameterDec: (Type: "~type~", Identifier: "~identifier~")",DebugType.WARNING);
         }
@@ -237,11 +292,12 @@ public final class Parser
             exit(0);
         }
 
-
-        gprintln(getCurrentToken());
+        /* TODO: If we outta tokens we should not call this */
+        // gprintln(getCurrentToken());
         gprintln("ParseTypedDec: Je suis fini");
     }
 
+    /* Almost like parseBody but has more */
     public void parse()
     {
         /* TODO: Do parsing here */

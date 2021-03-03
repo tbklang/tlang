@@ -18,6 +18,9 @@ public enum SymbolType
     LBRACE,
     RBRACE,
     ASSIGN,
+    COMMA,
+    OCURLY,
+    CCURLY,
     UNKNOWN
 }
 
