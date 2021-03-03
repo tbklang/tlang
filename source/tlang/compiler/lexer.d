@@ -3,6 +3,7 @@ module compiler.lexer;
 import std.container.slist;
 import gogga;
 import std.conv : to;
+import std.string : cmp;
 
 /* TODO: Add Token type (which matches column and position too) */
 public final class Token
@@ -20,9 +21,19 @@ public final class Token
         this.column = column;
     }
 
+    override bool opEquals(Object other)
+    {
+        return cmp(token, (cast(Token)other).getToken()) == 0;
+    }
+
     override string toString()
     {
         return token~" at ("~to!(string)(line)~", "~to!(string)(column)~")";
+    }
+
+    public string getToken()
+    {
+        return token;
     }
 }
 
@@ -33,14 +44,14 @@ public final class Lexer
     */
     private string sourceCode; /* The source to be lexed */
     private ulong line = 1; /* Current line */
-    private string[] currentTokens; /* Current token set */
+    private Token[] currentTokens; /* Current token set */
     private string currentToken; /* Current token */
     private ulong position; /* Current column */
     private char currentChar; /* Current character */
     private bool stringMode; /* Whether we are in a string "we are here" or not */
 
     /* The tokens */
-    private string[] tokens;
+    private Token[] tokens;
 
     this(string sourceCode)
     {
@@ -64,7 +75,7 @@ public final class Lexer
                 /* TODO: Check if current token is fulled, then flush */
                 if(currentToken.length != 0)
                 {
-                    currentTokens ~= currentToken;
+                    currentTokens ~= new Token(currentToken, line, position);
                     currentToken = "";
                 }
 
@@ -103,14 +114,14 @@ public final class Lexer
                 /* Flush the current token (if one exists) */
                 if(currentToken.length)
                 {
-                    currentTokens ~= currentToken;
+                    currentTokens ~= new Token(currentToken, line, position);
                     currentToken = "";
                 }
                 
                 /* Add the splitter token (only if it isn't empty) */
                 if(splitterToken.length)
                 {
-                    currentTokens ~= splitterToken;
+                    currentTokens ~= new Token(splitterToken, line, position);
                 }
             }
             else if(currentChar == '"')
@@ -131,7 +142,7 @@ public final class Lexer
                     currentToken ~= '"';
 
                     /* Flush the token */
-                    currentTokens ~= currentToken;
+                    currentTokens ~= new Token(currentToken, line, position);
                     currentToken = "";
 
                     /* Get out of string mode */
@@ -184,7 +195,7 @@ public final class Lexer
                     {
                         /* Generate and add the token */
                         currentToken ~= "'";
-                        currentTokens ~= currentToken;
+                        currentTokens ~= new Token(currentToken, line, position);
 
                         /* Flush the token */
                         currentToken = "";
@@ -211,14 +222,14 @@ public final class Lexer
         /* If there was a token made at the end then flush it */
         if(currentToken.length)
         {
-            currentTokens ~= currentToken;
+            currentTokens ~= new Token(currentToken, line, position);
         }
 
         tokens = currentTokens;
     }
 
     /* Return the tokens */
-    public string[] getTokens()
+    public Token[] getTokens()
     {
         return tokens;
     }
@@ -249,7 +260,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello", "\"world\"",";"]);
+    assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token("\"world\"", 0, 0), new Token(";", 0, 0)]);
 }
 
 /* Test input: `hello "world"|| ` */
@@ -260,7 +271,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello", "\"world\"","||"]);
+    assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token("\"world\"", 0, 0), new Token("||", 0, 0)]);
 }
 
 /* Test input: `hello "world"||` */
@@ -271,7 +282,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello", "\"world\"","||"]);
+    assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token("\"world\"", 0, 0), new Token("||", 0, 0)]);
 }
 
 /* Test input: `hello "world"|` */
@@ -282,7 +293,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello", "\"world\"",";", "|"]);
+    assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token("\"world\"", 0, 0), new Token(";", 0, 0), new Token("|", 0, 0)]);
 }
 
 /* Test input: `     hello` */
@@ -293,7 +304,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello"]);
+    assert(currentLexer.getTokens() == [new Token("hello", 0, 0)]);
 }
 
 /* Test input: `hello;` */
@@ -304,7 +315,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello", ";"]);
+    assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token(";", 0, 0)]);
 }
 
 /* Test input: `hello "world\""` */
@@ -315,7 +326,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["hello", "\"world\\\"\""]);
+    assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token("\"world\\\"\"", 0, 0)]);
 }
 
 /* Test input: `'c'` */
@@ -326,7 +337,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["'c'"]);
+    assert(currentLexer.getTokens() == [new Token("'c'", 0, 0)]);
 }
 
 /* Test input: `2121\n2121` */
@@ -337,7 +348,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == ["2121", "2121"]);
+    assert(currentLexer.getTokens() == [new Token("2121", 0, 0), new Token("2121", 0, 0)]);
 }
 
 
