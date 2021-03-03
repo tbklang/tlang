@@ -5,6 +5,7 @@ import std.conv : to;
 import std.string : isNumeric, cmp;
 import compiler.symbols : SymbolType;
 import compiler.lexer : Token;
+import core.stdc.stdlib;
 
 public final class Parser
 {
@@ -198,6 +199,11 @@ public final class Parser
             nextToken();
 
             gprintln("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "~type~", Identifier: "~identifier~")", DebugType.WARNING);
+        }
+        else
+        {
+            gprintln("Expected one of the following: (, ; or =", DebugType.ERROR);
+            exit(0);
         }
 
 
