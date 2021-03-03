@@ -1,6 +1,5 @@
-int g = 1;
-
-import hello.llldskflds.sfdfds;
+int x;
+ubyte y;
 
 void main(string hello)
 {

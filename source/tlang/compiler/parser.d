@@ -17,10 +17,27 @@ public final class Parser
 
     public static bool isType(string tokenStr)
     {
-        return cmp(tokenStr, "byte") == 0 || cmp(tokenStr, "ubyte") == 0 ||
-                cmp(tokenStr, "short") == 0 || cmp(tokenStr, "ushort") == 0 ||
-                cmp(tokenStr, "int") == 0 || cmp(tokenStr, "uint") == 0 ||
-                cmp(tokenStr, "long") == 0 || cmp(tokenStr, "ulong") == 0;
+        return cmp(tokenStr, "byte") == 0 || cmp(tokenStr, "ubyte") == 0
+            || cmp(tokenStr, "short") == 0 || cmp(tokenStr, "ushort") == 0
+            || cmp(tokenStr, "int") == 0 || cmp(tokenStr, "uint") == 0
+            || cmp(tokenStr, "long") == 0 || cmp(tokenStr, "ulong") == 0;
+    }
+
+    private static bool isAlpha(string token)
+    {
+        foreach (char character; token)
+        {
+            if ((character >= 65 && character <= 90) || (character >= 97 && character <= 122))
+            {
+
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static SymbolType getSymbolType(Token tokenIn)
@@ -29,35 +46,40 @@ public final class Parser
         /* TODO: Get symbol type of token */
 
         /* Character literal check */
-        if(token[0] == '\'')
+        if (token[0] == '\'')
         {
             /* TODO: Add escape sequnece support */
 
-            if(token[2] == '\'')
+            if (token[2] == '\'')
             {
                 return SymbolType.CHARACTER_LITERAL;
             }
         }
         /* String literal check */
-        else if(token[0] == '\"' && token[token.length-1] == '\"')
+        else if (token[0] == '\"' && token[token.length - 1] == '\"')
         {
             return SymbolType.STRING_LITERAL;
         }
         /* Number literal check */
-        else if(isNumeric(token))
+        else if (isNumeric(token))
         {
             return SymbolType.NUMBER_LITERAL;
         }
         /* Type name (TODO: Track user-defined types) */
-        else if(isType(token))
+        else if (isType(token))
         {
             return SymbolType.TYPE;
         }
         /* Identifier check (TODO: Track vars) */
-        // else if()
-        // {
-
-        // }
+        else if (isAlpha(token))
+        {
+            return SymbolType.IDENTIFIER;
+        }
+        /* Semi-colon check */
+        else if (token[0] == ';')
+        {
+            return SymbolType.SEMICOLON;
+        }
 
         return SymbolType.UNKNOWN;
     }
@@ -67,12 +89,15 @@ public final class Parser
         /* TODO: Do checking here to see if token is a type of given symbol */
         SymbolType actualType = getSymbolType(token);
         bool isFine = actualType == symbol;
-        
 
         /* TODO: Crash program if not */
-        if(!isFine)
+        if (!isFine)
         {
-            gprintln("Expected symbol of type "~to!(string)(symbol)~" but got "~to!(string)(actualType)~" with "~token.toString(), DebugType.ERROR);
+            gprintln("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
+                    string)(actualType) ~ " with " ~ token.toString(), DebugType.ERROR);
+            import core.stdc.stdlib;
+
+            exit(0);
         }
     }
 
@@ -90,7 +115,7 @@ public final class Parser
     */
     private bool nextToken()
     {
-        if(hasTokens())
+        if (hasTokens())
         {
             tokenPtr++;
             return true;
@@ -111,23 +136,47 @@ public final class Parser
         return tokens[tokenPtr];
     }
 
+    private void parseVarDec()
+    {
+        /* TODO: Save type */
+        string type = getCurrentToken().getToken();
+        string identifier;
+
+
+        /* Expect an identifier */
+        nextToken();
+        expect(SymbolType.IDENTIFIER, getCurrentToken());
+        identifier = getCurrentToken().getToken();
+
+
+        nextToken();
+        /* TODO: Check for `=` or `;` */
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+
+        nextToken();
+
+        gprintln("VariableDeclaration: (Type: "~type~", Identifier: "~identifier~")", DebugType.WARNING);
+    }
+
     public void parse()
     {
         /* TODO: Do parsing here */
 
         /* We can have an import or vardef or funcdef */
-        while(hasTokens())
+        while (hasTokens())
         {
             /* Get the token */
             Token tok = getCurrentToken();
             SymbolType symbol = getSymbolType(tok);
 
             /* If it is a type */
-            if(symbol == SymbolType.TYPE)
+            if (symbol == SymbolType.TYPE)
             {
-                /* Expect an identifier */
-                nextToken();
-                expect(SymbolType.IDENTIFIER, getCurrentToken());
+                parseVarDec();
+            }
+            else
+            {
+                // gprintln("Error");
             }
         }
     }
@@ -152,10 +201,7 @@ unittest
 {
     SymbolType symbol = Parser.getSymbolType("2121");
     assert(symbol == SymbolType.NUMBER_LITERAL);
-    
+
     symbol = Parser.getSymbolType("2121a");
     assert(symbol != SymbolType.NUMBER_LITERAL);
 }
-
-
-

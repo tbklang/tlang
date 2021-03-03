@@ -14,6 +14,7 @@ public enum SymbolType
     CHARACTER_LITERAL,
     STRING_LITERAL,
     TYPE,
+    SEMICOLON,
     UNKNOWN
 }
 
