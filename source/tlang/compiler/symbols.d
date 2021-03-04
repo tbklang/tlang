@@ -25,6 +25,9 @@ public enum SymbolType
     CCURLY,
     IF,
     WHILE,
+    CLASS,
+    INHERIT_OPP,
+    TILDE,
     UNKNOWN
 }
 
@@ -107,6 +110,11 @@ public static SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.WHILE;
     }
+    /* class keyword */
+    else if(cmp(token, "class") == 0)
+    {
+        return SymbolType.CLASS;
+    }
     /* Identifier check (TODO: Track vars) */
     else if (isAlpha(token))
     {
@@ -147,6 +155,19 @@ public static SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.COMMA;
     }
+    /* Inheritance operator check */
+    else if (token[0] == ':')
+    {
+        return SymbolType.INHERIT_OPP;
+    }
+    /* Tilde operator check */
+    else if (token[0] == '~')
+    {
+        return SymbolType.TILDE;
+    }
+    
+    
+    
     
 
     return SymbolType.UNKNOWN;

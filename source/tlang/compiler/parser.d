@@ -271,7 +271,12 @@ public final class Parser
             /* If the symbol is `(` then function call */
             if(getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
             {
-                /* TODO: Implement function call */
+                /* TODO: Implement function call parsing */
+            }
+            else
+            {
+                /* TODO: Leave the token here */
+                /* TODO: Just leave it, yeah */
             }
         }
         else
@@ -340,6 +345,36 @@ public final class Parser
         /* TODO: If we outta tokens we should not call this */
         // gprintln(getCurrentToken());
         gprintln("ParseTypedDec: Je suis fini");
+    }
+
+    /**
+    * Parses a class definition
+    *
+    * This is called when there is an occurrence of
+    * a token `class`
+    *
+    * STATUS: Not integrated
+    * STATUS: Not tested
+    */
+    private void parseClass()
+    {
+        /* Pop off the `class` */
+        nextToken();
+
+        /* Get the class's name */
+        expect(SymbolType.IDENTIFIER, getCurrentToken());
+        string className = getCurrentToken().getToken();
+        gprintln("parseClass(): Class name found '"~className~"'");
+
+        /* Expect a `{` */
+        nextToken();
+        expect(SymbolType.OCURLY, getCurrentToken());
+
+        /* Parse a body */
+        parseBody();
+
+
+        /* TODO: Ending here, expect closing `}`? */
     }
 
     private void parseStatement()
