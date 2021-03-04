@@ -28,6 +28,15 @@ public enum SymbolType
     CLASS,
     INHERIT_OPP,
     TILDE,
+    FOR,
+    SUPER,
+    THIS,
+    SWITCH,
+    ELSE,
+    RETURN,
+    PUBLIC,
+    PRIVATE,
+    STATIC,
     UNKNOWN
 }
 
@@ -115,6 +124,52 @@ public static SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.CLASS;
     }
+    /* static keyword */
+    else if(cmp(token, "static") == 0)
+    {
+        return SymbolType.STATIC;
+    }
+    /* private keyword */
+    else if(cmp(token, "private") == 0)
+    {
+        return SymbolType.PRIVATE;
+    }
+    /* public keyword */
+    else if(cmp(token, "public") == 0)
+    {
+        return SymbolType.PUBLIC;
+    }
+    /* return keyword */
+    else if(cmp(token, "return") == 0)
+    {
+        return SymbolType.RETURN;
+    }
+    /* else keyword */
+    else if(cmp(token, "else") == 0)
+    {
+        return SymbolType.ELSE;
+    }
+    /* switch keyword */
+    else if(cmp(token, "switch") == 0)
+    {
+        return SymbolType.SWITCH;
+    }
+    /* this keyword */
+    else if(cmp(token, "this") == 0)
+    {
+        return SymbolType.THIS;
+    }
+    /* super keyword */
+    else if(cmp(token, "super") == 0)
+    {
+        return SymbolType.SUPER;
+    }
+    /* for keyword */
+    else if(cmp(token, "for") == 0)
+    {
+        return SymbolType.FOR;
+    }
+    
     /* Identifier check (TODO: Track vars) */
     else if (isAlpha(token))
     {
