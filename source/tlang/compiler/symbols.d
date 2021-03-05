@@ -318,3 +318,14 @@ unittest
     symbol = getSymbolType(new Token("2121a", 0, 0));
     assert(symbol != SymbolType.NUMBER_LITERAL);
 }
+
+/* Test: Identifer tests */
+unittest
+{
+    SymbolType symbol = getSymbolType(new Token("_yolo2", 0, 0));
+    assert(symbol == SymbolType.IDENTIFIER);
+
+    symbol = getSymbolType(new Token("2_2ff", 0, 0));
+    assert(symbol != SymbolType.IDENTIFIER);
+}
+
