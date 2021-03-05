@@ -165,6 +165,11 @@ public final class Parser
                 closedBeforeExit = true;
                 break;
             }
+            /* If it is a class definition */
+            else if(symbol == SymbolType.CLASS)
+            {
+                parseClass();
+            }
             /* Error out */
             else
             {

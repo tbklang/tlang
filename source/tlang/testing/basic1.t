@@ -10,7 +10,10 @@ class clazz1
 
 class clazz_2_1
 {
-    
+    class clazz_2_2
+    {
+        
+    }
 }
 
 
