@@ -16,6 +16,10 @@ public final class Parser
     private Token currentToken;
     private ulong tokenPtr;
 
+    /**
+    * Crashes the program if the given token is not a symbol
+    * the same as the givne expected one
+    */
     public static void expect(SymbolType symbol, Token token)
     {
         /* TODO: Do checking here to see if token is a type of given symbol */
@@ -30,12 +34,18 @@ public final class Parser
         }
     }
 
+    /**
+    * Crashes the parser with the given message
+    */
     public static void expect(string message)
     {
         gprintln(message, DebugType.ERROR);
-        exit(0);
+        exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
     }
 
+    /**
+    * Costructs a new parser with the given set of Tokens
+    */
     this(Token[] tokens)
     {
         this.tokens = tokens;
@@ -64,6 +74,11 @@ public final class Parser
         return tokens[tokenPtr];
     }
 
+    /**
+    * Parses if statements
+    *
+    * TODO: Check kanban
+    */
     private void parseIf()
     {
         gprintln("parseIf(): Enter", DebugType.WARNING);
@@ -118,15 +133,12 @@ public final class Parser
         gprintln("parseWhile(): Leave", DebugType.WARNING);
     }
 
-    
-
     private void parseBody()
     {
         gprintln("parseBody(): Enter", DebugType.WARNING);
 
         /* TODO: Implement body parsing */
         nextToken();
-
 
         /**
         * If we were able to get a closing token, `}`, then
@@ -136,16 +148,13 @@ public final class Parser
         */
         bool closedBeforeExit;
 
-
-        while(hasTokens())
+        while (hasTokens())
         {
             /* Get the token */
             Token tok = getCurrentToken();
             SymbolType symbol = getSymbolType(tok);
 
-            
-            gprintln("parseBody(): SymbolType="~to!(string)(symbol));
-
+            gprintln("parseBody(): SymbolType=" ~ to!(string)(symbol));
 
             /* If it is a type */
             if (symbol == SymbolType.TYPE)
@@ -154,44 +163,45 @@ public final class Parser
                 parseTypedDeclaration();
             }
             /* If it is a branch */
-            else if(symbol == SymbolType.IF)
+            else if (symbol == SymbolType.IF)
             {
                 parseIf();
             }
             /* If it is a while loop */
-            else if(symbol == SymbolType.WHILE)
+            else if (symbol == SymbolType.WHILE)
             {
                 parseWhile();
             }
             /* If it is a function call */
-            else if(symbol == SymbolType.IDENTIFIER)
+            else if (symbol == SymbolType.IDENTIFIER)
             {
                 parseFuncCall();
             }
             /* If it is closing the body `}` */
-            else if(symbol == SymbolType.CCURLY)
+            else if (symbol == SymbolType.CCURLY)
             {
                 // gprintln("Error");
                 // nextToken();
                 gprintln("parseBody(): Exiting body by }", DebugType.WARNING);
-                
+
                 closedBeforeExit = true;
                 break;
             }
             /* If it is a class definition */
-            else if(symbol == SymbolType.CLASS)
+            else if (symbol == SymbolType.CLASS)
             {
                 parseClass();
             }
             /* Error out */
             else
             {
-                gprintln("parseBody(): Unknown symbol: "~getCurrentToken().getToken(), DebugType.ERROR);
+                gprintln("parseBody(): Unknown symbol: " ~ getCurrentToken()
+                        .getToken(), DebugType.ERROR);
             }
         }
 
         /* TODO: We can sometimes run out of tokens before getting our closing brace, we should fix that here */
-        if(!closedBeforeExit)
+        if (!closedBeforeExit)
         {
             expect("Expected closing } but ran out of tokens");
         }
@@ -201,6 +211,8 @@ public final class Parser
 
     private void parseFuncDef()
     {
+        gprintln("parseFuncDef(): Enter", DebugType.WARNING);
+
         /* TODO: Implement function parsing */
         nextToken();
 
@@ -208,7 +220,7 @@ public final class Parser
         ulong parameterCount;
 
         /* Get command-line arguments */
-        while(hasTokens())
+        while (hasTokens())
         {
             /* Expect a type */
             string type = getCurrentToken().getToken();
@@ -223,28 +235,31 @@ public final class Parser
             parameterCount++;
 
             /* Check if RBRACE/ `)` */
-            if(getSymbolType(getCurrentToken()) == SymbolType.RBRACE)
+            if (getSymbolType(getCurrentToken()) == SymbolType.RBRACE)
             {
                 nextToken();
                 expect(SymbolType.OCURLY, getCurrentToken());
-                
+
                 /* Parse the body (and it leaves ONLY when it gets the correct symbol, no expect needed) */
                 parseBody();
                 nextToken();
             }
-            else if(getSymbolType(getCurrentToken()) == SymbolType.COMMA)
+            else if (getSymbolType(getCurrentToken()) == SymbolType.COMMA)
             {
                 nextToken();
             }
             else
             {
                 /* TODO: Error */
-                expect("Expecting either ) or , but got "~getCurrentToken().getToken());
+                expect("Expecting either ) or , but got " ~ getCurrentToken().getToken());
             }
 
-            gprintln("ParseFuncDef: ParameterDec: (Type: "~type~", Identifier: "~identifier~")",DebugType.WARNING);
-            gprintln("ParseFuncDef: Parameter count: "~to!(string)(parameterCount));
+            gprintln("ParseFuncDef: ParameterDec: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")",
+                    DebugType.WARNING);
+            gprintln("ParseFuncDef: Parameter count: " ~ to!(string)(parameterCount));
         }
+
+        gprintln("parseFuncDef(): Leave", DebugType.WARNING);
     }
 
     /**
@@ -262,18 +277,20 @@ public final class Parser
     */
     private void parseExpression()
     {
+        gprintln("parseExpression(): Enter", DebugType.WARNING);
+
         /* TODO: Implement expression parsing */
 
         SymbolType symbol = getSymbolType(getCurrentToken());
 
         /* If it is a number literal */
-        if(symbol == SymbolType.NUMBER_LITERAL)
+        if (symbol == SymbolType.NUMBER_LITERAL)
         {
             /* Get the next token */
             nextToken();
 
             /* Check if the token is a mathematical operator */
-            if(isMathOp(getCurrentToken()))
+            if (isMathOp(getCurrentToken()))
             {
                 /* TODO:check math op */
                 nextToken();
@@ -283,24 +300,24 @@ public final class Parser
             }
             else
             {
-                
+
             }
         }
         /* If it is a string literal */
-        else if(symbol == SymbolType.STRING_LITERAL)
+        else if (symbol == SymbolType.STRING_LITERAL)
         {
             /* Get the next token */
             nextToken();
         }
         /* If it is an identifier */
-        else if(symbol == SymbolType.IDENTIFIER)
+        else if (symbol == SymbolType.IDENTIFIER)
         {
             string identifier = getCurrentToken().getToken();
 
             nextToken();
 
             /* If the symbol is `(` then function call */
-            if(getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
+            if (getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
             {
                 /* TODO: Implement function call parsing */
             }
@@ -316,41 +333,42 @@ public final class Parser
             /* TODO: Something isn't right here */
         }
 
-        gprintln("ParseExpression: Finished", DebugType.WARNING);
+        gprintln("parseExpression(): Leave", DebugType.WARNING);
     }
 
     private void parseTypedDeclaration()
     {
+        gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
+
         /* TODO: Save type */
         string type = getCurrentToken().getToken();
         string identifier;
-
 
         /* Expect an identifier */
         nextToken();
         expect(SymbolType.IDENTIFIER, getCurrentToken());
         identifier = getCurrentToken().getToken();
 
-
         nextToken();
-        gprintln("ParseTypedDec: DecisionBtwn FuncDef/VarDef: "~getCurrentToken().getToken());
+        gprintln("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ getCurrentToken().getToken());
 
         /* Check if it is `(` (func dec) */
         SymbolType symbolType = getSymbolType(getCurrentToken());
-        gprintln("ParseTypedDec: SymbolType="~to!(string)(symbolType));
-        if(symbolType == SymbolType.LBRACE)
+        gprintln("ParseTypedDec: SymbolType=" ~ to!(string)(symbolType));
+        if (symbolType == SymbolType.LBRACE)
         {
             parseFuncDef();
-            
+
         }
         /* Check for semi-colon (var dec) */
-        else if(symbolType == SymbolType.SEMICOLON)
+        else if (symbolType == SymbolType.SEMICOLON)
         {
             nextToken();
-            gprintln("ParseTypedDec: VariableDeclaration: (Type: "~type~", Identifier: "~identifier~")", DebugType.WARNING);
+            gprintln("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")",
+                    DebugType.WARNING);
         }
         /* Check for `=` (var dec) */
-        else if(symbolType == SymbolType.ASSIGN)
+        else if (symbolType == SymbolType.ASSIGN)
         {
             nextToken();
 
@@ -365,7 +383,8 @@ public final class Parser
 
             nextToken();
 
-            gprintln("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "~type~", Identifier: "~identifier~")", DebugType.WARNING);
+            gprintln("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
+                    ~ type ~ ", Identifier: " ~ identifier ~ ")", DebugType.WARNING);
         }
         else
         {
@@ -374,7 +393,7 @@ public final class Parser
 
         /* TODO: If we outta tokens we should not call this */
         // gprintln(getCurrentToken());
-        gprintln("ParseTypedDec: Je suis fini");
+        gprintln("parseTypedDeclaration(): Leave", DebugType.WARNING);
     }
 
     /**
@@ -385,13 +404,15 @@ public final class Parser
     */
     private void parseClass()
     {
+        gprintln("parseClass(): Enter", DebugType.WARNING);
+
         /* Pop off the `class` */
         nextToken();
 
         /* Get the class's name */
         expect(SymbolType.IDENTIFIER, getCurrentToken());
         string className = getCurrentToken().getToken();
-        gprintln("parseClass(): Class name found '"~className~"'");
+        gprintln("parseClass(): Class name found '" ~ className ~ "'");
 
         /* Expect a `{` */
         nextToken();
@@ -402,10 +423,14 @@ public final class Parser
 
         /* Pop off the ending `}` */
         nextToken();
+
+        gprintln("parseClass(): Leave", DebugType.WARNING);
     }
 
     private void parseStatement()
     {
+        gprintln("parseStatement(): Enter", DebugType.WARNING);
+
         /* TODO: Implement parse statement */
 
         /**
@@ -415,14 +440,15 @@ public final class Parser
         * 1. parseFuncCall()
         * 2. expect(;)
         */
+
+        gprintln("parseStatement(): Leave", DebugType.WARNING);
     }
 
     private void parseFuncCall()
     {
-        gprintln("parseFuncCall(): Doing function call parsing");
+        gprintln("parseFuncCall(): Enter", DebugType.WARNING);
 
         nextToken();
-
 
         /* Expect an opening brace `(` */
         expect(SymbolType.LBRACE, getCurrentToken());
@@ -437,6 +463,7 @@ public final class Parser
         expect(SymbolType.SEMICOLON, getCurrentToken());
         nextToken();
 
+        gprintln("parseFuncCall(): Leave", DebugType.WARNING);
     }
 
     /* Almost like parseBody but has more */
@@ -448,6 +475,8 @@ public final class Parser
     /* TODO: Variables should be allowed to have letters in them and underscores */
     public void parse()
     {
+        gprintln("parse(): Enter", DebugType.WARNING);
+
         /* TODO: Do parsing here */
 
         /* We can have an import or vardef or funcdef */
@@ -457,7 +486,7 @@ public final class Parser
             Token tok = getCurrentToken();
             SymbolType symbol = getSymbolType(tok);
 
-            gprintln("parse(): Token: "~tok.getToken());
+            gprintln("parse(): Token: " ~ tok.getToken());
 
             /* If it is a type */
             if (symbol == SymbolType.TYPE)
@@ -465,18 +494,20 @@ public final class Parser
                 /* Might be a function, might be a variable */
                 parseTypedDeclaration();
 
-                gprintln("parse()::woah: Current token: "~tok.getToken());
+                gprintln("parse()::woah: Current token: " ~ tok.getToken());
             }
             /* If it is a class */
-            else if(symbol == SymbolType.CLASS)
+            else if (symbol == SymbolType.CLASS)
             {
                 parseClass();
             }
             else
             {
-                expect("parse(): Unknown '"~tok.getToken()~"'");
+                expect("parse(): Unknown '" ~ tok.getToken() ~ "'");
             }
         }
+
+        gprintln("parse(): Leave", DebugType.WARNING);
     }
 }
 
