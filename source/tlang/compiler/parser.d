@@ -238,6 +238,17 @@ public final class Parser
         }
     }
 
+    /**
+    * Parses an expression
+    *
+    * I think we need a loop here to move till we hit a terminator like `)`
+    * in the case of a condition's/function's argument expression or `;` in
+    * the case of a assignment's expression.
+    *
+    * This means we will be able to get the `+` token and process it
+    * We will also terminate on `;` or `)` and that means our `else` can be
+    * left to error out for unknowns then
+    */
     private void parseExpression()
     {
         /* TODO: Implement expression parsing */
