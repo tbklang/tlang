@@ -193,8 +193,7 @@ public final class Parser
         /* TODO: We can sometimes run out of tokens before getting our closing brace, we should fix that here */
         if(!closedBeforeExit)
         {
-            gprintln("Expected closing } but ran out of tokens", DebugType.ERROR);
-            exit(0);
+            expect("Expected closing } but ran out of tokens");
         }
 
         gprintln("parseBody(): Leave", DebugType.WARNING);
@@ -240,8 +239,7 @@ public final class Parser
             else
             {
                 /* TODO: Error */
-                gprintln("Expecting either ) or , but got "~getCurrentToken().getToken(), DebugType.ERROR);
-                exit(0);
+                expect("Expecting either ) or , but got "~getCurrentToken().getToken());
             }
 
             gprintln("ParseFuncDef: ParameterDec: (Type: "~type~", Identifier: "~identifier~")",DebugType.WARNING);
@@ -371,8 +369,7 @@ public final class Parser
         }
         else
         {
-            gprintln("Expected one of the following: (, ; or =", DebugType.ERROR);
-            exit(0);
+            expect("Expected one of the following: (, ; or =");
         }
 
         /* TODO: If we outta tokens we should not call this */
@@ -477,8 +474,7 @@ public final class Parser
             }
             else
             {
-                gprintln("parse(): Unknown '"~tok.getToken()~"'", DebugType.ERROR);
-                exit(0);
+                expect("parse(): Unknown '"~tok.getToken()~"'");
             }
         }
     }
