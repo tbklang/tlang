@@ -357,9 +357,6 @@ public final class Parser
     *
     * This is called when there is an occurrence of
     * a token `class`
-    *
-    * STATUS: Not integrated
-    * STATUS: Not tested
     */
     private void parseClass()
     {
@@ -378,8 +375,7 @@ public final class Parser
         /* Parse a body */
         parseBody();
 
-
-        /* TODO: Ending here, expect closing `}`? */
+        /* Pop off the ending `}` */
         nextToken();
     }
 
