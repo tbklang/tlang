@@ -12,12 +12,23 @@ class clazz_2_1
 {
     class clazz_2_2
     {
-        
+        class clazz_2_2_1
+        {
+
+        }
     }
 
     class clazz_2_3
     {
+        class clazz_2_3_1
+        {
+            if(1)
+            {
+                print("Hello");
+            }
+        }
         
+        print("Hello");
     }
 }
 
