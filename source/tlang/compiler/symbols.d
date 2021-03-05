@@ -66,17 +66,53 @@ public static bool isType(string tokenStr)
                 "long") == 0 || cmp(tokenStr, "ulong") == 0 || cmp(tokenStr, "void") == 0;
 }
 
-private static bool isAlpha(string token)
+/**
+* Checks if the given character is a letter
+*/
+private static bool isCharacterAlpha(char character)
 {
+    return (character >= 65 && character <= 90) || (character >= 97 && character <= 122);
+}
+
+/**
+* Checks if the given character is a number
+*/
+private static bool isCharacterNumber(char character)
+{
+    return (character >= 48 && character <= 57);
+}
+
+private static bool isIdentifier(string token)
+{
+    /* This is used to prevent the first character from not being number */
+    bool isFirstRun = true;
+
     foreach (char character; token)
     {
-        if ((character >= 65 && character <= 90) || (character >= 97 && character <= 122))
+        if(isFirstRun)
         {
+            /* Only allow underscore of letter */
+            if(isCharacterAlpha(character) || character == '_')
+            {
 
+            }
+            else
+            {
+                return false;
+            }
+
+            isFirstRun = false;
         }
         else
         {
-            return false;
+            if(isCharacterAlpha(character) || character == '_' || isCharacterNumber(character))
+            {
+
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 
@@ -193,12 +229,8 @@ public static SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.DELETE;
     }
-    
-    
-    
-    
     /* Identifier check (TODO: Track vars) */
-    else if (isAlpha(token))
+    else if (isIdentifier(token))
     {
         return SymbolType.IDENTIFIER;
     }

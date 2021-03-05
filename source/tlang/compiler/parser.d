@@ -414,6 +414,12 @@ public final class Parser
     }
 
     /* Almost like parseBody but has more */
+    /**
+    * TODO: For certain things like `parseClass` we should
+    * keep track of what level we are at as we shouldn't allow
+    * one to define classes within functions
+    */
+    /* TODO: Variables should be allowed to have letters in them and underscores */
     public void parse()
     {
         /* TODO: Do parsing here */

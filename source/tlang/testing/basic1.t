@@ -3,14 +3,14 @@ ubyte y;
 
 ubyte k = 1;
 
-class clazzOne
+class clazz1
 {
     print("Hello world");
 }
 
-class clazzTwo
+class clazz_2_1
 {
-
+    
 }
 
 
