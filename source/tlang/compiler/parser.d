@@ -25,12 +25,15 @@ public final class Parser
         /* TODO: Crash program if not */
         if (!isFine)
         {
-            gprintln("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
-                    string)(actualType) ~ " with " ~ token.toString(), DebugType.ERROR);
-            import core.stdc.stdlib;
-
-            exit(0);
+            expect("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
+                    string)(actualType) ~ " with " ~ token.toString());
         }
+    }
+
+    public static void expect(string message)
+    {
+        gprintln(message, DebugType.ERROR);
+        exit(0);
     }
 
     this(Token[] tokens)
