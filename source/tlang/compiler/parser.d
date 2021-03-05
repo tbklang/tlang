@@ -375,6 +375,7 @@ public final class Parser
 
 
         /* TODO: Ending here, expect closing `}`? */
+        nextToken();
     }
 
     private void parseStatement()
@@ -434,9 +435,14 @@ public final class Parser
 
                 gprintln("parse()::woah: Current token: "~tok.getToken());
             }
+            /* If it is a class */
+            else if(symbol == SymbolType.CLASS)
+            {
+                parseClass();
+            }
             else
             {
-                gprintln("parse(): Geen idee", DebugType.ERROR);
+                gprintln("parse(): Unknown '"~tok.getToken()~"'", DebugType.ERROR);
                 exit(0);
             }
         }

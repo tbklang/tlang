@@ -40,6 +40,7 @@ public enum SymbolType
     CASE,
     GOTO,
     DO,
+    DELETE,
     UNKNOWN
 }
 
@@ -186,6 +187,11 @@ public static SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "do") == 0)
     {
         return SymbolType.DO;
+    }
+    /* delete keyword */
+    else if(cmp(token, "delete") == 0)
+    {
+        return SymbolType.DELETE;
     }
     
     

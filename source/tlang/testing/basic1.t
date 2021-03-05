@@ -3,6 +3,17 @@ ubyte y;
 
 ubyte k = 1;
 
+class clazzOne
+{
+    
+}
+
+class clazzTwo
+{
+    
+}
+
+
 void main(int hello, byte d)
 {
     ubyte thing = "Hello";
