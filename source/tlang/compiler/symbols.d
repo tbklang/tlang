@@ -37,6 +37,9 @@ public enum SymbolType
     PUBLIC,
     PRIVATE,
     STATIC,
+    CASE,
+    GOTO,
+    DO,
     UNKNOWN
 }
 
@@ -169,6 +172,24 @@ public static SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.FOR;
     }
+    /* case keyword */
+    else if(cmp(token, "case") == 0)
+    {
+        return SymbolType.CASE;
+    }
+    /* goto keyword */
+    else if(cmp(token, "goto") == 0)
+    {
+        return SymbolType.GOTO;
+    }
+    /* do keyword */
+    else if(cmp(token, "do") == 0)
+    {
+        return SymbolType.DO;
+    }
+    
+    
+    
     
     /* Identifier check (TODO: Track vars) */
     else if (isAlpha(token))
