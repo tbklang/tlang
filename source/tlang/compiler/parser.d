@@ -63,6 +63,8 @@ public final class Parser
 
     private void parseIf()
     {
+        gprintln("parseIf(): Enter", DebugType.WARNING);
+
         /* Pop off the `if` */
         nextToken();
 
@@ -83,11 +85,13 @@ public final class Parser
         expect(SymbolType.CCURLY, getCurrentToken());
         nextToken();
 
-        gprintln("parseIf(): PARSING OF IF STTAMENT BODY DONE");
+        gprintln("parseIf(): Leave", DebugType.WARNING);
     }
 
     private void parseWhile()
     {
+        gprintln("parseWhile(): Enter", DebugType.WARNING);
+
         /* Pop off the `while` */
         nextToken();
 
@@ -108,7 +112,7 @@ public final class Parser
         expect(SymbolType.CCURLY, getCurrentToken());
         nextToken();
 
-        gprintln("parseWhile(): PARSING OF WHILE STTAMENT BODY DONE");
+        gprintln("parseWhile(): Leave", DebugType.WARNING);
     }
 
     
@@ -240,6 +244,8 @@ public final class Parser
 
     /**
     * Parses an expression
+    *
+    * TODO:
     *
     * I think we need a loop here to move till we hit a terminator like `)`
     * in the case of a condition's/function's argument expression or `;` in
