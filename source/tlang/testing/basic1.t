@@ -5,12 +5,12 @@ ubyte k = 1;
 
 class clazzOne
 {
-    
+    print("Hello world");
 }
 
 class clazzTwo
 {
-    
+
 }
 
 
