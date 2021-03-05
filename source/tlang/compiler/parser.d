@@ -119,6 +119,8 @@ public final class Parser
 
     private void parseBody()
     {
+        gprintln("parseBody(): Enter", DebugType.WARNING);
+
         /* TODO: Implement body parsing */
         nextToken();
 
@@ -191,6 +193,8 @@ public final class Parser
             gprintln("Expected closing } but ran out of tokens", DebugType.ERROR);
             exit(0);
         }
+
+        gprintln("parseBody(): Leave", DebugType.WARNING);
     }
 
     private void parseFuncDef()
