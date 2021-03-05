@@ -63,6 +63,9 @@ public final class Parser
 
     private void parseIf()
     {
+        /* Pop off the `if` */
+        nextToken();
+
         /* Expect an opening brace `(` */
         expect(SymbolType.LBRACE, getCurrentToken());
         nextToken();
@@ -85,6 +88,9 @@ public final class Parser
 
     private void parseWhile()
     {
+        /* Pop off the `while` */
+        nextToken();
+
         /* Expect an opening brace `(` */
         expect(SymbolType.LBRACE, getCurrentToken());
         nextToken();
@@ -141,13 +147,11 @@ public final class Parser
             /* If it is a branch */
             else if(symbol == SymbolType.IF)
             {
-                nextToken();
                 parseIf();
             }
             /* If it is a while loop */
             else if(symbol == SymbolType.WHILE)
             {
-                nextToken();
                 parseWhile();
             }
             /* If it is a function call */
