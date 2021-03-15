@@ -281,57 +281,67 @@ public final class Parser
 
         /* TODO: Implement expression parsing */
 
-        SymbolType symbol = getSymbolType(getCurrentToken());
-
-        /* If it is a number literal */
-        if (symbol == SymbolType.NUMBER_LITERAL)
+        /**
+        * We loop here until we hit something that closes
+        * an expression, in other words an expression
+        * appears in variable assignments which end with a
+        * `;`, they also appear in conditions which end in
+        * a `)`
+        */
+        while (true)
         {
-            /* Get the next token */
-            nextToken();
+            SymbolType symbol = getSymbolType(getCurrentToken());
 
-            /* Check if the token is a mathematical operator */
-            if (isMathOp(getCurrentToken()))
+            /* If it is a number literal */
+            if (symbol == SymbolType.NUMBER_LITERAL)
             {
-                /* TODO:check math op */
+                /* Get the next token */
+                nextToken();
+            }
+            /* If it is a maths operator */
+            else if(isMathOp(getCurrentToken()))
+            {
+                /* TODO: Parse expression or pass arithemetic (I think latter) */
                 nextToken();
 
-                /* Parse an expression */
+                /* Parse expression */
                 parseExpression();
             }
+            /* If it is a string literal */
+            else if (symbol == SymbolType.STRING_LITERAL)
+            {
+                /* Get the next token */
+                nextToken();
+            }
+            /* If it is an identifier */
+            else if (symbol == SymbolType.IDENTIFIER)
+            {
+                string identifier = getCurrentToken().getToken();
+
+                nextToken();
+
+                /* If the symbol is `(` then function call */
+                if (getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
+                {
+                    /* TODO: Implement function call parsing */
+                }
+                else
+                {
+                    /* TODO: Leave the token here */
+                    /* TODO: Just leave it, yeah */
+                }
+            }
+            /* TODO: Add the `)` and `;` detection here to terminate ourselves */
+            else if(symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE)
+            {
+                break;
+            }
             else
             {
-
+                //gprintln("parseExpression(): NO MATCH", DebugType.ERROR);
+                /* TODO: Something isn't right here */
+                expect("Expected expression terminator ) or ;");
             }
-        }
-        /* If it is a string literal */
-        else if (symbol == SymbolType.STRING_LITERAL)
-        {
-            /* Get the next token */
-            nextToken();
-        }
-        /* If it is an identifier */
-        else if (symbol == SymbolType.IDENTIFIER)
-        {
-            string identifier = getCurrentToken().getToken();
-
-            nextToken();
-
-            /* If the symbol is `(` then function call */
-            if (getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
-            {
-                /* TODO: Implement function call parsing */
-            }
-            else
-            {
-                /* TODO: Leave the token here */
-                /* TODO: Just leave it, yeah */
-            }
-        }
-        /* TODO: Add the `)` and `;` detection here to terminate ourselves */
-        else
-        {
-            gprintln("parseExpression(): NO MATCH", DebugType.ERROR);
-            /* TODO: Something isn't right here */
         }
 
         gprintln("parseExpression(): Leave", DebugType.WARNING);
