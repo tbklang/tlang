@@ -346,7 +346,7 @@ public final class Parser
 
                 parseExpression();
 
-                
+
 
                 nextToken();
             }
