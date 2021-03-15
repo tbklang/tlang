@@ -340,6 +340,16 @@ public final class Parser
             * TODO: For recursive () in expressions I might need to stop the `)` detection outside
             * of the call to parseExpression (the original call)
             */
+            else if(symbol == SymbolType.LBRACE)
+            {
+                nextToken();
+
+                parseExpression();
+
+                
+
+                nextToken();
+            }
             else
             {
                 //gprintln("parseExpression(): NO MATCH", DebugType.ERROR);

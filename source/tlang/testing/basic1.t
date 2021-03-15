@@ -42,6 +42,8 @@ void main(int hello, byte d)
 
     ubyte eish = 1+1;
 
+    ubyte poes = ((1+1));
+
     if(1+1)
     {
         if(1)
