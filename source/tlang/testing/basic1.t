@@ -73,7 +73,7 @@ void main(int hello, byte d)
     }
 }
 
-void k(int j)
+void k(int j, int k)
 {
 
 }

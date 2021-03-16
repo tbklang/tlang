@@ -243,6 +243,8 @@ public final class Parser
                 /* Parse the body (and it leaves ONLY when it gets the correct symbol, no expect needed) */
                 parseBody();
                 nextToken();
+
+                break;
             }
             else if (getSymbolType(getCurrentToken()) == SymbolType.COMMA)
             {
@@ -256,9 +258,9 @@ public final class Parser
 
             gprintln("ParseFuncDef: ParameterDec: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")",
                     DebugType.WARNING);
-            gprintln("ParseFuncDef: Parameter count: " ~ to!(string)(parameterCount));
         }
 
+        gprintln("ParseFuncDef: Parameter count: " ~ to!(string)(parameterCount));
         gprintln("parseFuncDef(): Leave", DebugType.WARNING);
     }
 
