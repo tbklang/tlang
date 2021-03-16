@@ -342,12 +342,13 @@ public final class Parser
             */
             else if(symbol == SymbolType.LBRACE)
             {
+                /* Consume the `(` */
                 nextToken();
 
+                /* Parse the inner expression till terminator */
                 parseExpression();
 
-                
-
+                /* Consume the terminator */
                 nextToken();
             }
             else
