@@ -337,8 +337,7 @@ public final class Parser
                 break;
             }
             /**
-            * TODO: For recursive () in expressions I might need to stop the `)` detection outside
-            * of the call to parseExpression (the original call)
+            * For ()
             */
             else if(symbol == SymbolType.LBRACE)
             {
