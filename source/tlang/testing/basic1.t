@@ -48,11 +48,15 @@ void main(int hello, byte d)
     {
         if(1)
         {
+            if((1))
+            {
+                print("Hello");    
+            }
             print("Hello");
         }
     }
 
-    if(2)
+    if(((2)))
     {
         print(1+1);   
     }
@@ -67,6 +71,11 @@ void main(int hello, byte d)
             }
         }   
     }
+}
+
+void k(int j)
+{
+
 }
 
 
