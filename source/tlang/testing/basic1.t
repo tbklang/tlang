@@ -75,7 +75,42 @@ void main(int hello, byte d)
 
 void k(int j, int k)
 {
+    ubyte thing = "Hello";
+    print("Hello world");
+    print(1+1);
+    print(1+1);
 
+    ubyte eish = 1+1;
+
+    ubyte poes = ((1+1));
+
+    if(1+1)
+    {
+        if(1)
+        {
+            if((1))
+            {
+                print("Hello");    
+            }
+            print("Hello");
+        }
+    }
+
+    if(((2)))
+    {
+        print(1+1);   
+    }
+
+    if(2+222222/2)
+    {
+        while(1)
+        {
+            while(2+2)
+            {
+
+            }
+        }   
+    }
 }
 
 
