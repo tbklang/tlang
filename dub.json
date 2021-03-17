@@ -4,7 +4,7 @@
 	],
 	"copyright": "Copyright © 2021, Tristan B. Kildaire",
 	"dependencies": {
-		"gogga": "~>0.0.2",
+		"gogga": "~>0.1.0",
 		"jcli": "~>0.12.0"
 	},
 	"description": "The official Tristan language compiler project",
