@@ -220,7 +220,7 @@ public final class Parser
     {
         gprintln("parseFuncDef(): Enter", DebugType.WARNING);
 
-        /* TODO: Implement function parsing */
+        /* Consume the `(` token */
         nextToken();
 
         /* Count for number of parameters processed */
@@ -340,7 +340,7 @@ public final class Parser
                     /* TODO: Just leave it, yeah */
                 }
             }
-            /* TODO: Add the `)` and `;` detection here to terminate ourselves */
+            /* Detect if this expression is coming to an end, then return */
             else if(symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE)
             {
                 break;
