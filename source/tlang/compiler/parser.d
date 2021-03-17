@@ -45,9 +45,9 @@ public final class Parser
     */
     public static void expect(string message)
     {
-        throw new TError(message);
-        //gprintln(message, DebugType.ERROR);
-        //exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
+        //throw new TError(message);
+        gprintln(message, DebugType.ERROR);
+        exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
     }
 
     /**
