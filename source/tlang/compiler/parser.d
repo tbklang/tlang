@@ -6,6 +6,12 @@ import std.string : isNumeric, cmp;
 import compiler.symbols;
 import compiler.lexer : Token;
 import core.stdc.stdlib;
+import misc.exceptions : TError;
+
+// public final class ParserError : TError
+// {
+
+// }
 
 public final class Parser
 {
@@ -39,8 +45,9 @@ public final class Parser
     */
     public static void expect(string message)
     {
-        gprintln(message, DebugType.ERROR);
-        exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
+        throw new TError(message);
+        //gprintln(message, DebugType.ERROR);
+        //exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
     }
 
     /**
