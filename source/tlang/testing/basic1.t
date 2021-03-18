@@ -29,7 +29,7 @@ class clazz_2_1
             
             if(1)
             {
-                print(1);
+                
             }
             else
             {
@@ -38,7 +38,7 @@ class clazz_2_1
 
             if(1)
             {
-
+                print(1);
             }
             else
             {

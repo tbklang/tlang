@@ -131,9 +131,12 @@ public final class Parser
                 /* Pop off the `else` */
                 nextToken();
 
-                /* Check if we have an `if` after the `else` (so an "else if" statement) */
+                /* Check if we have an `if` after the `{` (so an "else if" statement) */
                 if (getSymbolType(getCurrentToken()) == SymbolType.IF && !reachedElse)
                 {
+                    /* Pop off the `if` */
+                    nextToken();
+
                     /* Expect an opening brace `(` */
                     expect(SymbolType.LBRACE, getCurrentToken());
                     nextToken();
@@ -151,19 +154,25 @@ public final class Parser
                     expect(SymbolType.CCURLY, getCurrentToken());
                     nextToken();
                 }
-                /* Check for opening brace (just an "else" statement) */
-                else if (getSymbolType(getCurrentToken()) == SymbolType.ELSE)
+                /* Check for opening curly (just an "else" statement) */
+                else if (getSymbolType(getCurrentToken()) == SymbolType.OCURLY)
                 {
                     /* TODO: Implement me */
 
+                    import std.stdio;
+                    writeln("EYO ELSE");
+
                     /* Opening { */
+                    writeln("Bruh"~to!(string)(getCurrentToken()));
                     nextToken();
-                    expect(SymbolType.OCURLY, getCurrentToken());
 
                     /* Parse the if' statement's body AND expect a closing curly */
                     parseBody();
                     expect(SymbolType.CCURLY, getCurrentToken());
                     nextToken();
+
+                    writeln("EYO ELSE (END):");
+                    writeln("Bruh"~to!(string)(getCurrentToken()));
 
                     /* Don't allow anything to follow after this */
                     reachedElse = true;
@@ -173,6 +182,7 @@ public final class Parser
                 {
                     /* TODO: Add error */
                     /* TODO: DO we need this here? */
+                    expect("fok");
                 }
 
             }
@@ -191,6 +201,8 @@ public final class Parser
             else
             {
                 /* TODO: Add error */
+                import std.stdio;
+                writeln("Bruh"~to!(string)(getCurrentToken()));
                 break;
             }
         }
