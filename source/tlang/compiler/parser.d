@@ -90,25 +90,110 @@ public final class Parser
     {
         gprintln("parseIf(): Enter", DebugType.WARNING);
 
-        /* Pop off the `if` */
-        nextToken();
+        bool hasIf;
+        bool reachedElse;
 
-        /* Expect an opening brace `(` */
-        expect(SymbolType.LBRACE, getCurrentToken());
-        nextToken();
+        while (hasTokens())
+        {
+            // /* If else has been reached then exit */
+            // if(reachedElse)
+            // {
+            //     break;
+            // }
+            
+            /* TODO: Add tracking to not allow startign with `else` with no initial `if` */
+            if (getSymbolType(getCurrentToken()) == SymbolType.IF && !hasIf)
+            {
+                /* Pop off the `if` */
+                nextToken();
 
-        /* Parse an expression (for the condition) */
-        parseExpression();
-        expect(SymbolType.RBRACE, getCurrentToken());
+                /* Expect an opening brace `(` */
+                expect(SymbolType.LBRACE, getCurrentToken());
+                nextToken();
 
-        /* Openening { */
-        nextToken();
-        expect(SymbolType.OCURLY, getCurrentToken());
+                /* Parse an expression (for the condition) */
+                parseExpression();
+                expect(SymbolType.RBRACE, getCurrentToken());
 
-        /* Parse the if' statement's body AND expect a closing curly */
-        parseBody();
-        expect(SymbolType.CCURLY, getCurrentToken());
-        nextToken();
+                /* Opening { */
+                nextToken();
+                expect(SymbolType.OCURLY, getCurrentToken());
+
+                /* Parse the if' statement's body AND expect a closing curly */
+                parseBody();
+                expect(SymbolType.CCURLY, getCurrentToken());
+                nextToken();
+
+                hasIf = true;
+            }
+            else if (getSymbolType(getCurrentToken()) == SymbolType.ELSE && hasIf)
+            {
+                /* Pop off the `else` */
+                nextToken();
+
+                /* Check if we have an `if` after the `else` (so an "else if" statement) */
+                if (getSymbolType(getCurrentToken()) == SymbolType.IF && !reachedElse)
+                {
+                    /* Expect an opening brace `(` */
+                    expect(SymbolType.LBRACE, getCurrentToken());
+                    nextToken();
+
+                    /* Parse an expression (for the condition) */
+                    parseExpression();
+                    expect(SymbolType.RBRACE, getCurrentToken());
+
+                    /* Opening { */
+                    nextToken();
+                    expect(SymbolType.OCURLY, getCurrentToken());
+
+                    /* Parse the if' statement's body AND expect a closing curly */
+                    parseBody();
+                    expect(SymbolType.CCURLY, getCurrentToken());
+                    nextToken();
+                }
+                /* Check for opening brace (just an "else" statement) */
+                else if (getSymbolType(getCurrentToken()) == SymbolType.ELSE)
+                {
+                    /* TODO: Implement me */
+
+                    /* Opening { */
+                    nextToken();
+                    expect(SymbolType.OCURLY, getCurrentToken());
+
+                    /* Parse the if' statement's body AND expect a closing curly */
+                    parseBody();
+                    expect(SymbolType.CCURLY, getCurrentToken());
+                    nextToken();
+
+                    /* Don't allow anything to follow after this */
+                    reachedElse = true;
+                }
+                /* Error out for unexpected symbol or invalid reachedElse */
+                else
+                {
+                    /* TODO: Add error */
+                    /* TODO: DO we need this here? */
+                }
+
+            }
+            /* Error out if an else was simply placed */
+            else if(getSymbolType(getCurrentToken()) == SymbolType.ELSE && !hasIf)
+            {
+                expect("Else placed without previous if");
+            }
+            // /* If we get another `if` but already had one then exit, it's a new one to process */
+            // else if (getSymbolType(getCurrentToken()) == SymbolType.IF && hasIf)
+            // {
+            //     /* Leave this parseIf, it will be called again by caller (`parseBody()`) */
+            //     break;
+            // }
+            /* If we get an unknown, not an `if` or `else` */
+            else
+            {
+                /* TODO: Add error */
+                break;
+            }
+        }
 
         gprintln("parseIf(): Leave", DebugType.WARNING);
     }
@@ -308,7 +393,7 @@ public final class Parser
                 nextToken();
             }
             /* If it is a maths operator */
-            else if(isMathOp(getCurrentToken()))
+            else if (isMathOp(getCurrentToken()))
             {
                 /* TODO: Parse expression or pass arithemetic (I think latter) */
                 nextToken();
@@ -341,14 +426,14 @@ public final class Parser
                 }
             }
             /* Detect if this expression is coming to an end, then return */
-            else if(symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE)
+            else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE)
             {
                 break;
             }
             /**
             * For ()
             */
-            else if(symbol == SymbolType.LBRACE)
+            else if (symbol == SymbolType.LBRACE)
             {
                 /* Consume the `(` */
                 nextToken();

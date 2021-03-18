@@ -24,6 +24,7 @@ public enum SymbolType
     OCURLY,
     CCURLY,
     IF,
+    ELSE,
     WHILE,
     CLASS,
     INHERIT_OPP,
@@ -32,7 +33,6 @@ public enum SymbolType
     SUPER,
     THIS,
     SWITCH,
-    ELSE,
     RETURN,
     PUBLIC,
     PRIVATE,
@@ -153,6 +153,11 @@ public static SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "if") == 0)
     {
         return SymbolType.IF;
+    }
+    /* `else` */
+    else if(cmp(token, "else") == 0)
+    {
+        return SymbolType.ELSE;
     }
     /* `while` */
     else if(cmp(token, "while") == 0)
