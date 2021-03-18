@@ -189,11 +189,6 @@ public static SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.RETURN;
     }
-    /* else keyword */
-    else if(cmp(token, "else") == 0)
-    {
-        return SymbolType.ELSE;
-    }
     /* switch keyword */
     else if(cmp(token, "switch") == 0)
     {
