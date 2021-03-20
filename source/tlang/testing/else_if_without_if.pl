@@ -57,7 +57,7 @@ class clazz_2_1
                 print("Bruh");
             }
             
-            else
+            else if(1)
             {
                 print("Bhjkfd");
             }
