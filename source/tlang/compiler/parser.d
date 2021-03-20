@@ -90,11 +90,6 @@ public final class Parser
     {
         gprintln("parseIf(): Enter", DebugType.WARNING);
 
-        bool hasIf;
-        bool reachedElse;
-
-        ulong i = 0;
-
         while (hasTokens())
         {        
             /* This will only be called once (it is what caused a call to parseIf()) */
