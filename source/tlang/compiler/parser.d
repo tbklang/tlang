@@ -166,25 +166,15 @@ public final class Parser
                 /* Check for opening curly (just an "else" statement) */
                 else if (getSymbolType(getCurrentToken()) == SymbolType.OCURLY)
                 {
-                    /* TODO: Implement me */
-
-                    import std.stdio;
-                    writeln("EYO ELSE");
-
-                    /* Opening { */
-                    writeln("Bruh"~to!(string)(getCurrentToken()));
-                    // nextToken();
-
-                    /* Parse the if' statement's body AND expect a closing curly */
+                    /* Parse the if' statement's body (starting with `{` AND expect a closing curly */
                     parseBody();
                     expect(SymbolType.CCURLY, getCurrentToken());
                     nextToken();
 
-                    writeln("EYO ELSE (END):");
-                    writeln("Bruh"~to!(string)(getCurrentToken()));
-
                     /* Don't allow anything to follow after this */
                     reachedElse = true;
+
+                    //break;
                 }
                 /* Error out for unexpected symbol or invalid reachedElse */
                 else
