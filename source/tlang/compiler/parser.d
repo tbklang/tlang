@@ -203,6 +203,8 @@ public final class Parser
         gprintln("parseBody(): Enter", DebugType.WARNING);
 
         /* TODO: Implement body parsing */
+
+        /* Consume the `{` symbol */
         nextToken();
 
         /**
