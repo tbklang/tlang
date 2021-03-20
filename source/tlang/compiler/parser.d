@@ -96,20 +96,9 @@ public final class Parser
         ulong i = 0;
 
         while (hasTokens())
-        {
-            i++;
-            import std.stdio;
-            writeln("Token: "~getCurrentToken().getToken());
-            writeln("Current parseIf while: "~to!(string)(i));
-            writeln("Bababooey: "~to!(string)(getSymbolType(getCurrentToken()) == SymbolType.ELSE && hasIf));
-            // /* If else has been reached then exit */
-            // if(reachedElse)
-            // {
-            //     break;
-            // }
-            
-            /* TODO: Add tracking to not allow startign with `else` with no initial `if` */
-            if (getSymbolType(getCurrentToken()) == SymbolType.IF && !hasIf)
+        {        
+            /* This will only be called once (it is what caused a call to parseIf()) */
+            if (getSymbolType(getCurrentToken()) == SymbolType.IF)
             {
                 /* Pop off the `if` */
                 nextToken();
@@ -130,11 +119,8 @@ public final class Parser
                 parseBody();
                 expect(SymbolType.CCURLY, getCurrentToken());
                 nextToken();
-
-                writeln("American boy: "~getCurrentToken().getToken());
-
-                hasIf = true;
             }
+            /* If we get an else as the next symbol */
             else if (getSymbolType(getCurrentToken()) == SymbolType.ELSE)
             {
                 /* Pop off the `else` */
@@ -171,17 +157,15 @@ public final class Parser
                     expect(SymbolType.CCURLY, getCurrentToken());
                     nextToken();
 
-                    /* Don't allow anything to follow after this */
-                    reachedElse = true;
-
-                    //break;
+                    /* Exit, this is the end of the if statement as an else is reached */
+                    break;
                 }
                 /* Error out for unexpected symbol or invalid reachedElse */
                 else
                 {
                     /* TODO: Add error */
                     /* TODO: DO we need this here? */
-                    expect("fok");
+                    expect("Expected either if (for else if) or { for (else)");
                 }
 
             }
