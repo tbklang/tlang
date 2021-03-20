@@ -52,16 +52,15 @@ class clazz_2_1
             {
                 print("Hello");
             }
-            else if(1)
+            else
             {
                 print("Bruh");
             }
-            else
+            
+            else if(1)
             {
                 print("Bhjkfd");
             }
-
-            
 
 
             
