@@ -169,23 +169,9 @@ public final class Parser
                 }
 
             }
-            /* Error out if an else was simply placed */
-            else if(getSymbolType(getCurrentToken()) == SymbolType.ELSE && !hasIf)
-            {
-                expect("Else placed without previous if");
-            }
-            // /* If we get another `if` but already had one then exit, it's a new one to process */
-            // else if (getSymbolType(getCurrentToken()) == SymbolType.IF && hasIf)
-            // {
-            //     /* Leave this parseIf, it will be called again by caller (`parseBody()`) */
-            //     break;
-            // }
-            /* If we get an unknown, not an `if` or `else` */
+            /* If we get anything else, then we are done with if statement */
             else
             {
-                /* TODO: Add error */
-                import std.stdio;
-                writeln("Bruh"~to!(string)(getCurrentToken()));
                 break;
             }
         }
@@ -282,8 +268,8 @@ public final class Parser
             /* Error out */
             else
             {
-                gprintln("parseBody(): Unknown symbol: " ~ getCurrentToken()
-                        .getToken(), DebugType.ERROR);
+                expect("parseBody(): Unknown symbol: " ~ getCurrentToken()
+                        .getToken());
             }
         }
 
