@@ -27,14 +27,7 @@ class clazz_2_1
                 print("Hello");
             }
             
-            if(1)
-            {
-                
-            }
-            else
-            {
-                
-            }
+            
 
             if(1)
             {
