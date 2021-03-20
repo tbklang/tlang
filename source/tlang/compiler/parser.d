@@ -93,8 +93,15 @@ public final class Parser
         bool hasIf;
         bool reachedElse;
 
+        ulong i = 0;
+
         while (hasTokens())
         {
+            i++;
+            import std.stdio;
+            writeln("Token: "~getCurrentToken().getToken());
+            writeln("Current parseIf while: "~to!(string)(i));
+            writeln("Bababooey: "~to!(string)(getSymbolType(getCurrentToken()) == SymbolType.ELSE && hasIf));
             // /* If else has been reached then exit */
             // if(reachedElse)
             // {
@@ -123,6 +130,8 @@ public final class Parser
                 parseBody();
                 expect(SymbolType.CCURLY, getCurrentToken());
                 nextToken();
+
+                writeln("American boy: "~getCurrentToken().getToken());
 
                 hasIf = true;
             }
@@ -164,7 +173,7 @@ public final class Parser
 
                     /* Opening { */
                     writeln("Bruh"~to!(string)(getCurrentToken()));
-                    nextToken();
+                    // nextToken();
 
                     /* Parse the if' statement's body AND expect a closing curly */
                     parseBody();
