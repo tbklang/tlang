@@ -127,7 +127,7 @@ public final class Parser
                 nextToken();
 
                 /* Check if we have an `if` after the `{` (so an "else if" statement) */
-                if (getSymbolType(getCurrentToken()) == SymbolType.IF && !reachedElse)
+                if (getSymbolType(getCurrentToken()) == SymbolType.IF)
                 {
                     /* Pop off the `if` */
                     nextToken();

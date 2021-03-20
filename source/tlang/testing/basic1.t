@@ -26,7 +26,23 @@ class clazz_2_1
             {
                 print("Hello");
             }
-            
+            else if(1)
+            {
+                print("Bruh");
+            }
+            else
+            {
+                print("Bhjkfd");
+            }
+
+            if(1)
+            {
+                print("Hello");
+            }
+            else if(1)
+            {
+                print("Bruh");
+            }
             else
             {
                 print("Bhjkfd");
