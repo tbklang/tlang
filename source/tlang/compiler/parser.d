@@ -135,7 +135,7 @@ public final class Parser
 
                 hasIf = true;
             }
-            else if (getSymbolType(getCurrentToken()) == SymbolType.ELSE && hasIf)
+            else if (getSymbolType(getCurrentToken()) == SymbolType.ELSE)
             {
                 /* Pop off the `else` */
                 nextToken();
