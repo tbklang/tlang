@@ -160,14 +160,11 @@ public final class Parser
                     /* Exit, this is the end of the if statement as an else is reached */
                     break;
                 }
-                /* Error out for unexpected symbol or invalid reachedElse */
+                /* Error out if no `{` or `if` */
                 else
                 {
-                    /* TODO: Add error */
-                    /* TODO: DO we need this here? */
                     expect("Expected either if (for else if) or { for (else)");
                 }
-
             }
             /* If we get anything else, then we are done with if statement */
             else
