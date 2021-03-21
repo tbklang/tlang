@@ -8,7 +8,7 @@ class clazz1
     print("Hello world");
 }
 
-class clazz_2_1
+class clazz_2_1 : bruh
 {
     class clazz_2_2
     {

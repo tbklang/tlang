@@ -507,10 +507,44 @@ public final class Parser
         expect(SymbolType.IDENTIFIER, getCurrentToken());
         string className = getCurrentToken().getToken();
         gprintln("parseClass(): Class name found '" ~ className ~ "'");
-
-        /* Expect a `{` */
         nextToken();
-        expect(SymbolType.OCURLY, getCurrentToken());
+
+
+        /* TODO: If we have the inherit symbol `:` */
+        if(getSymbolType(getCurrentToken()) == SymbolType.INHERIT_OPP)
+        {
+            /* TODO: Loop until `}` */
+
+            /* Consume the inheritance operator `:` */
+            nextToken();
+
+            while(true)
+            {
+                /* Check if it is an identifier */
+                expect(SymbolType.IDENTIFIER, getCurrentToken());
+                nextToken();
+
+                /* Check if we have ended with a `{` */
+                if(getSymbolType(getCurrentToken()) == SymbolType.OCURLY)
+                {
+                    /* Exit */
+                    break;
+                }
+                /* If we get a comma */
+                else if(getSymbolType(getCurrentToken()) == SymbolType.COMMA)
+                {
+                    /* Consume */
+                    nextToken();
+                }
+                /* Error out if we get anything else */
+                else
+                {
+                    expect("Expected either { or ,");
+                }
+            }
+        }
+        
+        /* TODO: Go through all classes comma seperated */
 
         /* Parse a body */
         parseBody();
