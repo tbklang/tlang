@@ -286,46 +286,64 @@ public final class Parser
         /* Count for number of parameters processed */
         ulong parameterCount;
 
+        /* Expecting more arguments */
+        bool moreArgs;
+
         /* Get command-line arguments */
         while (hasTokens())
         {
-            /* Expect a type */
-            string type = getCurrentToken().getToken();
-            expect(SymbolType.TYPE, getCurrentToken());
-            nextToken();
-
-            /* Expect an identifier */
-            expect(SymbolType.IDENTIFIER, getCurrentToken());
-            string identifier = getCurrentToken().getToken();
-            nextToken();
-
-            parameterCount++;
-
-            /* Check if RBRACE/ `)` */
-            if (getSymbolType(getCurrentToken()) == SymbolType.RBRACE)
+            /* Check if the first thing is a type */
+            if(getSymbolType(getCurrentToken()) == SymbolType.TYPE)
             {
-                nextToken();
-                expect(SymbolType.OCURLY, getCurrentToken());
-
-                /* Parse the body (and it leaves ONLY when it gets the correct symbol, no expect needed) */
-                parseBody();
+                /* Get the type */
+                string type = getCurrentToken().getToken();
                 nextToken();
 
-                break;
+                /* Get the identifier */
+                expect(SymbolType.IDENTIFIER, getCurrentToken());
+                string identifier = getCurrentToken().getToken();
+                nextToken();
+
+                moreArgs = false;
+
+                parameterCount++;
             }
-            else if (getSymbolType(getCurrentToken()) == SymbolType.COMMA)
+            /* If we get a comma */
+            else if(getSymbolType(getCurrentToken()) == SymbolType.COMMA)
             {
+                /* Consume the `,` */
                 nextToken();
+
+                moreArgs = true;
             }
+            /* Check if it is a closing brace */
+            else if(getSymbolType(getCurrentToken()) == SymbolType.RBRACE)
+            {
+                /* Make sure we were not expecting more arguments */
+                if(!moreArgs)
+                {
+                    /* Consume the `)` */
+                    nextToken();
+                    break;
+                }
+                /* Error out if we were and we prematurely ended */
+                else
+                {
+                    expect(SymbolType.IDENTIFIER, getCurrentToken());
+                }
+            }
+            /* Error out */
             else
             {
-                /* TODO: Error */
-                expect("Expecting either ) or , but got " ~ getCurrentToken().getToken());
+                expect("Expected either type or )");
             }
-
-            gprintln("ParseFuncDef: ParameterDec: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")",
-                    DebugType.WARNING);
         }
+
+        expect(SymbolType.OCURLY, getCurrentToken());
+
+        /* Parse the body (and it leaves ONLY when it gets the correct symbol, no expect needed) */
+        parseBody();
+        nextToken();
 
         gprintln("ParseFuncDef: Parameter count: " ~ to!(string)(parameterCount));
         gprintln("parseFuncDef(): Leave", DebugType.WARNING);
@@ -543,8 +561,6 @@ public final class Parser
                 }
             }
         }
-        
-        /* TODO: Go through all classes comma seperated */
 
         /* Parse a body */
         parseBody();

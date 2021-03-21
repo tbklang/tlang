@@ -126,8 +126,16 @@ void main(int hello, byte d)
     }
 }
 
+void pdsjhfjdsf(int j)
+{
+
+}
+
 void k(int j, int k)
 {
+
+   
+
     ubyte thing = "Hello";
     print("Hello world");
     print(1+1);
