@@ -325,8 +325,10 @@ public final class Parser
     }
 
     /* STATUS: Not being used yet */
-    private void parseAccessor()
+    private Statement parseAccessor()
     {
+        Statement statement;
+
         /* Save and consume the accessor */
         AccessorType accessorType = getAccessorType(getCurrentToken());
         nextToken();
@@ -340,18 +342,22 @@ public final class Parser
         /* If class */
         if(symbolType == SymbolType.CLASS)
         {
+            /* TODO: Set accessor on returned thing */
             parseClass();
         }
         /* If typed-definition (function or variable) */
         else if(symbolType == SymbolType.TYPE)
         {
-            parseTypedDeclaration();
+            /* TODO: Set accesor on returned thing */
+            statement = parseTypedDeclaration();
         }
         /* Error out */
         else
         {
             expect("Expected either function definition, variable declaration or class definition");
         }
+
+        return statement;
     }
 
     private void parseFunctionArguments()
@@ -799,7 +805,10 @@ public final class Parser
             /* If it is an accessor */
             else if (isAccessor(tok))
             {
-                parseAccessor();
+                Statement statement = parseAccessor();
+
+                /* TODO: Tets case has classes which null statement, will crash */
+                program.addStatement(statement);
             }
             /* If it is a class */
             else if (symbol == SymbolType.CLASS)
