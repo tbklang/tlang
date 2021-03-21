@@ -23,6 +23,8 @@ public enum FunctionType
     STATIC, VIRTUAL
 }
 
+bool isUnitTest;
+
 public final class Parser
 {
     /**
@@ -57,7 +59,15 @@ public final class Parser
     {
         //throw new TError(message);
         gprintln(message, DebugType.ERROR);
-        exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
+
+        if(isUnitTest)
+        {
+            assert(false);
+        }
+        else
+        {
+            exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
+        }
     }
 
     /**
@@ -746,4 +756,65 @@ public final class Parser
 unittest
 {
     /* TODO: Add some unit tests */
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+
+    string sourceFile = "source/tlang/testing/basic1.t";
+    
+        File sourceFileFile;
+        sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+        ulong fileSize = sourceFileFile.size();
+        byte[] fileBytes;
+        fileBytes.length = fileSize;
+        fileBytes = sourceFileFile.rawRead(fileBytes);
+        sourceFileFile.close();
+
+    
+
+        /* TODO: Open source file */
+        string sourceCode = cast(string)fileBytes;
+        // string sourceCode = "hello \"world\"|| ";
+        //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
+        // string sourceCode = "hello;";
+        Lexer currentLexer = new Lexer(sourceCode);
+        currentLexer.performLex();
+        
+      
+        Parser parser = new Parser(currentLexer.getTokens());
+        parser.parse();
 }
+
+
+unittest
+{
+    /* TODO: Add some unit tests */
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+
+    string sourceFile = "source/tlang/testing/basic2.t";
+    
+        File sourceFileFile;
+        sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+        ulong fileSize = sourceFileFile.size();
+        byte[] fileBytes;
+        fileBytes.length = fileSize;
+        fileBytes = sourceFileFile.rawRead(fileBytes);
+        sourceFileFile.close();
+
+    
+
+        /* TODO: Open source file */
+        string sourceCode = cast(string)fileBytes;
+        // string sourceCode = "hello \"world\"|| ";
+        //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
+        // string sourceCode = "hello;";
+        Lexer currentLexer = new Lexer(sourceCode);
+        currentLexer.performLex();
+        
+      
+        Parser parser = new Parser(currentLexer.getTokens());
+        parser.parse();
+}
+
