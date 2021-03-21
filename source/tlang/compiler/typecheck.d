@@ -14,6 +14,9 @@ public final class TypeChecker
     this(Program program)
     {
         import std.stdio;
-        writeln("Got globals: "~to!(string)(program.getGlobals()));
+        writeln("Got globals: "~to!(string)(program.getAllOf(new Variable(null, null))));
+        writeln("Got functions: "~to!(string)(program.getAllOf(new Function(null, null, null, null))));
+        writeln("Got classes: "~to!(string)(program.getAllOf(new Clazz(null))));
+        
     }
 }
