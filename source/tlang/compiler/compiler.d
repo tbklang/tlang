@@ -5,6 +5,8 @@ import std.conv : to;
 import compiler.lexer;
 import std.stdio : File;
 import compiler.parser;
+import compiler.symbols;
+import compiler.typecheck;
 
 void beginCompilation(string[] sourceFiles)
 {
@@ -37,6 +39,9 @@ void beginCompilation(string[] sourceFiles)
 
         gprintln("Parsing tokens...");
         Parser parser = new Parser(currentLexer.getTokens());
-        parser.parse();
+        Program program = parser.parse();
+
+        gprintln("Type checking and symbol resolution...");
+        TypeChecker typeChecker = new TypeChecker(program);
     }
 }
