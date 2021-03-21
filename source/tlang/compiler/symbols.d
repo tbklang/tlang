@@ -328,8 +328,27 @@ public class Program
 {
     private string moduleName;
     private Program[] importedModules;
-    private Variable[] globals;
-    private Function[] functions;
+
+    private Statement[] statements;
+
+    this(string moduleName)
+    {
+        this.moduleName = moduleName;
+    }
+
+    public void addStatement(Statement statement)
+    {
+        statements ~= statement;
+    }
+
+    public Variable[] getGlobals()
+    {
+        Variable[] variables;
+
+        // foreach()
+
+        return variables;
+    }
 }
 
 public class Statement {}
@@ -390,7 +409,7 @@ public class Function : TypedEntity
 
         foreach(Statement statement; bodyStatements)
         {
-            if(statement !is null && typeid(statement) == typeid(Variable))
+            if(typeid(statement) == typeid(Variable))
             {
                 variables ~= cast(Variable)statement;
             }
@@ -435,7 +454,7 @@ public class Expression : Statement
 {
     this(Expression[] expressions)
     {
-        
+
     }
 }
 
