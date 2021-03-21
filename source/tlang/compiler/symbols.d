@@ -419,9 +419,9 @@ public class Clazz : Entity
         this.name = name;
     }
 
-    public void addStatement(Statement statement)
+    public void addStatements(Statement[] statements)
     {
-        statements ~= statement;
+        this.statements ~= statements;
     }
     
 }

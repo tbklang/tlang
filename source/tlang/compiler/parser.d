@@ -317,9 +317,9 @@ public final class Parser
     }
 
     /* STATUS: Not being used yet */
-    private Statement parseAccessor()
+    private Entity parseAccessor()
     {
-        Statement statement;
+        Entity entity;
 
         /* Save and consume the accessor */
         AccessorType accessorType = getAccessorType(getCurrentToken());
@@ -335,13 +335,13 @@ public final class Parser
         if(symbolType == SymbolType.CLASS)
         {
             /* TODO: Set accessor on returned thing */
-            parseClass();
+            entity = parseClass();
         }
         /* If typed-definition (function or variable) */
         else if(symbolType == SymbolType.TYPE)
         {
             /* TODO: Set accesor on returned thing */
-            statement = parseTypedDeclaration();
+            entity = parseTypedDeclaration();
         }
         /* Error out */
         else
@@ -349,7 +349,9 @@ public final class Parser
             expect("Expected either function definition, variable declaration or class definition");
         }
 
-        return statement;
+        entity.setAccessorType(accessorType);
+
+        return entity;
     }
 
     private void parseFunctionArguments()
@@ -642,7 +644,7 @@ public final class Parser
     * This is called when there is an occurrence of
     * a token `class`
     */
-    private void parseClass()
+    private Clazz parseClass()
     {
         gprintln("parseClass(): Enter", DebugType.WARNING);
 
@@ -696,12 +698,15 @@ public final class Parser
 
         /* TODO: Technically we should be more specific, this does too much */
         /* Parse a body */
-        parseBody();
+        Statement[] statements = parseBody();
+        generated.addStatements(statements);
 
         /* Pop off the ending `}` */
         nextToken();
 
         gprintln("parseClass(): Leave", DebugType.WARNING);
+
+        return generated;
     }
 
     private void parseStatement()
@@ -805,7 +810,10 @@ public final class Parser
             /* If it is a class */
             else if (symbol == SymbolType.CLASS)
             {
-                parseClass();
+                Clazz clazz = parseClass();
+
+                /* Add the class definition to the program */
+                program.addStatement(clazz);
             }
             else
             {
