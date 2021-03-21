@@ -276,6 +276,37 @@ public final class Parser
         gprintln("parseBody(): Leave", DebugType.WARNING);
     }
 
+    private void parseAccessor()
+    {
+        /* Save and consume the accessor */
+        string accessor = getCurrentToken().getToken();
+        nextToken();
+
+        /* TODO: Only allow, private, public, protected */
+        /* TODO: Pass this to call for class prsewr or whatever comes after the accessor */
+
+        /* Get the current token's symbol type */
+        SymbolType symbolType = getSymbolType(getCurrentToken());
+
+        /* Before calling any, consume the token (accessor) */
+        nextToken();
+
+        /* If class */
+        if(symbolType == SymbolType.CLASS)
+        {
+
+        }
+        /* If typed-definition (function or variable) */
+        else if(symbolType == SymbolType.TYPE)
+        {
+            /* TODO: Call parseClass with parseClass(View=) */
+        }
+        /* Error out */
+        else
+        {
+            expect("Expected either function definition, variable declaration or class definition");
+        }
+    }
 
     private void parseFunctionArguments()
     {
