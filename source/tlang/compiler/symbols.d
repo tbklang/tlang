@@ -37,6 +37,7 @@ public enum SymbolType
     RETURN,
     PUBLIC,
     PRIVATE,
+    PROTECTED,
     STATIC,
     CASE,
     GOTO,
@@ -59,7 +60,7 @@ public class Symbol
 }
 
 /* TODO: Later build classes specific to symbol */
-public static bool isType(string tokenStr)
+public bool isType(string tokenStr)
 {
     return cmp(tokenStr, "byte") == 0 || cmp(tokenStr, "ubyte") == 0
         || cmp(tokenStr, "short") == 0 || cmp(tokenStr, "ushort") == 0
@@ -70,7 +71,7 @@ public static bool isType(string tokenStr)
 /**
 * Checks if the given character is a letter
 */
-private static bool isCharacterAlpha(char character)
+private bool isCharacterAlpha(char character)
 {
     return (character >= 65 && character <= 90) || (character >= 97 && character <= 122);
 }
@@ -78,12 +79,12 @@ private static bool isCharacterAlpha(char character)
 /**
 * Checks if the given character is a number
 */
-private static bool isCharacterNumber(char character)
+private bool isCharacterNumber(char character)
 {
     return (character >= 48 && character <= 57);
 }
 
-private static bool isIdentifier(string token)
+private bool isIdentifier(string token)
 {
     /* This is used to prevent the first character from not being number */
     bool isFirstRun = true;
@@ -120,7 +121,14 @@ private static bool isIdentifier(string token)
     return true;
 }
 
-public static SymbolType getSymbolType(Token tokenIn)
+public bool isAccessor(Token token)
+{
+    return getSymbolType(token) == SymbolType.PUBLIC ||
+            getSymbolType(token) == SymbolType.PRIVATE ||
+            getSymbolType(token) == SymbolType.PROTECTED;
+}
+
+public SymbolType getSymbolType(Token tokenIn)
 {
     string token = tokenIn.getToken();
     /* TODO: Get symbol type of token */
@@ -308,11 +316,13 @@ public bool isMathOp(Token token)
 * These are just to use for keeping track of what
 * valid identifiers are.
 *
-* The are NOT used for code gen
+* Actually it might be, yeah it will
 */
 
 public class Program
 {
+    private string moduleName;
+    private Program[] importedModules;
     private Variable[] globals;
     private Function[] functions;
 }
@@ -329,6 +339,8 @@ public class Variable
 {
     private string type;
     private string identifier;
+
+    /* Code gen */
 }
 
 
