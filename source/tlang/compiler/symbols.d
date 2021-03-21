@@ -375,31 +375,54 @@ public class Program
 
 public class Statement {}
 
-public class TypedEntity : Statement {}
+public enum AccessorType
+{
+    PUBLIC, PRIVATE, PROTECTED, UNKNOWN
+}
+
+public enum FunctionType
+{
+    STATIC, VIRTUAL
+}
+
+/* Declared variables, defined classes and fucntions */
+public class Entity : Statement
+{
+    /* Accesor type */
+    private AccessorType accessorType = AccessorType.PUBLIC;
+
+    public void setAccessorType(AccessorType accessorType)
+    {
+        this.accessorType = accessorType;
+    }
+
+    public AccessorType getAccessorType()
+    {
+        return accessorType;
+    }
+}
+
+/* TODO: DO we need intermediary class, TypedEntity */
+public class TypedEntity : Entity {}
 
 
-public class Clazz : Statement
+public class Clazz : Entity
 {
     private string name;
+    private string parentClass;
+    private string[] interfaces;
 
-    private Variable[] fields;
-    private Function[] methods;
+    private Statement[] statements;
 
     this(string name)
     {
         this.name = name;
     }
 
-    public void addField(Variable field)
+    public void addStatement(Statement statement)
     {
-        fields ~= field;
+        statements ~= statement;
     }
-
-    public void addMethod(Function method)
-    {
-        methods ~= method;
-    }
-
     
 }
 

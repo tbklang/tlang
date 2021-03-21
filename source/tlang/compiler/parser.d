@@ -13,15 +13,7 @@ import misc.exceptions : TError;
 
 // }
 
-public enum AccessorType
-{
-    PUBLIC, PRIVATE, PROTECTED, UNKNOWN
-}
 
-public enum FunctionType
-{
-    STATIC, VIRTUAL
-}
 
 bool isUnitTest;
 
