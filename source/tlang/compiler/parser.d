@@ -15,7 +15,7 @@ import misc.exceptions : TError;
 
 public enum AccessorType
 {
-    PUBLIC, PRIVATE, PROTECTED
+    PUBLIC, PRIVATE, PROTECTED, UNKNOWN
 }
 
 public enum FunctionType
@@ -239,6 +239,11 @@ public final class Parser
                 /* Might be a function, might be a variable */
                 parseTypedDeclaration();
             }
+            /* If it is an accessor */
+            else if (isAccessor(tok))
+            {
+                parseAccessor();
+            }
             /* If it is a branch */
             else if (symbol == SymbolType.IF)
             {
@@ -286,11 +291,31 @@ public final class Parser
         gprintln("parseBody(): Leave", DebugType.WARNING);
     }
 
+    private AccessorType getAccessorType(Token token)
+    {
+        if(getSymbolType(token) == SymbolType.PUBLIC)
+        {
+            return AccessorType.PUBLIC;
+        }
+        else if(getSymbolType(token) == SymbolType.PROTECTED)
+        {
+            return AccessorType.PROTECTED;
+        }
+        else if(getSymbolType(token) == SymbolType.PRIVATE)
+        {
+            return AccessorType.PRIVATE;
+        }
+        else
+        {
+            return AccessorType.UNKNOWN;
+        }
+    }
+
     /* STATUS: Not being used yet */
     private void parseAccessor()
     {
         /* Save and consume the accessor */
-        string accessor = getCurrentToken().getToken();
+        AccessorType accessorType = getAccessorType(getCurrentToken());
         nextToken();
 
         /* TODO: Only allow, private, public, protected */
@@ -299,18 +324,15 @@ public final class Parser
         /* Get the current token's symbol type */
         SymbolType symbolType = getSymbolType(getCurrentToken());
 
-        /* Before calling any, consume the token (accessor) */
-        nextToken();
-
         /* If class */
         if(symbolType == SymbolType.CLASS)
         {
-
+            parseClass(accessorType);
         }
         /* If typed-definition (function or variable) */
         else if(symbolType == SymbolType.TYPE)
         {
-            /* TODO: Call parseClass with parseClass(View=) */
+            parseTypedDeclaration(accessorType);
         }
         /* Error out */
         else
@@ -497,7 +519,7 @@ public final class Parser
         gprintln("parseExpression(): Leave", DebugType.WARNING);
     }
 
-    private void parseTypedDeclaration()
+    private void parseTypedDeclaration(AccessorType accessorType = AccessorType.PUBLIC)
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
 
@@ -563,7 +585,7 @@ public final class Parser
     * This is called when there is an occurrence of
     * a token `class`
     */
-    private void parseClass()
+    private void parseClass(AccessorType accessorType = AccessorType.PUBLIC)
     {
         gprintln("parseClass(): Enter", DebugType.WARNING);
 

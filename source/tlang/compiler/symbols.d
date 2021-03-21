@@ -193,6 +193,11 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.PUBLIC;
     }
+    /* protected keyword */
+    else if(cmp(token, "protected") == 0)
+    {
+        return SymbolType.PROTECTED;
+    }
     /* return keyword */
     else if(cmp(token, "return") == 0)
     {

@@ -4,9 +4,12 @@ module bababoioey;
 int x;
 ubyte y;
 
-ubyte k = 1;
+public ubyte k = 1;
+private ubyte k = 1;
+protected ubyte k = 1;
 
-class clazz1
+
+public class clazz1
 {
     print("Hello world");
 }
@@ -15,13 +18,13 @@ class clazz_2_1 : bruh
 {
     class clazz_2_2
     {
-        class clazz_2_2_1 : bruh, bruh2
+        private class clazz_2_2_1 : bruh, bruh2
         {
 
         }
     }
 
-    class clazz_2_3
+    protected class clazz_2_3
     {
         class clazz_2_3_1
         {
@@ -89,7 +92,7 @@ class clazz_2_1 : bruh
 }
 
 
-void main(int hello, byte d)
+public void main(int hello, byte d)
 {
 
     void bruh()
