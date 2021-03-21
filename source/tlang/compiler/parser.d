@@ -701,6 +701,11 @@ public final class Parser
 
                 gprintln("parse()::woah: Current token: " ~ tok.getToken());
             }
+            /* If it is an accessor */
+            else if (isAccessor(tok))
+            {
+                parseAccessor();
+            }
             /* If it is a class */
             else if (symbol == SymbolType.CLASS)
             {
