@@ -760,6 +760,8 @@ unittest
     import std.stdio;
     import compiler.lexer;
 
+    isUnitTest = true;
+
     string sourceFile = "source/tlang/testing/basic1.t";
     
         File sourceFileFile;
@@ -792,6 +794,8 @@ unittest
     import std.file;
     import std.stdio;
     import compiler.lexer;
+
+    isUnitTest = true;
 
     string sourceFile = "source/tlang/testing/basic2.t";
     
