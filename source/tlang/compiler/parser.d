@@ -752,19 +752,27 @@ public final class Parser
     * one to define classes within functions
     */
     /* TODO: Variables should be allowed to have letters in them and underscores */
-    public void parse()
+    public Program parse()
     {
         gprintln("parse(): Enter", DebugType.WARNING);
+
+        Program program;
 
         /* TODO: Do parsing here */
 
         /* Expect `module` and module name and consume them (and `;`) */
         expect(SymbolType.MODULE, getCurrentToken());
         nextToken();
+
         expect(SymbolType.IDENTIFIER, getCurrentToken());
+        string programName = getCurrentToken().getToken();
         nextToken();
+
         expect(SymbolType.SEMICOLON, getCurrentToken());
         nextToken();
+
+        /* Initialize Program */
+        program = new Program(programName);
 
         /* TODO: do `hasTokens()` check */
         /* TODO: We should add `hasTokens()` to the `nextToken()` */
@@ -783,9 +791,10 @@ public final class Parser
             if (symbol == SymbolType.TYPE)
             {
                 /* Might be a function, might be a variable */
-                parseTypedDeclaration();
+                TypedEntity varFunc = parseTypedDeclaration();
 
-                gprintln("parse()::woah: Current token: " ~ tok.getToken());
+                /* Add this statement to the program's statement list */
+                program.addStatement(varFunc);
             }
             /* If it is an accessor */
             else if (isAccessor(tok))
@@ -804,6 +813,8 @@ public final class Parser
         }
 
         gprintln("parse(): Leave", DebugType.WARNING);
+
+        return program;
     }
 }
 
