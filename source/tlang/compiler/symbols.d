@@ -295,6 +295,38 @@ public bool isMathOp(Token token)
             tokenStr[0] == '*' || tokenStr[0] == '/';
 }
 
+
+/**
+* TODO: Implement the blow and use them
+*
+* These are just to use for keeping track of what
+* valid identifiers are.
+*
+* The are NOT used for code gen
+*/
+
+public class Program
+{
+    private Variable[] globals;
+    private Function[] functions;
+}
+
+public class Function
+{
+    /* The residing program */
+    private Program program;
+
+    private Variable[] locals;
+}
+
+public class Variable
+{
+    private string type;
+    private string identifier;
+}
+
+
+
 /* Test: Character literal */
 unittest
 {
