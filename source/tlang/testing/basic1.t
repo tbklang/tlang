@@ -88,6 +88,12 @@ class clazz_2_1 : bruh
 
 void main(int hello, byte d)
 {
+
+    void bruh()
+    {
+
+    }
+
     ubyte thing = "Hello";
     print("Hello world");
     print(1+1);
@@ -174,5 +180,8 @@ void k(int j, int k)
     }
 }
 
-
+void bruh()
+    {
+        
+    }
 

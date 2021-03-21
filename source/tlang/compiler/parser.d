@@ -276,6 +276,13 @@ public final class Parser
         gprintln("parseBody(): Leave", DebugType.WARNING);
     }
 
+
+    private void parseFunctionArguments()
+    {
+        /* TODO: Use later */
+        /* TODO: Add support for default values for function arguments */
+    }
+
     private void parseFuncDef()
     {
         gprintln("parseFuncDef(): Enter", DebugType.WARNING);
