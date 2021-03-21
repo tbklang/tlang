@@ -337,12 +337,12 @@ public final class Parser
         /* If class */
         if(symbolType == SymbolType.CLASS)
         {
-            parseClass(accessorType);
+            parseClass();
         }
         /* If typed-definition (function or variable) */
         else if(symbolType == SymbolType.TYPE)
         {
-            parseTypedDeclaration(accessorType);
+            parseTypedDeclaration();
         }
         /* Error out */
         else
@@ -529,7 +529,7 @@ public final class Parser
         gprintln("parseExpression(): Leave", DebugType.WARNING);
     }
 
-    private void parseTypedDeclaration(AccessorType accessorType = AccessorType.PUBLIC)
+    private void parseTypedDeclaration()
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
 
@@ -595,7 +595,7 @@ public final class Parser
     * This is called when there is an occurrence of
     * a token `class`
     */
-    private void parseClass(AccessorType accessorType = AccessorType.PUBLIC)
+    private void parseClass()
     {
         gprintln("parseClass(): Enter", DebugType.WARNING);
 
