@@ -23,6 +23,7 @@ public enum SymbolType
     COMMA,
     OCURLY,
     CCURLY,
+    MODULE,
     IF,
     ELSE,
     WHILE,
@@ -228,6 +229,11 @@ public static SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "delete") == 0)
     {
         return SymbolType.DELETE;
+    }
+    /* module keyword */
+    else if(cmp(token, "module") == 0)
+    {
+        return SymbolType.MODULE;
     }
     /* Identifier check (TODO: Track vars) */
     else if (isIdentifier(token))

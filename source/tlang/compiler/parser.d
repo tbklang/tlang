@@ -672,6 +672,18 @@ public final class Parser
 
         /* TODO: Do parsing here */
 
+        /* Expect `module` and module name and consume them (and `;`) */
+        expect(SymbolType.MODULE, getCurrentToken());
+        nextToken();
+        expect(SymbolType.IDENTIFIER, getCurrentToken());
+        nextToken();
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+        nextToken();
+
+        /* TODO: do `hasTokens()` check */
+        /* TODO: We should add `hasTokens()` to the `nextToken()` */
+        /* TODO: And too the `getCurrentTokem()` and throw an error when we have ran out rather */
+
         /* We can have an import or vardef or funcdef */
         while (hasTokens())
         {
