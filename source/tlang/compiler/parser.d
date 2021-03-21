@@ -218,11 +218,12 @@ public final class Parser
         gprintln("parseWhile(): Leave", DebugType.WARNING);
     }
 
-    private void parseBody()
+    private Statement[] parseBody()
     {
         gprintln("parseBody(): Enter", DebugType.WARNING);
 
         /* TODO: Implement body parsing */
+        Statement[] statements;
 
         /* Consume the `{` symbol */
         nextToken();
@@ -247,7 +248,7 @@ public final class Parser
             if (symbol == SymbolType.TYPE)
             {
                 /* Might be a function, might be a variable */
-                parseTypedDeclaration();
+                statements ~= parseTypedDeclaration();
             }
             /* If it is an accessor */
             else if (isAccessor(tok))
@@ -299,6 +300,8 @@ public final class Parser
         }
 
         gprintln("parseBody(): Leave", DebugType.WARNING);
+
+        return statements;
     }
 
     private AccessorType getAccessorType(Token token)
@@ -357,9 +360,20 @@ public final class Parser
         /* TODO: Add support for default values for function arguments */
     }
 
-    private void parseFuncDef()
+    private struct funcDefPair
+    {
+        Statement[] bodyStatements;
+        ArgumentList[] args;
+    }
+
+    private funcDefPair parseFuncDef()
     {
         gprintln("parseFuncDef(): Enter", DebugType.WARNING);
+
+        Statement[] statements;
+        ArgumentList[] argumentList;
+        funcDefPair bruh;
+        
 
         /* Consume the `(` token */
         nextToken();
@@ -423,11 +437,15 @@ public final class Parser
         expect(SymbolType.OCURLY, getCurrentToken());
 
         /* Parse the body (and it leaves ONLY when it gets the correct symbol, no expect needed) */
-        parseBody();
+        statements = parseBody();
         nextToken();
 
         gprintln("ParseFuncDef: Parameter count: " ~ to!(string)(parameterCount));
         gprintln("parseFuncDef(): Leave", DebugType.WARNING);
+
+        bruh.bodyStatements = statements;
+        bruh.args = argumentList;
+        return bruh;
     }
 
     /**
@@ -443,9 +461,13 @@ public final class Parser
     * We will also terminate on `;` or `)` and that means our `else` can be
     * left to error out for unknowns then
     */
-    private void parseExpression()
+    private Expression parseExpression()
     {
         gprintln("parseExpression(): Enter", DebugType.WARNING);
+
+        Expression expression;
+
+        Expression[] expressions;
 
         /* TODO: Implement expression parsing */
 
@@ -527,11 +549,20 @@ public final class Parser
         }
 
         gprintln("parseExpression(): Leave", DebugType.WARNING);
+
+        expression = new Expression(expressions);
+
+        return expression;
     }
 
-    private void parseTypedDeclaration()
+    private TypedEntity parseTypedDeclaration()
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
+
+
+        /* Generated object */
+        TypedEntity generated;
+
 
         /* TODO: Save type */
         string type = getCurrentToken().getToken();
@@ -550,8 +581,15 @@ public final class Parser
         gprintln("ParseTypedDec: SymbolType=" ~ to!(string)(symbolType));
         if (symbolType == SymbolType.LBRACE)
         {
-            parseFuncDef();
+            funcDefPair pair = parseFuncDef();
 
+            generated = new Function(identifier, type, pair.bodyStatements, pair.args);
+            
+
+
+            import std.stdio;
+            
+            writeln(to!(string)((cast(Function)generated).getVariables()));
         }
         /* Check for semi-colon (var dec) */
         else if (symbolType == SymbolType.SEMICOLON)
@@ -559,6 +597,8 @@ public final class Parser
             nextToken();
             gprintln("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")",
                     DebugType.WARNING);
+
+            generated = new Variable(type, identifier);
         }
         /* Check for `=` (var dec) */
         else if (symbolType == SymbolType.ASSIGN)
@@ -566,7 +606,9 @@ public final class Parser
             nextToken();
 
             /* Now parse an expression */
-            parseExpression();
+            Expression expression = parseExpression();
+
+            VariableAssignment varAssign = new VariableAssignment(expression);
 
             /**
             * The symbol that returned us from `parseExpression` must
@@ -578,6 +620,11 @@ public final class Parser
 
             gprintln("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
                     ~ type ~ ", Identifier: " ~ identifier ~ ")", DebugType.WARNING);
+            
+            Variable variable = new Variable(identifier, type);
+            variable.addAssignment(varAssign);
+
+            generated = variable;
         }
         else
         {
@@ -587,6 +634,8 @@ public final class Parser
         /* TODO: If we outta tokens we should not call this */
         // gprintln(getCurrentToken());
         gprintln("parseTypedDeclaration(): Leave", DebugType.WARNING);
+
+        return generated;
     }
 
     /**
@@ -599,6 +648,8 @@ public final class Parser
     {
         gprintln("parseClass(): Enter", DebugType.WARNING);
 
+        Clazz generated;
+
         /* Pop off the `class` */
         nextToken();
 
@@ -607,6 +658,8 @@ public final class Parser
         string className = getCurrentToken().getToken();
         gprintln("parseClass(): Class name found '" ~ className ~ "'");
         nextToken();
+
+        generated = new Clazz(className);
 
 
         /* TODO: If we have the inherit symbol `:` */
@@ -643,6 +696,7 @@ public final class Parser
             }
         }
 
+        /* TODO: Technically we should be more specific, this does too much */
         /* Parse a body */
         parseBody();
 

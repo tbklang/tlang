@@ -91,53 +91,6 @@ class clazz_2_1 : bruh
     }
 }
 
-
-public void main(int hello, byte d)
-{
-
-    void bruh()
-    {
-
-    }
-
-    ubyte thing = "Hello";
-    print("Hello world");
-    print(1+1);
-    print(1+1);
-
-    ubyte eish = 1+1;
-
-    ubyte poes = ((1+1));
-
-    if(1+1)
-    {
-        if(1)
-        {
-            if((1))
-            {
-                print("Hello");    
-            }
-            print("Hello");
-        }
-    }
-
-    if(((2)))
-    {
-        print(1+1);   
-    }
-
-    if(2+222222/2)
-    {
-        while(1)
-        {
-            while(2+2)
-            {
-
-            }
-        }   
-    }
-}
-
 void pdsjhfjdsf(int j)
 {
 
@@ -190,4 +143,55 @@ void bruh()
     {
         
     }
+
+
+
+public void main(int hello, byte d)
+{
+
+    void bruh()
+    {
+
+    }
+
+    ubyte kak;
+    ubyte kak2;
+    ubyte thing = "Hello";
+    print("Hello world");
+    print(1+1);
+    print(1+1);
+
+    ubyte eish = 1+1;
+
+    ubyte poes = ((1+1));
+
+    if(1+1)
+    {
+        if(1)
+        {
+            if((1))
+            {
+                print("Hello");    
+            }
+            print("Hello");
+        }
+    }
+
+    if(((2)))
+    {
+        print(1+1);   
+    }
+
+    if(2+222222/2)
+    {
+        while(1)
+        {
+            while(2+2)
+            {
+
+            }
+        }   
+    }
+}
+
 

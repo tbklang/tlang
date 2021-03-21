@@ -332,20 +332,121 @@ public class Program
     private Function[] functions;
 }
 
-public class Function
-{
-    /* The residing program */
-    private Program program;
+public class Statement {}
 
-    private Variable[] locals;
+public class TypedEntity : Statement {}
+
+
+public class Clazz : Statement
+{
+    private string name;
+
+    private Variable[] fields;
+    private Function[] methods;
+
+    this(string name)
+    {
+        this.name = name;
+    }
+
+    public void addField(Variable field)
+    {
+        fields ~= field;
+    }
+
+    public void addMethod(Function method)
+    {
+        methods ~= method;
+    }
+
+    
 }
 
-public class Variable
+public class ArgumentList
+{
+
+}
+
+public class Function : TypedEntity
+{
+    private string name;
+    private ArgumentList[] params;
+    private Statement[] bodyStatements;
+
+    this(string name, string returnType, Statement[] bodyStatements, ArgumentList[] args)
+    {
+        this.name = name;
+        this.bodyStatements = bodyStatements;
+
+    }
+
+    /**
+    * This will sift through all the `Statement[]`'s in held
+    * within this Function and will find those which are Variable
+    */
+    public Variable[] getVariables()
+    {
+        Variable[] variables;
+
+        foreach(Statement statement; bodyStatements)
+        {
+            if(statement !is null && typeid(statement) == typeid(Variable))
+            {
+                variables ~= cast(Variable)statement;
+            }
+        }
+
+        return variables;
+    }
+}
+
+public class Variable : TypedEntity
 {
     private string type;
     private string identifier;
 
+    private VariableAssignment assignment;
+
+    this(string type, string identifier)
+    {
+        this.type = type;
+        this.identifier = identifier;
+    }
+
+    public void addAssignment(VariableAssignment assignment)
+    {
+        this.assignment = assignment;
+    }
+
+    public VariableAssignment getAssignment()
+    {
+        return assignment;
+    }
+
+    public override string toString()
+    {
+        return "Variable (Ident: "~identifier~", Type: "~type~")";
+    }
+
     /* Code gen */
+}
+
+public class Expression : Statement
+{
+    this(Expression[] expressions)
+    {
+        
+    }
+}
+
+public class VariableAssignment
+{
+    private Expression expression;
+
+    this(Expression)
+    {
+
+    }
 }
 
 
