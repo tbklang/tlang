@@ -345,7 +345,13 @@ public class Program
     {
         Variable[] variables;
 
-        // foreach()
+        foreach(Statement statement; statements)
+        {
+            if(typeid(statement) == typeid(Variable))
+            {
+                variables ~= cast(Variable)statement;
+            }
+        }
 
         return variables;
     }
