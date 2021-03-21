@@ -276,6 +276,7 @@ public final class Parser
         gprintln("parseBody(): Leave", DebugType.WARNING);
     }
 
+    /* STATUS: Not being used yet */
     private void parseAccessor()
     {
         /* Save and consume the accessor */
