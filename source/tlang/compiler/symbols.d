@@ -341,6 +341,22 @@ public class Program
         statements ~= statement;
     }
 
+    public StatementType[] getAllOf(StatementType)(StatementType)
+    {
+        StatementType[] statementsMatched;
+
+        foreach(Statement statement; statements)
+        {
+            /* TODO: Remove null, this is for unimpemented */
+            if(statement !is null && typeid(statement) == typeid(StatementType))
+            {
+                statementsMatched ~= cast(StatementType)statement;
+            }
+        }
+
+        return statementsMatched;
+    }
+
     public Variable[] getGlobals()
     {
         Variable[] variables;
