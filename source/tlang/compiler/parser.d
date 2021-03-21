@@ -13,6 +13,16 @@ import misc.exceptions : TError;
 
 // }
 
+public enum AccessorType
+{
+    PUBLIC, PRIVATE, PROTECTED
+}
+
+public enum FunctionType
+{
+    STATIC, VIRTUAL
+}
+
 public final class Parser
 {
     /**
