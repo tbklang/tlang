@@ -363,7 +363,7 @@ public final class Parser
     private struct funcDefPair
     {
         Statement[] bodyStatements;
-        ArgumentList[] args;
+        Variable[] args;
     }
 
     private funcDefPair parseFuncDef()
@@ -371,7 +371,7 @@ public final class Parser
         gprintln("parseFuncDef(): Enter", DebugType.WARNING);
 
         Statement[] statements;
-        ArgumentList[] argumentList;
+        Variable[] argumentList;
         funcDefPair bruh;
         
 
@@ -398,6 +398,10 @@ public final class Parser
                 expect(SymbolType.IDENTIFIER, getCurrentToken());
                 string identifier = getCurrentToken().getToken();
                 nextToken();
+
+
+                /* Add the local variable (parameter variable) */
+                argumentList ~= new Variable(type, identifier);
 
                 moreArgs = false;
 

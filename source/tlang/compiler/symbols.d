@@ -423,6 +423,11 @@ public class Clazz : Entity
     {
         this.statements ~= statements;
     }
+
+    public override string toString()
+    {
+        return "Class (Name: "~name~", Parent: "~parentClass~", Interfaces: "~to!(string)(interfaces)~")";
+    }
     
 }
 
@@ -434,14 +439,16 @@ public class ArgumentList
 public class Function : TypedEntity
 {
     private string name;
-    private ArgumentList[] params;
+    private string returnType;
+    private Variable[] params;
     private Statement[] bodyStatements;
 
-    this(string name, string returnType, Statement[] bodyStatements, ArgumentList[] args)
+    this(string name, string returnType, Statement[] bodyStatements, Variable[] args)
     {
         this.name = name;
+        this.returnType = returnType;
         this.bodyStatements = bodyStatements;
-
+        this.params = args;
     }
 
     /**
@@ -461,6 +468,27 @@ public class Function : TypedEntity
         }
 
         return variables;
+    }
+
+    public override string toString()
+    {
+        string argTypes;
+
+        for(ulong i = 0; i < params.length; i++)
+        {
+            Variable variable = params[i];
+
+            if(i == params.length-1)
+            {
+                argTypes ~= variable.getType();
+            }
+            else
+            {
+                argTypes ~= variable.getType() ~ ", ";
+            }
+        }
+        
+        return "Function (Name: "~name~", ReturnType: "~returnType~", Args: "~argTypes~")";
     }
 }
 
@@ -485,6 +513,11 @@ public class Variable : TypedEntity
     public VariableAssignment getAssignment()
     {
         return assignment;
+    }
+
+    public string getType()
+    {
+        return type;
     }
 
     public override string toString()
