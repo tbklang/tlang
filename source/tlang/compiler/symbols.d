@@ -391,6 +391,14 @@ public class Entity : Statement
     /* Accesor type */
     private AccessorType accessorType = AccessorType.PUBLIC;
 
+    /* Name of the entity (class's name, function's name, variable's name) */
+    private string name;
+
+    this(string name)
+    {
+        this.name = name;
+    }
+
     public void setAccessorType(AccessorType accessorType)
     {
         this.accessorType = accessorType;
@@ -400,15 +408,26 @@ public class Entity : Statement
     {
         return accessorType;
     }
+
+    public string getName()
+    {
+        return name;
+    }
 }
 
 /* TODO: DO we need intermediary class, TypedEntity */
-public class TypedEntity : Entity {}
+public class TypedEntity : Entity
+{
+    /* TODO: Return type/variable type in here (do what we did for ENtity with `name/identifier`) */
+    this(string name)
+    {
+        super(name);
+    }
+}
 
 
 public class Clazz : Entity
 {
-    private string name;
     private string parentClass;
     private string[] interfaces;
 
@@ -416,12 +435,31 @@ public class Clazz : Entity
 
     this(string name)
     {
-        this.name = name;
+        super(name);
     }
 
     public void addStatements(Statement[] statements)
     {
         this.statements ~= statements;
+    }
+
+    /**
+    * Checks all added Statement[]s and makes sure they
+    * are either of type Variable, Function or Class
+    */
+    public bool isFine()
+    {
+        foreach(Statement statement; statements)
+        {
+            if(typeid(statement) != typeid(Variable) &&
+                typeid(statement) != typeid(Function) &&
+                typeid(statement) != typeid(Clazz))
+            {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     public override string toString()
@@ -438,14 +476,13 @@ public class ArgumentList
 
 public class Function : TypedEntity
 {
-    private string name;
     private string returnType;
     private Variable[] params;
     private Statement[] bodyStatements;
 
     this(string name, string returnType, Statement[] bodyStatements, Variable[] args)
     {
-        this.name = name;
+        super(name);
         this.returnType = returnType;
         this.bodyStatements = bodyStatements;
         this.params = args;
@@ -495,14 +532,13 @@ public class Function : TypedEntity
 public class Variable : TypedEntity
 {
     private string type;
-    private string identifier;
 
     private VariableAssignment assignment;
 
     this(string type, string identifier)
     {
+        super(identifier);
         this.type = type;
-        this.identifier = identifier;
     }
 
     public void addAssignment(VariableAssignment assignment)
@@ -522,7 +558,7 @@ public class Variable : TypedEntity
 
     public override string toString()
     {
-        return "Variable (Ident: "~identifier~", Type: "~type~")";
+        return "Variable (Ident: "~name~", Type: "~type~")";
     }
 
     /* Code gen */

@@ -43,5 +43,6 @@ void beginCompilation(string[] sourceFiles)
 
         gprintln("Type checking and symbol resolution...");
         TypeChecker typeChecker = new TypeChecker(program);
+        typeChecker.check();
     }
 }

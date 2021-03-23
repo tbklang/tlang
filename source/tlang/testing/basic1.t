@@ -5,8 +5,8 @@ int x;
 ubyte y;
 
 public ubyte k = 1;
-private ubyte k = 1;
-protected ubyte k = 1;
+private ubyte k2 = 1;
+protected ubyte k3 = -1;
 
 
 public class clazz1

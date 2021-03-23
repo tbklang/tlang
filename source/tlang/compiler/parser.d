@@ -625,7 +625,7 @@ public final class Parser
             gprintln("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
                     ~ type ~ ", Identifier: " ~ identifier ~ ")", DebugType.WARNING);
             
-            Variable variable = new Variable(identifier, type);
+            Variable variable = new Variable(type, identifier);
             variable.addAssignment(varAssign);
 
             generated = variable;
