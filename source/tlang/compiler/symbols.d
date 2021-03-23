@@ -418,10 +418,18 @@ public class Entity : Statement
 /* TODO: DO we need intermediary class, TypedEntity */
 public class TypedEntity : Entity
 {
+    private string type;
+
     /* TODO: Return type/variable type in here (do what we did for ENtity with `name/identifier`) */
-    this(string name)
+    this(string name, string type)
     {
         super(name);
+        this.type = type;
+    }
+
+    public string getType()
+    {
+        return type;
     }
 }
 
@@ -476,14 +484,12 @@ public class ArgumentList
 
 public class Function : TypedEntity
 {
-    private string returnType;
     private Variable[] params;
     private Statement[] bodyStatements;
 
     this(string name, string returnType, Statement[] bodyStatements, Variable[] args)
     {
-        super(name);
-        this.returnType = returnType;
+        super(name, returnType);
         this.bodyStatements = bodyStatements;
         this.params = args;
     }
@@ -525,20 +531,17 @@ public class Function : TypedEntity
             }
         }
         
-        return "Function (Name: "~name~", ReturnType: "~returnType~", Args: "~argTypes~")";
+        return "Function (Name: "~name~", ReturnType: "~type~", Args: "~argTypes~")";
     }
 }
 
 public class Variable : TypedEntity
 {
-    private string type;
-
     private VariableAssignment assignment;
 
     this(string type, string identifier)
     {
-        super(identifier);
-        this.type = type;
+        super(identifier, type);
     }
 
     public void addAssignment(VariableAssignment assignment)
@@ -549,11 +552,6 @@ public class Variable : TypedEntity
     public VariableAssignment getAssignment()
     {
         return assignment;
-    }
-
-    public string getType()
-    {
-        return type;
     }
 
     public override string toString()
