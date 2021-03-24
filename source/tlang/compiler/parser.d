@@ -245,7 +245,7 @@ public final class Parser
             /* If it is an accessor */
             else if (isAccessor(tok))
             {
-                parseAccessor();
+                statements ~= parseAccessor();
             }
             /* If it is a branch */
             else if (symbol == SymbolType.IF)
