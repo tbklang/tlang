@@ -275,7 +275,8 @@ public final class Parser
             /* If it is a class definition */
             else if (symbol == SymbolType.CLASS)
             {
-                parseClass();
+                /* Parse the class and add its statements */
+                statements ~= parseClass();
             }
             /* Error out */
             else
