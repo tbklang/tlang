@@ -341,7 +341,7 @@ public class Program
         statements ~= statement;
     }
 
-    public StatementType[] getAllOf(StatementType)(StatementType)
+    public static StatementType[] getAllOf(StatementType)(StatementType, Statement[] statements)
     {
         StatementType[] statementsMatched;
 
@@ -370,6 +370,11 @@ public class Program
         }
 
         return variables;
+    }
+
+    public Statement[] getStatements()
+    {
+        return statements;
     }
 }
 
@@ -433,12 +438,8 @@ public class TypedEntity : Entity
     }
 }
 
-
-public class Clazz : Entity
+public class Container : Entity
 {
-    private string parentClass;
-    private string[] interfaces;
-
     private Statement[] statements;
 
     this(string name)
@@ -449,6 +450,23 @@ public class Clazz : Entity
     public void addStatements(Statement[] statements)
     {
         this.statements ~= statements;
+    }
+
+    public Statement[] getStatements()
+    {
+        return statements;
+    }
+}
+
+
+public class Clazz : Container
+{
+    private string parentClass;
+    private string[] interfaces;
+
+    this(string name)
+    {
+        super(name);
     }
 
     /**
@@ -537,6 +555,7 @@ public class Function : TypedEntity
 
 public class Variable : TypedEntity
 {
+    /* TODO: Just make this an Expression */
     private VariableAssignment assignment;
 
     this(string type, string identifier)
@@ -568,6 +587,8 @@ public class Expression : Statement
     {
 
     }
+
+    /* TODO: Evalute this expression's type */
 }
 
 public class VariableAssignment

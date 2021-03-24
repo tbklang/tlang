@@ -2,11 +2,15 @@ module compiler.typecheck;
 
 import compiler.symbols;
 import std.conv : to;
+import std.string;
+import std.stdio;
 
 /**
-* Used to run through generated IR
-* from parsing and do type-checking
-* and name-resolution
+* The Parser only makes sure syntax
+* is adhered to (and, well, partially)
+* as it would allow string+string
+* for example
+*
 */
 public final class TypeChecker
 {
@@ -16,11 +20,90 @@ public final class TypeChecker
     {
         this.program = program;
 
-        import std.stdio;
-        writeln("Got globals: "~to!(string)(program.getAllOf(new Variable(null, null))));
-        writeln("Got functions: "~to!(string)(program.getAllOf(new Function(null, null, null, null))));
-        writeln("Got classes: "~to!(string)(program.getAllOf(new Clazz(null))));
+        writeln("Got globals: "~to!(string)(program.getAllOf(new Variable(null, null), program.getStatements())));
+        writeln("Got functions: "~to!(string)(program.getAllOf(new Function(null, null, null, null), program.getStatements())));
+        writeln("Got classes: "~to!(string)(program.getAllOf(new Clazz(null),program.getStatements())));
         
+        // nameResolution;
+        // writeln("Res:",isValidEntity(program.getStatements(), "clazz1"));
+        // writeln("Res:",isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2"));
+
+        
+    }
+
+    /* Test name resolution */
+    unittest
+    {
+        //assert()
+    }
+
+    /* TODO: We need a duplicate detector, maybe do this in Parser, in `parseBody` */
+
+    /* Path: clazz_2_1.class_2_2 */
+    public Entity isValidEntity(Statement[] startingPoint, string path)
+    {   /* The entity found with the matching name at the end of the path */
+        // Entity foundEntity;
+
+        /* Go through each Statement and look for Entity's */
+        foreach(Statement curStatement; startingPoint)
+        {
+            /* Only look for Entitys */
+            if(cast(Entity)curStatement !is null)
+            {
+                /* Current entity */
+                Entity curEntity = cast(Entity)curStatement;
+
+                /* Make sure the root of path matches current entity */
+                string[] name = split(path, ".");
+
+                /* If root does not match current entity, skip */
+                if(cmp(name[0], curEntity.getName()) != 0)
+                {
+                    continue;
+                }
+
+                // writeln("warren g had to regulate");
+
+
+                /**
+                * Check if the name fully matches this entity's name
+                *
+                * If so, return it, a match has been found
+                */
+                if(cmp(path, curEntity.getName()) == 0)
+                {
+                    return curEntity;
+                }
+                /**
+                * Or recurse
+                */
+                else
+                {
+                    string newPath = path[indexOf(path, '.')+1..path.length];
+                    
+                    /* In this case it must be some sort of container */
+                    if(cast(Container)curEntity)
+                    {
+                        Container curContainer = cast(Container)curEntity;
+
+                        /* Get statements */
+                        Statement[] containerStatements = curContainer.getStatements();
+
+                        /* TODO: Consider accessors? Here, Parser, where? */
+
+                        return isValidEntity(containerStatements, newPath);
+                    }
+                    /* If not, error , semantics */
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+        }
+
+
+        return null;
     }
 
     /**
@@ -40,17 +123,30 @@ public final class TypeChecker
     {
         string[] names;
 
-        foreach(Statement statement; program.getAllOf(new Statement()))
+        foreach(Statement statement; program.getAllOf(new Statement(), program.getStatements()))
         {
             /* TODO: Add container name */
-            // names ~= 
-            // string[] receivedNameSet = resolveNames(statement);
+            /* TODO: Make sure all Entity type */
+            string containerName = (cast(Entity)statement).getName();
+            names ~= containerName;
+            string[] receivedNameSet = resolveNames(containerName, statement);
+            names ~= receivedNameSet;
         }
     }
 
-    private string[] resolveNames(Statement statement)
+    private string[] resolveNames(string root, Statement statement)
     {
-        // string containerName
+        /* If the statement is a variable then return */
+        if(typeid(statement) == typeid(Variable))
+        {
+            return null;
+        }
+        /* If it is a class */
+        else if(typeid(statement) == typeid(Clazz))
+        {
+            /* Get class's identifiers */
+            
+        }
         return null;
     }
 
@@ -78,7 +174,7 @@ public final class TypeChecker
         string[] names;
 
         /* Add all global variables */
-        foreach(Variable variable; program.getAllOf(new Variable(null, null)))
+        foreach(Variable variable; program.getAllOf(new Variable(null, null), program.getStatements()))
         {
             string name = variable.getName();
 
@@ -94,4 +190,57 @@ public final class TypeChecker
 
         return true;
     }
+}
+
+unittest
+{
+    /* TODO: Add some unit tests */
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.parser;
+
+    // isUnitTest = true;
+
+    string sourceFile = "source/tlang/testing/basic1.t";
+    
+        File sourceFileFile;
+        sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+        ulong fileSize = sourceFileFile.size();
+        byte[] fileBytes;
+        fileBytes.length = fileSize;
+        fileBytes = sourceFileFile.rawRead(fileBytes);
+        sourceFileFile.close();
+
+    
+
+        /* TODO: Open source file */
+        string sourceCode = cast(string)fileBytes;
+        // string sourceCode = "hello \"world\"|| ";
+        //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
+        // string sourceCode = "hello;";
+        Lexer currentLexer = new Lexer(sourceCode);
+        currentLexer.performLex();
+        
+      
+        Parser parser = new Parser(currentLexer.getTokens());
+
+        Program program = parser.parse();
+
+        TypeChecker typeChecker = new TypeChecker(program);
+        typeChecker.check();
+
+        /* Test first-level resolution */
+        assert(cmp(typeChecker.isValidEntity(program.getStatements(), "clazz1").getName(), "clazz1")==0);
+
+        /* Test n-level resolution */
+        assert(cmp(typeChecker.isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
+        assert(cmp(typeChecker.isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2.j").getName(), "j")==0);
+        assert(cmp(typeChecker.isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2.clazz_2_2_1").getName(), "clazz_2_2_1")==0);
+        assert(cmp(typeChecker.isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
+
+        /* Test invalid access to j treating it as a Container (whilst it is a Variable) */
+        assert(typeChecker.isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2.j.p") is null);
+
+        
 }

@@ -18,6 +18,7 @@ class clazz_2_1 : bruh
 {
     class clazz_2_2
     {
+        int j;
         private class clazz_2_2_1 : bruh, bruh2
         {
 
