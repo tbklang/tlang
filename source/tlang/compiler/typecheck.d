@@ -28,7 +28,42 @@ public final class TypeChecker
         // writeln("Res:",isValidEntity(program.getStatements(), "clazz1"));
         // writeln("Res:",isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2"));
 
-        
+        //process();
+    }
+
+    /**
+    * List of currently declared variables
+    */
+    private Entity[] declaredVars;
+
+
+
+    /**
+    * Initialization order
+    */
+
+    /**
+    * Example:
+    *
+    * 
+    * int a;
+    * int b = a;
+    * int c = b;
+    * Reversing must not work
+    *
+    * Only time it can is if the path is to something in a class as those should
+    * be initialized all before variables
+    */
+    private void process(Statement[] statements)
+    {
+        /* Go through each entity and check them */
+
+        /* TODO: Starting with x, if `int x = clacc.class.class.i` */
+        /* TODO: Then we getPath from the assignment aexpressiona nd eval it */
+        /**
+        * TODO: The variable there cannot rely on x without it being initted, hence 
+        * need for global list of declared variables
+        */
     }
 
     /* Test name resolution */

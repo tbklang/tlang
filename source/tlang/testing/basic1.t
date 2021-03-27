@@ -4,6 +4,10 @@ module bababoioey;
 int x;
 ubyte y;
 
+int a;
+int b = a;
+int c = b;
+
 public ubyte k = 1;
 private ubyte k2 = 1;
 protected ubyte k3 = -1;
