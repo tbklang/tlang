@@ -859,7 +859,7 @@ unittest
         //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
         // string sourceCode = "hello;";
         Lexer currentLexer = new Lexer(sourceCode);
-        currentLexer.performLex();
+        assert(currentLexer.performLex());
         
       
         Parser parser = new Parser(currentLexer.getTokens());
@@ -894,7 +894,7 @@ unittest
         //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
         // string sourceCode = "hello;";
         Lexer currentLexer = new Lexer(sourceCode);
-        currentLexer.performLex();
+        assert(currentLexer.performLex());
         
       
         Parser parser = new Parser(currentLexer.getTokens());
