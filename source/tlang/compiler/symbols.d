@@ -69,14 +69,6 @@ public bool isType(string tokenStr)
                 "long") == 0 || cmp(tokenStr, "ulong") == 0 || cmp(tokenStr, "void") == 0;
 }
 
-/**
-* Checks if the given character is a number
-*/
-private bool isCharacterNumber(char character)
-{
-    return (character >= 48 && character <= 57);
-}
-
 private bool isIdentifier(string token)
 {
     /* This is used to prevent the first character from not being number */

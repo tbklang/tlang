@@ -22,3 +22,11 @@ public bool isCharacterAlpha(char character)
 {
     return (character >= 65 && character <= 90) || (character >= 97 && character <= 122);
 }
+
+/**
+* Checks if the given character is a number
+*/
+public bool isCharacterNumber(char character)
+{
+    return (character >= 48 && character <= 57);
+}
