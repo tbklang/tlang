@@ -677,8 +677,8 @@ unittest
     assert(isIdentifier("hello"));
     
     /* TODO: Add support for the below in lexer */
-    //assert(isPathIdentifier("hello.2.e"));
-    //assert(isPathIdentifier("hello.2._e"));
+    //assert(isPathIdentifier("hello._a.e"));
+    //assert(isPathIdentifier("hello._2._e"));
     
     
 }
