@@ -451,7 +451,7 @@ public final class Parser
 
                 /* Get the identifier (This CAN NOT be dotted) */
                 expect(SymbolType.IDENT_TYPE, getCurrentToken());
-                if(isIdentifier_Dot(getCurrentToken()))
+                if(!isIdentifier_NoDot(getCurrentToken()))
                 {
                     expect("Identifier can not be path");
                 }
