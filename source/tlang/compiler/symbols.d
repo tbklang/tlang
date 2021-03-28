@@ -684,10 +684,10 @@ unittest
 unittest
 {
     SymbolType symbol = getSymbolType(new Token("_yolo2", 0, 0));
-    assert(symbol == SymbolType.IDENTIFIER);
+    assert(symbol == SymbolType.IDENT_TYPE);
 
     symbol = getSymbolType(new Token("2_2ff", 0, 0));
-    assert(symbol != SymbolType.IDENTIFIER);
+    assert(symbol != SymbolType.IDENT_TYPE);
 }
 
 
