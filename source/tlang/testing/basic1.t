@@ -8,7 +8,7 @@ int a;
 int b = a.a;
 int c = b;
 
-int f = f();
+int f = f.L(f(1+f.d.d.d()));
 
 public ubyte k = 1;
 private ubyte k2 = 1;
