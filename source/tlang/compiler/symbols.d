@@ -162,7 +162,7 @@ public bool isAccessor(Token token)
 public bool isIdentifier_NoDot(Token tokenIn)
 {
     /* Make sure it isn't any other type of symbol */
-    if(getSymbolType(tokenIn) == SymbolType.UNKNOWN)
+    if(getSymbolType(tokenIn) == SymbolType.IDENT_TYPE)
     {
         return isIdentifier(tokenIn.getToken());
     }
@@ -175,7 +175,7 @@ public bool isIdentifier_NoDot(Token tokenIn)
 public bool isIdentifier_Dot(Token tokenIn)
 {
     /* Make sure it isn't any other type of symbol */
-    if(getSymbolType(tokenIn) == SymbolType.UNKNOWN)
+    if(getSymbolType(tokenIn) == SymbolType.IDENT_TYPE)
     {
         return isPathIdentifier(tokenIn.getToken()) || isIdentifier(tokenIn.getToken());
     }

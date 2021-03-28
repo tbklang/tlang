@@ -15,7 +15,7 @@ private ubyte k2 = 1;
 protected ubyte k3 = -1;
 
 
-public class clazz1
+public class clazz1p
 {
     print("Hello world");
 }
