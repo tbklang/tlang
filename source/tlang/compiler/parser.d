@@ -234,6 +234,10 @@ public final class Parser
             /* TODO: Collect and return */
             previousToken();
             parseFuncCall();
+
+             /* Expect a semi-colon */
+            expect(SymbolType.SEMICOLON, getCurrentToken());
+            nextToken();
         }
         /* If we have an identifier/type then declaration */
         else if(type == SymbolType.IDENT_TYPE)
@@ -581,6 +585,7 @@ public final class Parser
                 {
                     /* TODO: Leave the token here */
                     /* TODO: Just leave it, yeah */
+                    // expect("poes");
                 }
             }
             /* Detect if this expression is coming to an end, then return */
@@ -805,13 +810,10 @@ public final class Parser
         expect(SymbolType.LBRACE, getCurrentToken());
         nextToken();
 
+        /* TODO: SHould be allowing , seperated arguments */
         /* Parse an expression AND end on closing brace (expect) */
         parseExpression();
         expect(SymbolType.RBRACE, getCurrentToken());
-        nextToken();
-
-        /* Expect a semi-colon */
-        expect(SymbolType.SEMICOLON, getCurrentToken());
         nextToken();
 
         gprintln("parseFuncCall(): Leave", DebugType.WARNING);

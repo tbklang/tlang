@@ -8,6 +8,7 @@ int a;
 int b = a.a;
 int c = b;
 
+int f = f();
 
 public ubyte k = 1;
 private ubyte k2 = 1;
@@ -105,7 +106,7 @@ void pdsjhfjdsf(int j)
 void k(int j, int k)
 {
 
-   
+   l();
 
     ubyte thing = "Hello";
     print("Hello world");
