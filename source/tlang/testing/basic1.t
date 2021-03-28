@@ -15,7 +15,7 @@ private ubyte k2 = 1;
 protected ubyte k3 = -1;
 
 
-public class clazz1p
+public class clazz1
 {
     print("Hello world");
 }
@@ -98,7 +98,7 @@ class clazz_2_1 : bruh
     }
 }
 
-void pdsjhfjdsf(int j)
+void.void pdsjhfjdsf(int j)
 {
 
 }
@@ -106,7 +106,8 @@ void pdsjhfjdsf(int j)
 void k(int j, int k)
 {
 
-   l();
+    l.l("");
+    l.l(l.l());
 
     ubyte thing = "Hello";
     print("Hello world");
