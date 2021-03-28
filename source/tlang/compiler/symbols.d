@@ -3,6 +3,7 @@ module compiler.symbols;
 import compiler.lexer : Token;
 import std.conv : to;
 import std.string : isNumeric, cmp;
+import misc.utils;
 
 /**
     * All allowed symbols
@@ -66,14 +67,6 @@ public bool isType(string tokenStr)
         || cmp(tokenStr, "short") == 0 || cmp(tokenStr, "ushort") == 0
         || cmp(tokenStr, "int") == 0 || cmp(tokenStr, "uint") == 0 || cmp(tokenStr,
                 "long") == 0 || cmp(tokenStr, "ulong") == 0 || cmp(tokenStr, "void") == 0;
-}
-
-/**
-* Checks if the given character is a letter
-*/
-private bool isCharacterAlpha(char character)
-{
-    return (character >= 65 && character <= 90) || (character >= 97 && character <= 122);
 }
 
 /**

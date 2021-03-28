@@ -14,3 +14,11 @@ public bool isPresent(string[] arr, string t)
 
     return false;
 }
+
+/**
+* Checks if the given character is a letter
+*/
+public bool isCharacterAlpha(char character)
+{
+    return (character >= 65 && character <= 90) || (character >= 97 && character <= 122);
+}

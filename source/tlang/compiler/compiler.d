@@ -33,7 +33,11 @@ void beginCompilation(string[] sourceFiles)
         //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
         // string sourceCode = "hello;";
         Lexer currentLexer = new Lexer(sourceCode);
-        currentLexer.performLex();
+        bool status = currentLexer.performLex();
+        if(!status)
+        {
+            return;
+        }
         
         gprintln("Collected "~to!(string)(currentLexer.getTokens()));
 

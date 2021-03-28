@@ -60,10 +60,20 @@ public final class Lexer
         this.sourceCode = sourceCode;
     }
 
-    /* Perform the lexing process */
-    public void performLex()
+    private bool isForward()
     {
-       
+        return position+1 < sourceCode.length;
+    }
+
+    public bool isBackward()
+    {
+        return position-1 < sourceCode.length;
+    }
+
+    /* Perform the lexing process */
+    /* TODO: Use return value */
+    public bool performLex()
+    {
 
         while(position < sourceCode.length)
         {
@@ -91,16 +101,44 @@ public final class Lexer
 
 
                 /**
-                * TODO: Add a check here for checking if the previous character
-                * was `!isSplitter(sourceCode[position-1])` and if current character
-                * `c == '.'`, if so then here we check if `sourceCode[position+1]`
-                * is `!isSplitter` and then we simply add `.` to current token
-                * build up and increment position but no token flush
+                * Here we check if we have a `.`, a character before us
+                * and that that character was a letter
                 */
+                import misc.utils;
+                if(currentChar == '.')
+                {
+                    gprintln(currentChar == '.');
+                    gprintln(isBackward());
+                    gprintln(isCharacterAlpha(sourceCode[position-1]));
+                }
+                
+                
+                if(currentChar == '.' && isBackward() && isCharacterAlpha(sourceCode[position-1]))
+                {
+                    gprintln("Bruh");
+                    /**
+                    * Now we check that we have a character infront of us
+                    * and that it is a letter
+                    */
+                    if(isForward() && isCharacterAlpha(sourceCode[position+1]))
+                    {
+                        position++;
+                        column+=1;
 
+                        currentToken ~= '.';
+
+                        continue;
+                    }
+                    else
+                    {
+                        gprintln("Expected a letter to follow the .", DebugType.ERROR);
+                        return false;
+                    }
+                    
+                }
                 /* Check if we need to do combinators (e.g. for ||, &&) */
                 /* TODO: Second operand in condition out of bounds */
-                if(currentChar == '|' && (position+1) != sourceCode.length && sourceCode[position+1] == '|')
+                else if(currentChar == '|' && (position+1) != sourceCode.length && sourceCode[position+1] == '|')
                 {
                     splitterToken = "||";
                     column += 2;
@@ -186,11 +224,13 @@ public final class Lexer
                     else
                     {
                         gprintln("Unfinished escape sequence", DebugType.ERROR);
+                        return false;
                     }
                 }
                 else
                 {
                     gprintln("Escape sequences can only be used within strings", DebugType.ERROR);
+                    return false;
                 }
             }
             /* Character literal support */
@@ -225,11 +265,13 @@ public final class Lexer
                     else
                     {
                         gprintln("Was expecting closing ' when finishing character literal", DebugType.ERROR);
+                        return false;
                     }
                 }
                 else
                 {
                     gprintln("EOSC reached when trying to get character literal", DebugType.ERROR);
+                    return false;
                 }
             }
             else
@@ -247,6 +289,8 @@ public final class Lexer
         }
 
         tokens = currentTokens;
+
+        return true;
     }
 
     /* Return the tokens */
@@ -263,7 +307,7 @@ public final class Lexer
                 character == '%' || character == '*' || character == '&' ||
                 character == '{' || character == '}' || character == '=' ||
                 character == '|' || character == '^' || character == '!' ||
-                character == '\n' || character == '~';
+                character == '\n' || character == '~' || character =='.';
     }
 
     /* Supported escapes \" */
