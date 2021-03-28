@@ -210,6 +210,49 @@ public final class Parser
         gprintln("parseWhile(): Leave", DebugType.WARNING);
     }
 
+    private void previousToken()
+    {
+        tokenPtr--;   
+    }
+
+    public Statement parseName()
+    {
+        Statement ret;
+
+        /* Save the name or type */
+        string nameTYpe = getCurrentToken().getToken();
+
+        /* TODO: The problem here is I don't want to progress the token */
+
+        /* Get next token */
+        nextToken();
+        SymbolType type = getSymbolType(getCurrentToken());
+
+        /* If we have `(` then function call */
+        if(type == SymbolType.LBRACE)
+        {
+            /* TODO: Collect and return */
+            previousToken();
+            parseFuncCall();
+        }
+        /* If we have an identifier/type then declaration */
+        else if(type == SymbolType.IDENT_TYPE)
+        {
+            previousToken();
+            ret = parseTypedDeclaration();
+        }
+        /* Any other case */
+        else
+        {
+            expect("Error expected ( for var/func def");
+        }
+       
+
+
+
+        return ret;
+    }
+
     private Statement[] parseBody()
     {
         gprintln("parseBody(): Enter", DebugType.WARNING);
@@ -237,10 +280,11 @@ public final class Parser
             gprintln("parseBody(): SymbolType=" ~ to!(string)(symbol));
 
             /* If it is a type */
-            if (symbol == SymbolType.TYPE)
+            if (symbol == SymbolType.IDENT_TYPE)
             {
+                
                 /* Might be a function, might be a variable */
-                statements ~= parseTypedDeclaration();
+                statements ~= parseName();
             }
             /* If it is an accessor */
             else if (isAccessor(tok))
@@ -257,9 +301,10 @@ public final class Parser
             {
                 parseWhile();
             }
-            /* If it is a function call */
-            else if (symbol == SymbolType.IDENTIFIER)
+            /* If it is a function call (further inspection needed) */
+            else if (symbol == SymbolType.IDENT_TYPE)
             {
+                /* Function calls can have dotted identifiers */
                 parseFuncCall();
             }
             /* If it is closing the body `}` */
@@ -339,10 +384,15 @@ public final class Parser
             entity = parseClass();
         }
         /* If typed-definition (function or variable) */
-        else if(symbolType == SymbolType.TYPE)
+        else if(symbolType == SymbolType.IDENT_TYPE)
         {
             /* TODO: Set accesor on returned thing */
-            entity = parseTypedDeclaration();
+            entity = cast(Entity)parseName();
+
+            if(!entity)
+            {
+                expect("Accessor got func call when expecting var/func def");
+            }
         }
         /* Error out */
         else
@@ -389,14 +439,18 @@ public final class Parser
         while (hasTokens())
         {
             /* Check if the first thing is a type */
-            if(getSymbolType(getCurrentToken()) == SymbolType.TYPE)
+            if(getSymbolType(getCurrentToken()) == SymbolType.IDENT_TYPE)
             {
-                /* Get the type */
+                /* Get the type (this can be doted) */
                 string type = getCurrentToken().getToken();
                 nextToken();
 
-                /* Get the identifier */
-                expect(SymbolType.IDENTIFIER, getCurrentToken());
+                /* Get the identifier (This CAN NOT be dotted) */
+                expect(SymbolType.IDENT_TYPE, getCurrentToken());
+                if(isIdentifier_Dot(getCurrentToken()))
+                {
+                    expect("Identifier can not be path");
+                }
                 string identifier = getCurrentToken().getToken();
                 nextToken();
 
@@ -429,7 +483,7 @@ public final class Parser
                 /* Error out if we were and we prematurely ended */
                 else
                 {
-                    expect(SymbolType.IDENTIFIER, getCurrentToken());
+                    expect(SymbolType.IDENT_TYPE, getCurrentToken());
                 }
             }
             /* Error out */
@@ -450,6 +504,7 @@ public final class Parser
 
         bruh.bodyStatements = statements;
         bruh.args = argumentList;
+
         return bruh;
     }
 
@@ -509,7 +564,7 @@ public final class Parser
                 nextToken();
             }
             /* If it is an identifier */
-            else if (symbol == SymbolType.IDENTIFIER)
+            else if (symbol == SymbolType.IDENT_TYPE)
             {
                 string identifier = getCurrentToken().getToken();
 
@@ -519,6 +574,8 @@ public final class Parser
                 if (getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
                 {
                     /* TODO: Implement function call parsing */
+                    previousToken();
+                    parseFuncCall();
                 }
                 else
                 {
@@ -573,9 +630,13 @@ public final class Parser
         string type = getCurrentToken().getToken();
         string identifier;
 
-        /* Expect an identifier */
+        /* Expect an identifier (CAN NOT be dotted) */
         nextToken();
-        expect(SymbolType.IDENTIFIER, getCurrentToken());
+        expect(SymbolType.IDENT_TYPE, getCurrentToken());
+        if(isIdentifier_Dot(getCurrentToken()))
+        {
+            expect("Identifier cannot be dotted");
+        }
         identifier = getCurrentToken().getToken();
 
         nextToken();
@@ -590,10 +651,7 @@ public final class Parser
 
             generated = new Function(identifier, type, pair.bodyStatements, pair.args);
             
-
-
             import std.stdio;
-            
             writeln(to!(string)((cast(Function)generated).getVariables()));
         }
         /* Check for semi-colon (var dec) */
@@ -658,8 +716,12 @@ public final class Parser
         /* Pop off the `class` */
         nextToken();
 
-        /* Get the class's name */
-        expect(SymbolType.IDENTIFIER, getCurrentToken());
+        /* Get the class's name (CAN NOT be dotted) */
+        expect(SymbolType.IDENT_TYPE, getCurrentToken());
+        if(isIdentifier_Dot(getCurrentToken()))
+        {
+            expect("Class name in declaration cannot be path");
+        }
         string className = getCurrentToken().getToken();
         gprintln("parseClass(): Class name found '" ~ className ~ "'");
         nextToken();
@@ -677,8 +739,8 @@ public final class Parser
 
             while(true)
             {
-                /* Check if it is an identifier */
-                expect(SymbolType.IDENTIFIER, getCurrentToken());
+                /* Check if it is an identifier (may be dotted) */
+                expect(SymbolType.IDENT_TYPE, getCurrentToken());
                 nextToken();
 
                 /* Check if we have ended with a `{` */
@@ -735,6 +797,8 @@ public final class Parser
     {
         gprintln("parseFuncCall(): Enter", DebugType.WARNING);
 
+        /* TODO: Save name */
+
         nextToken();
 
         /* Expect an opening brace `(` */
@@ -772,7 +836,8 @@ public final class Parser
         expect(SymbolType.MODULE, getCurrentToken());
         nextToken();
 
-        expect(SymbolType.IDENTIFIER, getCurrentToken());
+        /* Module name may NOT be dotted (TODO: Maybe it should be yeah) */
+        expect(SymbolType.IDENT_TYPE, getCurrentToken());
         string programName = getCurrentToken().getToken();
         nextToken();
 
@@ -796,10 +861,17 @@ public final class Parser
             gprintln("parse(): Token: " ~ tok.getToken());
 
             /* If it is a type */
-            if (symbol == SymbolType.TYPE)
+            if (symbol == SymbolType.IDENT_TYPE)
             {
                 /* Might be a function, might be a variable */
-                TypedEntity varFunc = parseTypedDeclaration();
+                TypedEntity varFunc = cast(TypedEntity)parseName();
+
+                /* If cast fails then it was a funcall */
+                if(!varFunc)
+                {
+                    /* FUnction calls not allowed in top level body */
+                    expect("Expected var/func def got funcall");
+                }
 
                 /* Add this statement to the program's statement list */
                 program.addStatement(varFunc);

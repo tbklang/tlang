@@ -5,7 +5,7 @@ int x;
 ubyte y;
 
 int a;
-int b = a;
+int b = a.a;
 int c = b;
 
 

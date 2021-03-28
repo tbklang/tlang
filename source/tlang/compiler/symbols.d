@@ -12,10 +12,10 @@ import misc.utils;
 public enum SymbolType
 {
     LE_SYMBOL,
+    IDENT_TYPE,
     NUMBER_LITERAL,
     CHARACTER_LITERAL,
     STRING_LITERAL,
-    TYPE,
     SEMICOLON,
     LBRACE,
     RBRACE,
@@ -300,6 +300,11 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.MODULE;
     }
+    /* An identifier/type  (of some sorts) - further inspection in parser is needed */
+    else if(isPathIdentifier(token) || isIdentifier(token))
+    {
+        return SymbolType.IDENT_TYPE;
+    }
     /* Semi-colon `;` check */
     else if (token[0] == ';')
     {
@@ -569,7 +574,8 @@ public class Function : TypedEntity
 
         foreach(Statement statement; bodyStatements)
         {
-            if(typeid(statement) == typeid(Variable))
+
+            if(statement !is null && cast(Variable)statement)
             {
                 variables ~= cast(Variable)statement;
             }
