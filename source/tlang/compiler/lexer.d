@@ -89,6 +89,15 @@ public final class Lexer
                 /* The splitter token to finally insert */
                 string splitterToken;
 
+
+                /**
+                * TODO: Add a check here for checking if the previous character
+                * was `!isSplitter(sourceCode[position-1])` and if current character
+                * `c == '.'`, if so then here we check if `sourceCode[position+1]`
+                * is `!isSplitter` and then we simply add `.` to current token
+                * build up and increment position but no token flush
+                */
+
                 /* Check if we need to do combinators (e.g. for ||, &&) */
                 /* TODO: Second operand in condition out of bounds */
                 if(currentChar == '|' && (position+1) != sourceCode.length && sourceCode[position+1] == '|')
