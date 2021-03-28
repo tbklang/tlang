@@ -724,7 +724,7 @@ public final class Parser
         /* Get the class's name (CAN NOT be dotted) */
         expect(SymbolType.IDENT_TYPE, getCurrentToken());
         expect(to!(string)(isIdentifier_Dot(getCurrentToken())));
-        if(isIdentifier_Dot(getCurrentToken()))
+        if(!isIdentifier_NoDot(getCurrentToken()))
         {
             expect("Class name in declaration cannot be path");
         }
