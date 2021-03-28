@@ -69,6 +69,51 @@ public bool isType(string tokenStr)
                 "long") == 0 || cmp(tokenStr, "ulong") == 0 || cmp(tokenStr, "void") == 0;
 }
 
+public bool isPathIdentifier(string token)
+{
+    /* This is used to prevent the first character from not being number */
+    bool isFirstRun = true;
+
+    /* Whether we found a dot or not */
+    bool isDot;
+
+    foreach (char character; token)
+    {
+        if(isFirstRun)
+        {
+            /* Only allow underscore of letter */
+            if(isCharacterAlpha(character) || character == '_')
+            {
+
+            }
+            else
+            {
+                return false;
+            }
+
+            isFirstRun = false;
+        }
+        else
+        {
+            /* Check for dot */
+            if(character == '.')
+            {
+                isDot = true;
+            }
+            else if(isCharacterAlpha(character) || character == '_' || isCharacterNumber(character))
+            {
+
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    return isDot;
+}
+
 private bool isIdentifier(string token)
 {
     /* This is used to prevent the first character from not being number */
@@ -622,3 +667,18 @@ unittest
     assert(symbol != SymbolType.IDENTIFIER);
 }
 
+
+/* Test: Identifier type detection */
+unittest
+{
+    assert(isPathIdentifier("hello.e.e"));
+    assert(!isPathIdentifier("hello"));
+    assert(!isIdentifier("hello.e.e"));
+    assert(isIdentifier("hello"));
+    
+    /* TODO: Add support for the below in lexer */
+    //assert(isPathIdentifier("hello.2.e"));
+    //assert(isPathIdentifier("hello.2._e"));
+    
+    
+}
