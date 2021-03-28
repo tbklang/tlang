@@ -12,7 +12,6 @@ import misc.utils;
 public enum SymbolType
 {
     LE_SYMBOL,
-    IDENTIFIER,
     NUMBER_LITERAL,
     CHARACTER_LITERAL,
     STRING_LITERAL,
