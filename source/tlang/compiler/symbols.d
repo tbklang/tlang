@@ -59,6 +59,8 @@ public class Symbol
     }
 }
 
+
+
 /* TODO: Later build classes specific to symbol */
 public bool isType(string tokenStr)
 {
@@ -157,6 +159,32 @@ public bool isAccessor(Token token)
             getSymbolType(token) == SymbolType.PROTECTED;
 }
 
+public bool isIdentifier_NoDot(Token tokenIn)
+{
+    /* Make sure it isn't any other type of symbol */
+    if(getSymbolType(tokenIn) == SymbolType.UNKNOWN)
+    {
+        return isIdentifier(tokenIn.getToken());
+    }
+    else
+    {
+        return false;
+    }
+}
+
+public bool isIdentifier_Dot(Token tokenIn)
+{
+    /* Make sure it isn't any other type of symbol */
+    if(getSymbolType(tokenIn) == SymbolType.UNKNOWN)
+    {
+        return isPathIdentifier(tokenIn.getToken()) || isIdentifier(tokenIn.getToken());
+    }
+    else
+    {
+        return false;
+    }
+}
+
 public SymbolType getSymbolType(Token tokenIn)
 {
     string token = tokenIn.getToken();
@@ -181,11 +209,6 @@ public SymbolType getSymbolType(Token tokenIn)
     else if (isNumeric(token))
     {
         return SymbolType.NUMBER_LITERAL;
-    }
-    /* Type name (TODO: Track user-defined types) */
-    else if (isType(token))
-    {
-        return SymbolType.TYPE;
     }
     /* `if` */
     else if(cmp(token, "if") == 0)
@@ -276,11 +299,6 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "module") == 0)
     {
         return SymbolType.MODULE;
-    }
-    /* Identifier check (TODO: Track vars) */
-    else if (isIdentifier(token))
-    {
-        return SymbolType.IDENTIFIER;
     }
     /* Semi-colon `;` check */
     else if (token[0] == ';')
