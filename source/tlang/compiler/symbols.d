@@ -112,6 +112,14 @@ public bool isPathIdentifier(string token)
         }
     }
 
+    if(token.length)
+    {
+        if(token[token.length-1] == '.')
+        {
+            return false;
+        }
+    }
+
     return isDot;
 }
 

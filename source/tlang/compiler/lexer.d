@@ -90,7 +90,7 @@ public final class Lexer
     */
     private bool hasToken()
     {
-        return currentToken.length == 0;
+        return currentToken.length != 0;
     }
 
     /* Perform the lexing process */
@@ -129,7 +129,7 @@ public final class Lexer
                 */
                 import misc.utils;
                 
-                if(currentChar == '.' && isBackward() && isCharacterAlpha(sourceCode[position-1]))
+                if(currentChar == '.' && hasToken() && isBuildUpValidIdent())
                 {
                     gprintln("Bruh");
                     /**
