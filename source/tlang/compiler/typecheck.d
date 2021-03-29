@@ -202,6 +202,15 @@ public final class TypeChecker
     //     if(cmp(path, "") == 0)
     // }
 
+
+    /* TODO: Do elow functio n */
+    /* TODO: I also need something to get all entities with same name */
+    public bool entityCmp(Entity lhs, Entity rhs)
+    {
+        /* TODO: Depends on Entity */
+        /* If lhs and rhs are variables then if lhs came before rhs this is true */
+    }
+
     /* Path: clazz_2_1.class_2_2 */
     public Entity isValidEntity(Statement[] startingPoint, string path)
     {   /* The entity found with the matching name at the end of the path */
