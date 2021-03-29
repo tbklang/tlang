@@ -545,6 +545,11 @@ public final class Parser
             return poppedExp;
         }
 
+        bool hasExp()
+        {
+            return retExpression.length != 0;
+        }
+
         void expressionStackSanityCheck()
         {
             /* If we don't have 1 on the stack */
@@ -589,23 +594,39 @@ public final class Parser
             /* If it is a maths operator */
             else if (isMathOp(getCurrentToken()))
             {
-                /* Pop left-hand side expression */
-                /* TODO: We should have error checking for `removeExp()` */
-                /* TODO: Make it automatically exit if not enough exps */
-                Expression lhs = removeExp();
+                SymbolType operatorType = getSymbolType(getCurrentToken());
 
                 /* TODO: Save operator, also pass to constructor */
                 /* TODO: Parse expression or pass arithemetic (I think latter) */
                 nextToken();
 
-                /* Parse expression (the right-hand side) */
-                Expression rhs = parseExpression();
+                OperatorExpression opExp;
 
-                /* Add to stack BinaryOpertaor Expression */
-                addRetExp(new BinaryOperatorExpression(lhs, rhs));
+                /* Check if unary or not (if so no expressions on stack) */
+                if(!hasExp())
+                {
+                    Expression rhs = parseExpression();
 
-                gprintln("addop");
-                gprintln(retExpression);
+                    /* Create UnaryExpression */
+                    opExp = new UnaryOperatorExpression(operatorType, rhs);
+                }
+                /* If has, then binary */
+                else
+                {
+                    /* Pop left-hand side expression */
+                    /* TODO: We should have error checking for `removeExp()` */
+                    /* TODO: Make it automatically exit if not enough exps */
+                    Expression lhs = removeExp();
+
+                    /* Parse expression (the right-hand side) */
+                    Expression rhs = parseExpression();
+
+                    /* Create BinaryOpertaor Expression */
+                    opExp = new BinaryOperatorExpression(operatorType, lhs, rhs);
+                }
+
+                /* Add operator expression to stack */
+                addRetExp(opExp);
             }
             /* If it is a string literal */
             else if (symbol == SymbolType.STRING_LITERAL)
@@ -630,10 +651,7 @@ public final class Parser
                 {
                     /* TODO: Implement function call parsing */
                     previousToken();
-                    gprintln("bruh", DebugType.ERROR);
                     toAdd = parseFuncCall();
-                    gprintln("Out paraseFUncall");
-                    gprintln(retExpression);
                 }
                 else
                 {

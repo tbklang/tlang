@@ -164,7 +164,7 @@ public void main(int hello, byte d)
     }
 
     ubyte kak;
-    ubyte kak2;
+    ubyte kak2 = -1;
     ubyte thing = "Hello";
     print("Hello world");
     print(1+1);

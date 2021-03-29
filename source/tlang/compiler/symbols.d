@@ -656,7 +656,7 @@ public class Expression : Statement
 public class StringExpression : Expression
 {
     private string ztring;
-    
+
     this(string ztring)
     {
         this.ztring = ztring;
@@ -665,15 +665,32 @@ public class StringExpression : Expression
 
 public class OperatorExpression : Expression
 {
+    /* Operator */
+    private SymbolType operator;
 
+    this(SymbolType operator)
+    {
+        this.operator = operator;
+    }
+}
+
+public class UnaryOperatorExpression : OperatorExpression
+{
+    private Expression exp;
+
+    this(SymbolType operator, Expression exp)
+    {
+        super(operator);
+        this.exp = exp;
+    }
 }
 
 public class BinaryOperatorExpression : OperatorExpression
 {
     /* TODO: Take in operator */
-    this(Expression lhs, Expression rhs)
+    this(SymbolType operator, Expression lhs, Expression rhs)
     {
-
+        super(operator);
     }
 }
 
