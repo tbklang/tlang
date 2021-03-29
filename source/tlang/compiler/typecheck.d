@@ -91,6 +91,20 @@ public final class TypeChecker
         known ~= entity;
     }
 
+    /* Returns index or 64 1 bits */
+    private ulong getStatementIndex(Statement[] statements, Statement statement)
+    {
+        for(ulong i = 0; i < statements.length; i++)
+        {
+            if(statement == statements[i])
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     private void checkIt(Statement[] statements, string path)
     {
         gprintln("Processing at path/level: "~path, DebugType.WARNING);
@@ -123,7 +137,8 @@ public final class TypeChecker
                 else
                 {
                     // gprintln(isValidEntity(statements, path~variable.getName()));
-                    if(isName(variable.getName()))
+                    /* Check if the identifier is taken already */
+                    if(isValidEntity(statements[getStatementIndex(statements, statement)+1..statements.length], path~variable.getName()))
                     {
                         import compiler.parser;
                         Parser.expect("Duplicate name tried to be declared");
