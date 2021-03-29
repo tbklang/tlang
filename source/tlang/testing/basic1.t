@@ -2,7 +2,6 @@ module bababoioey;
 
 
 int x;
-int x;
 ubyte y;
 
 int a;

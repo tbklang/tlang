@@ -145,7 +145,7 @@ public final class TypeChecker
                     }
                     else
                     {
-                        declareName(path~variable.getName());
+                        // declareName(path~variable.getName());
                     }
                 }
             }

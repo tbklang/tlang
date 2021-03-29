@@ -732,7 +732,7 @@ public class VariableAssignment
 {
     private Expression expression;
 
-    this(Expression)
+    this(Expression expression)
     {
         this.expression = expression;
     }
@@ -771,6 +771,8 @@ public class VariableExpression : IdentExpression
     public override string evaluateType(TypeChecker typeChecker, Statement[] startingPoint)
     {
         string type;
+
+        /* Variables can't get look ahead sort of */
 
         /* Get all names and see if i am in it firstly */
         Entity entity = typeChecker.isValidEntity(startingPoint, getName());
