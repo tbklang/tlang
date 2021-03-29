@@ -4,6 +4,7 @@ import compiler.symbols;
 import std.conv : to;
 import std.string;
 import std.stdio;
+import gogga;
 
 /**
 * The Parser only makes sure syntax
@@ -29,6 +30,22 @@ public final class TypeChecker
         // writeln("Res:",isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2"));
 
         //process();
+        checkIt();
+    }
+
+    private string[] validNames;
+
+    private void checkIt()
+    {
+        foreach(Statement statement; program.getAllOf(new Statement(), program.getStatements()))
+        {
+            gprintln("he");
+            /* If the statement is a variable declaration */
+            if(cast(Variable)statement)
+            {
+                gprintln("Declaring variable");
+            }
+        }
     }
 
     /**

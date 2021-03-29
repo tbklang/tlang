@@ -408,7 +408,7 @@ public class Program
         foreach(Statement statement; statements)
         {
             /* TODO: Remove null, this is for unimpemented */
-            if(statement !is null && typeid(statement) == typeid(StatementType))
+            if(statement !is null && cast(StatementType)statement)
             {
                 statementsMatched ~= cast(StatementType)statement;
             }
@@ -644,6 +644,13 @@ public class Variable : TypedEntity
 
 public class Expression : Statement
 {
+    /* TODO: Everything must implement this */
+    /* TODO: Takes in symbol table? */
+    public string evaluateType()
+    {
+        return null;
+    }
+
     this()
     {
 
