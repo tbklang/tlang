@@ -438,7 +438,15 @@ public class Program
     }
 }
 
-public class Statement {}
+public class Statement
+{
+    private Container container;
+
+    public final void parentTo(Container container)
+    {
+        this.container = container;
+    }
+}
 
 public enum AccessorType
 {
