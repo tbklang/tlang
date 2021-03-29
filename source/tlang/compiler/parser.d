@@ -852,12 +852,26 @@ public final class Parser
         Statement[] statements = parseBody();
         generated.addStatements(statements);
 
+        /* Parent each Statement to the container */
+        parentToContainer(generated, statements);
+
         /* Pop off the ending `}` */
         nextToken();
 
         gprintln("parseClass(): Leave", DebugType.WARNING);
 
         return generated;
+    }
+
+    private void parentToContainer(Container container, Statement[] statements)
+    {
+        foreach(Statement statement; statements)
+        {
+            if(statement !is null)
+            {
+                statement.parentTo(container);
+            }
+        }
     }
 
     private void parseStatement()
@@ -996,6 +1010,9 @@ public final class Parser
         }
 
         gprintln("parse(): Leave", DebugType.WARNING);
+
+        /* Parent each Statement to the container (the module) */
+        parentToContainer(modulle, modulle.getStatements());
 
         return modulle;
     }

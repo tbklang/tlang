@@ -780,6 +780,8 @@ public class VariableExpression : IdentExpression
     {
         string type;
 
+        /* Get Statement[] at level path */
+
         /* Variables can't get look ahead sort of */
 
         /* Get all names and see if i am in it firstly */

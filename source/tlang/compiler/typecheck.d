@@ -195,6 +195,13 @@ public final class TypeChecker
 
     /* TODO: We need a duplicate detector, maybe do this in Parser, in `parseBody` */
 
+
+    // public Entity isValidEntityTop(string path)
+    // {
+    //     /* module.x same as x */
+    //     if(cmp(path, "") == 0)
+    // }
+
     /* Path: clazz_2_1.class_2_2 */
     public Entity isValidEntity(Statement[] startingPoint, string path)
     {   /* The entity found with the matching name at the end of the path */
