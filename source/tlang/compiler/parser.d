@@ -660,7 +660,7 @@ public final class Parser
                 nextToken();
 
                 /* Parse the inner expression till terminator */
-                parseExpression();
+                addRetExp(parseExpression());
 
                 /* Consume the terminator */
                 nextToken();
@@ -673,6 +673,8 @@ public final class Parser
             }
         }
 
+
+        gprintln(retExpression);
         gprintln("parseExpression(): Leave", DebugType.WARNING);
 
         /* TODO: DO check here for retExp.length = 1 */

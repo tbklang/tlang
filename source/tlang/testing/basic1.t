@@ -13,7 +13,7 @@ int p = f2p.j2.p;
 
 public ubyte k = 1;
 private ubyte k2 = 1;
-protected ubyte k3 = -1;
+protected ubyte k3 = 1-1;
 
 
 public class clazz1
@@ -195,7 +195,7 @@ public void main(int hello, byte d)
     {
         while(1)
         {
-            while(2+2)
+            while(2+2+2)
             {
 
             }
