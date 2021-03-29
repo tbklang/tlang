@@ -9,6 +9,7 @@ int b = a.a;
 int c = b;
 
 int f = f.L(f(1+f.d.d.d()));
+int p = f2p.j2p.p;
 
 public ubyte k = 1;
 private ubyte k2 = 1;

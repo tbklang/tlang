@@ -70,6 +70,29 @@ public final class Lexer
         return position-1 < sourceCode.length;
     }
 
+    /**
+    * Used for tokenising a2.b2
+    *
+    * When the `.` is encountered
+    * and there are some characters
+    * behind it this checks if we can
+    * append a further dot to it
+    */
+    private bool isBuildUpValidIdent()
+    {
+        import compiler.symbols;
+        return isPathIdentifier(currentToken) || isIdentifier(currentToken);
+    }
+
+    /**
+    * Returns true if we have a token being built
+    * false otherwise
+    */
+    private bool hasToken()
+    {
+        return currentToken.length == 0;
+    }
+
     /* Perform the lexing process */
     /* TODO: Use return value */
     public bool performLex()

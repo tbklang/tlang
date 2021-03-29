@@ -115,7 +115,7 @@ public bool isPathIdentifier(string token)
     return isDot;
 }
 
-private bool isIdentifier(string token)
+public bool isIdentifier(string token)
 {
     /* This is used to prevent the first character from not being number */
     bool isFirstRun = true;
