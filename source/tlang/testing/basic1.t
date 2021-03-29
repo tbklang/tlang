@@ -5,8 +5,11 @@ int x;
 ubyte y;
 
 int a;
-int b = a.a;
+int b = a;
 int c = b;
+int l;
+
+int o = a.a;
 
 int f = f.L(f(1+f.d.d.d()));
 int p = f2p.j2.p;

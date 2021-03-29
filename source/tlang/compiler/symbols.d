@@ -507,6 +507,11 @@ public class Container : Entity
         super(name);
     }
 
+    public void addStatement(Statement statement)
+    {
+        this.statements ~= statement;
+    }
+
     public void addStatements(Statement[] statements)
     {
         this.statements ~= statements;
@@ -518,6 +523,13 @@ public class Container : Entity
     }
 }
 
+public class Module : Container
+{
+    this(string moduleName)
+    {
+        super(moduleName);
+    }
+}
 
 public class Clazz : Container
 {
@@ -644,10 +656,12 @@ public class Variable : TypedEntity
 
 public class Expression : Statement
 {
-    /* TODO: Everything must implement this */
+    import compiler.typecheck;
     /* TODO: Takes in symbol table? */
-    public string evaluateType()
+    public string evaluateType(TypeChecker typechecker, Statement[] stateexpression)
     {
+        /* TODO: Go through here evaluating the type */
+
         return null;
     }
 
@@ -658,6 +672,8 @@ public class Expression : Statement
 
     /* TODO: Evalute this expression's type */
 }
+
+
 
 /* TODO: Look into arrays later */
 public class StringExpression : Expression
@@ -718,26 +734,70 @@ public class VariableAssignment
 
     this(Expression)
     {
+        this.expression = expression;
+    }
 
+    public Expression getExpression()
+    {
+        return expression;
     }
 }
 
-public class Call : Expression
+public class IdentExpression : Expression
+{
+    /* name */
+    private string name;
+
+    this(string name)
+    {
+        this.name = name;
+    }
+
+    public string getName()
+    {
+        return name;
+    }
+}
+
+public class VariableExpression : IdentExpression
 {
 
+    this(string identifier)
+    {
+        super(identifier);
+    }
+
+    import compiler.typecheck;
+    public override string evaluateType(TypeChecker typeChecker, Statement[] startingPoint)
+    {
+        string type;
+
+        /* Get all names and see if i am in it firstly */
+        Entity entity = typeChecker.isValidEntity(startingPoint, getName());
+
+
+        return type;
+    }
+}
+
+public class Call : IdentExpression
+{
+    this(string ident)
+    {
+        super(ident);
+    }
 }
 
 public final class FunctionCall : Call
 {
-    /* Function name */
-    private string functionName;
+    
 
     /* Argument list */
     private Expression[] arguments;
 
     this(string functionName, Expression[] arguments)
     {
-        this.functionName = functionName;
+        super(functionName);
         this.arguments = arguments;
     }
 }

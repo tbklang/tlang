@@ -658,7 +658,7 @@ public final class Parser
                     /* TODO: Leave the token here */
                     /* TODO: Just leave it, yeah */
                     // expect("poes");
-                    toAdd = new Expression();
+                    toAdd = new VariableExpression(identifier);
                 }
 
                 /* TODO: Change this later, for now we doing this */
@@ -921,11 +921,11 @@ public final class Parser
     * one to define classes within functions
     */
     /* TODO: Variables should be allowed to have letters in them and underscores */
-    public Program parse()
+    public Module parse()
     {
         gprintln("parse(): Enter", DebugType.WARNING);
 
-        Program program;
+        Module modulle;
 
         /* TODO: Do parsing here */
 
@@ -941,8 +941,8 @@ public final class Parser
         expect(SymbolType.SEMICOLON, getCurrentToken());
         nextToken();
 
-        /* Initialize Program */
-        program = new Program(programName);
+        /* Initialize Module */
+        modulle = new Module(programName);
 
         /* TODO: do `hasTokens()` check */
         /* TODO: We should add `hasTokens()` to the `nextToken()` */
@@ -971,7 +971,7 @@ public final class Parser
                 }
 
                 /* Add this statement to the program's statement list */
-                program.addStatement(varFunc);
+                modulle.addStatement(varFunc);
             }
             /* If it is an accessor */
             else if (isAccessor(tok))
@@ -979,7 +979,7 @@ public final class Parser
                 Statement statement = parseAccessor();
 
                 /* TODO: Tets case has classes which null statement, will crash */
-                program.addStatement(statement);
+                modulle.addStatement(statement);
             }
             /* If it is a class */
             else if (symbol == SymbolType.CLASS)
@@ -987,7 +987,7 @@ public final class Parser
                 Clazz clazz = parseClass();
 
                 /* Add the class definition to the program */
-                program.addStatement(clazz);
+                modulle.addStatement(clazz);
             }
             else
             {
@@ -997,7 +997,7 @@ public final class Parser
 
         gprintln("parse(): Leave", DebugType.WARNING);
 
-        return program;
+        return modulle;
     }
 }
 
@@ -1045,7 +1045,7 @@ unittest
 
     isUnitTest = true;
 
-    string sourceFile = "source/tlang/testing/basic2.t";
+    string sourceFile = "source/tlang/testing/basic1.t";
     
         File sourceFileFile;
         sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */

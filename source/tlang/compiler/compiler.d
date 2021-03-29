@@ -43,10 +43,10 @@ void beginCompilation(string[] sourceFiles)
 
         gprintln("Parsing tokens...");
         Parser parser = new Parser(currentLexer.getTokens());
-        Program program = parser.parse();
+        Module modulle = parser.parse();
 
         gprintln("Type checking and symbol resolution...");
-        TypeChecker typeChecker = new TypeChecker(program);
-        typeChecker.check();
+        TypeChecker typeChecker = new TypeChecker(modulle);
+        // typeChecker.check();
     }
 }
