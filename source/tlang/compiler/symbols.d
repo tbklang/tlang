@@ -644,12 +644,48 @@ public class Variable : TypedEntity
 
 public class Expression : Statement
 {
-    this(Expression[] expressions)
+    this()
     {
 
     }
 
     /* TODO: Evalute this expression's type */
+}
+
+/* TODO: Look into arrays later */
+public class StringExpression : Expression
+{
+    private string ztring;
+    
+    this(string ztring)
+    {
+        this.ztring = ztring;
+    }
+}
+
+public class OperatorExpression : Expression
+{
+
+}
+
+public class BinaryOperatorExpression : OperatorExpression
+{
+    /* TODO: Take in operator */
+    this(Expression lhs, Expression rhs)
+    {
+
+    }
+}
+
+public class NumberLiteral : Expression
+{
+    private string numberLiteral;
+
+    /* TODO: Take in info like tyoe */
+    this(string numberLiteral)
+    {
+        this.numberLiteral = numberLiteral;
+    }
 }
 
 public class VariableAssignment
@@ -662,7 +698,25 @@ public class VariableAssignment
     }
 }
 
+public class Call : Expression
+{
 
+}
+
+public final class FunctionCall : Call
+{
+    /* Function name */
+    private string functionName;
+
+    /* Argument list */
+    private Expression[] arguments;
+
+    this(string functionName, Expression[] arguments)
+    {
+        this.functionName = functionName;
+        this.arguments = arguments;
+    }
+}
 
 /* Test: Character literal */
 unittest

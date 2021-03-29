@@ -529,9 +529,35 @@ public final class Parser
     {
         gprintln("parseExpression(): Enter", DebugType.WARNING);
 
-        Expression expression;
+        /* The expression to be returned */
+        Expression[] retExpression;
 
-        Expression[] expressions;
+        void addRetExp(Expression e)
+        {
+            retExpression ~= e;
+        }
+
+        Expression removeExp()
+        {
+            Expression poppedExp = retExpression[retExpression.length-1];
+            retExpression.length--;
+
+            return poppedExp;
+        }
+
+        void expressionStackSanityCheck()
+        {
+            /* If we don't have 1 on the stack */
+            if(retExpression.length != 1)
+            {
+                gprintln(retExpression);
+                expect("Expression parsing failed as we had remaining items on the expression parser stack or zero");
+            }
+        }
+
+        /* TODO: Unless I am wrong we can do a check that retExp should always be length 1 */
+        /* TODO: Makes sure that expressions like 1 1 don't wortk */
+        /* TODO: It must always be consumed */
 
         /* TODO: Implement expression parsing */
 
@@ -546,24 +572,47 @@ public final class Parser
         {
             SymbolType symbol = getSymbolType(getCurrentToken());
 
+            gprintln(retExpression);
+
             /* If it is a number literal */
             if (symbol == SymbolType.NUMBER_LITERAL)
-            {
+            { 
+                /* TODO: Do number checking here to get correct NUmberLiteral */
+                NumberLiteral numberLiteral = new NumberLiteral(getCurrentToken().getToken());
+                
+                /* Add expression to stack */
+                addRetExp(numberLiteral);
+
                 /* Get the next token */
                 nextToken();
             }
             /* If it is a maths operator */
             else if (isMathOp(getCurrentToken()))
             {
+                /* Pop left-hand side expression */
+                /* TODO: We should have error checking for `removeExp()` */
+                /* TODO: Make it automatically exit if not enough exps */
+                Expression lhs = removeExp();
+
+                /* TODO: Save operator, also pass to constructor */
                 /* TODO: Parse expression or pass arithemetic (I think latter) */
                 nextToken();
 
-                /* Parse expression */
-                parseExpression();
+                /* Parse expression (the right-hand side) */
+                Expression rhs = parseExpression();
+
+                /* Add to stack BinaryOpertaor Expression */
+                addRetExp(new BinaryOperatorExpression(lhs, rhs));
+
+                gprintln("addop");
+                gprintln(retExpression);
             }
             /* If it is a string literal */
             else if (symbol == SymbolType.STRING_LITERAL)
             {
+                /* Add the string to the stack */
+                addRetExp(new StringExpression(getCurrentToken().getToken()));
+
                 /* Get the next token */
                 nextToken();
             }
@@ -574,22 +623,31 @@ public final class Parser
 
                 nextToken();
 
+                Expression toAdd;
+
                 /* If the symbol is `(` then function call */
                 if (getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
                 {
                     /* TODO: Implement function call parsing */
                     previousToken();
-                    parseFuncCall();
+                    gprintln("bruh", DebugType.ERROR);
+                    toAdd = parseFuncCall();
+                    gprintln("Out paraseFUncall");
+                    gprintln(retExpression);
                 }
                 else
                 {
                     /* TODO: Leave the token here */
                     /* TODO: Just leave it, yeah */
                     // expect("poes");
+                    toAdd = new Expression();
                 }
+
+                /* TODO: Change this later, for now we doing this */
+                addRetExp(toAdd);
             }
             /* Detect if this expression is coming to an end, then return */
-            else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE)
+            else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE || symbol == SymbolType.COMMA)
             {
                 break;
             }
@@ -617,9 +675,10 @@ public final class Parser
 
         gprintln("parseExpression(): Leave", DebugType.WARNING);
 
-        expression = new Expression(expressions);
+        /* TODO: DO check here for retExp.length = 1 */
+        expressionStackSanityCheck();
 
-        return expression;
+        return retExpression[0];
     }
 
     private TypedEntity parseTypedDeclaration()
@@ -798,11 +857,14 @@ public final class Parser
         gprintln("parseStatement(): Leave", DebugType.WARNING);
     }
 
-    private void parseFuncCall()
+    private Expression parseFuncCall()
     {
         gprintln("parseFuncCall(): Enter", DebugType.WARNING);
 
         /* TODO: Save name */
+        string functionName = getCurrentToken().getToken();
+
+        Expression[] arguments;
 
         nextToken();
 
@@ -810,13 +872,26 @@ public final class Parser
         expect(SymbolType.LBRACE, getCurrentToken());
         nextToken();
 
-        /* TODO: SHould be allowing , seperated arguments */
-        /* Parse an expression AND end on closing brace (expect) */
-        parseExpression();
-        expect(SymbolType.RBRACE, getCurrentToken());
+        /* If next token is RBRACE we don't expect arguments */
+        if(getSymbolType(getCurrentToken()) == SymbolType.RBRACE)
+        {
+            
+        }
+        /* If not expect arguments */
+        else
+        {
+             /* TODO: SHould be allowing , seperated arguments */
+            /* Parse an expression AND end on closing brace (expect) */
+            arguments ~= parseExpression();
+            expect(SymbolType.RBRACE, getCurrentToken());
+        }
+
+       
         nextToken();
 
         gprintln("parseFuncCall(): Leave", DebugType.WARNING);
+
+        return new FunctionCall(functionName, arguments);
     }
 
     /* Almost like parseBody but has more */

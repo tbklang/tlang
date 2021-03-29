@@ -140,7 +140,7 @@ void k(int j, int k)
     {
         while(1)
         {
-            while(2+2)
+            while(2+2+2)
             {
 
             }
