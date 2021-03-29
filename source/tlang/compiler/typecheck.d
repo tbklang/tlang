@@ -15,35 +15,124 @@ import gogga;
 */
 public final class TypeChecker
 {
-    private Program program;
+    private Module modulle;
 
-    this(Program program)
+    this(Module modulle)
     {
-        this.program = program;
+        this.modulle = modulle;
 
-        writeln("Got globals: "~to!(string)(program.getAllOf(new Variable(null, null), program.getStatements())));
-        writeln("Got functions: "~to!(string)(program.getAllOf(new Function(null, null, null, null), program.getStatements())));
-        writeln("Got classes: "~to!(string)(program.getAllOf(new Clazz(null),program.getStatements())));
+        writeln("Got globals: "~to!(string)(Program.getAllOf(new Variable(null, null), modulle.getStatements())));
+        writeln("Got functions: "~to!(string)(Program.getAllOf(new Function(null, null, null, null), modulle.getStatements())));
+        writeln("Got classes: "~to!(string)(Program.getAllOf(new Clazz(null), modulle.getStatements())));
         
         // nameResolution;
         // writeln("Res:",isValidEntity(program.getStatements(), "clazz1"));
         // writeln("Res:",isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2"));
 
         //process();
-        checkIt();
+        beginCheck();
     }
 
     private string[] validNames;
 
-    private void checkIt()
+    private bool declareName()
     {
-        foreach(Statement statement; program.getAllOf(new Statement(), program.getStatements()))
+        return 0;
+    }
+
+    private bool isName(string nameTest)
+    {
+        foreach(string name; validNames)
         {
-            gprintln("he");
-            /* If the statement is a variable declaration */
-            if(cast(Variable)statement)
+            if(cmp(nameTest, name) == 0)
             {
-                gprintln("Declaring variable");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void declareName(string name)
+    {
+        validNames ~= name;
+    }
+
+    private void beginCheck()
+    {
+        // checkIt(modulle.getStatements(), modulle.getName());
+        checkIt(modulle.getStatements(), "");
+    }
+
+    private void checkClass(Clazz clazz)
+    {
+
+    }
+
+
+    /* List of known objects */
+    private Entity[] known;
+
+    public bool isDeclaredEntity(Entity entityTest)
+    {
+        foreach(Entity entity; known)
+        {
+            if(entity == entityTest)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void declareEntity(Entity entity)
+    {
+        known ~= entity;
+    }
+
+    private void checkIt(Statement[] statements, string path)
+    {
+        gprintln("Processing at path/level: "~path, DebugType.WARNING);
+
+        foreach(Statement statement; statements)
+        {
+            /* If the statement is a COntainer */
+            if(cast(Container)statement)
+            {
+                Container container = cast(Container)statement;
+                string name = path~"."~container.getName();
+                /* TODO: Implement */
+                //checkIt()
+            }
+            /* If the statement is a variable declaration */
+            else if(cast(Variable)statement)
+            {
+                Variable variable = cast(Variable)statement;
+                gprintln("Declaring variable"~variable.getName());
+
+                /* Check if this variable has an expression, if so check that */
+                if(variable.getAssignment())
+                {
+                    VariableAssignment varAssign = variable.getAssignment();
+
+                    Expression expression = varAssign.getExpression();
+                    gprintln("ExpressionTYpe in VarAssign: "~expression.evaluateType(this, statements));
+                }
+                /* If not then go ahead and attempt to declare it */
+                else
+                {
+                    // gprintln(isValidEntity(statements, path~variable.getName()));
+                    if(isName(variable.getName()))
+                    {
+                        import compiler.parser;
+                        Parser.expect("Duplicate name tried to be declared");
+                    }
+                    else
+                    {
+                        declareName(path~variable.getName());
+                    }
+                }
             }
         }
     }
@@ -175,7 +264,7 @@ public final class TypeChecker
     {
         string[] names;
 
-        foreach(Statement statement; program.getAllOf(new Statement(), program.getStatements()))
+        foreach(Statement statement; Program.getAllOf(new Statement(), modulle.getStatements()))
         {
             /* TODO: Add container name */
             /* TODO: Make sure all Entity type */
@@ -226,7 +315,7 @@ public final class TypeChecker
         string[] names;
 
         /* Add all global variables */
-        foreach(Variable variable; program.getAllOf(new Variable(null, null), program.getStatements()))
+        foreach(Variable variable; Program.getAllOf(new Variable(null, null), modulle.getStatements()))
         {
             string name = variable.getName();
 
@@ -277,22 +366,22 @@ unittest
       
         Parser parser = new Parser(currentLexer.getTokens());
 
-        Program program = parser.parse();
+        Module modulle = parser.parse();
 
-        TypeChecker typeChecker = new TypeChecker(program);
+        TypeChecker typeChecker = new TypeChecker(modulle);
         typeChecker.check();
 
         /* Test first-level resolution */
-        assert(cmp(typeChecker.isValidEntity(program.getStatements(), "clazz1").getName(), "clazz1")==0);
+        assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz1").getName(), "clazz1")==0);
 
         /* Test n-level resolution */
-        assert(cmp(typeChecker.isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
-        assert(cmp(typeChecker.isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2.j").getName(), "j")==0);
-        assert(cmp(typeChecker.isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2.clazz_2_2_1").getName(), "clazz_2_2_1")==0);
-        assert(cmp(typeChecker.isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
+        assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
+        assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j").getName(), "j")==0);
+        assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.clazz_2_2_1").getName(), "clazz_2_2_1")==0);
+        assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
 
         /* Test invalid access to j treating it as a Container (whilst it is a Variable) */
-        assert(typeChecker.isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2.j.p") is null);
+        assert(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j.p") is null);
 
         
 }
