@@ -101,17 +101,10 @@ public final class Lexer
 
 
                 /**
-                * Here we check if we have a `.`, a character before us
-                * and that that character was a letter
+                * Here we check if we have a `.` and that the characters
+                * preceding us were all godd for an identifier
                 */
                 import misc.utils;
-                if(currentChar == '.')
-                {
-                    gprintln(currentChar == '.');
-                    gprintln(isBackward());
-                    gprintln(isCharacterAlpha(sourceCode[position-1]));
-                }
-                
                 
                 if(currentChar == '.' && isBackward() && isCharacterAlpha(sourceCode[position-1]))
                 {
@@ -119,6 +112,8 @@ public final class Lexer
                     /**
                     * Now we check that we have a character infront of us
                     * and that it is a letter
+                    *
+                    * TODO: Add _ check too as that is a valid identifier start
                     */
                     if(isForward() && isCharacterAlpha(sourceCode[position+1]))
                     {
