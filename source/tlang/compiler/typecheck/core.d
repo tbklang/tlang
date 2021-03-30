@@ -325,17 +325,19 @@ public final class TypeChecker
                     }
                 }
 
-                /* Find the name starting in upper cotainer */
-                Entity clazzAbove = resolveUp(parentContainer, clazz.getName());
+                /* TODO: We allow shaddowing so below is disabled */
+                /* TODO: We should however use the below for dot-less resolution */
+                // /* Find the name starting in upper cotainer */
+                // Entity clazzAbove = resolveUp(parentContainer, clazz.getName());
 
-                if(!clazzAbove)
-                {
+                // if(!clazzAbove)
+                // {
 
-                }
-                else
-                {
-                    Parser.expect("Name in use abpve us, bad"~to!(string)(clazz));
-                }
+                // }
+                // else
+                // {
+                //     Parser.expect("Name in use abpve us, bad"~to!(string)(clazz));
+                // }
 
                 /* If the Container's parent container is Module then we can have
                 /* TODO: Check that it doesn;t equal any class up the chain */

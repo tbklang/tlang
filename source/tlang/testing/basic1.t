@@ -50,14 +50,17 @@ public class clazz1
         class bruh2
         {
 
-        }
+        }   
     }
+
+    class bruh
+    {
+
+    }
+
 }
 
-class myModule
-{
-    
-}
+
 
 class bruh
 {
