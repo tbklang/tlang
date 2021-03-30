@@ -1,4 +1,4 @@
-module bababoioey;
+module myModule;
 
 
 int x;
@@ -6,7 +6,7 @@ ubyte y;
 
 int a;
 int b = a;
-int c = b;
+int c = myModule.x;
 int l;
 
 int o = a.a;
@@ -21,7 +21,13 @@ protected ubyte k3 = 1-1;
 
 public class clazz1
 {
+    int k;
     print("Hello world");
+
+    public class clazz2
+    {
+
+    }
 }
 
 class clazz_2_1 : bruh

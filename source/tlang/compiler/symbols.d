@@ -464,6 +464,9 @@ public class Entity : Statement
     /* Accesor type */
     private AccessorType accessorType = AccessorType.PUBLIC;
 
+    /* Function/Modifier type */
+    private FunctionType functionType;
+
     /* Name of the entity (class's name, function's name, variable's name) */
     private string name;
 
@@ -480,6 +483,16 @@ public class Entity : Statement
     public AccessorType getAccessorType()
     {
         return accessorType;
+    }
+
+    public void setModifierType(FunctionType functionType)
+    {
+        this.functionType = functionType;
+    }
+
+    public FunctionType getModifierType()
+    {
+        return functionType;
     }
 
     public string getName()

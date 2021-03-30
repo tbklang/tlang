@@ -29,6 +29,19 @@ public final class TypeChecker
         // writeln("Res:",isValidEntity(program.getStatements(), "clazz1"));
         // writeln("Res:",isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2"));
 
+
+        /* Test getEntity on Module */
+        gprintln("getEntity: myModule.x: "~to!(string)(getEntity(modulle, "myModule.x")));
+        gprintln("getEntity: x: "~to!(string)(getEntity(modulle, "x")));
+        
+        /* Test getEntity on Class */
+        Container clazzEntity = cast(Container)getEntity(modulle, "clazz1");
+        gprintln("getEntity: clazz1.k: "~to!(string)(getEntity(clazzEntity, "clazz1.k")));
+        gprintln("getEntity: k: "~to!(string)(getEntity(clazzEntity, "k")));
+        clazzEntity = cast(Container)getEntity(modulle, "myModule.clazz1");
+        gprintln("getEntity: clazz1.k: "~to!(string)(getEntity(clazzEntity, "clazz1.k")));
+        gprintln("getEntity: k: "~to!(string)(getEntity(clazzEntity, "myModule.clazz1.k")));
+
         //process();
         beginCheck();
     }
@@ -61,7 +74,7 @@ public final class TypeChecker
     private void beginCheck()
     {
         // checkIt(modulle.getStatements(), modulle.getName());
-        checkIt(modulle.getStatements(), "");
+        checkIt(modulle);
     }
 
     private void checkClass(Clazz clazz)
@@ -105,9 +118,12 @@ public final class TypeChecker
         return -1;
     }
 
-    private void checkIt(Statement[] statements, string path)
+    private void checkIt(Container c)
     {
-        gprintln("Processing at path/level: "~path, DebugType.WARNING);
+        //gprintln("Processing at path/level: "~path, DebugType.WARNING);
+
+        Statement[] statements = c.getStatements();
+        string path = c.getName();
 
         foreach(Statement statement; statements)
         {
@@ -136,9 +152,11 @@ public final class TypeChecker
                 /* If not then go ahead and attempt to declare it */
                 else
                 {
-                    // gprintln(isValidEntity(statements, path~variable.getName()));
-                    /* Check if the identifier is taken already */
-                    if(isValidEntity(statements[getStatementIndex(statements, statement)+1..statements.length], path~variable.getName()))
+                    /**
+                    * To check if a name is taken we check if the current one equals the
+                    * first match (if so, then declare, if not, then taken)
+                    */
+                    if(getEntity(c, variable.getName()) != variable)
                     {
                         import compiler.parser;
                         Parser.expect("Duplicate name tried to be declared");
@@ -209,6 +227,32 @@ public final class TypeChecker
     {
         /* TODO: Depends on Entity */
         /* If lhs and rhs are variables then if lhs came before rhs this is true */
+        return true;
+    }
+
+    /**
+    * Given a Container like a Module or Class and a path
+    * this will search from said container to find the Entity
+    * at the given path
+    *
+    * If you give it class_1 and path class_1.x or x
+    * they both should return the same Entity
+    */
+    public Entity getEntity(Container container, string path)
+    {
+        /* Get the Container's name */
+        string containerName = container.getName();
+
+        /* Check to see if the first item is the container's name */
+        string[] pathItems = split(path, '.');
+        if(cmp(pathItems[0], containerName) == 0)
+        {
+            /* If so, then remove it */
+            path = path[indexOf(path, '.')+1..path.length];
+        }
+
+        /* Search for the Entity */
+        return isValidEntity(container.getStatements(), path);
     }
 
     /* Path: clazz_2_1.class_2_2 */
