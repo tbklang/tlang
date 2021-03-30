@@ -126,9 +126,82 @@ public final class TypeChecker
         return isMarkedEntity(getEntity(c, name));
     }
 
+    
+
+    private void checkTypes(Container c)
+    {
+        /* Get all types (Clazz so far) */
+        Clazz[] classTypes;
+
+        foreach(Statement statement; c.getStatements())
+        {
+            if(statement !is null && cast(Clazz)statement)
+            {
+                classTypes ~= cast(Clazz)statement;
+            }
+        }
+
+        /* Declare each type */
+        foreach(Clazz clazz; classTypes)
+        {
+            /**
+            * Check if the first class found with my name is the one being
+            * processed, if so then it is fine, if not then error, it has
+            * been used (that identifier) already
+            */
+            if(getEntity(c, clazz.getName()) != clazz)
+            {
+                Parser.expect("Error, we already have a class with name "~clazz.getName());
+            }
+            else
+            {
+                gprintln("Name now in use: "~clazz.getName());
+            }
+        }
+
+        /**
+        * TODO: Now we should loop through each class and do the same
+        * so we have all types defined
+        */
+        gprintln("Defined classes: "~to!(string)(Program.getAllOf(new Clazz(""), cast(Statement[])marked)));
+        
+        /**
+        * By now we have confirmed that within the current container
+        * there are no classes defined with the same name
+        *
+        * We now check each Class recursively, once we are done
+        * we mark the class entity as "ready" (may be referenced)
+        */
+        foreach(Clazz clazz; classTypes)
+        {
+            /* Check the current class's types within */
+            checkTypes(clazz);
+
+            /* If all went well mark this class as referencable */
+            markEntity(clazz);
+        }
+
+        /**
+        * If we have made it here then all the classes
+        * Now we can go through all classes at this level (they )
+        
+        
+        /*Now we should loop through each class */
+        /* Once outerly everything is defined we can then handle class inheritance names */
+        /* We can also then handle refereces between classes */
+
+        // gprintln("checkTypes: ")
+
+    }
+
+    /* TODO clazz_21_211 , crashes */
+
     private void checkIt(Container c)
     {
         //gprintln("Processing at path/level: "~path, DebugType.WARNING);
+
+        /* First we define types (so classes) */
+        checkTypes(c);
 
         Statement[] statements = c.getStatements();
         string path = c.getName();
@@ -163,6 +236,9 @@ public final class TypeChecker
                 {
                     VariableAssignment varAssign = variable.getAssignment();
 
+                    /* TODO: Do what D does, only allow assignment of constants */
+                    /* TODO: For assignments at global only allow constants */
+
                     Expression expression = varAssign.getExpression();
                     string type = expression.evaluateType(this, c);
 
@@ -177,6 +253,11 @@ public final class TypeChecker
 
                 /* Set the variable as declared */
                 markEntity(variable);
+            }
+            /* If the statement is a function */
+            else if(cast(Function)statement)
+            {
+                Function func = cast(Function)statement;
             }
         }
     }

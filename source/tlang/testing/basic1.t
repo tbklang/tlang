@@ -27,15 +27,15 @@ public class clazz1
     int k;
     print("Hello world");
 
-    public class clazz2
+    public class clazz3
     {
 
     }
 }
 
-class clazz_2_1 : bruh
+class clazz2 : bruh
 {
-    class clazz_2_2
+    class clazz3
     {
         int j;
         private class clazz_2_2_1 : bruh, bruh2
