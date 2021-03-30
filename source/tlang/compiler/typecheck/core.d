@@ -187,6 +187,117 @@ public final class TypeChecker
         }
     }
 
+    /**
+    * Resolves dot-paths and non-dot paths
+    * (both relative to a container)
+    *
+    * Example: Given c=clazz1 and name=clazz1 => result = clazz1
+    * Example: Given c=clazz1 and name=x (x is within) => result = x
+    * Example: Given c=clazz1 and name=clazz1.x => result = x
+    * Example: Given c=clazz1 and name=clazz2.x => result = x
+    */
+    private Entity resolveBest(Container c, string name)
+    {
+        string[] path = split(name, '.');
+
+        /**
+        * If no dot
+        *
+        * Try and find `name` within c
+        */
+        if(path.length == 1)
+        {
+            Entity entityWithin = resolveUp(c, name);
+
+            /* If `name` was in container `c` */
+            if(entityWithin)
+            {
+                return entityWithin;
+            }
+            /* If `name` was NOT within container `c` */
+            else
+            {
+                /* If the `name` the name of the container, then return it */
+                if(cmp(c.getName(), name) == 0)
+                {
+                    return c;
+                }
+                /* Not found */
+                else
+                {
+                    return null;
+                }
+            }
+        }
+        else
+        {
+            /* If the root is the current container */
+            if(cmp(path[0], c.getName()) == 0)
+            {
+
+                /* If only 1 left then just grab it */
+                if(path.length == 2)
+                {
+                    Entity entityNext = resolveWithin(c, path[1]);
+                    return entityNext;
+                }
+                /* Go deeper */
+                else
+                {
+                    string newPath = name[indexOf(name, '.')+1..name.length];
+                    Entity entityNext = resolveWithin(c, path[1]);
+
+                    /* If null then not found */
+                    if(entityNext)
+                    {
+                        Container containerWithin = cast(Container)entityNext;
+
+                        if(entityNext)
+                        {
+                            return resolveBest(containerWithin, newPath);
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            /* We need to search higher */
+            else
+            {
+                /* TODO: Bug is we will never find top container */
+                
+                Entity entityFound = resolveUp(c, path[0]);
+
+                if(entityFound)
+                {
+                    Container con = cast(Container)entityFound;
+
+                    if(con)
+                    {
+                        gprintln("fooook");
+                        return resolveBest(con, name);
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    gprintln("killl me");
+                    return null;
+                }
+            }
+
+        }
+    }
+
     private void checkClassInherit(Container c)
     {
         /* Get all types (Clazz so far) */
@@ -228,7 +339,7 @@ public final class TypeChecker
                     namedEntity = resolveUp(c, parent);
                 }
 
-                 
+                 namedEntity=resolveBest(c, parent);
 
                 /* If the entity exists */
                 if(namedEntity)

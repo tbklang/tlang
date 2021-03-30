@@ -34,6 +34,7 @@ class O : ooga
         {
 
         }
+        
     }
 
     
@@ -49,7 +50,67 @@ class testClass
 
     class test3 : test2
     {
-        
+        class llllll : testClass.test2
+        {
+            class fokfok : llllll
+            {
+
+            }
+
+            class testtest : llllll.fokfok
+            {
+
+            }
+
+            class testtest2 : test3.llllll.fokfok
+            {
+
+            }
+
+            class testtest3 : test3.llllll.fokfok
+            {
+
+            }
+
+            class testtest4 : testClass.test3.llllll.fokfok
+            {
+
+            }
+
+            class testtest5 : O
+            {
+
+            }
+
+            class testtest6 : O.I
+            {
+
+            }
+
+            class testtest7 : O.I.L
+            {
+
+            }
+
+            class testtest8 : O.L
+            {
+
+            }
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+        }
     }
 
     class test4 : bruh
@@ -57,9 +118,43 @@ class testClass
 
     }
 
-    class clazz1 : myModule.clazz1
+    
+
+    class yoyo
+    {
+        class kaka{}
+    }
+
+    class poop : poop.kaka
+    {
+        class kaka
+        {
+            class eish : poop
+            {
+
+            }
+
+            class eish2 : yoyo.kaka
+            {
+
+            }
+        }
+    }
+ 
+    class j : poop.kaka
     {
 
+    }
+
+    class hi : hi.ho.hee
+    {
+        class ho
+        {
+            class hee
+            {
+
+            }
+        }
     }
 }
 
