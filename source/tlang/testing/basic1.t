@@ -21,18 +21,18 @@ public ubyte k = 1;
 private ubyte k2 = 1;
 protected ubyte k3 = -1;
 
-class ooga
+class ooga : P
 {
 
 }
 
-class P
+class P : ooga
 {
-    class ooga
+    class P
     {
-        class P
+        class P : ooga
         {
-            
+
         }
     }
 

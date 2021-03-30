@@ -181,36 +181,95 @@ public final class TypeChecker
             /* If the current container has no parent container */
             else
             {
+                gprintln("Simply not found");
                 return null;
             }
         }
     }
 
-    private void checkClassInherit(Clazz clazz)
+    private void checkClassInherit(Container c)
     {
-        /* Get the current class's parent */
-        string[] parentClasses = clazz.getInherit();
+        /* Get all types (Clazz so far) */
+        Clazz[] classTypes;
 
-        /* Try resolve all of these */
-        foreach(string parent; parentClasses)
+        foreach(Statement statement; c.getStatements())
         {
-            
+            if(statement !is null && cast(Clazz)statement)
+            {
+                classTypes ~= cast(Clazz)statement;
+            }
         }
+
+        /* Process each Clazz */
+        foreach(Clazz clazz; classTypes)
+        {
+             /* Get the current class's parent */
+            string[] parentClasses = clazz.getInherit();
+            gprintln("Class: "~clazz.getName()~": ParentInheritList: "~to!(string)(parentClasses));
+
+            /* Try resolve all of these */
+            foreach(string parent; parentClasses)
+            {
+                /* Find the named entity */
+                Entity namedEntity = resolveUp(c, parent);
+
+                /* If the entity exists */
+                if(namedEntity)
+                {
+                    /* Check if it is a Class, if so non-null */
+                    Clazz parentEntity = cast(Clazz)namedEntity;
+
+                    /* Only inherit from class or (TODO: interfaces) */
+                    if(parentEntity)
+                    {
+                        /* Make sure it is not myself */
+                        if(parentEntity != clazz)
+                        {
+                            /* TODO: Add loop checking here */
+                        }
+                        else
+                        {
+                            Parser.expect("Cannot inherit from self");
+                        }
+                    }
+                    /* Error */
+                    else
+                    {
+                        Parser.expect("Can only inherit from classes");
+                    }
+                }
+                /* If the entity doesn't exist then it is an error */
+                else
+                {
+                    Parser.expect("Could not find any entity named "~parent);
+                }
+            }
+        }
+
+        /* Once processing is done, apply recursively */
+        foreach(Clazz clazz; classTypes)
+        {
+            checkClassInherit(clazz);
+        }
+
+
+       
     }    
 
     private void checkClasses(Container c)
     {
         /**
         * Make sure no duplicate types (classes) defined
-        * within same Container, mark them as referenceable
+        * within same Container
         */
         checkClassNames(c);
 
         /**
         * Now that everything is neat and tidy
+        * let's check class properties like inheritance
+        * names
         */
-
-        checkClassInherit();
+        checkClassInherit(c);
     }
 
 
@@ -289,8 +348,7 @@ public final class TypeChecker
             /* Check the current class's types within */
             checkClassNames(clazz);
 
-            /* If all went well mark this class as referencable */
-            markEntity(clazz);
+            // checkClassInherit(clazz);
         }
 
        
