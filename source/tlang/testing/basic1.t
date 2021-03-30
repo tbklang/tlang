@@ -15,6 +15,8 @@ int o = myModule.l;
 int f = f.L(f(1+f.d.d.d()));
 int p = f2p.j2.p;
 
+int ll = f(1,1);
+
 public ubyte k = 1;
 private ubyte k2 = 1;
 protected ubyte k3 = 1-1;

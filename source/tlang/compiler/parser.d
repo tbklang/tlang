@@ -914,10 +914,31 @@ public final class Parser
         /* If not expect arguments */
         else
         {
-             /* TODO: SHould be allowing , seperated arguments */
-            /* Parse an expression AND end on closing brace (expect) */
-            arguments ~= parseExpression();
-            expect(SymbolType.RBRACE, getCurrentToken());
+            while(true)
+            {
+                /* Get the Expression */
+                Expression exp = parseExpression();
+
+                /* Add it to list */
+                arguments ~= exp;
+
+                /* Check if we exiting */
+                if(getSymbolType(getCurrentToken()) == SymbolType.RBRACE)
+                {
+                    break;
+                }
+                /* If comma expect more */
+                else if(getSymbolType(getCurrentToken()) == SymbolType.COMMA)
+                {
+                    nextToken();
+                    /* TODO: If rbrace after then error, so save boolean */
+                }
+                /* TODO: Add else, could have exited on `;` which is invalid closing */
+                else
+                {
+                    expect("Function call closed on ;, invalid");
+                }
+            }
         }
 
        
