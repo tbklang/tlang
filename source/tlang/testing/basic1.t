@@ -9,7 +9,8 @@ int b = a;
 int c = myModule.x;
 int l;
 
-int o = a.a;
+int o = myModule.l;
+
 
 int f = f.L(f(1+f.d.d.d()));
 int p = f2p.j2.p;

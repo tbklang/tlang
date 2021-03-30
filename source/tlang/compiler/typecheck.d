@@ -5,6 +5,7 @@ import std.conv : to;
 import std.string;
 import std.stdio;
 import gogga;
+import compiler.parser;
 
 /**
 * The Parser only makes sure syntax
@@ -83,12 +84,12 @@ public final class TypeChecker
     }
 
 
-    /* List of known objects */
-    private Entity[] known;
+    /* List of known (marked) objects */
+    private Entity[] marked;
 
-    public bool isDeclaredEntity(Entity entityTest)
+    public bool isMarkedEntity(Entity entityTest)
     {
-        foreach(Entity entity; known)
+        foreach(Entity entity; marked)
         {
             if(entity == entityTest)
             {
@@ -99,9 +100,9 @@ public final class TypeChecker
         return false;
     }
 
-    public void declareEntity(Entity entity)
+    public void markEntity(Entity entity)
     {
-        known ~= entity;
+        marked ~= entity;
     }
 
     /* Returns index or 64 1 bits */
@@ -147,7 +148,13 @@ public final class TypeChecker
                     VariableAssignment varAssign = variable.getAssignment();
 
                     Expression expression = varAssign.getExpression();
-                    gprintln("ExpressionTYpe in VarAssign: "~expression.evaluateType(this, statements));
+                    string type = expression.evaluateType(this, c);
+
+                    if(!type.length)
+                    {
+                        Parser.expect("Expression type fetch failed: "~variable.getName());
+                    }
+                    gprintln("ExpressionTYpe in VarAssign: "~type);
                 }
                 /* If not then go ahead and attempt to declare it */
                 else
@@ -163,6 +170,7 @@ public final class TypeChecker
                     }
                     else
                     {
+                        markEntity(variable);
                         // declareName(path~variable.getName());
                     }
                 }

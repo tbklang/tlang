@@ -679,7 +679,7 @@ public class Expression : Statement
 {
     import compiler.typecheck;
     /* TODO: Takes in symbol table? */
-    public string evaluateType(TypeChecker typechecker, Statement[] stateexpression)
+    public string evaluateType(TypeChecker typechecker, Container c)
     {
         /* TODO: Go through here evaluating the type */
 
@@ -789,19 +789,36 @@ public class VariableExpression : IdentExpression
     }
 
     import compiler.typecheck;
-    public override string evaluateType(TypeChecker typeChecker, Statement[] startingPoint)
+    public override string evaluateType(TypeChecker typeChecker, Container c)
     {
         string type;
 
-        /* Get Statement[] at level path */
 
-        /* Variables can't get look ahead sort of */
-
-        /* Get all names and see if i am in it firstly */
-        Entity entity = typeChecker.isValidEntity(startingPoint, getName());
-
-
-        return type;
+        /**
+        * Check to see if the Entity exists (somewhere)
+        * in the source file
+        */
+        Entity entity = typeChecker.getEntity(c, getName());
+        if(entity)
+        {
+            /**
+            * Check if the Variable being referenced has been marked by
+            * the type checker (declared and my now be accessed)
+            */
+            if(typeChecker.isMarkedEntity(entity))
+            {
+                /* TODO: DO TYPE HCEKC, MAKE SURE IT iS A VAR */
+                return (cast(Variable)entity).getType();
+            }
+            else
+            {
+                return null;
+            }
+        }
+        else
+        {
+            return null;
+        }
     }
 }
 
