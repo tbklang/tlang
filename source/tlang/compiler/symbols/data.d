@@ -75,6 +75,11 @@ public class Statement
     {
         this.container = container;
     }
+
+    public final Container parentOf()
+    {
+        return container;
+    }
 }
 
 public enum AccessorType
@@ -183,36 +188,26 @@ public class Module : Container
 
 public class Clazz : Container
 {
-    private string parentClass;
-    private string[] interfaces;
+    private string[] interfacesClasses;
 
     this(string name)
     {
         super(name);
     }
 
-    /**
-    * Checks all added Statement[]s and makes sure they
-    * are either of type Variable, Function or Class
-    */
-    public bool isFine()
+    public void addInherit(string[] l)
     {
-        foreach(Statement statement; statements)
-        {
-            if(typeid(statement) != typeid(Variable) &&
-                typeid(statement) != typeid(Function) &&
-                typeid(statement) != typeid(Clazz))
-            {
-                return false;
-            }
-        }
-        
-        return true;
+        interfacesClasses ~= l;
+    }
+
+    public string[] getInherit()
+    {
+        return interfacesClasses;
     }
 
     public override string toString()
     {
-        return "Class (Name: "~name~", Parent: "~parentClass~", Interfaces: "~to!(string)(interfaces)~")";
+        return "Class (Name: "~name~", Parents (Class/Interfaces): "~to!(string)(interfacesClasses)~")";
     }
     
 }

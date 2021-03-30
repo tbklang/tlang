@@ -21,21 +21,58 @@ public ubyte k = 1;
 private ubyte k2 = 1;
 protected ubyte k3 = -1;
 
+class ooga
+{
+
+}
+
+class P
+{
+    class ooga
+    {
+        class P
+        {
+            
+        }
+    }
+
+    
+   
+}
 
 public class clazz1
 {
     int k;
     print("Hello world");
 
-    public class clazz3
+    public class clazz1
     {
+        class clazz1
+        {
 
+        }
+    }
+}
+
+class bruh
+{
+    class L
+    {
+        class bruh
+        {
+
+        }
     }
 }
 
 class clazz2 : bruh
 {
-    class clazz3
+    class clazz2
+    {
+        
+    }
+
+    class clazz1
     {
         int j;
         private class clazz_2_2_1 : bruh, bruh2

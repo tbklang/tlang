@@ -813,6 +813,7 @@ public final class Parser
 
         generated = new Clazz(className);
 
+        string[] inheritList;
 
         /* TODO: If we have the inherit symbol `:` */
         if(getSymbolType(getCurrentToken()) == SymbolType.INHERIT_OPP)
@@ -826,6 +827,7 @@ public final class Parser
             {
                 /* Check if it is an identifier (may be dotted) */
                 expect(SymbolType.IDENT_TYPE, getCurrentToken());
+                inheritList ~= getCurrentToken().getToken();
                 nextToken();
 
                 /* Check if we have ended with a `{` */
@@ -847,6 +849,9 @@ public final class Parser
                 }
             }
         }
+
+        /* Add inherit list */
+        generated.addInherit(inheritList);
 
         /* TODO: Technically we should be more specific, this does too much */
         /* Parse a body */

@@ -126,9 +126,101 @@ public final class TypeChecker
         return isMarkedEntity(getEntity(c, name));
     }
 
-    
+    private Entity resolveWithin(Container currentContainer, string name)
+    {
+        Statement[] statements = currentContainer.getStatements();
 
-    private void checkTypes(Container c)
+        foreach(Statement statement; statements)
+        {
+            /* TODO: Only acuse parser not done yet */
+            if(statement !is null)
+            {
+                Entity entity = cast(Entity)statement;
+
+                if(entity)
+                {
+                    if(cmp(entity.getName(), name) == 0)
+                    {
+                        return entity;
+                    }
+                }
+            }   
+        }
+
+        return null;
+    }   
+
+    private Entity resolveUp(Container currentContainer, string name)
+    {
+        /* If given container is null */
+        if(!currentContainer)
+        {
+            return null;
+        }
+
+        /* Try find the Entity within the current Contaier */
+        Entity entity = resolveWithin(currentContainer, name);
+        gprintln("Poes");
+        gprintln(entity);
+
+        /* If we found it return it */
+        if(entity)
+        {
+            return entity;
+        }
+        /* If we didn't then try go up a container */
+        else
+        {
+            Container possibleParent = currentContainer.parentOf();
+
+            /* Can we go up */
+            if(possibleParent)
+            {
+                return resolveUp(possibleParent, name);
+            }
+            /* If the current container has no parent container */
+            else
+            {
+                return null;
+            }
+        }
+    }
+
+    private void checkClassInherit(Clazz clazz)
+    {
+        /* Get the current class's parent */
+        string[] parentClasses = clazz.getInherit();
+
+        /* Try resolve all of these */
+        foreach(string parent; parentClasses)
+        {
+            
+        }
+    }    
+
+    private void checkClasses(Container c)
+    {
+        /**
+        * Make sure no duplicate types (classes) defined
+        * within same Container, mark them as referenceable
+        */
+        checkClassNames(c);
+
+        /**
+        * Now that everything is neat and tidy
+        */
+
+        checkClassInherit();
+    }
+
+
+
+    /**
+    * Starting from a Container c this makes sure
+    * that all classes defined within that container
+    * do no clash name wise
+    */
+    private void checkClassNames(Container c)
     {
         /* Get all types (Clazz so far) */
         Clazz[] classTypes;
@@ -148,14 +240,32 @@ public final class TypeChecker
             * Check if the first class found with my name is the one being
             * processed, if so then it is fine, if not then error, it has
             * been used (that identifier) already
+            *
+            * TODO: We cann add a check here to not allow containerName == clazz
+            * TODO: Call resolveUp as we can then stop class1.class1.class1
+            * Okay top would resolve first part but class1.class2.class1
+            * would not be caught by that
+            *
+            * TODO: This will meet inner clazz1 first, we need to do another check
             */
-            if(getEntity(c, clazz.getName()) != clazz)
+            if(resolveUp(c, clazz.getName()) != clazz)
             {
-                Parser.expect("Error, we already have a class with name "~clazz.getName());
+                Parser.expect("Error defining class with same name in same container: ClassTried: "~clazz.getName()~", Container: "~c.getName());
             }
             else
             {
-                gprintln("Name now in use: "~clazz.getName());
+                // /* Still check if there is something with our name above us */
+                // Container parentContainer = c.parentOf();
+
+                // /* If at this level container we find duplicate */
+                // if(resolveUp(parentContainer, clazz.getName()))
+                // {
+                    
+                //         Parser.expect("Class with name "~clazz.getName()~" defined in class "~c.getName());
+                    
+                // }
+
+                
             }
         }
 
@@ -174,16 +284,16 @@ public final class TypeChecker
         */
         foreach(Clazz clazz; classTypes)
         {
+            gprintln("Check recursive "~to!(string)(clazz), DebugType.WARNING);
+
             /* Check the current class's types within */
-            checkTypes(clazz);
+            checkClassNames(clazz);
 
             /* If all went well mark this class as referencable */
             markEntity(clazz);
         }
 
-        /**
-        * If we have made it here then all the classes
-        * Now we can go through all classes at this level (they )
+       
         
         
         /*Now we should loop through each class */
@@ -201,7 +311,7 @@ public final class TypeChecker
         //gprintln("Processing at path/level: "~path, DebugType.WARNING);
 
         /* First we define types (so classes) */
-        checkTypes(c);
+        checkClasses(c);
 
         Statement[] statements = c.getStatements();
         string path = c.getName();
