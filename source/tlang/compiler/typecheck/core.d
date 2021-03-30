@@ -6,7 +6,7 @@ import std.conv : to;
 import std.string;
 import std.stdio;
 import gogga;
-import compiler.parser;
+import compiler.parsing.core;
 
 /**
 * The Parser only makes sure syntax
@@ -149,6 +149,15 @@ public final class TypeChecker
                 Variable variable = cast(Variable)statement;
                 gprintln("Declaring variable"~variable.getName());
 
+                /**
+                * To check if a name is taken we check if the current one equals the
+                * first match (if so, then declare, if not, then taken)
+                */
+                if(getEntity(c, variable.getName()) != variable)
+                {
+                    Parser.expect("Duplicate name tried to be declared");
+                }
+
                 /* Check if this variable has an expression, if so check that */
                 if(variable.getAssignment())
                 {
@@ -162,25 +171,12 @@ public final class TypeChecker
                         Parser.expect("Expression type fetch failed: "~variable.getName());
                     }
                     gprintln("ExpressionTYpe in VarAssign: "~type);
+
+
                 }
-                /* If not then go ahead and attempt to declare it */
-                else
-                {
-                    /**
-                    * To check if a name is taken we check if the current one equals the
-                    * first match (if so, then declare, if not, then taken)
-                    */
-                    if(getEntity(c, variable.getName()) != variable)
-                    {
-                        import compiler.parser;
-                        Parser.expect("Duplicate name tried to be declared");
-                    }
-                    else
-                    {
-                        markEntity(variable);
-                        // declareName(path~variable.getName());
-                    }
-                }
+
+                /* Set the variable as declared */
+                markEntity(variable);
             }
         }
     }
@@ -399,7 +395,6 @@ public final class TypeChecker
     private bool checkDuplicateTopLevel()
     {
         import misc.utils;
-        import compiler.parser : Parser;
 
         /* List of names travsersed so far */
         string[] names;
@@ -429,7 +424,7 @@ unittest
     import std.file;
     import std.stdio;
     import compiler.lexer;
-    import compiler.parser;
+    import compiler.parsing.core;
 
     // isUnitTest = true;
 

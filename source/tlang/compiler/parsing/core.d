@@ -1,4 +1,4 @@
-module compiler.parser;
+module compiler.parsing.core;
 
 import gogga;
 import std.conv : to;

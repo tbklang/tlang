@@ -4,7 +4,7 @@ import gogga;
 import std.conv : to;
 import compiler.lexer;
 import std.stdio : File;
-import compiler.parser;
+import compiler.parsing.core;
 import compiler.symbols.check;
 import compiler.symbols.data;
 import compiler.typecheck.core;
