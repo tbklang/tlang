@@ -19,7 +19,7 @@ int ll = f(1,1);
 
 public ubyte k = 1;
 private ubyte k2 = 1;
-protected ubyte k3 = 1-1;
+protected ubyte k3 = -1;
 
 
 public class clazz1

@@ -46,18 +46,6 @@ public enum SymbolType
     UNKNOWN
 }
 
-public class Symbol
-{
-    /* Token */
-    private Token token;
-    private SymbolType symbolType;
-
-    this(SymbolType symbolType, Token token)
-    {
-        this.token = token;
-        this.symbolType = symbolType;
-    }
-}
 
 
 
@@ -677,7 +665,7 @@ public class Variable : TypedEntity
 
 public class Expression : Statement
 {
-    import compiler.typecheck;
+    import compiler.typecheck.core;
     /* TODO: Takes in symbol table? */
     public string evaluateType(TypeChecker typechecker, Container c)
     {
@@ -788,7 +776,7 @@ public class VariableExpression : IdentExpression
         super(identifier);
     }
 
-    import compiler.typecheck;
+    import compiler.typecheck.core;
     public override string evaluateType(TypeChecker typeChecker, Container c)
     {
         string type;

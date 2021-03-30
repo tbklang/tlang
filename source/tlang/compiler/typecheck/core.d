@@ -1,4 +1,4 @@
-module compiler.typecheck;
+module compiler.typecheck.core;
 
 import compiler.symbols;
 import std.conv : to;

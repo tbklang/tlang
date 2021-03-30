@@ -6,7 +6,7 @@ import compiler.lexer;
 import std.stdio : File;
 import compiler.parser;
 import compiler.symbols;
-import compiler.typecheck;
+import compiler.typecheck.core;
 
 void beginCompilation(string[] sourceFiles)
 {
