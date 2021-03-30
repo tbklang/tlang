@@ -40,6 +40,29 @@ class O : ooga
    
 }
 
+class testClass
+{
+    class test2 : testClass
+    {
+
+    }
+
+    class test3 : test2
+    {
+        
+    }
+
+    class test4 : bruh
+    {
+
+    }
+
+    class clazz1 : myModule.clazz1
+    {
+
+    }
+}
+
 public class clazz1
 {
     int k;

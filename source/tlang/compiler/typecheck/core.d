@@ -211,7 +211,24 @@ public final class TypeChecker
             foreach(string parent; parentClasses)
             {
                 /* Find the named entity */
-                Entity namedEntity = resolveUp(c, parent);
+                Entity namedEntity;
+
+                /* Check if the name is rooted */
+                string[] dotPath = split(parent, '.');
+                gprintln(dotPath.length);
+
+                /* If the name is rooted resolve the name top-down */
+                if(dotPath.length > 1)
+                {
+                    namedEntity = getEntity(modulle, parent);
+                }
+                /* If the name is not rooted resolve the name bottom up */
+                else
+                {
+                    namedEntity = resolveUp(c, parent);
+                }
+
+                 
 
                 /* If the entity exists */
                 if(namedEntity)
