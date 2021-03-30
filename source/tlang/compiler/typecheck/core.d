@@ -313,6 +313,36 @@ public final class TypeChecker
             }
             else
             {
+                /* Get the current container's parent container */
+                Container parentContainer = c.parentOf();
+
+                /* If c (container is Module) then it has no Parent */
+                if(!parentContainer)
+                {
+                    if(cmp(c.getName(), clazz.getName()) == 0)
+                    {
+                        Parser.expect("Cannot use name of module, in use");
+                    }
+                }
+
+                /* Find the name starting in upper cotainer */
+                Entity clazzAbove = resolveUp(parentContainer, clazz.getName());
+
+                if(!clazzAbove)
+                {
+
+                }
+                else
+                {
+                    Parser.expect("Name in use abpve us, bad"~to!(string)(clazz));
+                }
+
+                /* If the Container's parent container is Module then we can have
+                /* TODO: Check that it doesn;t equal any class up the chain */
+                /* TODO: Exclude Module from this */
+
+
+
                 // /* Still check if there is something with our name above us */
                 // Container parentContainer = c.parentOf();
 

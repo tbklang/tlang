@@ -21,16 +21,16 @@ public ubyte k = 1;
 private ubyte k2 = 1;
 protected ubyte k3 = -1;
 
-class ooga : P
+class ooga : O
 {
 
 }
 
-class P : ooga
+class O : ooga
 {
-    class P
+    class I
     {
-        class P : ooga
+        class L : ooga
         {
 
         }
@@ -45,20 +45,25 @@ public class clazz1
     int k;
     print("Hello world");
 
-    public class clazz1
+    public class clazz3
     {
-        class clazz1
+        class bruh2
         {
 
         }
     }
 }
 
+class myModule
+{
+    
+}
+
 class bruh
 {
-    class L
+    class bruh1
     {
-        class bruh
+        class bruh2
         {
 
         }
@@ -67,15 +72,15 @@ class bruh
 
 class clazz2 : bruh
 {
-    class clazz2
+    class clazzU
     {
         
     }
 
-    class clazz1
+    class clazz12
     {
         int j;
-        private class clazz_2_2_1 : bruh, bruh2
+        private class clazz_2_2_1 : bruh, clazzU
         {
 
         }
