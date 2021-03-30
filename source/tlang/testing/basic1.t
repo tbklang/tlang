@@ -47,7 +47,7 @@ public class clazz1
 
     public class clazz3
     {
-        class bruh2
+        class clazz1
         {
 
         }   

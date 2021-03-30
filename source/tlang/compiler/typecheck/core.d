@@ -33,16 +33,16 @@ public final class TypeChecker
 
 
         /* Test getEntity on Module */
-        gprintln("getEntity: myModule.x: "~to!(string)(getEntity(modulle, "myModule.x")));
-        gprintln("getEntity: x: "~to!(string)(getEntity(modulle, "x")));
+        // gprintln("getEntity: myModule.x: "~to!(string)(getEntity(modulle, "myModule.x")));
+        // gprintln("getEntity: x: "~to!(string)(getEntity(modulle, "x")));
         
-        /* Test getEntity on Class */
-        Container clazzEntity = cast(Container)getEntity(modulle, "clazz1");
-        gprintln("getEntity: clazz1.k: "~to!(string)(getEntity(clazzEntity, "clazz1.k")));
-        gprintln("getEntity: k: "~to!(string)(getEntity(clazzEntity, "k")));
-        clazzEntity = cast(Container)getEntity(modulle, "myModule.clazz1");
-        gprintln("getEntity: clazz1.k: "~to!(string)(getEntity(clazzEntity, "clazz1.k")));
-        gprintln("getEntity: k: "~to!(string)(getEntity(clazzEntity, "myModule.clazz1.k")));
+        // /* Test getEntity on Class */
+        // Container clazzEntity = cast(Container)getEntity(modulle, "clazz1");
+        // gprintln("getEntity: clazz1.k: "~to!(string)(getEntity(clazzEntity, "clazz1.k")));
+        // gprintln("getEntity: k: "~to!(string)(getEntity(clazzEntity, "k")));
+        // clazzEntity = cast(Container)getEntity(modulle, "myModule.clazz1");
+        // gprintln("getEntity: clazz1.k: "~to!(string)(getEntity(clazzEntity, "clazz1.k")));
+        // gprintln("getEntity: k: "~to!(string)(getEntity(clazzEntity, "myModule.clazz1.k")));
 
         //process();
         beginCheck();
@@ -307,23 +307,25 @@ public final class TypeChecker
             *
             * TODO: This will meet inner clazz1 first, we need to do another check
             */
+            gprintln("ddddsffsad");
             if(resolveUp(c, clazz.getName()) != clazz)
             {
                 Parser.expect("Error defining class with same name in same container: ClassTried: "~clazz.getName()~", Container: "~c.getName());
             }
             else
             {
+                gprintln("dshfgjhdsj");
                 /* Get the current container's parent container */
                 Container parentContainer = c.parentOf();
 
-                /* If c (container is Module) then it has no Parent */
-                if(!parentContainer)
-                {
+                /* Don't allow a class to be named after it's container */
+                // if(!parentContainer)
+                // {
                     if(cmp(c.getName(), clazz.getName()) == 0)
                     {
-                        Parser.expect("Cannot use name of module, in use");
+                        Parser.expect("Class cannot be defined with same name as containing entity");
                     }
-                }
+                // }
 
                 /* TODO: We allow shaddowing so below is disabled */
                 /* TODO: We should however use the below for dot-less resolution */
@@ -401,6 +403,7 @@ public final class TypeChecker
         //gprintln("Processing at path/level: "~path, DebugType.WARNING);
 
         /* First we define types (so classes) */
+        gprintln("dd");
         checkClasses(c);
 
         Statement[] statements = c.getStatements();
