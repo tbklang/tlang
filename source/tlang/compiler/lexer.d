@@ -80,7 +80,7 @@ public final class Lexer
     */
     private bool isBuildUpValidIdent()
     {
-        import compiler.symbols;
+        import compiler.symbols.check;
         return isPathIdentifier(currentToken) || isIdentifier(currentToken);
     }
 

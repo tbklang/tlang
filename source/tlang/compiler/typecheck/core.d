@@ -1,6 +1,7 @@
 module compiler.typecheck.core;
 
-import compiler.symbols;
+import compiler.symbols.check;
+import compiler.symbols.data;
 import std.conv : to;
 import std.string;
 import std.stdio;
