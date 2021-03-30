@@ -119,6 +119,12 @@ public final class TypeChecker
         return -1;
     }
 
+
+    public bool isMarkedByName(Container c, string name)
+    {
+        return isMarkedEntity(getEntity(c, name));
+    }
+
     private void checkIt(Container c)
     {
         //gprintln("Processing at path/level: "~path, DebugType.WARNING);
