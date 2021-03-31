@@ -7,6 +7,7 @@ import std.string;
 import std.stdio;
 import gogga;
 import compiler.parsing.core;
+import compiler.typecheck.resolution;
 
 /**
 * The Parser only makes sure syntax
@@ -19,9 +20,13 @@ public final class TypeChecker
 {
     private Module modulle;
 
+    /* The name resolver */
+    private Resolver resolver;
+
     this(Module modulle)
     {
         this.modulle = modulle;
+        resolver = new Resolver(this);
 
         writeln("Got globals: "~to!(string)(Program.getAllOf(new Variable(null, null), modulle.getStatements())));
         writeln("Got functions: "~to!(string)(Program.getAllOf(new Function(null, null, null, null), modulle.getStatements())));
@@ -126,179 +131,7 @@ public final class TypeChecker
         return isMarkedEntity(getEntity(c, name));
     }
 
-    private Entity resolveWithin(Container currentContainer, string name)
-    {
-        Statement[] statements = currentContainer.getStatements();
-
-        foreach(Statement statement; statements)
-        {
-            /* TODO: Only acuse parser not done yet */
-            if(statement !is null)
-            {
-                Entity entity = cast(Entity)statement;
-
-                if(entity)
-                {
-                    if(cmp(entity.getName(), name) == 0)
-                    {
-                        return entity;
-                    }
-                }
-            }   
-        }
-
-        return null;
-    }   
-
-    private Entity resolveUp(Container currentContainer, string name)
-    {
-        /* If given container is null */
-        if(!currentContainer)
-        {
-            return null;
-        }
-
-        /* Try find the Entity within the current Contaier */
-        Entity entity = resolveWithin(currentContainer, name);
-        gprintln("Poes");
-        gprintln(entity);
-
-        /* If we found it return it */
-        if(entity)
-        {
-            return entity;
-        }
-        /* If we didn't then try go up a container */
-        else
-        {
-            Container possibleParent = currentContainer.parentOf();
-
-            /* Can we go up */
-            if(possibleParent)
-            {
-                return resolveUp(possibleParent, name);
-            }
-            /* If the current container has no parent container */
-            else
-            {
-                gprintln("Simply not found");
-                return null;
-            }
-        }
-    }
-
-    /**
-    * Resolves dot-paths and non-dot paths
-    * (both relative to a container)
-    *
-    * Example: Given c=clazz1 and name=clazz1 => result = clazz1
-    * Example: Given c=clazz1 and name=x (x is within) => result = x
-    * Example: Given c=clazz1 and name=clazz1.x => result = x
-    * Example: Given c=clazz1 and name=clazz2.x => result = x
-    */
-    private Entity resolveBest(Container c, string name)
-    {
-        string[] path = split(name, '.');
-
-        /**
-        * If no dot
-        *
-        * Try and find `name` within c
-        */
-        if(path.length == 1)
-        {
-            Entity entityWithin = resolveUp(c, name);
-
-            /* If `name` was in container `c` */
-            if(entityWithin)
-            {
-                return entityWithin;
-            }
-            /* If `name` was NOT within container `c` */
-            else
-            {
-                /* If the `name` the name of the container, then return it */
-                if(cmp(c.getName(), name) == 0)
-                {
-                    return c;
-                }
-                /* Not found */
-                else
-                {
-                    return null;
-                }
-            }
-        }
-        else
-        {
-            /* If the root is the current container */
-            if(cmp(path[0], c.getName()) == 0)
-            {
-
-                /* If only 1 left then just grab it */
-                if(path.length == 2)
-                {
-                    Entity entityNext = resolveWithin(c, path[1]);
-                    return entityNext;
-                }
-                /* Go deeper */
-                else
-                {
-                    string newPath = name[indexOf(name, '.')+1..name.length];
-                    Entity entityNext = resolveWithin(c, path[1]);
-
-                    /* If null then not found */
-                    if(entityNext)
-                    {
-                        Container containerWithin = cast(Container)entityNext;
-
-                        if(entityNext)
-                        {
-                            return resolveBest(containerWithin, newPath);
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-            }
-            /* We need to search higher */
-            else
-            {
-                /* TODO: Bug is we will never find top container */
-
-                Entity entityFound = resolveUp(c, path[0]);
-
-                if(entityFound)
-                {
-                    Container con = cast(Container)entityFound;
-
-                    if(con)
-                    {
-                        gprintln("fooook");
-                        return resolveBest(con, name);
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                else
-                {
-                    /* TODO: We add module check here */
-                    
-                    gprintln("killl me");
-                    return null;
-                }
-            }
-
-        }
-    }
+    
 
     private void checkClassInherit(Container c)
     {
@@ -338,10 +171,10 @@ public final class TypeChecker
                 /* If the name is not rooted resolve the name bottom up */
                 else
                 {
-                    namedEntity = resolveUp(c, parent);
+                    namedEntity = resolver.resolveUp(c, parent);
                 }
 
-                 namedEntity=resolveBest(c, parent);
+                 namedEntity=resolver.resolveBest(c, parent);
 
                 /* If the entity exists */
                 if(namedEntity)
@@ -438,7 +271,7 @@ public final class TypeChecker
             * TODO: This will meet inner clazz1 first, we need to do another check
             */
             gprintln("ddddsffsad");
-            if(resolveUp(c, clazz.getName()) != clazz)
+            if(resolver.resolveUp(c, clazz.getName()) != clazz)
             {
                 Parser.expect("Error defining class with same name in same container: ClassTried: "~clazz.getName()~", Container: "~c.getName());
             }

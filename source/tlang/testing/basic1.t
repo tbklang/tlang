@@ -33,7 +33,7 @@ class X : myModule.ooga
         
     }
 
-    class Z : myModule.ooga
+    class Z : ooga
     {
 
     }
@@ -50,7 +50,7 @@ class O : ooga
 {
     class I
     {
-        class L : ooga
+        class L : myModule.ooga
         {
 
         }
@@ -73,6 +73,11 @@ class testClass
         class llllll : testClass.test2
         {
             class fokfok : llllll
+            {
+
+            }
+
+            class gustav : fokfok
             {
 
             }
@@ -111,6 +116,13 @@ class testClass
             {
 
             }
+
+            class testtest9 : L
+            {
+
+            }
+
+            class L {}
 
             class testtest8 : testtest7, clazz1.nofuck
             {
