@@ -92,7 +92,7 @@ class testClass
 
             }
 
-            class testtest8 : O.L
+            class testtest8 : testtest7, clazz1.nofuck
             {
 
             }
@@ -162,6 +162,10 @@ public class clazz1
 {
     int k;
     print("Hello world");
+    class nofuck
+    {
+
+    }
 
     public class clazz3
     {
