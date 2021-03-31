@@ -21,6 +21,26 @@ public ubyte k = 1;
 private ubyte k2 = 1;
 protected ubyte k3 = -1;
 
+class X : myModule.ooga
+{
+    class Y : ooga
+    {
+
+    }
+
+    class D : X.Y
+    {
+        
+    }
+
+    class Z : myModule.ooga
+    {
+
+    }
+
+    
+}
+
 class ooga : O
 {
 
