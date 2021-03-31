@@ -98,24 +98,15 @@ public final class Resolver
         {
             Entity entityWithin = resolveUp(c, name);
 
-            /* If `name` was in container `c` */
+            /* If `name` was in container `c` or above it */
             if(entityWithin)
             {
                 return entityWithin;
             }
-            /* If `name` was NOT within container `c` */
+            /* If `name` was NOT found within container `c` or above it */
             else
             {
-                /* If the `name` the name of the container, then return it */
-                if(cmp(c.getName(), name) == 0)
-                {
-                    return c;
-                }
-                /* Not found */
-                else
-                {
-                    return null;
-                }
+               return null;
             }
         }
         else
@@ -143,6 +134,9 @@ public final class Resolver
 
                         if(entityNext)
                         {
+                            /* TODO: Technically I could strip new root as we have the container */
+                            /* TODO: The only reason I don't want to do that is the condition */
+                            //newPath = newPath[indexOf(newPath, '.')+1..newPath.length];
                             return resolveBest(containerWithin, newPath);
                         }
                         else

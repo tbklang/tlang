@@ -50,7 +50,7 @@ class O : ooga
 {
     class I
     {
-        class L : myModule.ooga
+        class L 
         {
 
         }
@@ -59,6 +59,71 @@ class O : ooga
 
     
    
+}
+
+class Me
+{
+    class You
+    {
+        class Me
+        {
+
+        }
+
+        class InnerMe : Me
+        {
+
+        }
+
+        class OuterMe 
+        {
+
+        }
+    }   
+}
+
+class Us
+{
+    class Container : Us
+    {
+
+    }
+
+    class Tom
+    {
+
+    }
+
+    class Poes
+    {
+        class Kak
+        {
+
+        }
+    }
+}
+
+class Them
+{
+    class Container
+    {   
+        class TestInner : Container
+        {
+
+        }
+
+        class TestOuter : Us.Container
+        {
+            
+        }
+
+        class Naai : Us.Poes.Kak
+        {
+            
+        }
+
+        
+    }
 }
 
 class testClass
@@ -123,6 +188,30 @@ class testClass
             }
 
             class L {}
+
+            class tieg : troy
+            {
+                class troy
+                {
+                    
+                }
+            }
+            
+            class troy
+            {
+                
+            }
+
+            
+
+
+            class gabby
+            {
+                class troy
+                {
+                
+                }
+            }
 
             class testtest8 : testtest7, clazz1.nofuck
             {
