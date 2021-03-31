@@ -93,6 +93,8 @@ public final class Resolver
         * If no dot
         *
         * Try and find `name` within c
+        *
+        * TODO: WOn't resolve a module
         */
         if(path.length == 1)
         {
@@ -154,6 +156,19 @@ public final class Resolver
             else
             {
                 /* TODO: Bug is we will never find top container */
+                /* Check if the name of root is that of Module */
+                if(cmp(typeChecker.getModule().getName(), path[0]) == 0)
+                {
+                    /* Root ourselves relative to the Module */
+                    /* TODO: Don't serch for myModule class and ooga within */
+                    /**
+                    * TODO: Although the above should be impossible when we set usable names
+                    * and make sure module name cannot be sed anywhere
+                    */
+                    /* TODO: Even if it could be because of this check it would be ignored */
+                    /* TODO: This is what we want, but to avoid confusion we shouldn't allow the use of that name */
+                    return resolveBest(typeChecker.getModule(), name);
+                }
 
                 Entity entityFound = resolveUp(c, path[0]);
 

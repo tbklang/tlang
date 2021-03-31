@@ -39,13 +39,7 @@ class X : myModule.ooga
 
     }
 
-    class myModule
-    {
-        class ooga
-        {
-
-        }
-    }
+   
 
     class K : myModule.ooga
     {
@@ -54,7 +48,10 @@ class X : myModule.ooga
 
     class D : X.Y
     {
-        
+        class Fok : myModule.ooga
+        {
+
+        }
     }
 
     class F : Shekshi.G.F {}
@@ -146,6 +143,16 @@ class Them
         class Naai : Us.Poes.Kak
         {
             
+        }
+
+        class naai : testClass.test3.llllll.fokfok
+        {
+
+        }
+
+        class baai : myModule.testClass.test3.llllll.fokfok
+        {
+
         }
 
         

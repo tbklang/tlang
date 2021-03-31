@@ -23,6 +23,11 @@ public final class TypeChecker
     /* The name resolver */
     private Resolver resolver;
 
+    public Module getModule()
+    {
+        return modulle;
+    }
+
     this(Module modulle)
     {
         this.modulle = modulle;
