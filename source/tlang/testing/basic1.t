@@ -21,6 +21,17 @@ public ubyte k = 1;
 private ubyte k2 = 1;
 protected ubyte k3 = -1;
 
+class Shekshi 
+{
+    class G
+    {
+        class F
+        {
+
+        }
+    }
+}
+
 class X : myModule.ooga
 {
     class Y : ooga
@@ -28,10 +39,25 @@ class X : myModule.ooga
 
     }
 
+    class myModule
+    {
+        class ooga
+        {
+
+        }
+    }
+
+    class K : myModule.ooga
+    {
+        
+    }
+
     class D : X.Y
     {
         
     }
+
+    class F : Shekshi.G.F {}
 
     class Z : ooga
     {

@@ -41,11 +41,11 @@ public final class Resolver
 
     public Entity resolveUp(Container currentContainer, string name)
     {
-        /* If given container is null */
-        if(!currentContainer)
-        {
-            return null;
-        }
+        // /* If given container is null */
+        // if(!currentContainer)
+        // {
+        //     return null;
+        // }
 
         /* Try find the Entity within the current Contaier */
         Entity entity = resolveWithin(currentContainer, name);
