@@ -271,7 +271,7 @@ public final class TypeChecker
             else
             {
                 /* TODO: Bug is we will never find top container */
-                
+
                 Entity entityFound = resolveUp(c, path[0]);
 
                 if(entityFound)
@@ -290,6 +290,8 @@ public final class TypeChecker
                 }
                 else
                 {
+                    /* TODO: We add module check here */
+                    
                     gprintln("killl me");
                     return null;
                 }
