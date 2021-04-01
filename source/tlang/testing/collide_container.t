@@ -1,0 +1,3 @@
+module x;
+
+int x;
