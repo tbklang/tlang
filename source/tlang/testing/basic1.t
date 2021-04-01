@@ -23,6 +23,11 @@ protected ubyte k3 = -1;
 
 class Shekshi 
 {
+    class myModule
+    {
+        
+    }
+
     class G
     {
         class F

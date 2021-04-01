@@ -15,6 +15,99 @@ public final class Resolver
         this.typeChecker = typeChecker;
     }
 
+    /**
+    * Given an Entity generate it's full path relative to a given
+    * container
+    */
+    public string generateName(Container relativeTo, Entity entity)
+    {
+        string[] name = generateName_Internal(relativeTo, entity);
+        string path;
+        for(ulong i = 0; i < name.length; i++)
+        {
+            path ~= name[name.length-1-i];
+
+            if(i != name.length-1)
+            {
+                path ~= ".";
+            }
+        }
+
+        return path;
+    }
+
+    private string[] generateName_Internal(Container relativeTo, Entity entity)
+    {
+        /**
+        * If the Entity and Container are the same then
+        * just returns its name
+        */
+        if(relativeTo == entity)
+        {
+            return [relativeTo.getName()];
+        }
+        /**
+        * If the Entity is contained within the Container
+        */
+        else if(isDescendant(relativeTo, entity))
+        {
+            string[] items;
+
+            Entity currentEntity = entity;
+            do
+            {
+                items ~= currentEntity.getName();
+                currentEntity = currentEntity.parentOf();
+            }
+            while(currentEntity != relativeTo);
+
+            /* Add the relative to container */
+            items ~= relativeTo.getName();
+
+            return items;
+        }
+        /* If not */
+        else
+        {
+            return null;
+        }
+    }
+
+    /**
+    * Returns true if Entity e is C or is within
+    * (contained under c), false otherwise
+    */
+    public bool isDescendant(Container c, Entity e)
+    {
+        /**
+        * If they are the same
+        */
+        if(c == e)
+        {
+            return true;
+        }
+        /**
+        * If not, check descendancy
+        */
+        else
+        {
+            Entity currentEntity = e;
+
+            do
+            {
+                currentEntity = currentEntity.parentOf();
+
+                if(currentEntity == c)
+                {
+                    return true;
+                }
+            }
+            while(currentEntity);
+
+            return false;
+        }
+    }
+
     public Entity resolveWithin(Container currentContainer, string name)
     {
         Statement[] statements = currentContainer.getStatements();

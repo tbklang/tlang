@@ -86,7 +86,23 @@ public final class TypeChecker
     private void beginCheck()
     {
         // checkIt(modulle.getStatements(), modulle.getName());
+
+
+        /* First we define global types (so classes) */
+        gprintln("dd");
+        checkClasses(modulle);
+
+        /* TODO: Then we declare global functions */
+        checkFunctions(modulle);
+
+        /* TODO: Then we declare global variables */
+
         checkIt(modulle);
+    }
+
+    private void checkFunctions(Container c)
+    {
+
     }
 
     private void checkClass(Clazz clazz)
@@ -168,18 +184,8 @@ public final class TypeChecker
                 string[] dotPath = split(parent, '.');
                 gprintln(dotPath.length);
 
-                /* If the name is rooted resolve the name top-down */
-                if(dotPath.length > 1)
-                {
-                    namedEntity = getEntity(modulle, parent);
-                }
-                /* If the name is not rooted resolve the name bottom up */
-                else
-                {
-                    namedEntity = resolver.resolveUp(c, parent);
-                }
-
-                 namedEntity=resolver.resolveBest(c, parent);
+                /* Resolve the name */
+                namedEntity = resolver.resolveBest(c, parent);
 
                 /* If the entity exists */
                 if(namedEntity)
@@ -241,6 +247,8 @@ public final class TypeChecker
     }
 
 
+    
+
 
     /**
     * Starting from a Container c this makes sure
@@ -263,6 +271,7 @@ public final class TypeChecker
         /* Declare each type */
         foreach(Clazz clazz; classTypes)
         {
+            gprintln("Name: "~resolver.generateName(modulle, clazz));
             /**
             * Check if the first class found with my name is the one being
             * processed, if so then it is fine, if not then error, it has
@@ -366,13 +375,16 @@ public final class TypeChecker
 
     /* TODO clazz_21_211 , crashes */
 
+    private bool isNameInUse(Container relative, string name)
+    {
+        return resolver.resolveBest(relative, name) !is null;
+    }
+
     private void checkIt(Container c)
     {
         //gprintln("Processing at path/level: "~path, DebugType.WARNING);
 
-        /* First we define types (so classes) */
-        gprintln("dd");
-        checkClasses(c);
+        
 
         Statement[] statements = c.getStatements();
         string path = c.getName();
