@@ -9,6 +9,8 @@ int b = a;
 int c = myModule.x;
 int l;
 
+l=2;
+
 
 int o = myModule.l;
 

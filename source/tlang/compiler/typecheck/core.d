@@ -91,7 +91,7 @@ public final class TypeChecker
         * Classes being declared before Functions and
         * Functions before Variables
         */
-        checkContainer(modulle);
+        checkContainer(modulle); /* TODO: Rename checkContainerCollision */
 
         checkIt(modulle);
     }
@@ -401,6 +401,11 @@ public final class TypeChecker
         
     }
 
+    /**
+    * Finds the first occurring Entity with the provided
+    * name based on Classes being searched, then Functions
+    * and lastly Variables
+    */
     public Entity findPrecedence(Container c, string name)
     {
         foreach(Entity entity; getContainerMembers(c))

@@ -92,6 +92,18 @@ public enum FunctionType
     STATIC, VIRTUAL
 }
 
+public class Assignment : Statement
+{
+    private string identifier;
+    private Expression assignmentExpression;
+
+    this(string identifier, Expression assignmentExpression)
+    {
+        this.identifier = identifier;
+        this.assignmentExpression = assignmentExpression;
+    }
+}
+
 /* Declared variables, defined classes and fucntions */
 public class Entity : Statement
 {

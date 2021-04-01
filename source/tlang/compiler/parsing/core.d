@@ -216,6 +216,30 @@ public final class Parser
         tokenPtr--;   
     }
 
+    public Assignment parseAssignment()
+    {
+        /* Generated Assignment statement */
+        Assignment assignment;
+
+        /* The identifier being assigned to */
+        string identifier = getCurrentToken().getToken();
+        nextToken();
+        nextToken();
+
+        /* Expression */
+        Expression assignmentExpression = parseExpression();
+
+        assignment = new Assignment(identifier, assignmentExpression);
+
+        /* TODO: Support for (a=1)? */
+        /* Expect a semicolon */
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+        nextToken();
+        
+
+        return assignment;
+    }
+
     public Statement parseName()
     {
         Statement ret;
@@ -245,6 +269,12 @@ public final class Parser
         {
             previousToken();
             ret = parseTypedDeclaration();
+        }
+        /* Assignment */
+        else if(type == SymbolType.ASSIGN)
+        {
+            previousToken();
+            ret = parseAssignment();
         }
         /* Any other case */
         else
