@@ -28,12 +28,17 @@ class kl
 
 class Shekshi 
 {
-    class Shekshi
+    class Shekshi1
     {
         
     }
 
-    int Shekshi;
+    class kl
+    {
+        
+    }
+
+    int Shekshi2;
 
     class G
     {

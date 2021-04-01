@@ -320,6 +320,25 @@ public final class TypeChecker
                 string entityPath = resolver.generateName(modulle, entity);
                 Parser.expect("Cannot have entity \""~entityPath~"\" with same name as entity \""~preExistingEntity~"\" within same container");
             }
+            /**
+            * Otherwise this Entity is fine
+            */
+            else
+            {
+                string fullPath = resolver.generateName(modulle, entity);
+                string containerNameFullPath = resolver.generateName(modulle, c);
+                gprintln("Entity \""~fullPath~"\" is allowed to be defined within container \""~containerNameFullPath~"\"");
+
+                /**
+                * Check if this Entity is a Container, if so, then
+                * apply the same round of checks within it
+                */
+                Container possibleContainerEntity = cast(Container)entity;
+                if(possibleContainerEntity)
+                {
+                    checkContainer(possibleContainerEntity);
+                }
+            }
         }
 
         
