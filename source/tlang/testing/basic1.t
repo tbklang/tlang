@@ -21,12 +21,19 @@ public ubyte k = 1;
 private ubyte k2 = 1;
 protected ubyte k3 = -1;
 
+class kl
+{
+    
+}
+
 class Shekshi 
 {
-    class myModule
+    class Shekshi
     {
         
     }
+
+    int Shekshi;
 
     class G
     {
@@ -442,7 +449,7 @@ void.void pdsjhfjdsf(int j)
 
 }
 
-void k(int j, int k)
+void ko(int j, int k)
 {
 
     l.l("");
@@ -486,7 +493,7 @@ void k(int j, int k)
     }
 }
 
-void bruh()
+void brduh()
     {
         
     }
