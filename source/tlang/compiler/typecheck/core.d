@@ -271,7 +271,7 @@ public final class TypeChecker
         /* Declare each type */
         foreach(Clazz clazz; classTypes)
         {
-            gprintln("Name: "~resolver.generateName(modulle, clazz));
+            // gprintln("Name: "~resolver.generateName(modulle, clazz));
             /**
             * Check if the first class found with my name is the one being
             * processed, if so then it is fine, if not then error, it has
@@ -284,14 +284,12 @@ public final class TypeChecker
             *
             * TODO: This will meet inner clazz1 first, we need to do another check
             */
-            gprintln("ddddsffsad");
             if(resolver.resolveUp(c, clazz.getName()) != clazz)
             {
                 Parser.expect("Error defining class with same name in same container: ClassTried: "~clazz.getName()~", Container: "~c.getName());
             }
             else
             {
-                gprintln("dshfgjhdsj");
                 /* Get the current container's parent container */
                 Container parentContainer = c.parentOf();
 
@@ -300,7 +298,8 @@ public final class TypeChecker
                 // {
                     if(cmp(c.getName(), clazz.getName()) == 0)
                     {
-                        Parser.expect("Class cannot be defined with same name as containing entity");
+                        
+                        Parser.expect("Class \""~resolver.generateName(modulle, clazz)~"\" cannot be defined within container with same name, \""~resolver.generateName(modulle, c)~"\"");
                     }
                 // }
 
