@@ -52,14 +52,14 @@ void beginCompilation(string[] sourceFiles)
         {
             TypeChecker typeChecker = new TypeChecker(modulle);
         }
-        catch(CollidingNameException e)
-        {
-            gprintln(e.msg, DebugType.ERROR);
-            //gprintln("Stack trace:\n"~to!(string)(e.info));
-        }
+        // catch(CollidingNameException e)
+        // {
+        //     gprintln(e.msg, DebugType.ERROR);
+        //     //gprintln("Stack trace:\n"~to!(string)(e.info));
+        // }
         catch(TypeCheckerException e)
         {
-
+            gprintln(e.msg, DebugType.ERROR);
         }
         
         // typeChecker.check();
