@@ -8,6 +8,7 @@ import std.stdio;
 import gogga;
 import compiler.parsing.core;
 import compiler.typecheck.resolution;
+import compiler.typecheck.exceptions;
 
 /**
 * The Parser only makes sure syntax
@@ -201,7 +202,8 @@ public final class TypeChecker
             {
                 string containerPath = resolver.generateName(modulle, c);
                 string entityPath = resolver.generateName(modulle, entity);
-                Parser.expect("Cannot have entity \""~entityPath~"\" with same name as container \""~containerPath~"\"");
+                throw new CollidingNameException(this, c, entity);
+                //Parser.expect("Cannot have entity \""~entityPath~"\" with same name as container \""~containerPath~"\"");
             }
             /**
             * If there are conflicting names within the current container
@@ -212,7 +214,8 @@ public final class TypeChecker
             {
                 string preExistingEntity = resolver.generateName(modulle, findPrecedence(c, entity.getName()));
                 string entityPath = resolver.generateName(modulle, entity);
-                Parser.expect("Cannot have entity \""~entityPath~"\" with same name as entity \""~preExistingEntity~"\" within same container");
+                throw new CollidingNameException(this, findPrecedence(c, entity.getName()), entity);
+                //Parser.expect("Cannot have entity \""~entityPath~"\" with same name as entity \""~preExistingEntity~"\" within same container");
             }
             /**
             * Otherwise this Entity is fine
