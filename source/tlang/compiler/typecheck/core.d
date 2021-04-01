@@ -284,10 +284,28 @@ public final class TypeChecker
 
 
     /**
-    * Given a Container c and Type to search for
-    * this makes sure that within the container
-    * there are no entities with duplicate names
-    * or sharing the same name as the Container
+    * Given a Container `c` this will check all
+    * members of said Container and make sure
+    * none of them have a name that conflicts
+    * with any other member in said Container
+    * nor uses the same name AS the Container
+    * itself.
+    *
+    * Errors are printed when a member has a name
+    * of a previously defined member
+    *
+    * Errors are printed if the memeber shares a
+    * name with the container
+    *
+    * If the above 2 are false then a last check
+    * happens to check if the current Entity
+    * that just passed these checks is itself a
+    * Container, if not, then we do nothing and
+    * go onto processing the next Entity that is
+    * a member of Container `c` (we stay at the
+    * same level), HOWEVER if so, we then recursively
+    * call `checkContainer` on said Entity and the
+    * logic above applies again
     */
     private void checkContainer(Container c)
     {

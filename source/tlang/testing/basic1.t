@@ -9,6 +9,7 @@ int b = a;
 int c = myModule.x;
 int l;
 
+
 int o = myModule.l;
 
 
@@ -35,7 +36,7 @@ class Shekshi
 
     class kl
     {
-        
+
     }
 
     int Shekshi2;
