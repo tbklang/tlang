@@ -159,6 +159,10 @@ public final class TypeChecker
         checkClassInherit(c);
     }
 
+    public Resolver getResolver()
+    {
+        return resolver;
+    }
 
     /**
     * Given a Container `c` this will check all
@@ -200,10 +204,7 @@ public final class TypeChecker
             */
             if(cmp(c.getName(), entity.getName()) == 0)
             {
-                string containerPath = resolver.generateName(modulle, c);
-                string entityPath = resolver.generateName(modulle, entity);
-                throw new CollidingNameException(this, c, entity);
-                //Parser.expect("Cannot have entity \""~entityPath~"\" with same name as container \""~containerPath~"\"");
+                throw new CollidingNameException(this, c, entity, c);
             }
             /**
             * If there are conflicting names within the current container
@@ -212,10 +213,7 @@ public final class TypeChecker
             */
             else if(findPrecedence(c, entity.getName()) != entity)
             {
-                string preExistingEntity = resolver.generateName(modulle, findPrecedence(c, entity.getName()));
-                string entityPath = resolver.generateName(modulle, entity);
-                throw new CollidingNameException(this, findPrecedence(c, entity.getName()), entity);
-                //Parser.expect("Cannot have entity \""~entityPath~"\" with same name as entity \""~preExistingEntity~"\" within same container");
+                throw new CollidingNameException(this, findPrecedence(c, entity.getName()), entity, c);
             }
             /**
             * Otherwise this Entity is fine
