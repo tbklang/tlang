@@ -90,19 +90,55 @@ public final class TypeChecker
 
         /* First we define global types (so classes) */
         gprintln("dd");
-        checkClasses(modulle);
+        // checkClasses(modulle);
 
         /* TODO: Then we declare global functions */
-        checkFunctions(modulle);
+        //checkFunctions(modulle);
 
         /* TODO: Then we declare global variables */
+
+        checkContainer(modulle);
 
         checkIt(modulle);
     }
 
-    private void checkFunctions(Container c)
+    /**
+    * Called to run on globals and on within classes
+    *
+    * Checks no conflicting functions and that return types
+    * are valid, also checks that variables then don't conflict
+    */
+    private void checkMembers(Container c)
     {
 
+    }
+
+    private void checkFunctions(Container c)
+    {
+        Statement[] statements = c.getStatements();
+
+        Function[] functions;
+
+        foreach(Statement statement; statements)
+        {
+            if(statement !is null && cast(Function)statement)
+            {
+                functions ~= cast(Function)statement;
+            }
+        }
+
+        /**
+        * By now no class name conflicts,
+        */
+
+        /**
+        * Make sure within the current container there is no conflict
+        * (including with the container's name itself)
+        */
+        foreach(Function func; functions)
+        {
+
+        }
     }
 
     private void checkClass(Clazz clazz)
@@ -247,13 +283,121 @@ public final class TypeChecker
     }
 
 
-    
+    /**
+    * Given a Container c and Type to search for
+    * this makes sure that within the container
+    * there are no entities with duplicate names
+    * or sharing the same name as the Container
+    */
+    private void checkContainer(Container c)
+    {
+        /**
+        * Get all Entities of the Container with order Clazz, Function, Variable
+        */
+        Entity[] entities = getContainerMembers(c);
+        gprintln("checkContainer(C): "~to!(string)(entities));
+
+
+        foreach(Entity entity; entities)
+        {
+            /**
+            * If the current entity's name matches the container then error
+            */
+            if(cmp(c.getName(), entity.getName()) == 0)
+            {
+                string containerPath = resolver.generateName(modulle, c);
+                string entityPath = resolver.generateName(modulle, entity);
+                Parser.expect("Cannot have entity \""~entityPath~"\" with same name as container \""~containerPath~"\"");
+            }
+            /**
+            * If there are conflicting names within the current container
+            * (this takes precedence into account based on how `entities`
+            * is generated)
+            */
+            else if(findPrecedence(c, entity.getName()) != entity)
+            {
+                string preExistingEntity = resolver.generateName(modulle, findPrecedence(c, entity.getName()));
+                string entityPath = resolver.generateName(modulle, entity);
+                Parser.expect("Cannot have entity \""~entityPath~"\" with same name as entity \""~preExistingEntity~"\" within same container");
+            }
+        }
+
+        
+
+        
+
+      
+    }
+
+    /**
+    * Returns container members in order of
+    * Clazz, Function, Variable
+    */
+    private Entity[] getContainerMembers(Container c)
+    {
+        /* Entities */
+        Entity[] entities;
+
+        /* Get all classes */
+        foreach(Statement statement; c.getStatements())
+        {
+            if(statement !is null && cast(Clazz)statement)
+            {
+                entities ~= cast(Clazz)statement;
+            }
+        }
+
+        /* Get all functions */
+        foreach(Statement statement; c.getStatements())
+        {
+            if(statement !is null && cast(Function)statement)
+            {
+                entities ~= cast(Function)statement;
+            }
+        }
+
+        /* Get all variables */
+        foreach(Statement statement; c.getStatements())
+        {
+            if(statement !is null && cast(Variable)statement)
+            {
+                entities ~= cast(Variable)statement;
+            }
+        }
+
+        return entities;
+
+        
+    }
+
+    public Entity findPrecedence(Container c, string name)
+    {
+        foreach(Entity entity; getContainerMembers(c))
+        {
+            /* If we find matching entity names */
+            if(cmp(entity.getName(), name) == 0)
+            {
+                return entity;
+            }
+        }
+
+        return null;
+    }
 
 
     /**
     * Starting from a Container c this makes sure
     * that all classes defined within that container
     * do no clash name wise
+    *
+    * Make this general, so it checks all Entoties
+    * within container, starting first with classes
+    * then it should probably mark them, this will
+    * be so we can then loop through all entities
+    * including classes, of container c and for
+    * every entity we come across in c we make
+    * sure it doesn't have a name of something that 
+    * is marked
     */
     private void checkClassNames(Container c)
     {
@@ -300,6 +444,11 @@ public final class TypeChecker
                 {
                     Parser.expect("Class \""~resolver.generateName(modulle, clazz)~"\" cannot be defined within container with same name, \""~resolver.generateName(modulle, c)~"\"");
                 }
+
+                /* TODO: Loop througn Container ENtitys here */
+                /* Make sure that when we call findPrecedence(entity) == current entity */
+
+
                 // }
 
                 /* TODO: We allow shaddowing so below is disabled */
@@ -336,6 +485,9 @@ public final class TypeChecker
                 
             }
         }
+
+      
+
 
         /**
         * TODO: Now we should loop through each class and do the same
