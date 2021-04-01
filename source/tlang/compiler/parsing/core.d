@@ -225,9 +225,11 @@ public final class Parser
         string identifier = getCurrentToken().getToken();
         nextToken();
         nextToken();
+        gprintln(getCurrentToken());
 
         /* Expression */
         Expression assignmentExpression = parseExpression();
+
 
         assignment = new Assignment(identifier, assignmentExpression);
 
@@ -279,7 +281,9 @@ public final class Parser
         /* Any other case */
         else
         {
+            gprintln(getCurrentToken);
             expect("Error expected ( for var/func def");
+
         }
        
 
@@ -317,8 +321,7 @@ public final class Parser
             /* If it is a type */
             if (symbol == SymbolType.IDENT_TYPE)
             {
-                
-                /* Might be a function, might be a variable */
+                /* Might be a function, might be a variable, or assignment */
                 statements ~= parseName();
             }
             /* If it is an accessor */
@@ -1031,18 +1034,20 @@ public final class Parser
             /* If it is a type */
             if (symbol == SymbolType.IDENT_TYPE)
             {
-                /* Might be a function, might be a variable */
-                TypedEntity varFunc = cast(TypedEntity)parseName();
+                /* Might be a function, might be a variable, or assignment */
+                modulle.addStatement(parseName());
+                /* Might be a function, might be a variable, or assignment */
+                // TypedEntity varFunc = cast(TypedEntity)parseName();
 
-                /* If cast fails then it was a funcall */
-                if(!varFunc)
-                {
-                    /* FUnction calls not allowed in top level body */
-                    expect("Expected var/func def got funcall");
-                }
+                // /* If cast fails then it was a funcall */
+                // if(!varFunc)
+                // {
+                //     /* FUnction calls not allowed in top level body */
+                //     expect("Expected var/func def got funcall");
+                // }
 
                 /* Add this statement to the program's statement list */
-                modulle.addStatement(varFunc);
+                
             }
             /* If it is an accessor */
             else if (isAccessor(tok))
