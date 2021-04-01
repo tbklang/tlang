@@ -34,11 +34,7 @@ public final class TypeChecker
         this.modulle = modulle;
         resolver = new Resolver(this);
 
-       
-        
     }
-
-   
 
     public void beginCheck()
     {
@@ -55,40 +51,29 @@ public final class TypeChecker
         checkClassInherit(modulle);
     }
 
-   
-
-   
-
-
-   
-
-
-  
-
-    
-
     private void checkClassInherit(Container c)
     {
         /* Get all types (Clazz so far) */
         Clazz[] classTypes;
 
-        foreach(Statement statement; c.getStatements())
+        foreach (Statement statement; c.getStatements())
         {
-            if(statement !is null && cast(Clazz)statement)
+            if (statement !is null && cast(Clazz) statement)
             {
-                classTypes ~= cast(Clazz)statement;
+                classTypes ~= cast(Clazz) statement;
             }
         }
 
         /* Process each Clazz */
-        foreach(Clazz clazz; classTypes)
+        foreach (Clazz clazz; classTypes)
         {
-             /* Get the current class's parent */
+            /* Get the current class's parent */
             string[] parentClasses = clazz.getInherit();
-            gprintln("Class: "~clazz.getName()~": ParentInheritList: "~to!(string)(parentClasses));
+            gprintln("Class: " ~ clazz.getName() ~ ": ParentInheritList: " ~ to!(
+                    string)(parentClasses));
 
             /* Try resolve all of these */
-            foreach(string parent; parentClasses)
+            foreach (string parent; parentClasses)
             {
                 /* Find the named entity */
                 Entity namedEntity;
@@ -101,16 +86,16 @@ public final class TypeChecker
                 namedEntity = resolver.resolveBest(c, parent);
 
                 /* If the entity exists */
-                if(namedEntity)
+                if (namedEntity)
                 {
                     /* Check if it is a Class, if so non-null */
-                    Clazz parentEntity = cast(Clazz)namedEntity;
+                    Clazz parentEntity = cast(Clazz) namedEntity;
 
                     /* Only inherit from class or (TODO: interfaces) */
-                    if(parentEntity)
+                    if (parentEntity)
                     {
                         /* Make sure it is not myself */
-                        if(parentEntity != clazz)
+                        if (parentEntity != clazz)
                         {
                             /* TODO: Add loop checking here */
                         }
@@ -120,7 +105,7 @@ public final class TypeChecker
                         }
                     }
                     /* Error */
-                    else
+                else
                     {
                         Parser.expect("Can only inherit from classes");
                     }
@@ -128,20 +113,18 @@ public final class TypeChecker
                 /* If the entity doesn't exist then it is an error */
                 else
                 {
-                    Parser.expect("Could not find any entity named "~parent);
+                    Parser.expect("Could not find any entity named " ~ parent);
                 }
             }
         }
 
         /* Once processing is done, apply recursively */
-        foreach(Clazz clazz; classTypes)
+        foreach (Clazz clazz; classTypes)
         {
             checkClassInherit(clazz);
         }
 
-
-       
-    }    
+    }
 
     private void checkClasses(Container c)
     {
@@ -194,15 +177,14 @@ public final class TypeChecker
         * Get all Entities of the Container with order Clazz, Function, Variable
         */
         Entity[] entities = getContainerMembers(c);
-        gprintln("checkContainer(C): "~to!(string)(entities));
+        gprintln("checkContainer(C): " ~ to!(string)(entities));
 
-
-        foreach(Entity entity; entities)
+        foreach (Entity entity; entities)
         {
             /**
             * If the current entity's name matches the container then error
             */
-            if(cmp(c.getName(), entity.getName()) == 0)
+            if (cmp(c.getName(), entity.getName()) == 0)
             {
                 throw new CollidingNameException(this, c, entity, c);
             }
@@ -211,9 +193,10 @@ public final class TypeChecker
             * (this takes precedence into account based on how `entities`
             * is generated)
             */
-            else if(findPrecedence(c, entity.getName()) != entity)
+            else if (findPrecedence(c, entity.getName()) != entity)
             {
-                throw new CollidingNameException(this, findPrecedence(c, entity.getName()), entity, c);
+                throw new CollidingNameException(this, findPrecedence(c,
+                        entity.getName()), entity, c);
             }
             /**
             * Otherwise this Entity is fine
@@ -222,25 +205,22 @@ public final class TypeChecker
             {
                 string fullPath = resolver.generateName(modulle, entity);
                 string containerNameFullPath = resolver.generateName(modulle, c);
-                gprintln("Entity \""~fullPath~"\" is allowed to be defined within container \""~containerNameFullPath~"\"");
+                gprintln("Entity \"" ~ fullPath
+                        ~ "\" is allowed to be defined within container \""
+                        ~ containerNameFullPath ~ "\"");
 
                 /**
                 * Check if this Entity is a Container, if so, then
                 * apply the same round of checks within it
                 */
-                Container possibleContainerEntity = cast(Container)entity;
-                if(possibleContainerEntity)
+                Container possibleContainerEntity = cast(Container) entity;
+                if (possibleContainerEntity)
                 {
                     checkContainer(possibleContainerEntity);
                 }
             }
         }
 
-        
-
-        
-
-      
     }
 
     /**
@@ -253,35 +233,34 @@ public final class TypeChecker
         Entity[] entities;
 
         /* Get all classes */
-        foreach(Statement statement; c.getStatements())
+        foreach (Statement statement; c.getStatements())
         {
-            if(statement !is null && cast(Clazz)statement)
+            if (statement !is null && cast(Clazz) statement)
             {
-                entities ~= cast(Clazz)statement;
+                entities ~= cast(Clazz) statement;
             }
         }
 
         /* Get all functions */
-        foreach(Statement statement; c.getStatements())
+        foreach (Statement statement; c.getStatements())
         {
-            if(statement !is null && cast(Function)statement)
+            if (statement !is null && cast(Function) statement)
             {
-                entities ~= cast(Function)statement;
+                entities ~= cast(Function) statement;
             }
         }
 
         /* Get all variables */
-        foreach(Statement statement; c.getStatements())
+        foreach (Statement statement; c.getStatements())
         {
-            if(statement !is null && cast(Variable)statement)
+            if (statement !is null && cast(Variable) statement)
             {
-                entities ~= cast(Variable)statement;
+                entities ~= cast(Variable) statement;
             }
         }
 
         return entities;
 
-        
     }
 
     /**
@@ -291,10 +270,10 @@ public final class TypeChecker
     */
     public Entity findPrecedence(Container c, string name)
     {
-        foreach(Entity entity; getContainerMembers(c))
+        foreach (Entity entity; getContainerMembers(c))
         {
             /* If we find matching entity names */
-            if(cmp(entity.getName(), name) == 0)
+            if (cmp(entity.getName(), name) == 0)
             {
                 return entity;
             }
@@ -302,7 +281,6 @@ public final class TypeChecker
 
         return null;
     }
-
 
     /**
     * Starting from a Container c this makes sure
@@ -323,16 +301,16 @@ public final class TypeChecker
         /* Get all types (Clazz so far) */
         Clazz[] classTypes;
 
-        foreach(Statement statement; c.getStatements())
+        foreach (Statement statement; c.getStatements())
         {
-            if(statement !is null && cast(Clazz)statement)
+            if (statement !is null && cast(Clazz) statement)
             {
-                classTypes ~= cast(Clazz)statement;
+                classTypes ~= cast(Clazz) statement;
             }
         }
 
         /* Declare each type */
-        foreach(Clazz clazz; classTypes)
+        foreach (Clazz clazz; classTypes)
         {
             // gprintln("Name: "~resolver.generateName(modulle, clazz));
             /**
@@ -347,9 +325,12 @@ public final class TypeChecker
             *
             * TODO: This will meet inner clazz1 first, we need to do another check
             */
-            if(resolver.resolveUp(c, clazz.getName()) != clazz)
+            if (resolver.resolveUp(c, clazz.getName()) != clazz)
             {
-                Parser.expect("Cannot define class \""~resolver.generateName(modulle, clazz)~"\" as one with same name, \""~resolver.generateName(modulle,resolver.resolveUp(c, clazz.getName()))~"\" exists in container \""~resolver.generateName(modulle, c)~"\"");
+                Parser.expect("Cannot define class \"" ~ resolver.generateName(modulle,
+                        clazz) ~ "\" as one with same name, \"" ~ resolver.generateName(modulle,
+                        resolver.resolveUp(c, clazz.getName())) ~ "\" exists in container \"" ~ resolver.generateName(
+                        modulle, c) ~ "\"");
             }
             else
             {
@@ -359,14 +340,15 @@ public final class TypeChecker
                 /* Don't allow a class to be named after it's container */
                 // if(!parentContainer)
                 // {
-                if(cmp(c.getName(), clazz.getName()) == 0)
+                if (cmp(c.getName(), clazz.getName()) == 0)
                 {
-                    Parser.expect("Class \""~resolver.generateName(modulle, clazz)~"\" cannot be defined within container with same name, \""~resolver.generateName(modulle, c)~"\"");
+                    Parser.expect("Class \"" ~ resolver.generateName(modulle,
+                            clazz) ~ "\" cannot be defined within container with same name, \"" ~ resolver.generateName(
+                            modulle, c) ~ "\"");
                 }
 
                 /* TODO: Loop througn Container ENtitys here */
                 /* Make sure that when we call findPrecedence(entity) == current entity */
-
 
                 // }
 
@@ -388,32 +370,26 @@ public final class TypeChecker
                 /* TODO: Check that it doesn;t equal any class up the chain */
                 /* TODO: Exclude Module from this */
 
-
-
                 // /* Still check if there is something with our name above us */
                 // Container parentContainer = c.parentOf();
 
                 // /* If at this level container we find duplicate */
                 // if(resolveUp(parentContainer, clazz.getName()))
                 // {
-                    
+
                 //         Parser.expect("Class with name "~clazz.getName()~" defined in class "~c.getName());
-                    
+
                 // }
 
-                
             }
         }
-
-      
-
 
         /**
         * TODO: Now we should loop through each class and do the same
         * so we have all types defined
         */
         //gprintln("Defined classes: "~to!(string)(Program.getAllOf(new Clazz(""), cast(Statement[])marked)));
-        
+
         /**
         * By now we have confirmed that within the current container
         * there are no classes defined with the same name
@@ -421,9 +397,9 @@ public final class TypeChecker
         * We now check each Class recursively, once we are done
         * we mark the class entity as "ready" (may be referenced)
         */
-        foreach(Clazz clazz; classTypes)
+        foreach (Clazz clazz; classTypes)
         {
-            gprintln("Check recursive "~to!(string)(clazz), DebugType.WARNING);
+            gprintln("Check recursive " ~ to!(string)(clazz), DebugType.WARNING);
 
             /* Check the current class's types within */
             checkClassNames(clazz);
@@ -431,9 +407,6 @@ public final class TypeChecker
             // checkClassInherit(clazz);
         }
 
-       
-        
-        
         /*Now we should loop through each class */
         /* Once outerly everything is defined we can then handle class inheritance names */
         /* We can also then handle refereces between classes */
@@ -442,18 +415,104 @@ public final class TypeChecker
 
     }
 
-   
-
     /* Test name resolution */
     unittest
     {
         //assert()
     }
 
-  
-
-    
 }
+
+/* Test name colliding with container name (1/3) [module] */
+unittest
+{
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.parsing.core;
+
+    string sourceFile = "source/tlang/testing/collide_container_module1.t";
+
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
+
+    string sourceCode = cast(string) fileBytes;
+    Lexer currentLexer = new Lexer(sourceCode);
+
+    Parser parser = new Parser(currentLexer.getTokens());
+    Module modulle = parser.parse();
+    TypeChecker typeChecker = new TypeChecker(modulle);
+
+    /* Setup testing variables */
+    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
+    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
+
+    try
+    {
+        /* Perform test */
+        typeChecker.beginCheck();
+
+        /* Shouldn't reach here, collision exception MUST occur */
+        assert(false);
+    }
+    catch (CollidingNameException e)
+    {
+        /* Make sure the member y.y collided with root container (module) y */
+        assert(e.defined == container);
+    }
+}
+
+
+
+/* Test name colliding with container name (2/3) [module, nested collider] */
+unittest
+{
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.parsing.core;
+
+    string sourceFile = "source/tlang/testing/collide_container_module1.t";
+
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
+
+    string sourceCode = cast(string) fileBytes;
+    Lexer currentLexer = new Lexer(sourceCode);
+
+    Parser parser = new Parser(currentLexer.getTokens());
+    Module modulle = parser.parse();
+    TypeChecker typeChecker = new TypeChecker(modulle);
+
+    /* Setup testing variables */
+    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
+    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.a.b.c.y");
+
+    try
+    {
+        /* Perform test */
+        typeChecker.beginCheck();
+
+        /* Shouldn't reach here, collision exception MUST occur */
+        assert(false);
+    }
+    catch (CollidingNameException e)
+    {
+        /* Make sure the member y.y collided with root container (module) y */
+        assert(e.defined == container);
+    }
+}
+
 
 /* Test name colliding with container name (1/2) */
 unittest
@@ -463,63 +522,41 @@ unittest
     import compiler.lexer;
     import compiler.parsing.core;
 
-
     string sourceFile = "source/tlang/testing/collide_container.t";
-    
-        
-        File sourceFileFile;
-        sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-        ulong fileSize = sourceFileFile.size();
-        byte[] fileBytes;
-        fileBytes.length = fileSize;
-        fileBytes = sourceFileFile.rawRead(fileBytes);
-        sourceFileFile.close();
 
-       // gprintln("Performing tokenization on '"~sourceFile~"' ...");
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
 
-        /* TODO: Open source file */
-        string sourceCode = cast(string)fileBytes;
-        // string sourceCode = "hello \"world\"|| ";
-        //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
-        // string sourceCode = "hello;";
-        Lexer currentLexer = new Lexer(sourceCode);
-        bool status = currentLexer.performLex();
-        
-       
-        
-     
-        Parser parser = new Parser(currentLexer.getTokens());
-        Module modulle = parser.parse();
+    string sourceCode = cast(string) fileBytes;
+    Lexer currentLexer = new Lexer(sourceCode);
 
-        TypeChecker typeChecker = new TypeChecker(modulle);
+    Parser parser = new Parser(currentLexer.getTokens());
+    Module modulle = parser.parse();
+    TypeChecker typeChecker = new TypeChecker(modulle);
 
-        Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-        gprintln(container); /* TODO: fix this, resolve container at top */
-        Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
-        gprintln(colliderMember); /* TODO: fix this, resolve container at top */
-        
-        
-        try
-        {
-            typeChecker.beginCheck();
-            assert(false);
-        }
-        catch(CollidingNameException e)
-        {
-            /* Make sure the member y.y collided with root container (module) y */
-            assert(e.defined == container);
-            /* TODO: Check */
-            assert(true);
-            //gprintln("Stack trace:\n"~to!(string)(e.info));
-        }
+    /* Setup testing variables */
+    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
+    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
+
+    try
+    {
+        /* Perform test */
+        typeChecker.beginCheck();
+
+        /* Shouldn't reach here, collision exception MUST occur */
+        assert(false);
+    }
+    catch (CollidingNameException e)
+    {
+        /* Make sure the member y.y collided with root container (module) y */
+        assert(e.defined == container);
+    }
 }
-
-/* Test name colliding with container name (2/2) */
-unittest
-{
-
-}
-
 
 
 unittest
@@ -533,64 +570,62 @@ unittest
     // isUnitTest = true;
 
     string sourceFile = "source/tlang/testing/basic1.t";
-    
-        gprintln("Reading source file '"~sourceFile~"' ...");
-        File sourceFileFile;
-        sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-        ulong fileSize = sourceFileFile.size();
-        byte[] fileBytes;
-        fileBytes.length = fileSize;
-        fileBytes = sourceFileFile.rawRead(fileBytes);
-        sourceFileFile.close();
 
-        gprintln("Performing tokenization on '"~sourceFile~"' ...");
+    gprintln("Reading source file '" ~ sourceFile ~ "' ...");
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
 
-        /* TODO: Open source file */
-        string sourceCode = cast(string)fileBytes;
-        // string sourceCode = "hello \"world\"|| ";
-        //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
-        // string sourceCode = "hello;";
-        Lexer currentLexer = new Lexer(sourceCode);
-        bool status = currentLexer.performLex();
-        if(!status)
-        {
-            return;
-        }
-        
-        gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    gprintln("Performing tokenization on '" ~ sourceFile ~ "' ...");
 
-        gprintln("Parsing tokens...");
-        Parser parser = new Parser(currentLexer.getTokens());
-        Module modulle = parser.parse();
+    /* TODO: Open source file */
+    string sourceCode = cast(string) fileBytes;
+    // string sourceCode = "hello \"world\"|| ";
+    //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
+    // string sourceCode = "hello;";
+    Lexer currentLexer = new Lexer(sourceCode);
+    bool status = currentLexer.performLex();
+    if (!status)
+    {
+        return;
+    }
 
-        gprintln("Type checking and symbol resolution...");
-        try
-        {
-            TypeChecker typeChecker = new TypeChecker(modulle);
-            
-        }
-        // catch(CollidingNameException e)
-        // {
-        //     gprintln(e.msg, DebugType.ERROR);
-        //     //gprintln("Stack trace:\n"~to!(string)(e.info));
-        // }
-        catch(TypeCheckerException e)
-        {
-            gprintln(e.msg, DebugType.ERROR);
-        }
-        
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
 
-        /* Test first-level resolution */
-        // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz1").getName(), "clazz1")==0);
+    gprintln("Parsing tokens...");
+    Parser parser = new Parser(currentLexer.getTokens());
+    Module modulle = parser.parse();
 
-        // /* Test n-level resolution */
-        // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
-        // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j").getName(), "j")==0);
-        // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.clazz_2_2_1").getName(), "clazz_2_2_1")==0);
-        // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
+    gprintln("Type checking and symbol resolution...");
+    try
+    {
+        TypeChecker typeChecker = new TypeChecker(modulle);
 
-        // /* Test invalid access to j treating it as a Container (whilst it is a Variable) */
-        // assert(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j.p") is null);
+    }
+    // catch(CollidingNameException e)
+    // {
+    //     gprintln(e.msg, DebugType.ERROR);
+    //     //gprintln("Stack trace:\n"~to!(string)(e.info));
+    // }
+    catch (TypeCheckerException e)
+    {
+        gprintln(e.msg, DebugType.ERROR);
+    }
 
-        
+    /* Test first-level resolution */
+    // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz1").getName(), "clazz1")==0);
+
+    // /* Test n-level resolution */
+    // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
+    // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j").getName(), "j")==0);
+    // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.clazz_2_2_1").getName(), "clazz_2_2_1")==0);
+    // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
+
+    // /* Test invalid access to j treating it as a Container (whilst it is a Variable) */
+    // assert(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j.p") is null);
+
 }
