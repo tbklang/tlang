@@ -33,28 +33,7 @@ public final class TypeChecker
         this.modulle = modulle;
         resolver = new Resolver(this);
 
-        writeln("Got globals: "~to!(string)(Program.getAllOf(new Variable(null, null), modulle.getStatements())));
-        writeln("Got functions: "~to!(string)(Program.getAllOf(new Function(null, null, null, null), modulle.getStatements())));
-        writeln("Got classes: "~to!(string)(Program.getAllOf(new Clazz(null), modulle.getStatements())));
-        
-        // nameResolution;
-        // writeln("Res:",isValidEntity(program.getStatements(), "clazz1"));
-        // writeln("Res:",isValidEntity(program.getStatements(), "clazz_2_1.clazz_2_2"));
-
-
-        /* Test getEntity on Module */
-        // gprintln("getEntity: myModule.x: "~to!(string)(getEntity(modulle, "myModule.x")));
-        // gprintln("getEntity: x: "~to!(string)(getEntity(modulle, "x")));
-        
-        // /* Test getEntity on Class */
-        // Container clazzEntity = cast(Container)getEntity(modulle, "clazz1");
-        // gprintln("getEntity: clazz1.k: "~to!(string)(getEntity(clazzEntity, "clazz1.k")));
-        // gprintln("getEntity: k: "~to!(string)(getEntity(clazzEntity, "k")));
-        // clazzEntity = cast(Container)getEntity(modulle, "myModule.clazz1");
-        // gprintln("getEntity: clazz1.k: "~to!(string)(getEntity(clazzEntity, "clazz1.k")));
-        // gprintln("getEntity: k: "~to!(string)(getEntity(clazzEntity, "myModule.clazz1.k")));
-
-        //process();
+       
         beginCheck();
     }
 
