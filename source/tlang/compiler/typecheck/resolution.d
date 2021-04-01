@@ -193,6 +193,13 @@ public final class Resolver
         {
             /* TODO: Add path[0], c.getName()) == modulle */
 
+            /* TODO: This is for getting module entity */
+            /* Check if the name, regardless of container, is root (Module) */
+            // if(cmp(name, typeChecker.getModule().getName()) == 0)
+            // {
+            //     return typeChecker.getModule();
+            // }
+
             Entity entityWithin = resolveUp(c, name);
 
             /* If `name` was in container `c` or above it */
@@ -208,6 +215,8 @@ public final class Resolver
         }
         else
         {
+            /* TODO: Add module name check here */
+
             /* If the root is the current container */
             if(cmp(path[0], c.getName()) == 0)
             {
