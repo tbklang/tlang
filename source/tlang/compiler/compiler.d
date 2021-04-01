@@ -48,18 +48,18 @@ void beginCompilation(string[] sourceFiles)
         Module modulle = parser.parse();
 
         gprintln("Type checking and symbol resolution...");
-        // try
-        // {
+        try
+        {
             TypeChecker typeChecker = new TypeChecker(modulle);
-        // }
-        // catch(CollidingNameException e)
-        // {
+        }
+        catch(CollidingNameException e)
+        {
+            gprintln(e.msg, DebugType.ERROR);
+        }
+        catch(TypeCheckerException e)
+        {
 
-        // }
-        // catch(TypeCheckerException e)
-        // {
-
-        // }
+        }
         
         // typeChecker.check();
     }
