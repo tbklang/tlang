@@ -568,6 +568,50 @@ unittest
     }
 }
 
+/* Test name colliding with member */
+unittest
+{
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.parsing.core;
+
+    string sourceFile = "source/tlang/testing/collide_member.t";
+
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
+
+    string sourceCode = cast(string) fileBytes;
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+
+    Parser parser = new Parser(currentLexer.getTokens());
+    Module modulle = parser.parse();
+    TypeChecker typeChecker = new TypeChecker(modulle);
+
+    /* Setup testing variables */
+    Entity memberFirst = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b");
+
+    try
+    {
+        /* Perform test */
+        typeChecker.beginCheck();
+
+        /* Shouldn't reach here, collision exception MUST occur */
+        assert(false);
+    }
+    catch (CollidingNameException e)
+    {
+        /* Make sure the member a.b.c.c collided with a.b.c container */
+        assert(e.attempted != memberFirst);
+    }
+}
+
 
 /* Test name colliding with container name (1/2) */
 unittest

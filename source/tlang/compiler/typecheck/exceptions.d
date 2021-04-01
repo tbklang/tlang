@@ -27,7 +27,7 @@ public final class CollidingNameException : TypeCheckerException
     /**
     * The colliding Entity
     */
-    private Entity attempted;
+    public Entity attempted;
 
     /**
     * The Container we are in

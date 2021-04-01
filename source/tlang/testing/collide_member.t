@@ -1,8 +1,14 @@
-module x;
+module y;
 
-int y;
-
-void y()
+class a
 {
-    
+    class b
+    {
+        
+    }
+
+    class b
+    {
+        
+    }
 }
