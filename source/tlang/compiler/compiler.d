@@ -8,6 +8,7 @@ import compiler.parsing.core;
 import compiler.symbols.check;
 import compiler.symbols.data;
 import compiler.typecheck.core;
+import compiler.typecheck.exceptions;
 
 void beginCompilation(string[] sourceFiles)
 {
@@ -47,7 +48,19 @@ void beginCompilation(string[] sourceFiles)
         Module modulle = parser.parse();
 
         gprintln("Type checking and symbol resolution...");
-        TypeChecker typeChecker = new TypeChecker(modulle);
+        // try
+        // {
+            TypeChecker typeChecker = new TypeChecker(modulle);
+        // }
+        // catch(CollidingNameException e)
+        // {
+
+        // }
+        // catch(TypeCheckerException e)
+        // {
+
+        // }
+        
         // typeChecker.check();
     }
 }

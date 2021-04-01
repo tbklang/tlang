@@ -2,6 +2,7 @@ module compiler.typecheck.exceptions;
 
 import compiler.typecheck.core;
 import compiler.symbols.data;
+import compiler.typecheck.resolution;
 
 public class TypeCheckerException : Exception
 {
@@ -36,6 +37,18 @@ public final class CollidingNameException : TypeCheckerException
 
         /* TODO: Set `msg` */
         /* TODO: (Gogga it) Generate the error message */
+        if(isCollidingWithContainer())
+        {
+            string containerPath = typeChecker.getResolver().generateName(modulle, defined);
+            string entityPath = typeChecker.getResolver().generateName(modulle, attempted);
+            msg = "Cannot have entity \""~entityPath~"\" with same name as container \""~containerPath~"\"";
+        }
+        else
+        {
+            string preExistingEntity = resolver.generateName(modulle, findPrecedence(c, entity.getName()));
+            string entityPath = resolver.generateName(modulle, entity);
+            msg = "Cannot have entity \""~entityPath~"\" with same name as entity \""~preExistingEntity~"\" within same container";
+        }
     }
 
     public bool isCollidingWithContainer()
