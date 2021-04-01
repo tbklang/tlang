@@ -3,6 +3,7 @@ module compiler.typecheck.exceptions;
 import compiler.typecheck.core;
 import compiler.symbols.data;
 import compiler.typecheck.resolution;
+import std.string : cmp;
 
 public class TypeCheckerException : Exception
 {
@@ -48,6 +49,12 @@ public final class CollidingNameException : TypeCheckerException
             string containerPath = typeChecker.getResolver().generateName(typeChecker.getModule(), defined);
             string entityPath = typeChecker.getResolver().generateName(typeChecker.getModule(), attempted);
             msg = "Cannot have entity \""~entityPath~"\" with same name as container \""~containerPath~"\"";
+        }
+        /* If colliding with root (Module) */
+        else if(cmp(typeChecker.getModule().getName(), attempted.getName()) == 0)
+        {
+            string entityPath = typeChecker.getResolver().generateName(typeChecker.getModule(), attempted);
+            msg = "Cannot have entity \""~entityPath~"\" with same name as module \""~typeChecker.getModule().getName()~"\"";
         }
         else
         {
