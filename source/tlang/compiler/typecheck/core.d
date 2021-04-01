@@ -514,12 +514,12 @@ unittest
         typeChecker.beginCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
-        // assert(false);
+        assert(false);
     }
     catch (CollidingNameException e)
     {
         /* Make sure the member y.y collided with root container (module) y */
-        // assert(e.defined == container);
+        assert(e.defined == container);
     }
 }
 
