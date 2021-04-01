@@ -55,6 +55,7 @@ void beginCompilation(string[] sourceFiles)
         catch(CollidingNameException e)
         {
             gprintln(e.msg, DebugType.ERROR);
+            //gprintln("Stack trace:\n"~to!(string)(e.info));
         }
         catch(TypeCheckerException e)
         {
