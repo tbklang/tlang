@@ -85,18 +85,12 @@ public final class TypeChecker
 
     private void beginCheck()
     {
-        // checkIt(modulle.getStatements(), modulle.getName());
-
-
-        /* First we define global types (so classes) */
-        gprintln("dd");
-        // checkClasses(modulle);
-
-        /* TODO: Then we declare global functions */
-        //checkFunctions(modulle);
-
-        /* TODO: Then we declare global variables */
-
+        /**
+        * Make sure there are no name collisions anywhere
+        * in the Module with an order of precedence of
+        * Classes being declared before Functions and
+        * Functions before Variables
+        */
         checkContainer(modulle);
 
         checkIt(modulle);
