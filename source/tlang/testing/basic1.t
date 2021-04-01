@@ -187,6 +187,8 @@ class testClass
 
     }
 
+    class oops : myModule.testClass {}
+
     class test3 : test2
     {
         class llllll : testClass.test2
