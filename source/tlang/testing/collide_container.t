@@ -1,3 +1,3 @@
 module y;
 
-int p;
+int y;

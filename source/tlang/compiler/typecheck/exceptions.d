@@ -21,7 +21,7 @@ public final class CollidingNameException : TypeCheckerException
     /**
     * The previously declared Entity
     */
-    private Entity defined;
+    public Entity defined;
 
     /**
     * The colliding Entity

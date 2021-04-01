@@ -495,9 +495,9 @@ unittest
 
         Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
         gprintln(container); /* TODO: fix this, resolve container at top */
-        Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.p");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
         gprintln(colliderMember); /* TODO: fix this, resolve container at top */
-        parser.expect("d");
+        
         
         try
         {
@@ -506,6 +506,8 @@ unittest
         }
         catch(CollidingNameException e)
         {
+            /* Make sure the member y.y collided with root container (module) y */
+            assert(e.defined == container);
             /* TODO: Check */
             assert(true);
             //gprintln("Stack trace:\n"~to!(string)(e.info));
