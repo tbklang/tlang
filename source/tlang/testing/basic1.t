@@ -10,6 +10,7 @@ int c = myModule.x;
 int l;
 
 l=2;
+l=l;
 
 
 int o = myModule.l;

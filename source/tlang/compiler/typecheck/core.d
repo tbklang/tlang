@@ -93,94 +93,19 @@ public final class TypeChecker
         */
         checkContainer(modulle); /* TODO: Rename checkContainerCollision */
 
-        checkIt(modulle);
+        /* TODO: Now that everything is defined, no collision */
+        /* TODO: Do actual type checking and declarations */
     }
 
-    /**
-    * Called to run on globals and on within classes
-    *
-    * Checks no conflicting functions and that return types
-    * are valid, also checks that variables then don't conflict
-    */
-    private void checkMembers(Container c)
-    {
+   
 
-    }
-
-    private void checkFunctions(Container c)
-    {
-        Statement[] statements = c.getStatements();
-
-        Function[] functions;
-
-        foreach(Statement statement; statements)
-        {
-            if(statement !is null && cast(Function)statement)
-            {
-                functions ~= cast(Function)statement;
-            }
-        }
-
-        /**
-        * By now no class name conflicts,
-        */
-
-        /**
-        * Make sure within the current container there is no conflict
-        * (including with the container's name itself)
-        */
-        foreach(Function func; functions)
-        {
-
-        }
-    }
-
-    private void checkClass(Clazz clazz)
-    {
-
-    }
+   
 
 
-    /* List of known (marked) objects */
-    private Entity[] marked;
-
-    public bool isMarkedEntity(Entity entityTest)
-    {
-        foreach(Entity entity; marked)
-        {
-            if(entity == entityTest)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public void markEntity(Entity entity)
-    {
-        marked ~= entity;
-    }
-
-    /* Returns index or 64 1 bits */
-    private ulong getStatementIndex(Statement[] statements, Statement statement)
-    {
-        for(ulong i = 0; i < statements.length; i++)
-        {
-            if(statement == statements[i])
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
+   
 
 
-    public bool isMarkedByName(Container c, string name)
-    {
-        return isMarkedEntity(getEntity(c, name));
-    }
+  
 
     
 
@@ -529,7 +454,7 @@ public final class TypeChecker
         * TODO: Now we should loop through each class and do the same
         * so we have all types defined
         */
-        gprintln("Defined classes: "~to!(string)(Program.getAllOf(new Clazz(""), cast(Statement[])marked)));
+        //gprintln("Defined classes: "~to!(string)(Program.getAllOf(new Clazz(""), cast(Statement[])marked)));
         
         /**
         * By now we have confirmed that within the current container
@@ -566,75 +491,7 @@ public final class TypeChecker
         return resolver.resolveBest(relative, name) !is null;
     }
 
-    private void checkIt(Container c)
-    {
-        //gprintln("Processing at path/level: "~path, DebugType.WARNING);
-
-        
-
-        Statement[] statements = c.getStatements();
-        string path = c.getName();
-
-        foreach(Statement statement; statements)
-        {
-            /* If the statement is a COntainer */
-            if(cast(Container)statement)
-            {
-                Container container = cast(Container)statement;
-                string name = path~"."~container.getName();
-                /* TODO: Implement */
-                //checkIt()
-            }
-            /* If the statement is a variable declaration */
-            else if(cast(Variable)statement)
-            {
-                Variable variable = cast(Variable)statement;
-                gprintln("Declaring variable"~variable.getName());
-
-                /**
-                * To check if a name is taken we check if the current one equals the
-                * first match (if so, then declare, if not, then taken)
-                */
-                if(getEntity(c, variable.getName()) != variable)
-                {
-                    Parser.expect("Duplicate name tried to be declared");
-                }
-
-                /* Check if this variable has an expression, if so check that */
-                if(variable.getAssignment())
-                {
-                    VariableAssignment varAssign = variable.getAssignment();
-
-                    /* TODO: Do what D does, only allow assignment of constants */
-                    /* TODO: For assignments at global only allow constants */
-
-                    Expression expression = varAssign.getExpression();
-                    string type = expression.evaluateType(this, c);
-
-                    if(!type.length)
-                    {
-                        Parser.expect("Expression type fetch failed: "~variable.getName());
-                    }
-                    gprintln("ExpressionTYpe in VarAssign: "~type);
-
-
-                }
-
-                /* Set the variable as declared */
-                markEntity(variable);
-            }
-            /* If the statement is a function */
-            else if(cast(Function)statement)
-            {
-                Function func = cast(Function)statement;
-            }
-        }
-    }
-
-    /**
-    * List of currently declared variables
-    */
-    private Entity[] declaredVars;
+   
 
 
 

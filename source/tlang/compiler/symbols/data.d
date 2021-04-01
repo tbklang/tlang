@@ -430,31 +430,7 @@ public class VariableExpression : IdentExpression
         string type;
 
 
-        /**
-        * Check to see if the Entity exists (somewhere)
-        * in the source file
-        */
-        Entity entity = typeChecker.getEntity(c, getName());
-        if(entity)
-        {
-            /**
-            * Check if the Variable being referenced has been marked by
-            * the type checker (declared and my now be accessed)
-            */
-            if(typeChecker.isMarkedEntity(entity))
-            {
-                /* TODO: DO TYPE HCEKC, MAKE SURE IT iS A VAR */
-                return (cast(Variable)entity).getType();
-            }
-            else
-            {
-                return null;
-            }
-        }
-        else
-        {
-            return null;
-        }
+        return null;
     }
 }
 
