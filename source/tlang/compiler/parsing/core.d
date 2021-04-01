@@ -1036,18 +1036,6 @@ public final class Parser
             {
                 /* Might be a function, might be a variable, or assignment */
                 modulle.addStatement(parseName());
-                /* Might be a function, might be a variable, or assignment */
-                // TypedEntity varFunc = cast(TypedEntity)parseName();
-
-                // /* If cast fails then it was a funcall */
-                // if(!varFunc)
-                // {
-                //     /* FUnction calls not allowed in top level body */
-                //     expect("Expected var/func def got funcall");
-                // }
-
-                /* Add this statement to the program's statement list */
-                
             }
             /* If it is an accessor */
             else if (isAccessor(tok))
