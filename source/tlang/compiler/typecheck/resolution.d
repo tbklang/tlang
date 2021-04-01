@@ -191,6 +191,8 @@ public final class Resolver
         */
         if(path.length == 1)
         {
+            /* TODO: Add path[0], c.getName()) == modulle */
+
             Entity entityWithin = resolveUp(c, name);
 
             /* If `name` was in container `c` or above it */
