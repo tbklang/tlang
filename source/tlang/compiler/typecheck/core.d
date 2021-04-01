@@ -95,6 +95,7 @@ public final class TypeChecker
 
         /* TODO: Now that everything is defined, no collision */
         /* TODO: Do actual type checking and declarations */
+        checkClassInherit(modulle);
     }
 
    
