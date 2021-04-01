@@ -182,14 +182,14 @@ class Them
 
 class testClass
 {
-    class test2 : testClass
+    class test2 :testClass
     {
 
     }
 
-    class oops : myModule.testClass {}
+    class oops: myModule.testClass {}
 
-    class test3 : test2
+    class test3:test2
     {
         class llllll : testClass.test2
         {
