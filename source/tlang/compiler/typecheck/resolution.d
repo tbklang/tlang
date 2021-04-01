@@ -195,10 +195,10 @@ public final class Resolver
 
             /* TODO: This is for getting module entity */
             /* Check if the name, regardless of container, is root (Module) */
-            // if(cmp(name, typeChecker.getModule().getName()) == 0)
-            // {
-            //     return typeChecker.getModule();
-            // }
+            if(cmp(name, typeChecker.getModule().getName()) == 0)
+            {
+                return typeChecker.getModule();
+            }
 
             Entity entityWithin = resolveUp(c, name);
 
