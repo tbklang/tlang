@@ -204,7 +204,7 @@ public final class TypeChecker
             */
             if(cmp(c.getName(), entity.getName()) == 0)
             {
-                throw new CollidingNameException(this, c, entity);
+                throw new CollidingNameException(this, c, entity, c);
             }
             /**
             * If there are conflicting names within the current container
@@ -213,7 +213,7 @@ public final class TypeChecker
             */
             else if(findPrecedence(c, entity.getName()) != entity)
             {
-                throw new CollidingNameException(this, findPrecedence(c, entity.getName()), entity);
+                throw new CollidingNameException(this, findPrecedence(c, entity.getName()), entity, c);
             }
             /**
             * Otherwise this Entity is fine
@@ -442,44 +442,7 @@ public final class TypeChecker
 
     }
 
-    /* TODO clazz_21_211 , crashes */
-
-    private bool isNameInUse(Container relative, string name)
-    {
-        return resolver.resolveBest(relative, name) !is null;
-    }
-
    
-
-
-
-    /**
-    * Initialization order
-    */
-
-    /**
-    * Example:
-    *
-    * 
-    * int a;
-    * int b = a;
-    * int c = b;
-    * Reversing must not work
-    *
-    * Only time it can is if the path is to something in a class as those should
-    * be initialized all before variables
-    */
-    private void process(Statement[] statements)
-    {
-        /* Go through each entity and check them */
-
-        /* TODO: Starting with x, if `int x = clacc.class.class.i` */
-        /* TODO: Then we getPath from the assignment aexpressiona nd eval it */
-        /**
-        * TODO: The variable there cannot rely on x without it being initted, hence 
-        * need for global list of declared variables
-        */
-    }
 
     /* Test name resolution */
     unittest
@@ -487,200 +450,9 @@ public final class TypeChecker
         //assert()
     }
 
-    /* TODO: We need a duplicate detector, maybe do this in Parser, in `parseBody` */
-
-
-    // public Entity isValidEntityTop(string path)
-    // {
-    //     /* module.x same as x */
-    //     if(cmp(path, "") == 0)
-    // }
-
-
-    /* TODO: Do elow functio n */
-    /* TODO: I also need something to get all entities with same name */
-    public bool entityCmp(Entity lhs, Entity rhs)
-    {
-        /* TODO: Depends on Entity */
-        /* If lhs and rhs are variables then if lhs came before rhs this is true */
-        return true;
-    }
-
-    /**
-    * Given a Container like a Module or Class and a path
-    * this will search from said container to find the Entity
-    * at the given path
-    *
-    * If you give it class_1 and path class_1.x or x
-    * they both should return the same Entity
-    */
-    public Entity getEntity(Container container, string path)
-    {
-        /* Get the Container's name */
-        string containerName = container.getName();
-
-        /* Check to see if the first item is the container's name */
-        string[] pathItems = split(path, '.');
-        if(cmp(pathItems[0], containerName) == 0)
-        {
-            /* If so, then remove it */
-            path = path[indexOf(path, '.')+1..path.length];
-        }
-
-        /* Search for the Entity */
-        return isValidEntity(container.getStatements(), path);
-    }
-
-    /* Path: clazz_2_1.class_2_2 */
-    public Entity isValidEntity(Statement[] startingPoint, string path)
-    {   /* The entity found with the matching name at the end of the path */
-        // Entity foundEntity;
-
-        /* Go through each Statement and look for Entity's */
-        foreach(Statement curStatement; startingPoint)
-        {
-            /* Only look for Entitys */
-            if(cast(Entity)curStatement !is null)
-            {
-                /* Current entity */
-                Entity curEntity = cast(Entity)curStatement;
-
-                /* Make sure the root of path matches current entity */
-                string[] name = split(path, ".");
-
-                /* If root does not match current entity, skip */
-                if(cmp(name[0], curEntity.getName()) != 0)
-                {
-                    continue;
-                }
-
-                // writeln("warren g had to regulate");
-
-
-                /**
-                * Check if the name fully matches this entity's name
-                *
-                * If so, return it, a match has been found
-                */
-                if(cmp(path, curEntity.getName()) == 0)
-                {
-                    return curEntity;
-                }
-                /**
-                * Or recurse
-                */
-                else
-                {
-                    string newPath = path[indexOf(path, '.')+1..path.length];
-                    
-                    /* In this case it must be some sort of container */
-                    if(cast(Container)curEntity)
-                    {
-                        Container curContainer = cast(Container)curEntity;
-
-                        /* Get statements */
-                        Statement[] containerStatements = curContainer.getStatements();
-
-                        /* TODO: Consider accessors? Here, Parser, where? */
-
-                        return isValidEntity(containerStatements, newPath);
-                    }
-                    /* If not, error , semantics */
-                    else
-                    {
-                        return null;
-                    }
-                }
-            }
-        }
-
-
-        return null;
-    }
-
-    /**
-    * This function will walk, recursively, through
-    * each Statement at the top-level and generate
-    * names of declared items in a global array
-    *
-    * This is top-level, iterative then recursive within
-    * each iteration
-    *
-    * The point of this is to know of all symbols
-    * that exist so that we can do a second pass
-    * and see if symbols in use (declaration does
-    * not count as "use") are infact valid references
-    */
-    public void nameResolution()
-    {
-        string[] names;
-
-        foreach(Statement statement; Program.getAllOf(new Statement(), modulle.getStatements()))
-        {
-            /* TODO: Add container name */
-            /* TODO: Make sure all Entity type */
-            string containerName = (cast(Entity)statement).getName();
-            names ~= containerName;
-            string[] receivedNameSet = resolveNames(containerName, statement);
-            names ~= receivedNameSet;
-        }
-    }
-
-    private string[] resolveNames(string root, Statement statement)
-    {
-        /* If the statement is a variable then return */
-        if(typeid(statement) == typeid(Variable))
-        {
-            return null;
-        }
-        /* If it is a class */
-        else if(typeid(statement) == typeid(Clazz))
-        {
-            /* Get class's identifiers */
-            
-        }
-        return null;
-    }
-
-
-    public void check()
-    {
-        checkDuplicateTopLevel();
-
-        /* TODO: Process globals */
-        /* TODO: Process classes */
-        /* TODO: Process functions */
-    }
+  
 
     
-
-    /**
-    * Ensures that at the top-level there are no duplicate names
-    */
-    private bool checkDuplicateTopLevel()
-    {
-        import misc.utils;
-
-        /* List of names travsersed so far */
-        string[] names;
-
-        /* Add all global variables */
-        foreach(Variable variable; Program.getAllOf(new Variable(null, null), modulle.getStatements()))
-        {
-            string name = variable.getName();
-
-            if(isPresent(names, name))
-            {
-                Parser.expect("Bruh duplicate var"~name);
-            }
-            else
-            {
-                names ~= variable.getName();
-            }
-        }
-
-        return true;
-    }
 }
 
 unittest
