@@ -286,7 +286,7 @@ public final class TypeChecker
             */
             if(resolver.resolveUp(c, clazz.getName()) != clazz)
             {
-                Parser.expect("Error defining class with same name in same container: ClassTried: "~clazz.getName()~", Container: "~c.getName());
+                Parser.expect("Cannot define class \""~resolver.generateName(modulle, clazz)~"\" as one with same name, \""~resolver.generateName(modulle,resolver.resolveUp(c, clazz.getName()))~"\" exists in container \""~resolver.generateName(modulle, c)~"\"");
             }
             else
             {
@@ -296,11 +296,10 @@ public final class TypeChecker
                 /* Don't allow a class to be named after it's container */
                 // if(!parentContainer)
                 // {
-                    if(cmp(c.getName(), clazz.getName()) == 0)
-                    {
-                        
-                        Parser.expect("Class \""~resolver.generateName(modulle, clazz)~"\" cannot be defined within container with same name, \""~resolver.generateName(modulle, c)~"\"");
-                    }
+                if(cmp(c.getName(), clazz.getName()) == 0)
+                {
+                    Parser.expect("Class \""~resolver.generateName(modulle, clazz)~"\" cannot be defined within container with same name, \""~resolver.generateName(modulle, c)~"\"");
+                }
                 // }
 
                 /* TODO: We allow shaddowing so below is disabled */
