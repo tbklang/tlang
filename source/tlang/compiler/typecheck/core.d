@@ -35,12 +35,12 @@ public final class TypeChecker
         resolver = new Resolver(this);
 
        
-        beginCheck();
+        
     }
 
    
 
-    private void beginCheck()
+    public void beginCheck()
     {
         /**
         * Make sure there are no name collisions anywhere
@@ -491,14 +491,22 @@ unittest
         Parser parser = new Parser(currentLexer.getTokens());
         Module modulle = parser.parse();
 
-        gprintln("Type checking and symbol resolution...");
+        TypeChecker typeChecker = new TypeChecker(modulle);
+
+        Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
+        gprintln(container); /* TODO: fix this, resolve container at top */
+        Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.p");
+        gprintln(colliderMember); /* TODO: fix this, resolve container at top */
+        parser.expect("d");
+        
         try
         {
-            TypeChecker typeChecker = new TypeChecker(modulle);
+            typeChecker.beginCheck();
             assert(false);
         }
         catch(CollidingNameException e)
         {
+            /* TODO: Check */
             assert(true);
             //gprintln("Stack trace:\n"~to!(string)(e.info));
         }
@@ -557,6 +565,7 @@ unittest
         try
         {
             TypeChecker typeChecker = new TypeChecker(modulle);
+            
         }
         // catch(CollidingNameException e)
         // {

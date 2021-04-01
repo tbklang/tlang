@@ -1,3 +1,3 @@
-module x;
+module y;
 
-int x;
+int p;

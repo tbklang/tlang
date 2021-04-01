@@ -51,6 +51,7 @@ void beginCompilation(string[] sourceFiles)
         try
         {
             TypeChecker typeChecker = new TypeChecker(modulle);
+            typeChecker.beginCheck();
         }
         // catch(CollidingNameException e)
         // {
