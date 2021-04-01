@@ -58,30 +58,7 @@ public final class TypeChecker
         beginCheck();
     }
 
-    private string[] validNames;
-
-    private bool declareName()
-    {
-        return 0;
-    }
-
-    private bool isName(string nameTest)
-    {
-        foreach(string name; validNames)
-        {
-            if(cmp(nameTest, name) == 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void declareName(string name)
-    {
-        validNames ~= name;
-    }
+   
 
     private void beginCheck()
     {
