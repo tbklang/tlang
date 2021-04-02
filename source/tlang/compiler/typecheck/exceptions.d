@@ -42,8 +42,7 @@ public final class CollidingNameException : TypeCheckerException
         this.attempted = attempted;
         this.c = c;
 
-        /* TODO: Set `msg` */
-        /* TODO: (Gogga it) Generate the error message */
+        /* If colliding with the container */
         if(isCollidingWithContainer())
         {
             string containerPath = typeChecker.getResolver().generateName(typeChecker.getModule(), defined);
@@ -56,6 +55,7 @@ public final class CollidingNameException : TypeCheckerException
             string entityPath = typeChecker.getResolver().generateName(typeChecker.getModule(), attempted);
             msg = "Cannot have entity \""~entityPath~"\" with same name as module \""~typeChecker.getModule().getName()~"\"";
         }
+        /* If colliding with a member within the container */
         else
         {
             string preExistingEntity = typeChecker.getResolver().generateName(typeChecker.getModule(), typeChecker.findPrecedence(c, attempted.getName()));
