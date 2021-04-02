@@ -612,6 +612,51 @@ unittest
     }
 }
 
+/* Test name colliding with member (check that the member defined is class (precendence test)) */
+unittest
+{
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.parsing.core;
+
+    string sourceFile = "source/tlang/testing/precedence_collision_test.t";
+
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
+
+    string sourceCode = cast(string) fileBytes;
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+
+    Parser parser = new Parser(currentLexer.getTokens());
+    Module modulle = parser.parse();
+    TypeChecker typeChecker = new TypeChecker(modulle);
+
+    /* Setup testing variables */
+    Entity ourClassA = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a");
+
+    try
+    {
+        /* Perform test */
+        typeChecker.beginCheck();
+
+        /* Shouldn't reach here, collision exception MUST occur */
+        assert(false);
+    }
+    catch (CollidingNameException e)
+    {
+        /* Make sure the member attempted was Variable and defined was Clazz */
+        assert(cast(Variable)e.attempted);
+        assert(cast(Clazz)e.defined);
+    }
+}
+
 
 /* Test name colliding with container name (1/2) */
 unittest
