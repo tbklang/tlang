@@ -36,6 +36,20 @@ public final class TypeChecker
 
     }
 
+    /**
+    * I guess this should be called rather
+    * when processing assignments but I also
+    * think we need something like it for
+    * class initializations first rather than
+    * variable expressions in assignments 
+    * (which should probably use some other
+    * function to check that then)
+    */
+    public void dependencyCheck()
+    {
+        /* TODO: Implement me */
+    }
+
     public void beginCheck()
     {
         /**
