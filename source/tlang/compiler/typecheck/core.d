@@ -48,6 +48,9 @@ public final class TypeChecker
     public void dependencyCheck()
     {
         /* TODO: Implement me */
+        checkClassInherit(modulle);
+
+        /* TODO: Process class ? vars funcs ?*/
     }
 
     public void beginCheck()
@@ -62,7 +65,7 @@ public final class TypeChecker
 
         /* TODO: Now that everything is defined, no collision */
         /* TODO: Do actual type checking and declarations */
-        checkClassInherit(modulle);
+        dependencyCheck();
     }
 
     private void checkClassInherit(Container c)
