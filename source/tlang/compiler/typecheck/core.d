@@ -47,10 +47,52 @@ public final class TypeChecker
     */
     public void dependencyCheck()
     {
+        /* Check declaration and definition types */
+        checkDefinitionTypes(modulle);
+
         /* TODO: Implement me */
         checkClassInherit(modulle);
 
         /* TODO: Process class ? vars funcs ?*/
+    }
+
+    /* TODO: Idk, maybe change */
+    /* TODO: Just using for `checkDefinitionTypes` */
+
+    private void checkDefinitionTypes(Container c)
+    {
+        /* Check variable declarations */
+        Variable[] variables;
+
+        foreach (Statement statement; c.getStatements())
+        {
+            if (statement !is null && cast(Variable) statement)
+            {
+                variables ~= cast(Variable) statement;
+            }
+        }
+
+        /* Check function definitions */
+        Function[] functions;
+
+        foreach (Statement statement; c.getStatements())
+        {
+            if (statement !is null && cast(Function) statement)
+            {
+                functions ~= cast(Function) statement;
+            }
+        }
+
+        /* Check class inheritance types */
+        Clazz[] classes;
+
+        foreach (Statement statement; c.getStatements())
+        {
+            if (statement !is null && cast(Clazz) statement)
+            {
+                classes ~= cast(Clazz) statement;
+            }
+        }
     }
 
     public void beginCheck()
