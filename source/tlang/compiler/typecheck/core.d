@@ -67,7 +67,7 @@ public final class TypeChecker
 
     private bool isClassType()
     {
-
+        return false;
     }
 
     /* TODO: I don't like above, let's make shit implement Type */
