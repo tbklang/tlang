@@ -90,7 +90,7 @@ public final class TypeChecker
             /* Variable's type */
             string type = variable.getType();
 
-
+            /* TODO: Resolve type here (either built-in or class type) */
         }
     }
 
