@@ -59,9 +59,21 @@ public final class TypeChecker
     /* TODO: Idk, maybe change */
     /* TODO: Just using for `checkDefinitionTypes` */
 
-    private void checkDefinitionTypes(Container c)
+    private bool isBuiltInType(string type)
     {
-        /* Check variable declarations */
+        /* TODO: Implemtn me */
+        return false;
+    }
+
+    private bool isClassType()
+    {
+
+    }
+
+    /* TODO: I don't like above, let's make shit implement Type */
+
+    private void checkVariableDeclarationTypes(Container c)
+    {
         Variable[] variables;
 
         foreach (Statement statement; c.getStatements())
@@ -71,6 +83,21 @@ public final class TypeChecker
                 variables ~= cast(Variable) statement;
             }
         }
+
+        /* Attempt to resolve the types of the variables */
+        foreach(Variable variable; variables)
+        {
+            /* Variable's type */
+            string type = variable.getType();
+
+
+        }
+    }
+
+    private void checkDefinitionTypes(Container c)
+    {
+        /* Check variable declarations */
+        checkVariableDeclarationTypes(c);
 
         /* Check function definitions */
         Function[] functions;
