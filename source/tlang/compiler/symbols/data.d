@@ -114,7 +114,7 @@ public class Entity : Statement
     private FunctionType functionType;
 
     /* Name of the entity (class's name, function's name, variable's name) */
-    private string name;
+    protected string name;
 
     this(string name)
     {
@@ -165,64 +165,7 @@ public class TypedEntity : Entity
     }
 }
 
-public class Container : Entity
-{
-    private Statement[] statements;
-
-    this(string name)
-    {
-        super(name);
-    }
-
-    public void addStatement(Statement statement)
-    {
-        this.statements ~= statement;
-    }
-
-    public void addStatements(Statement[] statements)
-    {
-        this.statements ~= statements;
-    }
-
-    public Statement[] getStatements()
-    {
-        return statements;
-    }
-}
-
-public class Module : Container
-{
-    this(string moduleName)
-    {
-        super(moduleName);
-    }
-}
-
-public class Clazz : Container
-{
-    private string[] interfacesClasses;
-
-    this(string name)
-    {
-        super(name);
-    }
-
-    public void addInherit(string[] l)
-    {
-        interfacesClasses ~= l;
-    }
-
-    public string[] getInherit()
-    {
-        return interfacesClasses;
-    }
-
-    public override string toString()
-    {
-        return "Class (Name: "~name~", Parents (Class/Interfaces): "~to!(string)(interfacesClasses)~")";
-    }
-    
-}
+public import compiler.symbols.containers;
 
 public class ArgumentList
 {
