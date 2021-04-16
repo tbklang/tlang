@@ -1,6 +1,6 @@
 module compiler.symbols.data;
 
-import compiler.symbols.check;
+public import compiler.symbols.check;
 import std.conv : to;
 
 
