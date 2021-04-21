@@ -31,6 +31,9 @@ public class Type : Entity
 
 public class Number : Type
 {
+    /* Number of bytes (1,2,4,8) */
+    private ubyte width;
+    
     this(string name)
     {
         super(name);
@@ -39,9 +42,6 @@ public class Number : Type
 
 public class Integer : Number
 {
-    /* Number of bytes (1,2,4,8) */
-    private ubyte width;
-
     this(string name)
     {
         super(name);
