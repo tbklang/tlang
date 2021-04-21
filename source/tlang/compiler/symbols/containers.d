@@ -39,6 +39,31 @@ public class Module : Entity, Container
     }
 }
 
+public class Struct : Type, Container
+{
+    private Statement[] statements;
+
+    public void addStatement(Statement statement)
+    {
+        this.statements ~= statement;
+    }
+
+    public void addStatements(Statement[] statements)
+    {
+        this.statements ~= statements;
+    }
+
+    public Statement[] getStatements()
+    {
+        return statements;
+    }
+
+    this(string name)
+    {
+        super(name);
+    }
+}
+
 public class Clazz : Type, Container
 {
     private Statement[] statements;
