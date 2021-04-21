@@ -23,11 +23,11 @@ public final class Resolver
     {
         string[] name = generateName_Internal(relativeTo, entity);
         string path;
-        for(ulong i = 0; i < name.length; i++)
+        for (ulong i = 0; i < name.length; i++)
         {
-            path ~= name[name.length-1-i];
+            path ~= name[name.length - 1 - i];
 
-            if(i != name.length-1)
+            if (i != name.length - 1)
             {
                 path ~= ".";
             }
@@ -39,17 +39,26 @@ public final class Resolver
     private string[] generateName_Internal(Container relativeTo, Entity entity)
     {
         /**
+        * TODO: Always make sure this holds
+        *
+        * All objects that implement Container so far
+        * are also Entities (hence they have a name)
+        */
+        Entity containerEntity = cast(Entity) relativeTo;
+        assert(containerEntity);
+
+        /**
         * If the Entity and Container are the same then
         * just returns its name
         */
-        if(relativeTo == entity)
+        if (relativeTo == entity)
         {
-            return [relativeTo.getName()];
+            return [containerEntity.getName()];
         }
         /**
         * If the Entity is contained within the Container
         */
-        else if(isDescendant(relativeTo, entity))
+        else if (isDescendant(relativeTo, entity))
         {
             string[] items;
 
@@ -57,12 +66,22 @@ public final class Resolver
             do
             {
                 items ~= currentEntity.getName();
-                currentEntity = currentEntity.parentOf();
+
+                /**
+                * TODO: Make sure this condition holds
+                *
+                * So far all objects we have being used
+                * of which are kind-of Containers are also
+                * and ONLY also kind-of Entity's hence the
+                * cast should never fail
+                */
+                assert(cast(Entity) currentEntity.parentOf());
+                currentEntity = cast(Entity)(currentEntity.parentOf());
             }
-            while(currentEntity != relativeTo);
+            while (currentEntity != relativeTo);
 
             /* Add the relative to container */
-            items ~= relativeTo.getName();
+            items ~= containerEntity.getName();
 
             return items;
         }
@@ -82,7 +101,7 @@ public final class Resolver
         /**
         * If they are the same
         */
-        if(c == e)
+        if (c == e)
         {
             return true;
         }
@@ -95,14 +114,23 @@ public final class Resolver
 
             do
             {
-                currentEntity = currentEntity.parentOf();
+                /**
+                * TODO: Make sure this condition holds
+                *
+                * So far all objects we have being used
+                * of which are kind-of Containers are also
+                * and ONLY also kind-of Entity's hence the
+                * cast should never fail
+                */
+                assert(cast(Entity) currentEntity.parentOf());
+                currentEntity = cast(Entity)(currentEntity.parentOf());
 
-                if(currentEntity == c)
+                if (currentEntity == c)
                 {
                     return true;
                 }
             }
-            while(currentEntity);
+            while (currentEntity);
 
             return false;
         }
@@ -112,25 +140,25 @@ public final class Resolver
     {
         Statement[] statements = currentContainer.getStatements();
 
-        foreach(Statement statement; statements)
+        foreach (Statement statement; statements)
         {
             /* TODO: Only acuse parser not done yet */
-            if(statement !is null)
+            if (statement !is null)
             {
-                Entity entity = cast(Entity)statement;
+                Entity entity = cast(Entity) statement;
 
-                if(entity)
+                if (entity)
                 {
-                    if(cmp(entity.getName(), name) == 0)
+                    if (cmp(entity.getName(), name) == 0)
                     {
                         return entity;
                     }
                 }
-            }   
+            }
         }
 
         return null;
-    }   
+    }
 
     public Entity resolveUp(Container currentContainer, string name)
     {
@@ -146,17 +174,26 @@ public final class Resolver
         gprintln(entity);
 
         /* If we found it return it */
-        if(entity)
+        if (entity)
         {
             return entity;
         }
         /* If we didn't then try go up a container */
         else
         {
-            Container possibleParent = currentContainer.parentOf();
+            /**
+            * TODO: Make sure this condition holds
+            *
+            * So far all objects we have being used
+            * of which are kind-of Containers are also
+            * and ONLY also kind-of Entity's hence the
+            * cast should never fail
+            */
+            assert(cast(Entity) currentContainer);
+            Container possibleParent = (cast(Entity) currentContainer).parentOf();
 
             /* Can we go up */
-            if(possibleParent)
+            if (possibleParent)
             {
                 return resolveUp(possibleParent, name);
             }
@@ -180,6 +217,15 @@ public final class Resolver
     */
     public Entity resolveBest(Container c, string name)
     {
+        /**
+        * TODO: Always make sure this holds
+        *
+        * All objects that implement Container so far
+        * are also Entities (hence they have a name)
+        */
+        Entity containerEntity = cast(Entity) c;
+        assert(containerEntity);
+
         string[] path = split(name, '.');
 
         /**
@@ -189,13 +235,13 @@ public final class Resolver
         *
         * TODO: WOn't resolve a module
         */
-        if(path.length == 1)
+        if (path.length == 1)
         {
             /* TODO: Add path[0], c.getName()) == modulle */
 
             /* TODO: This is for getting module entity */
             /* Check if the name, regardless of container, is root (Module) */
-            if(cmp(name, typeChecker.getModule().getName()) == 0)
+            if (cmp(name, typeChecker.getModule().getName()) == 0)
             {
                 return typeChecker.getModule();
             }
@@ -203,14 +249,14 @@ public final class Resolver
             Entity entityWithin = resolveUp(c, name);
 
             /* If `name` was in container `c` or above it */
-            if(entityWithin)
+            if (entityWithin)
             {
                 return entityWithin;
             }
             /* If `name` was NOT found within container `c` or above it */
-            else
+        else
             {
-               return null;
+                return null;
             }
         }
         else
@@ -218,27 +264,27 @@ public final class Resolver
             /* TODO: Add module name check here */
 
             /* If the root is the current container */
-            if(cmp(path[0], c.getName()) == 0)
+            if (cmp(path[0], containerEntity.getName()) == 0)
             {
 
                 /* If only 1 left then just grab it */
-                if(path.length == 2)
+                if (path.length == 2)
                 {
                     Entity entityNext = resolveWithin(c, path[1]);
                     return entityNext;
                 }
                 /* Go deeper */
-                else
+            else
                 {
-                    string newPath = name[indexOf(name, '.')+1..name.length];
+                    string newPath = name[indexOf(name, '.') + 1 .. name.length];
                     Entity entityNext = resolveWithin(c, path[1]);
 
                     /* If null then not found */
-                    if(entityNext)
+                    if (entityNext)
                     {
-                        Container containerWithin = cast(Container)entityNext;
+                        Container containerWithin = cast(Container) entityNext;
 
-                        if(entityNext)
+                        if (entityNext)
                         {
                             /* TODO: Technically I could strip new root as we have the container */
                             /* TODO: The only reason I don't want to do that is the condition */
@@ -257,11 +303,11 @@ public final class Resolver
                 }
             }
             /* We need to search higher */
-            else
+        else
             {
                 /* TODO: Bug is we will never find top container */
                 /* Check if the name of root is that of Module */
-                if(cmp(typeChecker.getModule().getName(), path[0]) == 0)
+                if (cmp(typeChecker.getModule().getName(), path[0]) == 0)
                 {
                     /* Root ourselves relative to the Module */
                     /* TODO: Don't serch for myModule class and ooga within */
@@ -276,11 +322,11 @@ public final class Resolver
 
                 Entity entityFound = resolveUp(c, path[0]);
 
-                if(entityFound)
+                if (entityFound)
                 {
-                    Container con = cast(Container)entityFound;
+                    Container con = cast(Container) entityFound;
 
-                    if(con)
+                    if (con)
                     {
                         gprintln("fooook");
                         return resolveBest(con, name);

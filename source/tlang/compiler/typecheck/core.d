@@ -126,7 +126,7 @@ public final class TypeChecker
     {
 
       
-      
+
 
 
         
@@ -267,6 +267,15 @@ public final class TypeChecker
     private void checkContainer(Container c)
     {
         /**
+        * TODO: Always make sure this holds
+        *
+        * All objects that implement Container so far
+        * are also Entities (hence they have a name)
+        */
+        Entity containerEntity = cast(Entity)c;
+        assert(containerEntity);
+
+        /**
         * Get all Entities of the Container with order Clazz, Function, Variable
         */
         Entity[] entities = getContainerMembers(c);
@@ -285,9 +294,9 @@ public final class TypeChecker
             /**
             * If the current entity's name matches the container then error
             */
-            else if (cmp(c.getName(), entity.getName()) == 0)
+            else if (cmp(containerEntity.getName(), entity.getName()) == 0)
             {
-                throw new CollidingNameException(this, c, entity, c);
+                throw new CollidingNameException(this, containerEntity, entity, c);
             }
             /**
             * If there are conflicting names within the current container
@@ -305,7 +314,7 @@ public final class TypeChecker
             else
             {
                 string fullPath = resolver.generateName(modulle, entity);
-                string containerNameFullPath = resolver.generateName(modulle, c);
+                string containerNameFullPath = resolver.generateName(modulle, containerEntity);
                 gprintln("Entity \"" ~ fullPath
                         ~ "\" is allowed to be defined within container \""
                         ~ containerNameFullPath ~ "\"");
@@ -399,6 +408,15 @@ public final class TypeChecker
     */
     private void checkClassNames(Container c)
     {
+        /**
+        * TODO: Always make sure this holds
+        *
+        * All objects that implement Container so far
+        * are also Entities (hence they have a name)
+        */
+        Entity containerEntity = cast(Entity)c;
+        assert(containerEntity);
+
         /* Get all types (Clazz so far) */
         Clazz[] classTypes;
 
@@ -431,21 +449,21 @@ public final class TypeChecker
                 Parser.expect("Cannot define class \"" ~ resolver.generateName(modulle,
                         clazz) ~ "\" as one with same name, \"" ~ resolver.generateName(modulle,
                         resolver.resolveUp(c, clazz.getName())) ~ "\" exists in container \"" ~ resolver.generateName(
-                        modulle, c) ~ "\"");
+                        modulle, containerEntity) ~ "\"");
             }
             else
             {
                 /* Get the current container's parent container */
-                Container parentContainer = c.parentOf();
+                Container parentContainer = containerEntity.parentOf();
 
                 /* Don't allow a class to be named after it's container */
                 // if(!parentContainer)
                 // {
-                if (cmp(c.getName(), clazz.getName()) == 0)
+                if (cmp(containerEntity.getName(), clazz.getName()) == 0)
                 {
                     Parser.expect("Class \"" ~ resolver.generateName(modulle,
                             clazz) ~ "\" cannot be defined within container with same name, \"" ~ resolver.generateName(
-                            modulle, c) ~ "\"");
+                            modulle, containerEntity) ~ "\"");
                 }
 
                 /* TODO: Loop througn Container ENtitys here */
