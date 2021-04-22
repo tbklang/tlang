@@ -39,6 +39,13 @@ public class Module : Entity, Container
     }
 }
 
+/**
+* Struct
+*
+* A Struct can only contain Entity's
+* that are Variables (TODO: Enforce in parser)
+* TODO: Possibly enforce here too
+*/
 public class Struct : Type, Container
 {
     private Statement[] statements;
