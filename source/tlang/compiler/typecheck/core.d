@@ -9,6 +9,7 @@ import gogga;
 import compiler.parsing.core;
 import compiler.typecheck.resolution;
 import compiler.typecheck.exceptions;
+import compiler.symbols.typing;
 
 /**
 * The Parser only makes sure syntax
@@ -56,19 +57,30 @@ public final class TypeChecker
         /* TODO: Process class ? vars funcs ?*/
     }
 
-    /* TODO: Idk, maybe change */
-    /* TODO: Just using for `checkDefinitionTypes` */
-
-    private bool isBuiltInType(string type)
+    /**
+    * Given a type as a string this
+    * returns the actual type
+    *
+    * If not found then null is returned
+    */
+    public Type getType(Container c, string typeString)
     {
-        /* TODO: Implemtn me */
-        return false;
+        Type foundType;
+
+        /* Check if the type is built-in */
+        if(isBuiltInType(typeString))
+        {
+            /* TODO: Get the built-in type */
+        }
+        /* If not built-in, resolve it */
+        else
+        {
+            foundType = cast(Type)resolver.resolveBest(c, typeString);
+        }
+
+        return foundType;
     }
 
-    private bool isClassType()
-    {
-        return false;
-    }
 
     /* TODO: I don't like above, let's make shit implement Type */
 
@@ -88,9 +100,13 @@ public final class TypeChecker
         foreach(Variable variable; variables)
         {
             /* Variable's type */
-            string type = variable.getType();
+            string typeString = variable.getType();
 
             /* TODO: Resolve type here (either built-in or class type) */
+            Type type = getType(c, typeString);
+
+            gprintln("TYpe"~to!(string)(type));
+
         }
     }
 

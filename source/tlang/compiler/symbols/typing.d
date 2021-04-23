@@ -1,6 +1,16 @@
 module compiler.symbols.typing;
 
 import compiler.symbols.data;
+import std.string : cmp;
+
+public bool isBuiltInType(string name)
+{
+    return cmp(name, "int") == 0 || cmp(name, "uint") == 0 ||
+            cmp(name, "long") == 0 || cmp(name, "ulong") == 0;
+
+   
+}
+
 
 public class Type : Entity
 {
