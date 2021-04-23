@@ -105,6 +105,12 @@ public final class TypeChecker
             /* TODO: Resolve type here (either built-in or class type) */
             Type type = getType(c, typeString);
 
+            /* Make sure type is valid */
+            if(!type)
+            {
+                Parser.expect("Invalid type \""~typeString~"\"");
+            }
+
             gprintln("TYpe"~to!(string)(type));
 
         }
