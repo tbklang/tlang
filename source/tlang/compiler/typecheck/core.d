@@ -84,23 +84,28 @@ public final class TypeChecker
 
     /* TODO: I don't like above, let's make shit implement Type */
 
-    private void checkVariableDeclarationTypes(Container c)
+    /**
+    * Checks all TypedEntity(s) (so Variables and Functions)
+    * such that their types (variable type/return type) are
+    * valid type names
+    */
+    private void checkTypedEntitiesTypeNames(Container c)
     {
-        Variable[] variables;
+        TypedEntity[] typedEntities;
 
         foreach (Statement statement; c.getStatements())
         {
-            if (statement !is null && cast(Variable) statement)
+            if (statement !is null && cast(TypedEntity) statement)
             {
-                variables ~= cast(Variable) statement;
+                typedEntities ~= cast(TypedEntity) statement;
             }
         }
 
         /* Attempt to resolve the types of the variables */
-        foreach(Variable variable; variables)
+        foreach(TypedEntity typedEntity; typedEntities)
         {
-            /* Variable's type */
-            string typeString = variable.getType();
+            /* TypedEntity's type */
+            string typeString = typedEntity.getType();
 
             /* TODO: Resolve type here (either built-in or class type) */
             Type type = getType(c, typeString);
@@ -116,21 +121,15 @@ public final class TypeChecker
         }
     }
 
+    /* TODO: TYpeEntity check sepeare */
+    /* TODO: Parsing within function etc. */
+
     private void checkDefinitionTypes(Container c)
     {
-        /* Check variable declarations */
-        checkVariableDeclarationTypes(c);
+        /* Check variables and functions (TypedEntities) declarations */
+        checkTypedEntitiesTypeNames(c);
 
-        /* Check function definitions */
-        Function[] functions;
-
-        foreach (Statement statement; c.getStatements())
-        {
-            if (statement !is null && cast(Function) statement)
-            {
-                functions ~= cast(Function) statement;
-            }
-        }
+       
 
         /* Check class inheritance types */
         Clazz[] classes;

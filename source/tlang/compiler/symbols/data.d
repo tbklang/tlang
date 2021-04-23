@@ -172,6 +172,8 @@ public class ArgumentList
 
 }
 
+/* TODO: Don't make this a Container, or maybe (make sure I don't rely on COntainer casting for other shit
+* though, also the recent changes) */
 public class Function : TypedEntity
 {
     private Variable[] params;
