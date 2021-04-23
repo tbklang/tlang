@@ -2,7 +2,7 @@ module compiler.symbols.containers;
 
 import compiler.symbols.data;
 import std.conv : to;
-import compiler.symbols.typing;
+import compiler.symbols.typing.core;
 
 public interface Container
 {

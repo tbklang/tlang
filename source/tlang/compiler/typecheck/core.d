@@ -9,7 +9,7 @@ import gogga;
 import compiler.parsing.core;
 import compiler.typecheck.resolution;
 import compiler.typecheck.exceptions;
-import compiler.symbols.typing;
+import compiler.symbols.typing.core;
 
 /**
 * The Parser only makes sure syntax

@@ -1,4 +1,4 @@
-module compiler.symbols.typing;
+module compiler.symbols.typing.core;
 
 import compiler.symbols.data;
 import std.string : cmp;
@@ -10,6 +10,7 @@ public bool isBuiltInType(string name)
 
    
 }
+
 
 
 public class Type : Entity
