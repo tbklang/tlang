@@ -53,11 +53,12 @@ public class Double : Number
 
 public class Pointer : Type
 {
-    /* Datum wdith */
-    private ubyte datumWidth;
+    /* Data type being pointed to */
+    private Type dataType;
 
-    this(string name)
+    this(string name, Type dataType)
     {
         super(name);
+        this.dataType = dataType;
     }
 }
