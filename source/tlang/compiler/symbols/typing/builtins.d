@@ -21,7 +21,7 @@ public Type getBuiltInType(string typeString)
         return new Integer("uint", 4, false);
     }
     /* `long`, signed (2-complement) */
-    if(cmp(typeString, "long") == 0)
+    else if(cmp(typeString, "long") == 0)
     {
         return new Integer("long", 8, true);
     }
@@ -30,6 +30,17 @@ public Type getBuiltInType(string typeString)
     {
         return new Integer("ulong", 8, false);
     }
+    /* `short`, signed (2-complement) */
+    else if(cmp(typeString, "short") == 0)
+    {
+        return new Integer("short", 2, true);
+    }
+    /* `ushort` unsigned */
+    else if(cmp(typeString, "ushort") == 0)
+    {
+        return new Integer("ushort", 2, false);
+    }
+    
     /* TODO: Add all remaining types */
     /* If unknown, return null */
     else
