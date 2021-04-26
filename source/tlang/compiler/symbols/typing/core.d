@@ -29,6 +29,14 @@ public class Type : Entity
     }
 }
 
+public final class Void : Type
+{
+    this()
+    {
+        super("void");
+    }
+}
+
 /* TODO: Move width to Type class */
 public class Number : Type
 {
@@ -50,7 +58,7 @@ public class Integer : Number
 {
     /* Whether or not signed (if so, then 2's complement) */
     private bool signed;
-    
+
     this(string name, ubyte width, bool signed = false)
     {
         super(name, width);

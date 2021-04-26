@@ -50,6 +50,11 @@ public Type getBuiltInType(string typeString)
     {
         return new Integer("ubyte", 1, false);
     }
+    /* `void` */
+    else if (cmp(typeString, "void") == 0)
+    {
+        return new Void();
+    }
     
     
     /* TODO: Add all remaining types */
