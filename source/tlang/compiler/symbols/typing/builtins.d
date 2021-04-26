@@ -40,6 +40,17 @@ public Type getBuiltInType(string typeString)
     {
         return new Integer("ushort", 2, false);
     }
+    /* `byte`, signed (2-complement) */
+    else if(cmp(typeString, "byte") == 0)
+    {
+        return new Integer("byte", 1, true);
+    }
+    /* `ubyte` unsigned */
+    else if(cmp(typeString, "ubyte") == 0)
+    {
+        return new Integer("ubyte", 1, false);
+    }
+    
     
     /* TODO: Add all remaining types */
     /* If unknown, return null */
