@@ -68,18 +68,14 @@ public final class TypeChecker
         Type foundType;
 
         /* Check if the type is built-in */
-        /* TODO: Just use `getBuiltInType`, if null then yeah - not built-in */
-        if(isBuiltInType(typeString))
-        {
-            /* TODO: Get the built-in type */
-            foundType = getBuiltInType(typeString);
-        }
-        /* If not built-in, resolve it */
-        else
+        foundType = getBuiltInType(typeString);
+
+        /* If it isn't then check for a type (resolve it) */
+        if(!foundType)
         {
             foundType = cast(Type)resolver.resolveBest(c, typeString);
         }
-
+        
         return foundType;
     }
 
