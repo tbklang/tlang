@@ -20,6 +20,16 @@ public Type getBuiltInType(string typeString)
     {
         return new Integer("uint", 4, false);
     }
+    /* `long`, signed (2-complement) */
+    if(cmp(typeString, "long") == 0)
+    {
+        return new Integer("long", 8, true);
+    }
+    /* `ulong` unsigned */
+    else if(cmp(typeString, "ulong") == 0)
+    {
+        return new Integer("ulong", 8, false);
+    }
     /* TODO: Add all remaining types */
     /* If unknown, return null */
     else
