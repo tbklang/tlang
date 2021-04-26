@@ -455,7 +455,7 @@ class clazz2 : bruh
     }
 }
 
-void.void pdsjhfjdsf(int j)
+void pdsjhfjdsf(int j)
 {
 
 }
