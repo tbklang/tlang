@@ -79,9 +79,6 @@ public final class TypeChecker
         return foundType;
     }
 
-
-    /* TODO: I don't like above, let's make shit implement Type */
-
     /**
     * Checks all TypedEntity(s) (so Variables and Functions)
     * such that their types (variable type/return type) are
