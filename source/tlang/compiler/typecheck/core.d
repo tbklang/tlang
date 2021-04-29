@@ -153,7 +153,7 @@ public final class TypeChecker
         * Classes being declared before Functions and
         * Functions before Variables
         */
-        checkContainer(modulle); /* TODO: Rename checkContainerCollision */
+        checkContainerCollision(modulle); /* TODO: Rename checkContainerCollision */
 
         /* TODO: Now that everything is defined, no collision */
         /* TODO: Do actual type checking and declarations */
@@ -280,7 +280,7 @@ public final class TypeChecker
     * call `checkContainer` on said Entity and the
     * logic above applies again
     */
-    private void checkContainer(Container c)
+    private void checkContainerCollision(Container c)
     {
         /**
         * TODO: Always make sure this holds
@@ -342,7 +342,7 @@ public final class TypeChecker
                 Container possibleContainerEntity = cast(Container) entity;
                 if (possibleContainerEntity)
                 {
-                    checkContainer(possibleContainerEntity);
+                    checkContainerCollision(possibleContainerEntity);
                 }
             }
         }
