@@ -155,6 +155,12 @@ public final class TypeChecker
         */
         checkContainerCollision(modulle); /* TODO: Rename checkContainerCollision */
 
+        /**
+        * Check that definition types (for functions and
+        * variables that are being declared) are valid types
+        */
+        checkDefinitionTypes(modulle);
+
         /* TODO: Now that everything is defined, no collision */
         /* TODO: Do actual type checking and declarations */
         dependencyCheck();
