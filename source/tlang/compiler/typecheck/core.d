@@ -138,15 +138,11 @@ public final class TypeChecker
         }
     }
 
+    /**
+    * Begins the type checking process
+    */
     public void beginCheck()
     {
-
-      
-
-
-
-        
-
         /**
         * Make sure there are no name collisions anywhere
         * in the Module with an order of precedence of
