@@ -32,11 +32,16 @@ class kl
 
 struct structTest
 {
-    
+
 }
 
 class Shekshi 
 {
+    struct structTest
+    {
+        
+    }
+
     class Shekshi1
     {
         

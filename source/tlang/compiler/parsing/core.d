@@ -415,6 +415,12 @@ public final class Parser
                 /* Parse the class and add its statements */
                 statements ~= parseClass();
             }
+            /* If it is a struct definition */
+            else if(symbol == SymbolType.STRUCT)
+            {
+                /* Parse the struct and add it to the statements */
+                statements ~= parseStruct();
+            }
             /* Error out */
             else
             {
