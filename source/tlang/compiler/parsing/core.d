@@ -1116,6 +1116,14 @@ public final class Parser
                 /* Add the class definition to the program */
                 modulle.addStatement(clazz);
             }
+            /* If it is a struct definition */
+            else if(symbol == SymbolType.STRUCT)
+            {
+                Struct ztruct = parseStruct();
+
+                /* Add the struct definition to the program */
+                modulle.addStatement(ztruct);
+            }
             else
             {
                 expect("parse(): Unknown '" ~ tok.getToken() ~ "'");
