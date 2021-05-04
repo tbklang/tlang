@@ -292,6 +292,35 @@ public final class Parser
         return ret;
     }
 
+    /* TODO: Implement me, and call me */
+    private Struct parseStruct()
+    {
+        gprintln("parseStruct(): Enter", DebugType.WARNING);
+
+        Struct generatedStruct;
+
+        /* Consume the `struct` that caused `parseStruct` to be called */
+        nextToken();
+
+        /* Expect an identifier here (no dot) */
+        string structName = getCurrentToken().getToken();
+        expect(SymbolType.IDENT_TYPE, getCurrentToken());
+        if(!isIdentifier_NoDot(getCurrentToken()))
+        {
+            expect("Identifier (for struct declaration) cannot be dotted");
+        }
+        
+        /* Consume the name */
+        nextToken();
+
+        /* TODO: Here we will do a while loop */
+
+
+        gprintln("parseStruct(): Leave", DebugType.WARNING);
+
+        return generatedStruct;
+    }
+
     private Statement[] parseBody()
     {
         gprintln("parseBody(): Enter", DebugType.WARNING);
