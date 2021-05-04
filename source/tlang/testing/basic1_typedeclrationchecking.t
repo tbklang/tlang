@@ -32,8 +32,23 @@ class kl
     
 }
 
+struct structTest
+{
+
+}
+
 class Shekshi 
 {
+    struct structTest
+    {
+        
+    }
+
+    public struct poesStruct
+    {
+        
+    }
+
     class Shekshi1
     {
         
