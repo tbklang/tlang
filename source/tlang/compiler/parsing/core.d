@@ -340,6 +340,9 @@ public final class Parser
         /* Expect closing brace (sanity) */
         expect(SymbolType.CCURLY, getCurrentToken());
 
+        /* Consume the closing curly brace */
+        nextToken();
+
 
         gprintln("parseStruct(): Leave", DebugType.WARNING);
 
