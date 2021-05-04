@@ -484,6 +484,13 @@ public final class Parser
             /* TODO: Set accessor on returned thing */
             entity = parseClass();
         }
+        /* If struct */
+        else if(symbolType == SymbolType.STRUCT)
+        {
+            /* TODO: Set accessor on returned thing */
+            entity = parseStruct();
+            gprintln("Poes"~to!(string)(entity));
+        }
         /* If typed-definition (function or variable) */
         else if(symbolType == SymbolType.IDENT_TYPE)
         {

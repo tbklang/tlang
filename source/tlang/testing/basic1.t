@@ -42,6 +42,11 @@ class Shekshi
         
     }
 
+    public struct poesStruct
+    {
+        
+    }
+
     class Shekshi1
     {
         
