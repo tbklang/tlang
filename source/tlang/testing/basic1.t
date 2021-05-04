@@ -30,6 +30,11 @@ class kl
     
 }
 
+struct structTest
+{
+    
+}
+
 class Shekshi 
 {
     class Shekshi1

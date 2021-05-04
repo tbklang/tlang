@@ -314,6 +314,31 @@ public final class Parser
         nextToken();
 
         /* TODO: Here we will do a while loop */
+        expect(SymbolType.OCURLY, getCurrentToken());
+        nextToken();
+
+        while(true)
+        {
+            /* Get current token */
+            SymbolType symbolType = getSymbolType(getCurrentToken());
+
+            /* If closing brace then exit */
+            if(symbolType == SymbolType.CCURLY)
+            {
+                break;
+            }
+
+            /* TODO: Only allow variables here */
+            /* TODO: Only allowe VariableDeclarations (maybe assignments idk) */
+            /* TODO: Might, do what d does and allow function */
+            /* TODO: Which is just a codegen trick and implicit thing really */
+            /* TODO: I mean isn't OOP too lmao */
+
+            
+        }
+
+        /* Expect closing brace (sanity) */
+        expect(SymbolType.CCURLY, getCurrentToken());
 
 
         gprintln("parseStruct(): Leave", DebugType.WARNING);
