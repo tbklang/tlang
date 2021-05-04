@@ -43,6 +43,7 @@ public enum SymbolType
     GOTO,
     DO,
     DELETE,
+    STRUCT,
     UNKNOWN
 }
 
@@ -205,6 +206,11 @@ public SymbolType getSymbolType(Token tokenIn)
     else if (isNumeric(token))
     {
         return SymbolType.NUMBER_LITERAL;
+    }
+    /* `struct` */
+    else if(cmp(token, "struct") == 0)
+    {
+        return SymbolType.STRUCT;
     }
     /* `if` */
     else if(cmp(token, "if") == 0)
