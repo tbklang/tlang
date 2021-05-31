@@ -348,6 +348,11 @@ public final class Parser
             {
                 structMember = parseAccessor();
             }
+            /* If closing brace then exit */
+            else if(symbolType == SymbolType.CCURLY)
+            {
+                break;
+            }
 
             /* Ensure only function declaration or variable declaration */
             if(cast(Function)structMember)
@@ -378,11 +383,7 @@ public final class Parser
             
             
 
-            /* If closing brace then exit */
-            if(symbolType == SymbolType.CCURLY)
-            {
-                break;
-            }
+            
 
             /* TODO: Only allow variables here */
             /* TODO: Only allowe VariableDeclarations (maybe assignments idk) */
