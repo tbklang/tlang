@@ -32,7 +32,13 @@ class kl
 
 struct structTest
 {
+    int j;
+    int j;
 
+    void pdsjhfjdsf(int j)
+    {
+
+    }
 }
 
 class Shekshi 
