@@ -320,7 +320,11 @@ public final class Parser
         while(true)
         {
             /* Get current token */
-            //SymbolType symbolType = getSymbolType(getCurrentToken());
+            SymbolType symbolType = getSymbolType(getCurrentToken());
+
+            /* The possibly valid returned struct member (Entity) */
+            Statement structMember;
+
 
             /** TODO:
             * We only want to allow function definitions and variable
@@ -331,7 +335,48 @@ public final class Parser
             * filter out those (raise an error) on checking the type of
             * Entity returned by `parseAccessor()`
             */
-            Entity structMember = parseAccessor();
+
+
+            /* If it is a type */
+            if (symbolType == SymbolType.IDENT_TYPE)
+            {
+                /* Might be a function, might be a variable, or assignment */
+                structMember = parseName();
+            }
+            /* If it is an accessor */
+            else if (isAccessor(getCurrentToken()))
+            {
+                structMember = parseAccessor();
+            }
+
+            /* Ensure only function declaration or variable declaration */
+            if(cast(Function)structMember)
+            {
+
+            }
+            else if(cast(Variable)structMember)
+            {
+                /* Ensure that there is (WIP: for now) no assignment in the variable declaration */
+                Variable variableDeclaration = cast(Variable)structMember;
+
+                /* Raise error if an assignment is present */
+                if(variableDeclaration.getAssignment())
+                {
+                    expect("Assignments not allowed in struct body");
+                }
+            }
+            /**
+            * Anything else that isn't a assignment-less variable declaration
+            * or a function definition is an error
+            */
+            else
+            {
+                expect("Only function definitions and variable declarations allowed in struct body");
+            }
+            
+
+            
+            
 
             /* If closing brace then exit */
             if(symbolType == SymbolType.CCURLY)
