@@ -298,6 +298,7 @@ public final class Parser
         gprintln("parseStruct(): Enter", DebugType.WARNING);
 
         Struct generatedStruct;
+        Statement[] statements;
 
         /* Consume the `struct` that caused `parseStruct` to be called */
         nextToken();
@@ -324,7 +325,6 @@ public final class Parser
 
             /* The possibly valid returned struct member (Entity) */
             Statement structMember;
-
 
             /** TODO:
             * We only want to allow function definitions and variable
@@ -379,7 +379,8 @@ public final class Parser
                 expect("Only function definitions and variable declarations allowed in struct body");
             }
             
-
+            /* Append to struct's body */
+            statements ~= structMember;
             
             
 
