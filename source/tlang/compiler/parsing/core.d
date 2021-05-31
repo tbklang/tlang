@@ -333,11 +333,11 @@ public final class Parser
             */
             Entity structMember = parseAccessor();
 
-            // /* If closing brace then exit */
-            // if(symbolType == SymbolType.CCURLY)
-            // {
-            //     break;
-            // }
+            /* If closing brace then exit */
+            if(symbolType == SymbolType.CCURLY)
+            {
+                break;
+            }
 
             /* TODO: Only allow variables here */
             /* TODO: Only allowe VariableDeclarations (maybe assignments idk) */
