@@ -320,7 +320,7 @@ public final class Parser
         while(true)
         {
             /* Get current token */
-            SymbolType symbolType = getSymbolType(getCurrentToken());
+            //SymbolType symbolType = getSymbolType(getCurrentToken());
 
             /** TODO:
             * We only want to allow function definitions and variable
@@ -331,12 +331,13 @@ public final class Parser
             * filter out those (raise an error) on checking the type of
             * Entity returned by `parseAccessor()`
             */
+            Entity structMember = parseAccessor();
 
-            /* If closing brace then exit */
-            if(symbolType == SymbolType.CCURLY)
-            {
-                break;
-            }
+            // /* If closing brace then exit */
+            // if(symbolType == SymbolType.CCURLY)
+            // {
+            //     break;
+            // }
 
             /* TODO: Only allow variables here */
             /* TODO: Only allowe VariableDeclarations (maybe assignments idk) */
