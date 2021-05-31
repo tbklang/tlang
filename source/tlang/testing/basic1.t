@@ -39,6 +39,16 @@ struct structTest
     {
 
     }
+
+    void pdsjhfjdsf(int j)
+    {
+
+    }
+}
+
+struct structTest2
+{
+
 }
 
 class Shekshi 
