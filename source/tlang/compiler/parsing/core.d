@@ -322,6 +322,16 @@ public final class Parser
             /* Get current token */
             SymbolType symbolType = getSymbolType(getCurrentToken());
 
+            /** TODO:
+            * We only want to allow function definitions and variable
+            * declarations here (WIP: for now without assignments)
+            *
+            * parseAccessor() supports those BUT it will also allow classes
+            * and further structs - this we do not want and hence we should
+            * filter out those (raise an error) on checking the type of
+            * Entity returned by `parseAccessor()`
+            */
+
             /* If closing brace then exit */
             if(symbolType == SymbolType.CCURLY)
             {
