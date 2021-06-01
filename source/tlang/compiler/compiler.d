@@ -62,6 +62,9 @@ void beginCompilation(string[] sourceFiles)
         {
             gprintln(e.msg, DebugType.ERROR);
         }
+
+        import compiler.codegen.core;
+        CodeGenerator codegen = new CodeGenerator(modulle);
         
         // typeChecker.check();
     }
