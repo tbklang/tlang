@@ -396,9 +396,9 @@ public final class Parser
         }
 
 
-        /* TODO: Remove this and actually impleent struct's body parsing */
-        /* TODO: Add Statement[] array, statements, to `generatedStruct` */
+        /* Generate a new Struct with the given body Statement(s) */
         generatedStruct = new Struct(structName);
+        generatedStruct.addStatements(statements);
         
         /* Expect closing brace (sanity) */
         expect(SymbolType.CCURLY, getCurrentToken());
