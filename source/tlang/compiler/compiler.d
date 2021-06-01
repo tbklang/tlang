@@ -64,7 +64,8 @@ void beginCompilation(string[] sourceFiles)
         }
 
         import compiler.codegen.core;
-        CodeGenerator codegen = new CodeGenerator(modulle);
+        CodeGenerator codegen = new DCodeGenerator(modulle);
+        codegen.build();
         
         // typeChecker.check();
     }

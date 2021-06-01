@@ -15,7 +15,7 @@ public class DCodeGenerator : CodeGenerator
         super(modulle);
     }
 
-    public void build()
+    public override string build()
     {
         Statement[] statements = modulle.getStatements();
 
@@ -31,5 +31,7 @@ public class DCodeGenerator : CodeGenerator
             }
             
         }
+
+        return "";
     }
 }

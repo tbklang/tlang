@@ -17,6 +17,11 @@ public class CodeGenerator
     {
         this.modulle = modulle;
     }
+
+    public string build()
+    {
+        return "";
+    }
 }
 
 public import compiler.codegen.dgen;

@@ -228,7 +228,9 @@ public class Function : TypedEntity
     }
 }
 
-public class Variable : TypedEntity
+import compiler.codegen.core;
+
+public class Variable : TypedEntity, Emittable
 {
     /* TODO: Just make this an Expression */
     private VariableAssignment assignment;
@@ -254,6 +256,22 @@ public class Variable : TypedEntity
     }
 
     /* Code gen */
+    public string emit()
+    {
+        string emittedCode;
+
+        /* TODO: So far only emitting for non assignment */
+        if(!assignment)
+        {
+            /* TODO: Let's hope only primitive types */
+            emittedCode = type;
+            emittedCode ~= " ";
+            emittedCode ~= getName();
+            emittedCode ~= ";";
+        }
+
+        return emittedCode;
+    }
 }
 
 
