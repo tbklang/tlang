@@ -79,6 +79,17 @@ public final class TypeChecker
         return foundType;
     }
 
+    private void checkClass(Clazz clazz)
+    {
+        gprintln("Checking class now...");
+
+        /* TODO: Get all typed entities */
+        
+
+        /* TODO: Check things ithin */
+        checkTypedEntitiesTypeNames(clazz);
+    }
+
     /**
     * Checks all TypedEntity(s) (so Variables and Functions)
     * such that their types (variable type/return type) are
@@ -111,7 +122,28 @@ public final class TypeChecker
                 Parser.expect("Invalid type \""~typeString~"\"");
             }
 
-            gprintln("TYpe"~to!(string)(type));
+            gprintln("Type: "~to!(string)(type));
+
+
+
+            /* TODO: Check type here */
+
+            /* If it is primitive then no further checking */
+            if(cast(Number)type)
+            {
+                /* TODO: Mark it as ready-for-reference */
+            }
+            else
+            {
+                /* If it is a Class type */
+                if(cast(Clazz)type)
+                {
+                    Clazz clazzType = cast(Clazz)type;
+
+                    /* TODO: Now check this class and follow it's path */
+                    checkClass(clazzType);
+                }
+            }
 
         }
     }
