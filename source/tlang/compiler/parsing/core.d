@@ -526,6 +526,25 @@ public final class Parser
         }
     }
 
+
+    /* STATUS: Not being used yet */
+    /**
+    * Called in an occurence of the: `static x`
+    */
+    /* TODO: Anything that isn't static, is non-static => the false boolean should imply non-static */
+    private Entity parseInitScope()
+    {
+        Entity entity;
+
+        /* Save and consume the accessor */
+        AccessorType accessorType = getAccessorType(getCurrentToken());
+        nextToken();
+
+        /* TODO: Implement me and fix the above */
+
+        return entity;
+    }
+
     /* STATUS: Not being used yet */
     private Entity parseAccessor()
     {
