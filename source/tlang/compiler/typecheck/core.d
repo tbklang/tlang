@@ -156,7 +156,7 @@ public final class TypeChecker
             if(cast(Number)type)
             {
                 /* TODO: Mark it as ready-for-reference */
-                type.mark();
+                
             }
             else
             {

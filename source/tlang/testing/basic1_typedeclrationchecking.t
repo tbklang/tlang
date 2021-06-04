@@ -1,7 +1,7 @@
 module myModule;
 
 
-int x;
+int x =1;
 ubyte y;
 
 int a;
