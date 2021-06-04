@@ -27,7 +27,7 @@ protected ubyte k3 = -1;
 
 class kl
 {
-    Shekshi l;
+    static Shekshi l;
     kl o;
 }
 
