@@ -532,14 +532,6 @@ public final class Parser
         {
             return InitScope.STATIC;
         }
-        else if(getSymbolType(token) == SymbolType.PROTECTED)
-        {
-            return AccessorType.PROTECTED;
-        }
-        else if(getSymbolType(token) == SymbolType.PRIVATE)
-        {
-            return AccessorType.PRIVATE;
-        }
         else
         {
             return InitScope.UNKNOWN;

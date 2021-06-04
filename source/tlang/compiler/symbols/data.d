@@ -104,9 +104,9 @@ public enum AccessorType
     PUBLIC, PRIVATE, PROTECTED, UNKNOWN
 }
 
-public enum FunctionType
+public enum InitScope
 {
-    STATIC, VIRTUAL
+    STATIC, UNKNOWN
 }
 
 public class Assignment : Statement
@@ -128,7 +128,7 @@ public class Entity : Statement
     private AccessorType accessorType = AccessorType.PUBLIC;
 
     /* Function/Modifier type */
-    private FunctionType functionType;
+    private InitScope initScope;
 
     /* Name of the entity (class's name, function's name, variable's name) */
     protected string name;
@@ -148,14 +148,14 @@ public class Entity : Statement
         return accessorType;
     }
 
-    public void setModifierType(FunctionType functionType)
+    public void setModifierType(InitScope initScope)
     {
-        this.functionType = functionType;
+        this.initScope = initScope;
     }
 
-    public FunctionType getModifierType()
+    public InitScope getModifierType()
     {
-        return functionType;
+        return initScope;
     }
 
     public string getName()
