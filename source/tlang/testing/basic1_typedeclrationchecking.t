@@ -29,7 +29,7 @@ protected Them.Container fsdhsdj;
 
 class kl
 {
-    Shekshi l = new Shekshi();
+    Shekshi l;
     kl o;
 }
 

@@ -34,27 +34,28 @@ public final class TypeChecker
     {
         this.modulle = modulle;
         resolver = new Resolver(this);
+        /* TODO: Module check?!?!? */
+        initTree();
+    }
 
+    import compiler.typecheck.visitor;
+    private VTreeNode root;
+    private void initTree()
+    {
+        root = new VTreeNode(modulle);
     }
 
 
-    private Statement[] visistedStatements;
-    public void visit(Statement statement)
+    // private Statement[] visistedStatements;
+    public void visit(VTreeNode level, Statement statement)
     {
-        visistedStatements ~= statement;
+        // visistedStatements ~= statement;
+        level.addChild(new VTreeNode(statement));
     }
 
-    public bool hasVisited(Statement statementInQuestion)
+    public VTreeNode hasVisited(Statement statementInQuestion)
     {
-        foreach(Statement statement; visistedStatements)
-        {
-            if(statement == statementInQuestion)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return root.isInTree(statementInQuestion);
     }
 
     /**
@@ -120,8 +121,43 @@ public final class TypeChecker
     * TODO: Should we also do expression parsing or rather do another call for that
     * mmmmh
     */
+    // private VTreeNode currentNode;
     private void checkTypedEntitiesTypeNames(Container c)
     {
+        /* This VTreeNode */
+        VTreeNode thisNode;
+
+        if(c == modulle)
+        {
+            thisNode = root;
+        }
+        else
+        {
+            /* Create a VTreeNode for this Statement */
+            assert(cast(Statement)c);
+            thisNode = new VTreeNode(cast(Statement)c);
+
+            gprintln("dsdf");
+
+            /* Get my parent's VTreeNode */
+            /* TODO: This parent of, ah we should make functions be containers, like we gonna need that for constutcor processing etc, and fucntions, mutual recursion there too */
+            Statement cS = cast(Statement)c;
+            VTreeNode parentNode = hasVisited(cast(Statement)cS.parentOf());
+
+            gprintln("dsdf");
+            gprintln(parentNode);
+            gprintln(c);
+
+            /* TODO: We should do this recursively rather, because we exit it is fine technically so the tree will be valid */
+
+            /* Child-self to parent VTreeNode */
+            parentNode.addChild(thisNode);
+            gprintln("dsdf");
+        }
+
+   
+    
+
         TypedEntity[] typedEntities;
 
         foreach (Statement statement; c.getStatements())
@@ -151,7 +187,9 @@ public final class TypeChecker
 
 
             /* TODO: Visit it (mark it as such) */
-            visit(type);
+            VTreeNode thisEntity = new VTreeNode(typedEntity);
+            
+
 
             /* TODO: Check type here */
 
@@ -159,6 +197,9 @@ public final class TypeChecker
             if(cast(Number)type)
             {
                 /* TODO: Mark it as ready-for-reference */
+
+                /* TODO: Expression checking */
+                thisNode.addChild(thisEntity);
                 
             }
             else
@@ -179,12 +220,16 @@ public final class TypeChecker
                         gprintln("Container we are in matches type of TypedEdntity being processed");
 
                         /* TODO: In that case mark the entity as fine */
-                        clazzType.mark();
+                        thisNode.addChild(thisEntity);
+                        // clazzType.mark();
                     }
                     /* If the type is visited already (good for rwcuasiev case mutal class references) */
                     else if(hasVisited(clazzType))
                     {
                         /* TODO: This could actually solve the abive too? */
+                        /* This is basically saying the TypedEntity's type is a CLass that has been visited so we can assume it is safe to add */
+                        /* We don't wanna visit it again (as stackoevrflow)  from mutaul recursion then */
+                        thisNode.addChild(thisEntity);
                     }
                     else
                     {
