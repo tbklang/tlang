@@ -142,10 +142,13 @@ public final class TypeChecker
                 {
                     Clazz clazzType = cast(Clazz)type;
 
+                    /* TODO: We need to start marking things */
+                    /* TODO: Do actual checks here now */
+
                     /* TODO: If the type is of the current class we are in then it is fine? */
                     if(clazzType == c)
                     {
-
+                        gprintln("Container we are in matches type of TypedEdntity being processed");
                     }
                     else
                     {
