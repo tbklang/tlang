@@ -94,6 +94,8 @@ public final class TypeChecker
     * Checks all TypedEntity(s) (so Variables and Functions)
     * such that their types (variable type/return type) are
     * valid type names
+    *
+    * This is called on a Container
     */
     private void checkTypedEntitiesTypeNames(Container c)
     {
@@ -140,8 +142,18 @@ public final class TypeChecker
                 {
                     Clazz clazzType = cast(Clazz)type;
 
-                    /* TODO: Now check this class and follow it's path */
-                    checkClass(clazzType);
+                    /* TODO: If the type is of the current class we are in then it is fine? */
+                    if(clazzType == c)
+                    {
+
+                    }
+                    else
+                    {
+                        /* TODO: Now check this class and follow it's path */
+                        checkClass(clazzType);
+                    }
+
+                   
                 }
             }
 

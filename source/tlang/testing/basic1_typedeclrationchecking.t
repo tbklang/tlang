@@ -30,6 +30,7 @@ protected Them.Container fsdhsdj;
 class kl
 {
     Shekshi l;
+    kl o;
 }
 
 struct structTest
@@ -39,6 +40,9 @@ struct structTest
 
 class Shekshi 
 {
+    kl l;
+    Shekshi p;
+
     struct structTest
     {
         
