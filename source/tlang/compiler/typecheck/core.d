@@ -134,6 +134,7 @@ public final class TypeChecker
             if(cast(Number)type)
             {
                 /* TODO: Mark it as ready-for-reference */
+                type.mark();
             }
             else
             {
@@ -142,6 +143,8 @@ public final class TypeChecker
                 {
                     Clazz clazzType = cast(Clazz)type;
 
+                    /* TODO: Check constructor */
+
                     /* TODO: We need to start marking things */
                     /* TODO: Do actual checks here now */
 
@@ -149,9 +152,15 @@ public final class TypeChecker
                     if(clazzType == c)
                     {
                         gprintln("Container we are in matches type of TypedEdntity being processed");
+
+                        /* TODO: In that case mark the entity as fine */
+                        clazzType.mark();
                     }
                     else
                     {
+                        /* TODO: Also make it fine? mmuutal recusive refernce */
+                        /* TODO: Got it, we NEED a dependency tree, to know chihs is being processed previosuly */
+
                         /* TODO: Now check this class and follow it's path */
                         checkClass(clazzType);
                     }
