@@ -60,7 +60,8 @@ class Shekshi
 
     class kl
     {
-        
+        kl o;
+        Shekshi oo;
     }
 
     int Shekshi2;
