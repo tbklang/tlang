@@ -37,6 +37,26 @@ public final class TypeChecker
 
     }
 
+
+    private Statement[] visistedStatements;
+    public void visit(Statement statement)
+    {
+        visistedStatements ~= statement;
+    }
+
+    public bool hasVisited(Statement statementInQuestion)
+    {
+        foreach(Statement statement; visistedStatements)
+        {
+            if(statement == statementInQuestion)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
     * I guess this should be called rather
     * when processing assignments but I also
@@ -127,6 +147,8 @@ public final class TypeChecker
             gprintln("Type: "~to!(string)(type));
 
 
+            /* TODO: Visit it (mark it as such) */
+            visit(type);
 
             /* TODO: Check type here */
 
@@ -155,6 +177,11 @@ public final class TypeChecker
 
                         /* TODO: In that case mark the entity as fine */
                         clazzType.mark();
+                    }
+                    /* If the type is visited already (good for rwcuasiev case mutal class references) */
+                    else if(hasVisited(clazzType))
+                    {
+                        /* TODO: This could actually solve the abive too? */
                     }
                     else
                     {
