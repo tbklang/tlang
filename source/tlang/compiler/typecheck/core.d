@@ -116,6 +116,9 @@ public final class TypeChecker
     * valid type names
     *
     * This is called on a Container
+    *
+    * TODO: Should we also do expression parsing or rather do another call for that
+    * mmmmh
     */
     private void checkTypedEntitiesTypeNames(Container c)
     {
