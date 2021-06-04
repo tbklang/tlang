@@ -1,7 +1,7 @@
 module myModule;
 
 
-int x;
+int x =1;
 ubyte y;
 
 int a;
@@ -29,7 +29,8 @@ protected Them.Container fsdhsdj;
 
 class kl
 {
-    
+    Shekshi l;
+    kl o;
 }
 
 struct structTest
@@ -39,6 +40,9 @@ struct structTest
 
 class Shekshi 
 {
+    kl l;
+    Shekshi p;
+
     struct structTest
     {
         
@@ -56,7 +60,8 @@ class Shekshi
 
     class kl
     {
-
+        kl o;
+        Shekshi oo;
     }
 
     int Shekshi2;

@@ -37,6 +37,26 @@ public final class TypeChecker
 
     }
 
+
+    private Statement[] visistedStatements;
+    public void visit(Statement statement)
+    {
+        visistedStatements ~= statement;
+    }
+
+    public bool hasVisited(Statement statementInQuestion)
+    {
+        foreach(Statement statement; visistedStatements)
+        {
+            if(statement == statementInQuestion)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
     * I guess this should be called rather
     * when processing assignments but I also
@@ -79,10 +99,23 @@ public final class TypeChecker
         return foundType;
     }
 
+    private void checkClass(Clazz clazz)
+    {
+        gprintln("Checking class now...");
+
+        /* TODO: Get all typed entities */
+        
+
+        /* TODO: Check things ithin */
+        checkTypedEntitiesTypeNames(clazz);
+    }
+
     /**
     * Checks all TypedEntity(s) (so Variables and Functions)
     * such that their types (variable type/return type) are
     * valid type names
+    *
+    * This is called on a Container
     */
     private void checkTypedEntitiesTypeNames(Container c)
     {
@@ -111,7 +144,57 @@ public final class TypeChecker
                 Parser.expect("Invalid type \""~typeString~"\"");
             }
 
-            gprintln("TYpe"~to!(string)(type));
+            gprintln("Type: "~to!(string)(type));
+
+
+            /* TODO: Visit it (mark it as such) */
+            visit(type);
+
+            /* TODO: Check type here */
+
+            /* If it is primitive then no further checking */
+            if(cast(Number)type)
+            {
+                /* TODO: Mark it as ready-for-reference */
+                
+            }
+            else
+            {
+                /* If it is a Class type */
+                if(cast(Clazz)type)
+                {
+                    Clazz clazzType = cast(Clazz)type;
+
+                    /* TODO: Check constructor */
+
+                    /* TODO: We need to start marking things */
+                    /* TODO: Do actual checks here now */
+
+                    /* TODO: If the type is of the current class we are in then it is fine? */
+                    if(clazzType == c)
+                    {
+                        gprintln("Container we are in matches type of TypedEdntity being processed");
+
+                        /* TODO: In that case mark the entity as fine */
+                        clazzType.mark();
+                    }
+                    /* If the type is visited already (good for rwcuasiev case mutal class references) */
+                    else if(hasVisited(clazzType))
+                    {
+                        /* TODO: This could actually solve the abive too? */
+                    }
+                    else
+                    {
+                        /* TODO: Also make it fine? mmuutal recusive refernce */
+                        /* TODO: Got it, we NEED a dependency tree, to know chihs is being processed previosuly */
+
+                        /* TODO: Now check this class and follow it's path */
+                        checkClass(clazzType);
+                    }
+
+                   
+                }
+            }
 
         }
     }
