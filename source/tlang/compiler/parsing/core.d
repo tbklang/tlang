@@ -526,6 +526,26 @@ public final class Parser
         }
     }
 
+    private InitScope getInitScope(Token token)
+    {
+        if(getSymbolType(token) == SymbolType.STATIC)
+        {
+            return InitScope.STATIC;
+        }
+        else if(getSymbolType(token) == SymbolType.PROTECTED)
+        {
+            return AccessorType.PROTECTED;
+        }
+        else if(getSymbolType(token) == SymbolType.PRIVATE)
+        {
+            return AccessorType.PRIVATE;
+        }
+        else
+        {
+            return InitScope.UNKNOWN;
+        }
+    }
+
 
     /* STATUS: Not being used yet */
     /**
@@ -536,8 +556,8 @@ public final class Parser
     {
         Entity entity;
 
-        /* Save and consume the accessor */
-        AccessorType accessorType = getAccessorType(getCurrentToken());
+        /* Save and consume the init-scope */
+        InitScope initScope = getInitScope(getCurrentToken());
         nextToken();
 
         /* TODO: Implement me and fix the above */
