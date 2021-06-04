@@ -148,6 +148,9 @@ public final class TypeChecker
             gprintln(parentNode);
             gprintln(c);
 
+            /* TODO: My grand resolver fuuuuck the parent is not in da tree */
+            /* TODO: Static classes moment */
+
             /* TODO: We should do this recursively rather, because we exit it is fine technically so the tree will be valid */
 
             /* Child-self to parent VTreeNode */
