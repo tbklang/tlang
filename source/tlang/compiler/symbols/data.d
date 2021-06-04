@@ -70,6 +70,7 @@ public class Program
 public class Statement
 {
     private Container container;
+    private bool marked;
 
     public final void parentTo(Container container)
     {
@@ -79,6 +80,22 @@ public class Statement
     public final Container parentOf()
     {
         return container;
+    }
+
+    /**
+    * Returns the ready-to-reference state of this Statement
+    */
+    public bool isMarked()
+    {
+        return marked;
+    }
+
+    /**
+    * Marks this Statement as ready-to-reference
+    */
+    public void mark()
+    {
+        marked = true;
     }
 }
 
