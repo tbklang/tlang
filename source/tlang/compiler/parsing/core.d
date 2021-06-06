@@ -348,6 +348,11 @@ public final class Parser
             {
                 structMember = parseAccessor();
             }
+            /* If is is a modifier */
+            else if(isModifier(getCurrentToken()))
+            {
+                structMember = parseInitScope();
+            }
             /* If closing brace then exit */
             else if(symbolType == SymbolType.CCURLY)
             {
