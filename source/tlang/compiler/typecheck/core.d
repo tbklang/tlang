@@ -88,6 +88,8 @@ public final class TypeChecker
         checkClassInherit(modulle);
 
         /* TODO: Process class ? vars funcs ?*/
+
+        gprintln(deps);
     }
 
     /**
@@ -139,133 +141,133 @@ public final class TypeChecker
     // private VTreeNode currentNode;
     private void checkTypedEntitiesTypeNames(Container c)
     {
-        /* This VTreeNode */
-        VTreeNode thisNode;
+        // /* This VTreeNode */
+        // VTreeNode thisNode;
 
-        if(c == modulle)
-        {
-            thisNode = root;
-        }
-        else
-        {
-            /* Create a VTreeNode for this Statement */
-            assert(cast(Statement)c);
-            thisNode = new VTreeNode(cast(Statement)c);
+        // if(c == modulle)
+        // {
+        //     thisNode = root;
+        // }
+        // else
+        // {
+        //     /* Create a VTreeNode for this Statement */
+        //     assert(cast(Statement)c);
+        //     thisNode = new VTreeNode(cast(Statement)c);
 
-            gprintln("dsdf");
+        //     gprintln("dsdf");
 
-            /* Get my parent's VTreeNode */
-            /* TODO: This parent of, ah we should make functions be containers, like we gonna need that for constutcor processing etc, and fucntions, mutual recursion there too */
-            Statement cS = cast(Statement)c;
-            VTreeNode parentNode = hasVisited(cast(Statement)cS.parentOf());
+        //     /* Get my parent's VTreeNode */
+        //     /* TODO: This parent of, ah we should make functions be containers, like we gonna need that for constutcor processing etc, and fucntions, mutual recursion there too */
+        //     Statement cS = cast(Statement)c;
+        //     VTreeNode parentNode = hasVisited(cast(Statement)cS.parentOf());
 
-            gprintln("dsdf");
-            gprintln(parentNode);
-            gprintln(c);
+        //     gprintln("dsdf");
+        //     gprintln(parentNode);
+        //     gprintln(c);
 
-            /* TODO: My grand resolver fuuuuck the parent is not in da tree */
-            /* TODO: Static classes moment */
+        //     /* TODO: My grand resolver fuuuuck the parent is not in da tree */
+        //     /* TODO: Static classes moment */
 
-            /* TODO: We should do this recursively rather, because we exit it is fine technically so the tree will be valid */
+        //     /* TODO: We should do this recursively rather, because we exit it is fine technically so the tree will be valid */
 
-            /* Child-self to parent VTreeNode */
-            parentNode.addChild(thisNode);
-            gprintln("dsdf");
+        //     /* Child-self to parent VTreeNode */
+        //     parentNode.addChild(thisNode);
+        //     gprintln("dsdf");
 
 
             
-        }
+        // }
 
    
     
 
-        TypedEntity[] typedEntities;
+        // TypedEntity[] typedEntities;
 
-        foreach (Statement statement; c.getStatements())
-        {
-            if (statement !is null && cast(TypedEntity) statement)
-            {
-                typedEntities ~= cast(TypedEntity) statement;
-            }
-        }
+        // foreach (Statement statement; c.getStatements())
+        // {
+        //     if (statement !is null && cast(TypedEntity) statement)
+        //     {
+        //         typedEntities ~= cast(TypedEntity) statement;
+        //     }
+        // }
 
-        /* Attempt to resolve the types of the variables */
-        foreach(TypedEntity typedEntity; typedEntities)
-        {
-            /* TypedEntity's type */
-            string typeString = typedEntity.getType();
+        // /* Attempt to resolve the types of the variables */
+        // foreach(TypedEntity typedEntity; typedEntities)
+        // {
+        //     /* TypedEntity's type */
+        //     string typeString = typedEntity.getType();
 
-            /* TODO: Resolve type here (either built-in or class type) */
-            Type type = getType(c, typeString);
+        //     /* TODO: Resolve type here (either built-in or class type) */
+        //     Type type = getType(c, typeString);
 
-            /* Make sure type is valid */
-            if(!type)
-            {
-                Parser.expect("Invalid type \""~typeString~"\"");
-            }
+        //     /* Make sure type is valid */
+        //     if(!type)
+        //     {
+        //         Parser.expect("Invalid type \""~typeString~"\"");
+        //     }
 
-            gprintln("Type: "~to!(string)(type));
+        //     gprintln("Type: "~to!(string)(type));
 
 
-            /* TODO: Visit it (mark it as such) */
-            VTreeNode thisEntity = new VTreeNode(typedEntity);
+        //     /* TODO: Visit it (mark it as such) */
+        //     VTreeNode thisEntity = new VTreeNode(typedEntity);
             
 
 
-            /* TODO: Check type here */
+        //     /* TODO: Check type here */
 
-            /* If it is primitive then no further checking */
-            if(cast(Number)type)
-            {
-                /* TODO: Mark it as ready-for-reference */
+        //     /* If it is primitive then no further checking */
+        //     if(cast(Number)type)
+        //     {
+        //         /* TODO: Mark it as ready-for-reference */
 
-                /* TODO: Expression checking */
-                thisNode.addChild(thisEntity);
+        //         /* TODO: Expression checking */
+        //         thisNode.addChild(thisEntity);
                 
-            }
-            else
-            {
-                /* If it is a Class type */
-                if(cast(Clazz)type)
-                {
-                    Clazz clazzType = cast(Clazz)type;
+        //     }
+        //     else
+        //     {
+        //         /* If it is a Class type */
+        //         if(cast(Clazz)type)
+        //         {
+        //             Clazz clazzType = cast(Clazz)type;
 
-                    /* TODO: Check constructor */
+        //             /* TODO: Check constructor */
 
-                    /* TODO: We need to start marking things */
-                    /* TODO: Do actual checks here now */
+        //             /* TODO: We need to start marking things */
+        //             /* TODO: Do actual checks here now */
 
-                    /* TODO: If the type is of the current class we are in then it is fine? */
-                    if(clazzType == c)
-                    {
-                        gprintln("Container we are in matches type of TypedEdntity being processed");
+        //             /* TODO: If the type is of the current class we are in then it is fine? */
+        //             if(clazzType == c)
+        //             {
+        //                 gprintln("Container we are in matches type of TypedEdntity being processed");
 
-                        /* TODO: In that case mark the entity as fine */
-                        thisNode.addChild(thisEntity);
-                        // clazzType.mark();
-                    }
-                    /* If the type is visited already (good for rwcuasiev case mutal class references) */
-                    else if(hasVisited(clazzType))
-                    {
-                        /* TODO: This could actually solve the abive too? */
-                        /* This is basically saying the TypedEntity's type is a CLass that has been visited so we can assume it is safe to add */
-                        /* We don't wanna visit it again (as stackoevrflow)  from mutaul recursion then */
-                        thisNode.addChild(thisEntity);
-                    }
-                    else
-                    {
-                        /* TODO: Also make it fine? mmuutal recusive refernce */
-                        /* TODO: Got it, we NEED a dependency tree, to know chihs is being processed previosuly */
+        //                 /* TODO: In that case mark the entity as fine */
+        //                 thisNode.addChild(thisEntity);
+        //                 // clazzType.mark();
+        //             }
+        //             /* If the type is visited already (good for rwcuasiev case mutal class references) */
+        //             else if(hasVisited(clazzType))
+        //             {
+        //                 /* TODO: This could actually solve the abive too? */
+        //                 /* This is basically saying the TypedEntity's type is a CLass that has been visited so we can assume it is safe to add */
+        //                 /* We don't wanna visit it again (as stackoevrflow)  from mutaul recursion then */
+        //                 thisNode.addChild(thisEntity);
+        //             }
+        //             else
+        //             {
+        //                 /* TODO: Also make it fine? mmuutal recusive refernce */
+        //                 /* TODO: Got it, we NEED a dependency tree, to know chihs is being processed previosuly */
 
-                        /* TODO: Now check this class and follow it's path */
-                        checkClass(clazzType);
-                    }
+        //                 /* TODO: Now check this class and follow it's path */
+        //                 checkClass(clazzType);
+        //             }
 
                    
-                }
-            }
+        //         }
+        //     }
 
-        }
+        // }
 
 
         /**
@@ -295,8 +297,6 @@ public final class TypeChecker
             checkClass_DepTest(currentClass);
         }
 
-        gprintln(deps);
-
     }
 
 
@@ -317,15 +317,15 @@ public final class TypeChecker
         /**
         * Get all static entities in class
         */
-        TypedEntity[] staticMembers;
+        Entity[] staticMembers;
         foreach (Statement statement; c.getStatements())
         {
-            if (statement !is null && cast(TypedEntity) statement)
+            if (statement !is null && cast(Entity) statement)
             {
-                TypedEntity member = cast(TypedEntity)statement;
+                Entity member = cast(Entity)statement;
                 if(member.getModifierType() == InitScope.STATIC)
                 {
-                    staticMembers ~= cast(TypedEntity) statement;    
+                    staticMembers ~= cast(Entity) statement;    
                 }
             }
         }
@@ -333,22 +333,57 @@ public final class TypeChecker
         gprintln("Static members: "~to!(string)(staticMembers));
 
         /**
-        * 
+        * Processes all Class definitions (first, ordered)
+        * Fucntions and Variables (TODO: I cannot recall that ordering)
         */
-        foreach(TypedEntity staticMember; staticMembers)
+        foreach(Entity staticMember; staticMembers)
         {
-            /* Get the Type of the member */
-            Type staticMemberType = getType(c, staticMember.getType());
+            /**
+            * Handle static member classes (Class)
+            */
+            if(cast(Clazz)staticMember)
+            {
+                /* The class must be dependent on the current class */
+                    gprintln("fdhjdfshjfd");
+                /* Full path of thing depending on something else */
+                string dependee = resolver.generateName(modulle, staticMember);
 
-            /* Full path of thing depending on something else */
-            string dependee = resolver.generateName(modulle, staticMember);
+                /* Full path of the thing it is dependent on */
+                string dependency = resolver.generateName(modulle, c);
+                
+                /* Add this to the dependency list fpr the current dependent staticMemberType */
+                encounter(dependee, dependency);
 
-            /* Full path of the thing it is dependent on */
-            string dependency = resolver.generateName(modulle, staticMemberType);
-            
-            /* Add this to the dependency list fpr the current dependent staticMemberType */
-            encounter(dependee, dependency);
-        }
+                /* If the static member is a class then apply the logic recursively to it */
+                Clazz staticMemberClass = cast(Clazz)staticMember;
+                checkTypedEntitiesTypeNames(staticMemberClass);
+            }
+            /**
+            * Handle static member functions/variables (Function/Variable)
+            */
+            else if(cast(TypedEntity)staticMember)
+            {
+                /* Typed static member */
+                TypedEntity typedStaticMember = cast(TypedEntity)staticMember;
+
+                /* Get the Type of the member */
+                Type staticMemberType = getType(c, typedStaticMember.getType());
+
+                /* Full path of thing depending on something else */
+                string dependee = resolver.generateName(modulle, typedStaticMember);
+
+                /* Full path of the thing it is dependent on */
+                string dependency = resolver.generateName(modulle, staticMemberType);
+                
+                /* Add this to the dependency list fpr the current dependent staticMemberType */
+                encounter(dependee, dependency);
+            }
+            else
+            {
+                assert(false);
+            }
+
+        }        
     }
 
 
