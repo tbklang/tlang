@@ -92,7 +92,7 @@ public final class TypeChecker
         import compiler.typecheck.dependancy;
         dependancyGenerate(this, modulle);
 
-        //gprintln(deps);
+        gprintln("Final deps: "~to!(string)(deps));
     }
 
     /**
