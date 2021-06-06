@@ -133,6 +133,7 @@ public final class TypeChecker
     private void encounter(string entityName, string dependentOn)
     {
         deps[entityName] ~= dependentOn;
+        gprintln("[Encounter] Entity: \""~entityName~"\" set to be dependent on \""~dependentOn~"\"");
     }
 
     /**
@@ -304,6 +305,8 @@ public final class TypeChecker
             checkClass_DepTest(currentClass);
         }
 
+        gprintln(deps);
+
     }
 
 
@@ -327,7 +330,23 @@ public final class TypeChecker
 
         gprintln("Static members: "~to!(string)(staticMembers));
 
-        
+        /**
+        * 
+        */
+        foreach(TypedEntity staticMember; staticMembers)
+        {
+            /* Get the Type of the member */
+            Type staticMemberType = getType(c, staticMember.getType());
+
+            /* Full path of thing depending on something else */
+            string dependee = resolver.generateName(modulle, staticMember);
+
+            /* Full path of the thing it is dependent on */
+            string dependency = resolver.generateName(modulle, staticMemberType);
+            
+            /* Add this to the dependency list fpr the current dependent staticMemberType */
+            encounter(dependee, dependency);
+        }
     }
 
 
