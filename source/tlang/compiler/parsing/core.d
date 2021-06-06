@@ -552,7 +552,59 @@ public final class Parser
         InitScope initScope = getInitScope(getCurrentToken());
         nextToken();
 
-        /* TODO: Implement me and fix the above */
+        /* Get the current token's symbol type */
+        SymbolType symbolType = getSymbolType(getCurrentToken());
+
+        /**
+        * TODO
+        *
+        * Topic of discussion: "What can be static?"
+        *
+        * Structs!
+        *   As we might want them to be initted on class load or not (on instance initialization)
+        * Classes
+        *   Likewise a class in a class could be initted if static then on outer class load so would inner
+        *   If not then only inner class loads on outer instantiation
+        * Variables
+        *   Initialize on class reference if static, however if not, then on instance initialization
+        *
+        *   Note: There are two meanings for static (if you take C for example, I might add a word for that, `global` rather)
+        * Functions
+        *   Journal entry describes this.
+        *
+        * Journal entry also describes this (/journal/static_keyword_addition/)
+        */
+        /* If class */
+        if(symbolType == SymbolType.CLASS)
+        {
+            /* TODO: Set accessor on returned thing */
+            entity = parseClass();
+        }
+        /* If struct */
+        else if(symbolType == SymbolType.STRUCT)
+        {
+            /* TODO: Set accessor on returned thing */
+            entity = parseStruct();
+            gprintln("Poes"~to!(string)(entity));
+        }
+        /* If typed-definition (function or variable) */
+        else if(symbolType == SymbolType.IDENT_TYPE)
+        {
+            /* TODO: Set accesor on returned thing */
+            entity = cast(Entity)parseName();
+
+            if(!entity)
+            {
+                expect("Accessor got func call when expecting var/func def");
+            }
+        }
+        /* Error out */
+        else
+        {
+            expect("Expected either function definition, variable declaration, struct definition or class definition");
+        }
+
+        entity.setModifierType(initScope);
 
         return entity;
     }
@@ -596,10 +648,15 @@ public final class Parser
                 expect("Accessor got func call when expecting var/func def");
             }
         }
+        /* If static */
+        else if(symbolType == SymbolType.STATIC)
+        {
+            entity = parseInitScope();
+        }
         /* Error out */
         else
         {
-            expect("Expected either function definition, variable declaration or class definition");
+            expect("Expected either function definition, variable declaration, struct definition or class definition");
         }
 
         entity.setAccessorType(accessorType);
