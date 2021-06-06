@@ -35,14 +35,26 @@ public final class TypeChecker
         this.modulle = modulle;
         resolver = new Resolver(this);
         /* TODO: Module check?!?!? */
-        initTree();
+        initTrees();
     }
 
     import compiler.typecheck.visitor;
     private VTreeNode root;
-    private void initTree()
+
+
+    /**
+    * Root of reliance (dependency) tree
+    */
+    import compiler.typecheck.reliance;
+    private RelianceNode relianceRootNode;
+
+
+    private void initTrees()
     {
         root = new VTreeNode(modulle);
+
+        /* Create a reliance node with no dependancies for the module */
+        relianceRootNode = new RelianceNode(modulle);
     }
 
 
@@ -111,6 +123,18 @@ public final class TypeChecker
         checkTypedEntitiesTypeNames(clazz);
     }
 
+
+    /**
+    * Dependency encountering
+    *
+    * TODO: Move to own module
+    */
+    private string[][string] deps;
+    private void encounter(string entityName, string dependentOn)
+    {
+        deps[entityName] ~= dependentOn;
+    }
+
     /**
     * Checks all TypedEntity(s) (so Variables and Functions)
     * such that their types (variable type/return type) are
@@ -156,6 +180,9 @@ public final class TypeChecker
             /* Child-self to parent VTreeNode */
             parentNode.addChild(thisNode);
             gprintln("dsdf");
+
+
+            
         }
 
    
@@ -248,7 +275,62 @@ public final class TypeChecker
             }
 
         }
+
+
+        /**
+        * Get all classes
+        */
+        Clazz[] classes;
+        foreach (Statement statement; c.getStatements())
+        {
+            if (statement !is null && cast(Clazz) statement)
+            {
+                classes ~= cast(Clazz) statement;
+            }
+        }
+
+        /**
+        * TODO: Here I am testing on dependeny constrtuction
+        * 1. Only for classes
+        * 2. Only for their static member (assignment is assumed not to happen)
+        */
+        foreach(Clazz currentClass; classes)
+        {
+            gprintln("DependencyConstruction: Class Container found '"~to!(string)(currentClass)~"'");
+
+            /* Mark this as reliant on modulle (then) */
+
+            /* Check recursively */
+            checkClass_DepTest(currentClass);
+        }
+
     }
+
+
+    private void checkClass_DepTest(Clazz c)
+    {
+        /**
+        * Get all static entities in class
+        */
+        TypedEntity[] staticMembers;
+        foreach (Statement statement; c.getStatements())
+        {
+            if (statement !is null && cast(TypedEntity) statement)
+            {
+                TypedEntity member = cast(TypedEntity)statement;
+                if(member.getModifierType() == InitScope.STATIC)
+                {
+                    staticMembers ~= cast(TypedEntity) statement;    
+                }
+            }
+        }
+
+        gprintln("Static members: "~to!(string)(staticMembers));
+
+        
+    }
+
+
 
     /* TODO: TYpeEntity check sepeare */
     /* TODO: Parsing within function etc. */
