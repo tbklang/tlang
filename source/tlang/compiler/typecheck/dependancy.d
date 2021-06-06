@@ -121,6 +121,11 @@ public void dependancyGenerate(TypeChecker tc, Container container)
                         */
                         encounter(tc, variable, classType);
                     }
+                    else
+                    {
+                        /* TODO: Possible errors but may work too */
+                        gprintln("Woah there cowboy, this is dangerous territory", DebugType.WARNING);
+                    }
                 }
                 /**
                 * Anything else (TODO: Checking)
@@ -158,6 +163,7 @@ public void dependancyGenerate(TypeChecker tc, Container container)
         else
         {
             /* This shouldn't happen */
+            gprintln("BAAD", DebugType.ERROR);
             assert(false);
         }
     }

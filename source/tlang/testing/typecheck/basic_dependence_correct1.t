@@ -1,12 +1,17 @@
 module typeChecking1;
 
 
-B aInstance;
+A aInstance;
+B bInstance;
+A.C cInstanceInvalid;
 int jNumber;
 
 class A
 {
-    
+    class C
+    {
+
+    }
 }
 
 class B
