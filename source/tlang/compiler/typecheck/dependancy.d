@@ -2,7 +2,9 @@ module compiler.typecheck.dependancy;
 
 import gogga;
 import compiler.symbols.data;
+import compiler.symbols.typing.core;
 import compiler.typecheck.core;
+
 import std.conv : to;
 
 /**
@@ -46,5 +48,55 @@ public void dependancyGenerate(TypeChecker tc, Container container)
 
     /**
     * Process all entities
+    *
+    * The natural order would be classes, funcitons/variables (I cannot remember TOOD: check this)
     */
+    foreach(Entity entity; containerEntities)
+    {
+        /**
+        * If we are at Module level then things differ
+        * ever so slightly
+        */
+        if(container == tc.getModule())
+        {
+            /**
+            * If it is a variable
+            */
+            if(cast(Variable)entity)
+            {
+                Variable variable = cast(Variable)entity;
+
+                /* Get the variable's type */
+                Type variableType = tc.getType(container, variable.getType());
+
+                /* If then variable has an assignment */
+                if(variable.getAssignment())
+                {
+                    /* TODO: Add assignment support */    
+                }
+            }
+        }
+        /**
+        * If we are at the Class level
+        */
+        else if(cast(Clazz)container)
+        {
+
+        }
+        /**
+        * If we are at the Struct level
+        */
+        else if(cast(Struct)container)
+        {
+
+        }
+        /**
+        * Any other type of Container
+        */
+        else
+        {
+            /* This shouldn't happen */
+            assert(false);
+        }
+    }
 }
