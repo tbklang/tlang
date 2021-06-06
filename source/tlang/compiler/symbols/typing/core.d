@@ -21,7 +21,7 @@ public class Type : Entity
     }
 }
 
-public final class Void : Type
+public final class Void : Primitive
 {
     this()
     {
@@ -29,8 +29,16 @@ public final class Void : Type
     }
 }
 
+public class Primitive : Type
+{
+    this(string name)
+    {
+        super(name);
+    }
+}
+
 /* TODO: Move width to Type class */
-public class Number : Type
+public class Number : Primitive
 {
     /* Number of bytes (1,2,4,8) */
     private ubyte width;
