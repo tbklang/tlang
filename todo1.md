@@ -17,3 +17,13 @@ TODO: Holidays (1-10th May)
         - [x]  Adding missing support for `static` in it
     - [ ] `parseClass`
         - [ ] Add this
+
+
+## Future
+
+- [ ] Make the compiler a library
+    - [ ] Remove `exit` from `expect` and rather throw an error
+    - [ ] Split it up into two projects with...
+        - [ ] Library
+        - [ ] Frontend interface
+    - [ ] Publish to dub
