@@ -66,4 +66,13 @@ public final class StructuralOrganizer
 
 
     }
+
+    /**
+    * Given a path determine if it is accessible (in a static context)
+    *
+    * TODO: Explain
+    *
+    * If so, return the order of static initializations
+    */
+    // public string[]
 }
