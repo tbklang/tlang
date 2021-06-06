@@ -124,17 +124,7 @@ public final class TypeChecker
     }
 
 
-    /**
-    * Dependency encountering
-    *
-    * TODO: Move to own module
-    */
-    private string[][string] deps;
-    private void encounter(string entityName, string dependentOn)
-    {
-        deps[entityName] ~= dependentOn;
-        gprintln("[Encounter] Entity: \""~entityName~"\" set to be dependent on \""~dependentOn~"\"");
-    }
+    
 
     /**
     * Checks all TypedEntity(s) (so Variables and Functions)
@@ -309,6 +299,18 @@ public final class TypeChecker
 
     }
 
+
+    /**
+    * Dependency encountering
+    *
+    * TODO: Move to own module
+    */
+    private string[][string] deps;
+    private void encounter(string entityName, string dependentOn)
+    {
+        deps[entityName] ~= dependentOn;
+        gprintln("[Encounter] Entity: \""~entityName~"\" set to be dependent on \""~dependentOn~"\"");
+    }
 
     private void checkClass_DepTest(Clazz c)
     {
