@@ -1,5 +1,7 @@
 module typeChecking1;
 
+A aInstance;
+
 class A
 {
     static A aInstance;
