@@ -90,15 +90,8 @@ public final class TypeChecker
         /* TODO: Process class ? vars funcs ?*/
 
         import compiler.typecheck.dependancy;
-        dependancyGenerate(this, modulle);
-
-        string depsString;
-        foreach(string key; keysOrder)
-        {
-            depsString ~= key~": "~to!(string)(deps[key])~", ";
-        }
-        gprintln("Final deps: "~to!(string)(depsString));
-        findEnd(this);
+        StructuralOrganizer so = new StructuralOrganizer(this);
+        so.checkContainer(modulle);
     }
 
     /**
