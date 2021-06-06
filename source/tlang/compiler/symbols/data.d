@@ -106,7 +106,7 @@ public enum AccessorType
 
 public enum InitScope
 {
-    STATIC, UNKNOWN
+    STATIC, VIRTUAL, UNKNOWN
 }
 
 public class Assignment : Statement

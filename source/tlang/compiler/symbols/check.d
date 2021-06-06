@@ -156,6 +156,11 @@ public bool isAccessor(Token token)
             getSymbolType(token) == SymbolType.PROTECTED;
 }
 
+public bool isModifier(Token token)
+{
+    return getSymbolType(token) == SymbolType.STATIC;
+}
+
 public bool isIdentifier_NoDot(Token tokenIn)
 {
     /* Make sure it isn't any other type of symbol */

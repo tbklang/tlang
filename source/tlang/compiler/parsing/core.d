@@ -449,6 +449,11 @@ public final class Parser
             {
                 statements ~= parseAccessor();
             }
+            /* If it is a modifier */
+            else if(isModifier(tok))
+            {
+                statements ~= parseInitScope();
+            }
             /* If it is a branch */
             else if (symbol == SymbolType.IF)
             {
