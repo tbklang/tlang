@@ -29,6 +29,11 @@ class kl
 {
     static Shekshi l;
     kl o;
+
+    public int k1;
+    public static int k2;
+    int k3;
+    static int k4;
 }
 
 struct structTest
