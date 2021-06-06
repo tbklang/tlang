@@ -34,6 +34,116 @@ public void encounter(TypeChecker tc, Entity entityDependee, Entity dependentOn)
     encounter(dependee, dependency);
 }
 
+/**
+* Given a path to a class and a relative container to start at
+* this will start at the top of the path and dependencyGneerate
+* on each of them
+*
+* Example:
+*
+* module j;
+* A.B.C cInstance;
+*
+* class A
+* {
+*    class B
+*    {
+*
+*    }
+* }
+*/
+
+/* TODO: Implement me */
+
+
+public bool hasDepChecked(TypeChecker tc, Entity entity)
+{
+    return false;
+}
+
+
+/**
+* Statically initilizes a given class
+*/
+public void staticInitClass(TypeChecker tc, Clazz clazz)
+{
+    /**
+    * Don't init if we have initted before
+    */
+
+
+
+    /**
+    * Get all Entities of the class that are static
+    */
+    Entity[] staticEntities;
+    foreach (Statement statement; clazz.getStatements())
+    {
+        if (statement !is null && cast(Entity) statement)
+        {
+            Entity entity = cast(Entity)statement;
+            if(entity.getModifierType() == InitScope.STATIC)
+            {
+                staticEntities ~= cast(Entity) statement;    
+            }
+        }
+    }
+
+    /**
+    * Process the static members
+    */
+    foreach(Entity staticMember; staticEntities)
+    {
+        /**
+        * If the static member is a variable
+        * declaration
+        */
+        if(cast(Variable)staticMember)
+        {
+            Variable variable = cast(Variable)staticMember;
+
+            /* Get the variable's type */
+            Type variableType = tc.getType(clazz, variable.getType());
+
+            /**
+            * Check if the type is a class type
+            */
+            if(cast(Clazz)variableType)
+            {
+                Clazz classType = cast(Clazz)variableType;
+
+                /* Only init if not the current class */
+                if(classType != clazz)
+                {
+                    staticInitClass(tc, classType);
+                }
+            }
+
+
+            /* This class depends on this variable being initialized */
+            encounter(tc, clazz, variable);
+            
+            /* If then variable has an assignment */
+            if(variable.getAssignment())
+            {
+                /* TODO: Add assignment support */    
+            }
+        }
+        
+    }
+}
+
+public void virtualInitClass(TypeChecker tc, Clazz clazz)
+{
+
+}
+
+
+
+/**
+* Returns true if the path downwards is all static dentities
+*/
+
 public void dependancyGenerate(TypeChecker tc, Container container)
 {
     /**
@@ -61,16 +171,13 @@ public void dependancyGenerate(TypeChecker tc, Container container)
     * Process all entities
     *
     * The natural order would be classes, funcitons/variables (I cannot remember TOOD: check this)
+    *
+    * If, for example, we have `A aInstance;` as a module-level variable declaration then
+    * we must statically initialize A (the class as that is a class-type reference) - we do
+    * this by visiting the class and initializing all of it's things
     */
     foreach(Entity entity; containerEntities)
     {
-        /**
-        * Encounter yourself as to not be lost if you need not depens on anything else
-        * cause if this is not done then we can easily forget `int jNumber;` at module-level
-        * for example.
-        */
-        encounter(tc, entity, entity);
-
         /**
         * If we are at Module level then things differ
         * ever so slightly
@@ -121,7 +228,7 @@ public void dependancyGenerate(TypeChecker tc, Container container)
                         *
                         * Okay, so we do all of the above SECOND, first the class must be checked itself
                         */
-                        dependancyGenerate(tc, classType);
+                        staticInitClass(tc, classType);
                         encounter(tc, variable, classType);
                     }
                     else
@@ -137,6 +244,9 @@ public void dependancyGenerate(TypeChecker tc, Container container)
                 {
                     /* TODO: EVerything else is fine */
                     /* TODO: Either struct or primtive, neither have static initlization */
+
+                    /* We need to still know it exists */
+                    encounter(tc, variable, variable);
                 }
 
                 /* If then variable has an assignment */
@@ -151,6 +261,11 @@ public void dependancyGenerate(TypeChecker tc, Container container)
         */
         else if(cast(Clazz)container)
         {
+            /* TODO: Only should be called in static-initialization case */
+            // Clazz clazz = cast(Clazz)container;
+            // assert(clazz.);
+
+
 
         }
         /**
