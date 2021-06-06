@@ -1,15 +1,16 @@
 module typeChecking1;
 
-
-A aInstance;
 B bInstance;
+A aInstance;
+
 int jNumber;
 
 class A
 {
+    static B bInstanceStatic;
     static int jStatic;
     static A aInstanceStatic;
-    static B bInstanceStatic;
+    
     B bInstance;
     int jInstance;
 }

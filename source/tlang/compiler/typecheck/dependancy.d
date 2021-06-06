@@ -16,9 +16,14 @@ import std.conv : to;
 */
 public string[][string] deps;
 
+public string[] keysOrder;
 
 public void encounter(string entityName, string dependentOn)
 {
+    if(entityName !in deps)
+    {
+        keysOrder ~= entityName;
+    }
     deps[entityName] ~= dependentOn;
     gprintln("[Encounter] Entity: \""~entityName~"\" set to be dependent on \""~dependentOn~"\"");
 }
@@ -63,6 +68,7 @@ public bool hasDepChecked(TypeChecker tc, Entity entity)
 
     /**
     * Check if it is in there
+    * TODO: Use `in`
     */
     foreach(string key; deps.keys)
     {
@@ -131,8 +137,15 @@ public void staticInitClass(TypeChecker tc, Clazz clazz)
             {
                 Clazz classType = cast(Clazz)variableType;
 
-                /* Static initialize the class */
-                staticInitClass(tc, classType);
+                /* Static initialize the class if it is not this class-type */
+                if(classType != clazz)
+                {
+                    /* Set this class to be dependent on the class of the class-type */
+                    encounter(tc, clazz, classType);
+
+                    /* Initialize (statically) the class referred to by the class-type */
+                    staticInitClass(tc, classType);
+                }
             }
 
 
@@ -145,8 +158,37 @@ public void staticInitClass(TypeChecker tc, Clazz clazz)
                 /* TODO: Add assignment support */    
             }
         }
+
+        encounter(tc, staticMember, staticMember);
         
     }
+}
+
+public bool isClassMember(TypeChecker tc, Clazz c, string memberName)
+{
+    return false;
+}
+
+public string findEnd(TypeChecker tc)
+{
+    string end;
+
+    foreach(string entityPath; deps.keys)
+    {
+        string[] dependencies = deps[entityPath];
+
+        foreach(string dependency; dependencies)
+        {
+            /* Check if the dependency has only itself */
+            string visitedNode = dependency;
+            string[] visistedNodeDependencies = deps[visitedNode];
+
+            
+            
+        }
+    }
+
+    return end;
 }
 
 public void virtualInitClass(TypeChecker tc, Clazz clazz)

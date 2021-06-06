@@ -92,7 +92,13 @@ public final class TypeChecker
         import compiler.typecheck.dependancy;
         dependancyGenerate(this, modulle);
 
-        gprintln("Final deps: "~to!(string)(deps));
+        string depsString;
+        foreach(string key; keysOrder)
+        {
+            depsString ~= key~": "~to!(string)(deps[key])~", ";
+        }
+        gprintln("Final deps: "~to!(string)(depsString));
+        findEnd(this);
     }
 
     /**
