@@ -1,6 +1,7 @@
 module typeChecking1;
 
 A aInstance;
+int jNumber;
 
 class A
 {
