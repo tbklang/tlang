@@ -12,3 +12,7 @@ TODO: Holidays (1-10th May)
     - [ ] Allow nested structs
 - [ ] Note to self, `parseClass` and `parseStruct` should be way more specific and not just call `parseBody`
     - As currently one can then use `static` outside of these contexts
+    - [ ] `parseStruct`
+        - [ ]  Adding missing support for `static` in it
+    - [ ] `parseClass`
+        - [ ] Add this
