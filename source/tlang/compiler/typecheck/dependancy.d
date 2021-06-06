@@ -23,6 +23,17 @@ public void encounter(string entityName, string dependentOn)
     gprintln("[Encounter] Entity: \""~entityName~"\" set to be dependent on \""~dependentOn~"\"");
 }
 
+public void encounter(TypeChecker tc, Entity entityDependee, Entity dependentOn)
+{
+    /* Full path of thing depending on something else */
+    string dependee = tc.getResolver().generateName(tc.getModule(), entityDependee);
+
+    /* Full path of the thing it is dependent on */
+    string dependency = tc.getResolver().generateName(tc.getModule(), dependentOn);
+
+    encounter(dependee, dependency);
+}
+
 public void dependancyGenerate(TypeChecker tc, Container container)
 {
     /**
@@ -68,6 +79,22 @@ public void dependancyGenerate(TypeChecker tc, Container container)
 
                 /* Get the variable's type */
                 Type variableType = tc.getType(container, variable.getType());
+
+                /**
+                * TODO: Here we must decide, if it is basic type then no init -> no dependence
+                * The only depenedence would be what comes next (a.k.a. if an assignment exists)
+                * then dependence from the expression must be checked
+                *
+                * Non-basic types that have static initiliazation on type reference: Class
+                */
+                if(cast(Clazz)variableType)
+                {
+                    /**
+                    * Mark the variable as dependent on the class type (`variableType`) having 
+                    * been statically initialized
+                    */
+                    encounter(tc, variable, variableType);
+                }
 
                 /* If then variable has an assignment */
                 if(variable.getAssignment())
