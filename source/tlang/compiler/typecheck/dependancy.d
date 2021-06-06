@@ -65,6 +65,13 @@ public void dependancyGenerate(TypeChecker tc, Container container)
     foreach(Entity entity; containerEntities)
     {
         /**
+        * Encounter yourself as to not be lost if you need not depens on anything else
+        * cause if this is not done then we can easily forget `int jNumber;` at module-level
+        * for example.
+        */
+        encounter(tc, entity, entity);
+
+        /**
         * If we are at Module level then things differ
         * ever so slightly
         */
