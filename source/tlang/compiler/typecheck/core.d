@@ -132,7 +132,7 @@ public final class TypeChecker
     private string[][string] deps;
     private void encounter(string entityName, string dependentOn)
     {
-        deps[entityName] ~= dependentOn;
+        deps[dependentOn] ~= entityName;
         gprintln("[Encounter] Entity: \""~entityName~"\" set to be dependent on \""~dependentOn~"\"");
     }
 

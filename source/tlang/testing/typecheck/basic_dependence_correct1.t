@@ -3,7 +3,7 @@ module typeChecking1;
 class A
 {
     static A aInstance;
-    static B bInstance;
+    static typeChecking1.B bInstance;
 }
 
 class B
