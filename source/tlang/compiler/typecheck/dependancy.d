@@ -118,7 +118,10 @@ public void dependancyGenerate(TypeChecker tc, Container container)
                         * Above it means that because the type of `k` is `Person` and that is a
                         * class type therefore the Person class should have its static constructor
                         * run (=> all static members should be initialized)
+                        *
+                        * Okay, so we do all of the above SECOND, first the class must be checked itself
                         */
+                        dependancyGenerate(tc, classType);
                         encounter(tc, variable, classType);
                     }
                     else

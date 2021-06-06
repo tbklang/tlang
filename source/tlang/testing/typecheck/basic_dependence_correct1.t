@@ -8,6 +8,8 @@ int jNumber;
 
 class A
 {
+    static int jStatic;
+    int jInstance;
     class C
     {
 
