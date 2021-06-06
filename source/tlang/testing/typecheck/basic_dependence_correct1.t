@@ -6,7 +6,7 @@ class A
     static typeChecking1.B bInstance;
     static C cInstance;
 
-    static class C
+    class C
     {
         static B bInstance;
     }
@@ -14,5 +14,6 @@ class A
 
 class B
 {
+    static A.C cInstance;
     static B bInstance;
 }
