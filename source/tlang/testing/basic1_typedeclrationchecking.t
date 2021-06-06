@@ -41,6 +41,11 @@ struct structTest
     public int k1;
     static int k2;
     public static int k3;
+
+    public int g()
+    {
+
+    }
 }
 
 class Shekshi 
