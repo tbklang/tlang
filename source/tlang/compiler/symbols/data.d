@@ -162,6 +162,16 @@ public class Entity : Statement
     {
         return name;
     }
+
+    private Entity[] deps;
+    public Entity[] getDeps()
+    {
+        return deps;
+    }
+    public void addDep(Entity entity)
+    {
+        deps ~= entity;
+    }
 }
 
 /* TODO: DO we need intermediary class, TypedEntity */
