@@ -114,8 +114,14 @@ public void dependancyGenerate(TypeChecker tc, Container container)
                         */
                         encounter(tc, variable, classType);
                     }
-
-                    
+                }
+                /**
+                * Anything else (TODO: Checking)
+                */
+                else
+                {
+                    /* TODO: EVerything else is fine */
+                    /* TODO: Either struct or primtive, neither have static initlization */
                 }
 
                 /* If then variable has an assignment */
