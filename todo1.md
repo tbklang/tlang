@@ -25,8 +25,10 @@ TODO List
 ## Typechecking
 
 - [ ] Dependency generation
-    - [ ] Classes declared at the module level should be marked as static in `parse()` (not in `parseBody()` <- this is a note we don't do this)
-    - [ ] Structs declared at the module level should be marked as static in `parse()` (not in `parseBody()` <- this is a note we don't do this)
+    - [ ] Classes declared at the module level should be ~~marked~~ seen as static in `parse()` (not in `parseBody()` <- this is a note we don't do this)
+    - [ ] Structs declared at the module level should be marked as ~~marked~~ seen in `parse()` (not in `parseBody()` <- this is a note we don't do this)
+    - [ ] Functions (?) declared at the module level should be ~~marked~~ seen as static in `parse()` (not in `parseBody()` <- this is a note we don't do this)
+    - [ ] Variables declared at the module level should be marked as ~~marked~~ seen in `parse()` (not in `parseBody()` <- this is a note we don't do this)
 
 # Future
 

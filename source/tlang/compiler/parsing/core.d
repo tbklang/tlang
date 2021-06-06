@@ -1281,9 +1281,6 @@ public final class Parser
             {
                 Clazz clazz = parseClass();
 
-                /* All classes declared at the Module level are static by default */
-                clazz.setModifierType(InitScope.STATIC);
-
                 /* Add the class definition to the program */
                 modulle.addStatement(clazz);
             }
@@ -1291,9 +1288,6 @@ public final class Parser
             else if(symbol == SymbolType.STRUCT)
             {
                 Struct ztruct = parseStruct();
-
-                /* All structs declared at the Module level are static by default */
-                ztruct.setModifierType(InitScope.STATIC);
 
                 /* Add the struct definition to the program */
                 modulle.addStatement(ztruct);
