@@ -1,5 +1,9 @@
-TODO: Holidays (1-10th May)
-===========================
+TODO List
+=========
+
+# Now
+
+## Parsing
 
 - [ ] `parseStruct` 
     - [x] Actually parse body
@@ -18,8 +22,12 @@ TODO: Holidays (1-10th May)
     - [ ] `parseClass`
         - [ ] Add this
 
+## Typechecking
 
-## Future
+- [ ] Dependency generation
+    - [ ] Classes declared at the module level should be marked as static in `parse()` (not in `parseBody()` <- this is a note we don't do this)
+
+# Future
 
 - [ ] Make the compiler a library
     - [ ] Remove `exit` from `expect` and rather throw an error
