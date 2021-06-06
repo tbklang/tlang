@@ -83,6 +83,8 @@ public bool hasDepChecked(TypeChecker tc, Entity entity)
 }
 
 
+import compiler.typecheck.reliance;
+
 /**
 * Statically initilizes a given class
 */
@@ -183,7 +185,18 @@ public string findEnd(TypeChecker tc)
             string visitedNode = dependency;
             string[] visistedNodeDependencies = deps[visitedNode];
 
-            
+            /* If only one dep, add to top of init queue */
+            if(visistedNodeDependencies.length == 1)
+            {
+
+            }
+            else
+            {
+                foreach(string vNodeDep; visistedNodeDependencies)
+                {
+                    
+                }
+            }
             
         }
     }
