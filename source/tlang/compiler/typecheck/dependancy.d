@@ -58,6 +58,21 @@ public void encounter(TypeChecker tc, Entity entityDependee, Entity dependentOn)
 
 public bool hasDepChecked(TypeChecker tc, Entity entity)
 {
+    /* Full path of the entity */
+    string entityFullPath = tc.getResolver().generateName(tc.getModule(), entity);
+
+    /**
+    * Check if it is in there
+    */
+    foreach(string key; deps.keys)
+    {
+        import std.string : cmp;
+        if(cmp(key, entityFullPath) == 0)
+        {
+            return true;
+        }
+    }
+    
     return false;
 }
 
@@ -70,6 +85,10 @@ public void staticInitClass(TypeChecker tc, Clazz clazz)
     /**
     * Don't init if we have initted before
     */
+    if(hasDepChecked(tc, clazz))
+    {
+        return;
+    }
 
 
 
@@ -112,11 +131,8 @@ public void staticInitClass(TypeChecker tc, Clazz clazz)
             {
                 Clazz classType = cast(Clazz)variableType;
 
-                /* Only init if not the current class */
-                if(classType != clazz)
-                {
-                    staticInitClass(tc, classType);
-                }
+                /* Static initialize the class */
+                staticInitClass(tc, classType);
             }
 
 
