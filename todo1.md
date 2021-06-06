@@ -26,6 +26,7 @@ TODO List
 
 - [ ] Dependency generation
     - [ ] Classes declared at the module level should be marked as static in `parse()` (not in `parseBody()` <- this is a note we don't do this)
+    - [ ] Structs declared at the module level should be marked as static in `parse()` (not in `parseBody()` <- this is a note we don't do this)
 
 # Future
 
