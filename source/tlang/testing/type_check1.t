@@ -2,12 +2,11 @@ module typeChecking1;
 
 class A
 {
-    A aInstance;
-    B bInstance;
+    static A aInstance;
+    static B bInstance;
 }
 
 class B
 {
-    A aInstance;
-    B bInstance;
+    static B bInstance;
 }
