@@ -1,7 +1,7 @@
 module typeChecking1;
 
-B bInstance;
 A aInstance = 1;
+B bInstance;
 A.C cInstance;
 
 int jNumber;
@@ -24,6 +24,6 @@ class A
 class B
 {
     static int kStatic;
-    
+    static A ds;
 }
 

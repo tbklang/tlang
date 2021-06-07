@@ -22,8 +22,8 @@ public final class StructuralOrganizer
 
     public void generate()
     {
-        TreeNode node = checkContainer(tc.getModule());
-        //root.addDep(node);
+        root = poolNode(tc.getModule());
+        checkContainer(tc.getModule());
     }
 
     /**
@@ -31,7 +31,7 @@ public final class StructuralOrganizer
     * an implicit dependency tree (by setting the dependencies)
     * on the Entities contained within
     */
-    public TreeNode checkContainer(Container container)
+    public void checkContainer(Container container)
     {
         /* Get all Entities */
         Entity[] entities;
@@ -69,12 +69,14 @@ public final class StructuralOrganizer
             
                     /* Statically initialize the class */
                     TreeNode classWalkInitDep = staticInitializeClass(classType);
+                    root.addDep(classWalkInitDep);
 
                     /* Make the variable dependent on this */
                     TreeNode varNode = poolNode(variable);
+                    root.addDep(varNode);
 
-                    /* Mark the variable as dependent on having sttaic init for class-type class */
-                    varNode.addDep(classWalkInitDep);
+                    // /* Mark the variable as dependent on having sttaic init for class-type class */
+                    // varNode.addDep(classWalkInitDep);
                 }
 
 
@@ -87,9 +89,6 @@ public final class StructuralOrganizer
                 }
             }
         }
-
-
-        return null;
     }
 
     private TreeNode[] nodePool;
@@ -110,6 +109,19 @@ public final class StructuralOrganizer
         return node;
     }
 
+    public bool isPooled(Entity entity)
+    {
+        foreach(TreeNode node; nodePool)
+        {
+            if(node.getEntity() == entity)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
     * Statically initialize a class
     *
@@ -122,7 +134,21 @@ public final class StructuralOrganizer
         /**
         * This Class's TreeNode
         */
-        TreeNode treeNode = poolNode(clazz);
+        TreeNode treeNode;
+
+        if(isPooled(clazz))
+        {
+            treeNode = poolNode(clazz);
+            return treeNode;
+            // goto static_initialization_completed;
+        }
+        else
+        {
+            treeNode = poolNode(clazz);
+        }
+
+
+        
 
         /**
         * Check if the current Clazz has a parent Container
@@ -208,7 +234,7 @@ public final class StructuralOrganizer
             }
         }
 
-        
+        static_initialization_completed:
 
         return treeNode;
     }
@@ -228,8 +254,7 @@ public final class StructuralOrganizer
     {
         foreach(TreeNode node; nodePool)
         {
-            gprintln(node is null);
-            gprintln(node);
+            gprintln(node, DebugType.WARNING);
         }
     }
 
