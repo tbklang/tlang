@@ -1360,20 +1360,38 @@ public final class Parser
             if (symbol == SymbolType.IDENT_TYPE)
             {
                 /* Might be a function, might be a variable, or assignment */
-                modulle.addStatement(parseName());
+                Statement statement = parseName();
+                
+                /**
+                * If it is an Entity then mark it as static
+                * as all Entities at module-level are static
+                */
+                if(cast(Entity)statement)
+                {
+                    Entity entity = cast(Entity)statement;
+                    entity.setModifierType(InitScope.STATIC);
+                }
+
+                modulle.addStatement(statement);
             }
             /* If it is an accessor */
             else if (isAccessor(tok))
             {
-                Statement statement = parseAccessor();
+                Entity entity = parseAccessor();
+
+                /* Everything at the Module level is static */
+                entity.setModifierType(InitScope.STATIC);
 
                 /* TODO: Tets case has classes which null statement, will crash */
-                modulle.addStatement(statement);
+                modulle.addStatement(entity);
             }
             /* If it is a class */
             else if (symbol == SymbolType.CLASS)
             {
                 Clazz clazz = parseClass();
+
+                /* Everything at the Module level is static */
+                clazz.setModifierType(InitScope.STATIC);
 
                 /* Add the class definition to the program */
                 modulle.addStatement(clazz);
@@ -1382,6 +1400,9 @@ public final class Parser
             else if(symbol == SymbolType.STRUCT)
             {
                 Struct ztruct = parseStruct();
+
+                /* Everything at the Module level is static */
+                ztruct.setModifierType(InitScope.STATIC);
 
                 /* Add the struct definition to the program */
                 modulle.addStatement(ztruct);
