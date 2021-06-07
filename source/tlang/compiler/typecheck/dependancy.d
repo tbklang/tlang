@@ -251,9 +251,6 @@ public final class StructuralOrganizer
                     /* Statically initialize the static class */
                     TreeNode staticMemberClass = staticInitializeClass(cast(Clazz)entity);
 
-                    /* Make it depend on us */
-                    //staticMemberClass.addDep(treeNode);
-
                     /* We need to init it first as part of our initialization */
                     treeNode.addDep(staticMemberClass);
                     gprintln("brgfdfgdfgdu");

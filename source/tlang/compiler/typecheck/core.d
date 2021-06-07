@@ -93,6 +93,16 @@ public final class TypeChecker
         StructuralOrganizer so = new StructuralOrganizer(this);
         so.generate();
         so.printPool();
+        
+        import compiler.codegen.core;
+        foreach(Entity entity; so.initQueue)
+        {
+            if(cast(Emittable)entity)
+            {
+                Emittable emittable = cast(Emittable)entity;
+                gprintln("Emit code: "~emittable.emit());
+            }
+        }
     }
 
     /**
