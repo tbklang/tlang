@@ -18,6 +18,16 @@ public class Group
         this.initQueue = initQueue;
     }
 
+    public Container getGroupingEntity()
+    {
+        return groupingEntity;
+    }
+
+    public Entity[] getInitQueue()
+    {
+        return initQueue;
+    }
+
     public override string toString()
     {
         return "GroupInit ("~(cast(Entity)groupingEntity).getName()~"): "~to!(string)(initQueue);
