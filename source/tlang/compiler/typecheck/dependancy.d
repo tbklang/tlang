@@ -189,68 +189,9 @@ public final class StructuralOrganizer
                         /* Else init the class AND then the variable */
                         else
                         {
-                            //treeNode.addDep(staticInitializeClass(cast(Clazz)type));
-                            //treeNode.addDep(variableTNode);
-                        }
-                    }
-                    else
-                    {
-                        /* TODO: dik */
-                    }
-
-
-                    /* TODO: Implement this later */
-                    if(variable.getAssignment())
-                    {
-
-                    }
-                }
-            }
-        }
-
-        /**
-        * Process static entities
-        *
-        * Here we first want to mark the statics that have basic types
-        * or non-basic class types that match our class
-        */
-        foreach(Entity entity; entities)
-        {
-            if(entity.getModifierType() == InitScope.STATIC)
-            {
-                /**
-                * Static Variable declarations
-                */
-                if(cast(Variable)entity)
-                {
-                    /* Variable being declared */
-                    Variable variable = cast(Variable)entity;
-                    TreeNode variableTNode = poolNode(variable);
-
-                    /* Get the variable's type */
-                    Type type = tc.getType(clazz, variable.getType());
-
-                    /* If the variable's type basic */
-                    if(cast(Primitive)type)
-                    {
-                        /* TODO: Init */
-                        /* Immediately set as init, no further static recursion */
-                        //treeNode.addDep(variableTNode);
-                    }
-                    /* If the variable's type is class-type */
-                    else if(cast(Clazz)type)
-                    {
-                        /* If it is ours */
-                        if(type != clazz)
-                        {
                             treeNode.addDep(staticInitializeClass(cast(Clazz)type));
                             treeNode.addDep(variableTNode);
                         }
-                        /* Else init the class AND then the variable */
-                        else
-                        {
-                            
-                        }
                     }
                     else
                     {
@@ -266,6 +207,8 @@ public final class StructuralOrganizer
                 }
             }
         }
+
+        
 
         return treeNode;
     }
