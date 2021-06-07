@@ -67,16 +67,13 @@ public final class StructuralOrganizer
 
                     /* TODO: Ensure that we set dependences as A.B.C with A B C all static */
             
-                    /* Statically initialize the class */
+                    /* Statically initialize the class (make module depend on it) */
                     TreeNode classWalkInitDep = staticInitializeClass(classType);
                     root.addDep(classWalkInitDep);
 
-                    /* Make the variable dependent on this */
+                    /* Make the Module depend on this variable being initialized */
                     TreeNode varNode = poolNode(variable);
                     root.addDep(varNode);
-
-                    // /* Mark the variable as dependent on having sttaic init for class-type class */
-                    // varNode.addDep(classWalkInitDep);
                 }
 
 
@@ -230,6 +227,12 @@ public final class StructuralOrganizer
                     {
 
                     }
+                }
+                /* Static class definitions */
+                else if(cast(Clazz)entity)
+                {
+                    /* Statically initialize the static class */
+                    staticInitializeClass(cast(Clazz)entity);
                 }
             }
         }
