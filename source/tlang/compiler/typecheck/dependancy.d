@@ -17,7 +17,11 @@ public final class StructuralOrganizer
         this.tc = tc;
     }
 
-    /* TODO: Return a list of Statement, in their init order */
+    /**
+    * Given a container this method will attempt to build
+    * an implicit dependency tree (by setting the dependencies)
+    * on the Entities contained within
+    */
     public void checkContainer(Container container)
     {
         /* Get all Entities */
@@ -65,6 +69,34 @@ public final class StructuralOrganizer
         }
 
 
+    }
+
+    public void printDeps(Container container)
+    {
+        /* Get all Entities */
+        Entity[] entities;
+        foreach(Statement statement; container.getStatements())
+        {
+            if(statement !is null && cast(Entity)statement)
+            {
+                entities ~= cast(Entity)statement;
+            }
+        }
+
+        /**
+        * Print all the dependencies
+        */
+        foreach(Entity entity; entities)
+        {
+            /* Print the Entity's dependencies */
+            gprintln("Entity ("~entity.getName()~"): "~to!(string)(entity.getDeps()));
+
+            /* if the ENtity is a container then apply recursively */
+            if(cast(Container)entity)
+            {
+                printDeps(cast(Container)entity);
+            }
+        }
     }
 
     /**
