@@ -276,7 +276,60 @@ public final class StructuralOrganizer
         {
             gprintln(node, DebugType.WARNING);
         }
+
+        foreach(TreeNode node; nodePool)
+        {
+            figureOut(node);
+        }
+        
+
+        gprintln("InitQueue: "~to!(string)(initQueue));
     }
+
+    public Entity[] initQueue;
+
+    public void figureOut(TreeNode node)
+    {
+        /**
+        * If there are no dependencies then
+        * initialize it now (mark as completed)
+        * and add to init queue
+        */
+        if(!hasDeps(node))
+        {
+            node.markCompleted();
+            initQueue ~= node.getEntity();
+        }
+        /**
+        * If there are dependencies then mark it
+        * as busy
+        */
+        else
+        {
+            node.markBusy();
+
+            /* Get the dependencies */
+            TreeNode[] nodeDeps = node.getDeps();
+
+            /**
+            * 
+            */
+            foreach(TreeNode nodeDep; nodeDeps)
+            {
+                /* Initialize any non-busy node */
+                if(!nodeDep.isBusy())
+                {
+                    figureOut(nodeDep);
+                }
+            }
+        }
+    }
+
+    public bool hasDeps(TreeNode node)
+    {
+        return cast(bool)node.getDeps().length;
+    }
+
 
     /**
     * Given a path determine if it is accessible (in a static context)
@@ -293,6 +346,28 @@ public class TreeNode
     private Entity entity;
     private TreeNode[] deps;
     private TypeChecker tc;
+    private bool isBusyB;
+    private bool isCompletedB;
+
+    public bool isCompleted()
+    {
+        return isCompletedB;
+    }
+
+    public void markCompleted()
+    {
+        isCompletedB = true;
+    }
+
+    public bool isBusy()
+    {
+        return isBusyB;
+    }
+
+    public void markBusy()
+    {
+        isBusyB = true;
+    }
 
     this(TypeChecker tc, Entity entity)
     {
@@ -330,6 +405,11 @@ public class TreeNode
     public Entity getEntity()
     {
         return entity;
+    }
+
+    public TreeNode[] getDeps()
+    {
+        return deps;
     }
 
     public override string toString()
