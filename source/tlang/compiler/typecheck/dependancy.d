@@ -71,10 +71,22 @@ public final class StructuralOrganizer
                     TreeNode classWalkInitDep = staticInitializeClass(classType);
                     root.addDep(classWalkInitDep);
 
-                    /* Make the Module depend on this variable being initialized */
+                    
+                }
+                /* If the variable has a basic type */
+                else if(cast(Primitive)type)
+                {
+                    
+                }
+                else
+                {
+                    assert(false);
+                }
+
+                /* Make the Module depend on this variable being initialized */
                     TreeNode varNode = poolNode(variable);
                     root.addDep(varNode);
-                }
+
 
 
                 /* TODO: Handle assignment case */
