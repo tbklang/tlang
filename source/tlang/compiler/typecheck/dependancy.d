@@ -57,6 +57,9 @@ public final class StructuralOrganizer
                     Clazz classType = cast(Clazz)type;
 
                     /* TODO: Ensure that we set dependences as A.B.C with A B C all static */
+
+                    /* Mark the variable as dependent on having sttaic init for class-type class */
+                    variable.addDep(classType);
                 }
 
 
@@ -89,7 +92,7 @@ public final class StructuralOrganizer
         foreach(Entity entity; entities)
         {
             /* Print the Entity's dependencies */
-            gprintln("Entity ("~entity.getName()~"): "~to!(string)(entity.getDeps()));
+            gprintln("Entity ("~entity.getName()~") Deps: "~to!(string)(entity.getDeps()), DebugType.WARNING);
 
             /* if the ENtity is a container then apply recursively */
             if(cast(Container)entity)
