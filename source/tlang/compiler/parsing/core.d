@@ -1114,8 +1114,16 @@ public final class Parser
             }
         }
 
+
+
+
+
         /* Add inherit list */
         generated.addInherit(inheritList);
+
+
+
+
 
         /* TODO: Technically we should be more specific, this does too much */
         /* Parse a body */
