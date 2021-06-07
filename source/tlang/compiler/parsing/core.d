@@ -1118,6 +1118,92 @@ public final class Parser
 
 
 
+
+
+
+        /* TODO: Here we will do a while loop */
+        expect(SymbolType.OCURLY, getCurrentToken());
+        nextToken();
+
+        Statement[] statements;
+
+        while(true)
+        {
+            /* Get current token */
+            SymbolType symbolType = getSymbolType(getCurrentToken());
+
+            /* The possibly valid returned struct member (Entity) */
+            Statement structMember;
+
+            /** TODO:
+            * We only want to allow function definitions and variable
+            * declarations here (WIP: for now without assignments)
+            *
+            * parseAccessor() supports those BUT it will also allow classes
+            * and further structs - this we do not want and hence we should
+            * filter out those (raise an error) on checking the type of
+            * Entity returned by `parseAccessor()`
+            */
+
+
+            /* If it is a type */
+            if (symbolType == SymbolType.IDENT_TYPE)
+            {
+                /* Might be a function, might be a variable, or assignment */
+                structMember = parseName();
+            }
+            /* If it is a class */
+            else if(symbolType == SymbolType.CLASS)
+            {
+                structMember = parseClass();   
+            }
+            /* If it is a struct */
+            else if(symbolType == SymbolType.STRUCT)
+            {
+                structMember = parseStruct();
+            }
+            /* If it is an accessor */
+            else if (isAccessor(getCurrentToken()))
+            {
+                structMember = parseAccessor();
+            }
+            /* If is is a modifier */
+            else if(isModifier(getCurrentToken()))
+            {
+                structMember = parseInitScope();
+            }
+            /* If closing brace then exit */
+            else if(symbolType == SymbolType.CCURLY)
+            {
+                break;
+            }
+            else
+            {
+                expect("Only classes, structs, instance fields, static fields, functions allowed in class");
+            }
+
+            
+            
+            /* Append to struct's body */
+            statements ~= structMember;
+            
+            
+
+            
+
+            /* TODO: Only allow variables here */
+            /* TODO: Only allowe VariableDeclarations (maybe assignments idk) */
+            /* TODO: Might, do what d does and allow function */
+            /* TODO: Which is just a codegen trick and implicit thing really */
+            /* TODO: I mean isn't OOP too lmao */
+
+            
+        }
+
+
+
+
+
         /* Add inherit list */
         generated.addInherit(inheritList);
 
@@ -1125,9 +1211,9 @@ public final class Parser
 
 
 
-        /* TODO: Technically we should be more specific, this does too much */
-        /* Parse a body */
-        Statement[] statements = parseBody();
+        // /* TODO: Technically we should be more specific, this does too much */
+        // /* Parse a body */
+        // Statement[] statements = parseBody();
         generated.addStatements(statements);
 
         /* Parent each Statement to the container */
