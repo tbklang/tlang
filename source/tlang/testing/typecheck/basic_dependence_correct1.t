@@ -14,7 +14,7 @@ class A
 
     static class C
     {
-        static int jStatic;
+        static int pStatic;
     }
     
     B bInstance;

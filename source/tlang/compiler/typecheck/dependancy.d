@@ -249,7 +249,14 @@ public final class StructuralOrganizer
                 else if(cast(Clazz)entity)
                 {
                     /* Statically initialize the static class */
-                    staticInitializeClass(cast(Clazz)entity);
+                    TreeNode staticMemberClass = staticInitializeClass(cast(Clazz)entity);
+
+                    /* Make it depend on us */
+                    //staticMemberClass.addDep(treeNode);
+
+                    /* We need to init it first as part of our initialization */
+                    treeNode.addDep(staticMemberClass);
+                    gprintln("brgfdfgdfgdu");
                 }
             }
         }
@@ -293,12 +300,16 @@ public final class StructuralOrganizer
         /**
         * If there are no dependencies then
         * initialize it now (mark as completed)
-        * and add to init queue
+        * and add to init queue and only
+        * if it hasn't been added already
         */
         if(!hasDeps(node))
         {
-            node.markCompleted();
-            initQueue ~= node.getEntity();
+            if(!node.isCompleted())
+            {
+                node.markCompleted();
+                initQueue ~= node.getEntity();
+            }
         }
         /**
         * If there are dependencies then mark it
