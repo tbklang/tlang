@@ -103,6 +103,11 @@ public final class TypeChecker
                 gprintln("Emit code: "~emittable.emit());
             }
         }
+
+        import compiler.typecheck.group;
+        Grouper g = new Grouper(so.initQueue);
+        Group[] groups = g.begin();
+        gprintln(groups);
     }
 
     /**
