@@ -4,7 +4,7 @@ A aInstance = 1;
 B bInstance;
 A.C cInstance;
 
-int jNumber;
+int jNumber = A.jStatic;
 
 class A
 {
