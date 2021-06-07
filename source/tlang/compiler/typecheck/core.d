@@ -92,6 +92,7 @@ public final class TypeChecker
         import compiler.typecheck.dependancy;
         StructuralOrganizer so = new StructuralOrganizer(this);
         so.checkContainer(modulle);
+        so.printDeps(modulle);
     }
 
     /**
