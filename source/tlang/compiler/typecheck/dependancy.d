@@ -76,7 +76,7 @@ public final class StructuralOrganizer
                 /* If the variable has a basic type */
                 else if(cast(Primitive)type)
                 {
-                    
+
                 }
                 else
                 {
@@ -84,8 +84,8 @@ public final class StructuralOrganizer
                 }
 
                 /* Make the Module depend on this variable being initialized */
-                    TreeNode varNode = poolNode(variable);
-                    root.addDep(varNode);
+                TreeNode varNode = poolNode(variable);
+                root.addDep(varNode);
 
 
 
@@ -95,9 +95,43 @@ public final class StructuralOrganizer
                     /* TODO: Implement me */
                     VariableAssignment varAssign = variable.getAssignment();
                     gprintln("Assignment: "~to!(string)(varAssign));
+
+                    /* Get the Expression */
+                    Expression assignmentExpression = varAssign.getExpression();
+
+
+                    traceExpression(container, assignmentExpression);
                 }
             }
         }
+    }
+
+    /**
+    * TODO: Init orders?
+    */
+
+    private TreeNode traceExpression(Container rel, Expression exp)
+    {
+        TreeNode tnode;
+
+        /**
+        * Simple VariableExpression
+        * Exp: `a`
+        */
+        if(cast(VariableExpression)exp)
+        {
+            /* Get the variable being referred to */
+            Variable variableInExpression = cast(Variable)tc.getResolver().resolveBest(rel, (cast(VariableExpression)exp).getName());
+
+            
+        }
+        else if(cast(Primitive)exp)
+        {
+
+        }
+
+
+        return tnode;
     }
 
     private TreeNode[] nodePool;
