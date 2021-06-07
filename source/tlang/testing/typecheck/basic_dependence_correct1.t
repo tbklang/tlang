@@ -15,6 +15,7 @@ class A
     static class C
     {
         static int pStatic;
+        static A.C ll;
     }
     
     B bInstance;
@@ -23,7 +24,8 @@ class A
 
 class B
 {
-    static int kStatic;
     static A ds;
+    static int kStatic;
+    
 }
 
