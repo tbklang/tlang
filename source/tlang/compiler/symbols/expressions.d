@@ -2,15 +2,8 @@ module compiler.symbols.expressions;
 
 import compiler.symbols.data;
 
-
-public class SingletonExpression : Expression
-{
-
-}
-
-
 /* TODO: Look into arrays later */
-public class StringExpression : SingletonExpression
+public class StringExpression : Expression
 {
     private string ztring;
 
@@ -51,7 +44,7 @@ public class BinaryOperatorExpression : OperatorExpression
     }
 }
 
-public class NumberLiteral : SingletonExpression
+public class NumberLiteral : Expression
 {
     private string numberLiteral;
 
