@@ -346,7 +346,7 @@ public class VariableAssignment
     }
 }
 
-public class IdentExpression : Expression
+public class IdentExpression : SingletonExpression
 {
     /* name */
     private string name;
