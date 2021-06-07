@@ -4,8 +4,8 @@ import gogga;
 import compiler.symbols.data;
 import compiler.symbols.typing.core;
 import compiler.typecheck.core;
-
 import std.conv : to;
+import compiler.parsing.core;
 
 public final class StructuralOrganizer
 {
@@ -128,6 +128,15 @@ public final class StructuralOrganizer
     */
     public TreeNode staticInitializeClass(Clazz clazz)
     {
+        /**
+        * This is a recursive static initiliazer, all classes
+        * must be static
+        */
+        if(clazz.getModifierType() != InitScope.STATIC)
+        {
+            Parser.expect("Cannot use a class type that is of a class that is non-static");
+        }
+
         /**
         * This Class's TreeNode
         */
