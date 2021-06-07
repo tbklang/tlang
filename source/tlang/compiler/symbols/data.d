@@ -287,6 +287,29 @@ public class Variable : TypedEntity, Emittable
     {
         string emittedCode;
 
+
+        /**
+        * If we are a class memeber
+        */
+        if(cast(Clazz)parentOf())
+        {
+            /* The class we are a member of */
+            Clazz parentingClass = cast(Clazz)parentOf();
+
+            /* If we are a static member */
+            if(initScope == InitScope.STATIC)
+            {
+                
+            }
+            /* TODO: Handle non-static case */
+            else
+            {
+
+            }
+        }
+
+
+
         /* TODO: So far only emitting for non assignment */
         if(!assignment)
         {
