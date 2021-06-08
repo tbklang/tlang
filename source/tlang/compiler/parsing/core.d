@@ -1575,35 +1575,57 @@ unittest
         assert(cmp(modulle.getName(), "myModule")==0);
         TypeChecker tc = new TypeChecker(modulle);
 
-        /* There should exist two Module-level classes named `myClass1` and `myClass2` */
-        Entity entity1 = tc.getResolver().resolveBest(modulle, "myClass1");
-        Entity entity2 = tc.getResolver().resolveBest(modulle, "myClass2");
-        assert(entity1);
-        assert(entity2);
+        /**
+        * There should exist two module-level classes
+        *
+        * 1. Attempt resolving the two without a full-path (relative to module)
+        * 2. Attempt resolving the two with a full-path
+        */
 
-        /* They should be classes */
-        Clazz clazz1 = cast(Clazz)entity1;
-        Clazz clazz2 = cast(Clazz)entity2;
+        /* There should exist two Module-level classes named `myClass1` and `myClass2` */
+        Entity entity1_rel = tc.getResolver().resolveBest(modulle, "myClass1");
+        Entity entity2_rel = tc.getResolver().resolveBest(modulle, "myClass2");
+        assert(entity1_rel);
+        assert(entity2_rel);
+
+        /* Resolve using full-path instead */
+        Entity entity1_fp = tc.getResolver().resolveBest(modulle, "myModule.myClass1");
+        Entity entity2_fp = tc.getResolver().resolveBest(modulle, "myModule.myClass2");
+        assert(entity1_fp);
+        assert(entity2_fp);
+
+        /* These should match respectively */
+        assert(entity1_rel == entity1_fp);
+        assert(entity2_rel == entity2_fp);
+
+        /* These should all be classes */
+        Clazz clazz1 = cast(Clazz)entity1_fp;
+        Clazz clazz2 = cast(Clazz)entity2_fp;
         assert(clazz1);
-        assert(clazz2);
+        assert(clazz1);
+        
+        
+
 
         /**
-        * `myClass1` should have two members, both classes `myClass1_1` and `myClass2`
+        * Resolve members of myClass1
         *
-        * Either resolving relative to `myClass1` or via full-path
+        * 1. Resolve full-path
+        * 2. Resolve relative to myClass1
+        * 3. Resolve relative to module (incorrect)
+        * 4. Resolve relative to module (correct)
+        * 5. Resolve relative to myClass2 (resolves upwards)
         */
-        Entity entity1_1 = tc.getResolver().resolveBest(clazz1, "myClass1_1");
-        Entity entity1_1_fullPathResolved = tc.getResolver().resolveBest(clazz1, "myModule.myClass1.myClass1_1");
-        assert(entity1_1);
-        assert(entity1_1_fullPathResolved);
-        assert(entity1_1_fullPathResolved==entity1_1);
+        Entity myClass1_myClass2_1 = tc.getResolver().resolveBest(modulle, "myModule.myClass1.myClass2");
+        Entity myClass1_myClass2_2 = tc.getResolver().resolveBest(clazz1, "myClass2");
+        Entity myClass1_myClass2_3 = tc.getResolver().resolveBest(modulle, "myClass2");
+        Entity myClass1_myClass2_4 = tc.getResolver().resolveBest(clazz2, "myClass1.myClass2");
+        Entity myClass1_myClass2_5 = tc.getResolver().resolveBest(clazz2, "myClass1.myClass2");
         
-        /* myClass1_1 should be a class */
-        Clazz clazz1_1 = cast(Clazz)entity1_1;
-        assert(clazz1_1);
+
+
         
-        
-        
+
         
 
 
