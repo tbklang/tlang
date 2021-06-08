@@ -1504,35 +1504,113 @@ unittest
 
     string sourceFile = "source/tlang/testing/simple1_module_positive.t";
     
-        File sourceFileFile;
-        sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-        ulong fileSize = sourceFileFile.size();
-        byte[] fileBytes;
-        fileBytes.length = fileSize;
-        fileBytes = sourceFileFile.rawRead(fileBytes);
-        sourceFileFile.close();
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
 
+
+
+    /* TODO: Open source file */
+    string sourceCode = cast(string)fileBytes;
+    // string sourceCode = "hello \"world\"|| ";
+    //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
+    // string sourceCode = "hello;";
+    Lexer currentLexer = new Lexer(sourceCode);
+    assert(currentLexer.performLex());
     
+    
+    Parser parser = new Parser(currentLexer.getTokens());
+    
+    try
+    {
+        Module modulle = parser.parse();
 
-        /* TODO: Open source file */
-        string sourceCode = cast(string)fileBytes;
-        // string sourceCode = "hello \"world\"|| ";
-        //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
-        // string sourceCode = "hello;";
-        Lexer currentLexer = new Lexer(sourceCode);
-        assert(currentLexer.performLex());
-        
-      
-        Parser parser = new Parser(currentLexer.getTokens());
-        
-        try
-        {
-            Module modulle = parser.parse();
+        assert(cmp(modulle.getName(), "myModule")==0);
+    }
+    catch(TError)
+    {
+        assert(false);
+    }
+}
 
-            assert(cmp(modulle.getName(), "myModule")==0);
-        }
-        catch(TError)
-        {
-            assert(false);
-        }
+/**
+* Naming test for Entity recognition
+*/
+unittest
+{
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.typecheck.core;
+
+    string sourceFile = "source/tlang/testing/simple2_name_recognition.t";
+    
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
+
+
+
+    /* TODO: Open source file */
+    string sourceCode = cast(string)fileBytes;
+    Lexer currentLexer = new Lexer(sourceCode);
+    assert(currentLexer.performLex());
+    
+    
+    Parser parser = new Parser(currentLexer.getTokens());
+    
+    try
+    {
+        Module modulle = parser.parse();
+
+        /* Module name must be myModule */
+        assert(cmp(modulle.getName(), "myModule")==0);
+        TypeChecker tc = new TypeChecker(modulle);
+
+        /* There should exist two Module-level classes named `myClass1` and `myClass2` */
+        Entity entity1 = tc.getResolver().resolveBest(modulle, "myClass1");
+        Entity entity2 = tc.getResolver().resolveBest(modulle, "myClass2");
+        assert(entity1);
+        assert(entity2);
+
+        /* They should be classes */
+        Clazz clazz1 = cast(Clazz)entity1;
+        Clazz clazz2 = cast(Clazz)entity2;
+        assert(clazz1);
+        assert(clazz2);
+
+        /**
+        * `myClass1` should have two members, both classes `myClass1_1` and `myClass2`
+        *
+        * Either resolving relative to `myClass1` or via full-path
+        */
+        Entity entity1_1 = tc.getResolver().resolveBest(clazz1, "myClass1_1");
+        Entity entity1_1_fullPathResolved = tc.getResolver().resolveBest(clazz1, "myModule.myClass1.myClass1_1");
+        assert(entity1_1);
+        assert(entity1_1_fullPathResolved);
+        assert(entity1_1_fullPathResolved==entity1_1);
+        
+        /* myClass1_1 should be a class */
+        Clazz clazz1_1 = cast(Clazz)entity1_1;
+        assert(clazz1_1);
+        
+        
+        
+        
+
+
+        
+    }
+    catch(TError)
+    {
+        assert(false);
+    }
 }
