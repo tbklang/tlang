@@ -8,6 +8,7 @@ import compiler.symbols.data;
 import compiler.lexer : Token;
 import core.stdc.stdlib;
 import misc.exceptions : TError;
+import compiler.parsing.exceptions;
 
 // public final class ParserError : TError
 // {
@@ -31,7 +32,7 @@ public final class Parser
     * Crashes the program if the given token is not a symbol
     * the same as the givne expected one
     */
-    public static void expect(SymbolType symbol, Token token)
+    public void expect(SymbolType symbol, Token token)
     {
         /* TODO: Do checking here to see if token is a type of given symbol */
         SymbolType actualType = getSymbolType(token);
@@ -40,8 +41,9 @@ public final class Parser
         /* TODO: Crash program if not */
         if (!isFine)
         {
-            expect("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
-                    string)(actualType) ~ " with " ~ token.toString());
+            throw new SyntaxError(this, symbol, actualType);
+            // expect("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
+                    // string)(actualType) ~ " with " ~ token.toString());
         }
     }
 
