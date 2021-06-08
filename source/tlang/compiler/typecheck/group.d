@@ -72,7 +72,7 @@ Group[] groups;
     */
     public Group[] begin()
     {
-        
+        gprintln("Grouping beginning...");
 
         foreach(Entity entity; initQueue)
         {
@@ -82,10 +82,15 @@ Group[] groups;
             groupToContainer(entityContainer, entity);
         }
 
+        gprintln("fddsfdsf");
+
         foreach(Container container; keyOrder)
         {
             groups ~= new Group(container, containers[container]);
         }
+        gprintln("f");
+
+        /* TODO: Why module didn't cause error earlier, idk, but we need to fix this */
 
         return groups;
     }
