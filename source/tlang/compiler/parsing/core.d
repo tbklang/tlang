@@ -1665,22 +1665,7 @@ unittest
         innerVariable = tc.getResolver().resolveBest(c_myClass2, "inner");
         outerVariable = tc.getResolver().resolveBest(c_myClass1_myClass2_5, "outer");
         assert(innerVariable is null);
-        assert(outerVariable is null);
-
-        
-        
-
-
-
-        
-        
-
-        
-
-        
-
-
-        
+        assert(outerVariable is null); 
     }
     catch(TError)
     {
