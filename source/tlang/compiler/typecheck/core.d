@@ -844,343 +844,343 @@ public final class TypeChecker
 
 }
 
-/* Test name colliding with container name (1/3) [module] */
-unittest
-{
-    import std.file;
-    import std.stdio;
-    import compiler.lexer;
-    import compiler.parsing.core;
+// /* Test name colliding with container name (1/3) [module] */
+// unittest
+// {
+//     import std.file;
+//     import std.stdio;
+//     import compiler.lexer;
+//     import compiler.parsing.core;
 
-    string sourceFile = "source/tlang/testing/collide_container_module1.t";
+//     string sourceFile = "source/tlang/testing/collide_container_module1.t";
 
-    File sourceFileFile;
-    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-    ulong fileSize = sourceFileFile.size();
-    byte[] fileBytes;
-    fileBytes.length = fileSize;
-    fileBytes = sourceFileFile.rawRead(fileBytes);
-    sourceFileFile.close();
+//     File sourceFileFile;
+//     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+//     ulong fileSize = sourceFileFile.size();
+//     byte[] fileBytes;
+//     fileBytes.length = fileSize;
+//     fileBytes = sourceFileFile.rawRead(fileBytes);
+//     sourceFileFile.close();
 
-    string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+//     string sourceCode = cast(string) fileBytes;
+//     Lexer currentLexer = new Lexer(sourceCode);
+//     currentLexer.performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
+//     Parser parser = new Parser(currentLexer.getTokens());
+//     Module modulle = parser.parse();
+//     TypeChecker typeChecker = new TypeChecker(modulle);
 
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
+//     /* Setup testing variables */
+//     Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
+//     Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
 
-    try
-    {
-        /* Perform test */
-        typeChecker.beginCheck();
+//     try
+//     {
+//         /* Perform test */
+//         typeChecker.beginCheck();
 
-        /* Shouldn't reach here, collision exception MUST occur */
-        assert(false);
-    }
-    catch (CollidingNameException e)
-    {
-        /* Make sure the member y.y collided with root container (module) y */
-        assert(e.defined == container);
-    }
-}
-
-
-
-/* Test name colliding with container name (2/3) [module, nested collider] */
-unittest
-{
-    import std.file;
-    import std.stdio;
-    import compiler.lexer;
-    import compiler.parsing.core;
-
-    string sourceFile = "source/tlang/testing/collide_container_module2.t";
-
-    File sourceFileFile;
-    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-    ulong fileSize = sourceFileFile.size();
-    byte[] fileBytes;
-    fileBytes.length = fileSize;
-    fileBytes = sourceFileFile.rawRead(fileBytes);
-    sourceFileFile.close();
-
-    string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
-
-    Parser parser = new Parser(currentLexer.getTokens());
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.a.b.c.y");
-
-    try
-    {
-        /* Perform test */
-        typeChecker.beginCheck();
-
-        /* Shouldn't reach here, collision exception MUST occur */
-        assert(false);
-    }
-    catch (CollidingNameException e)
-    {
-        /* Make sure the member y.a.b.c.y collided with root container (module) y */
-        assert(e.defined == container);
-    }
-}
-
-/* Test name colliding with container name (3/3) [container (non-module), nested collider] */
-unittest
-{
-    import std.file;
-    import std.stdio;
-    import compiler.lexer;
-    import compiler.parsing.core;
-
-    string sourceFile = "source/tlang/testing/collide_container_non_module.t";
-
-    File sourceFileFile;
-    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-    ulong fileSize = sourceFileFile.size();
-    byte[] fileBytes;
-    fileBytes.length = fileSize;
-    fileBytes = sourceFileFile.rawRead(fileBytes);
-    sourceFileFile.close();
-
-    string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
-
-    Parser parser = new Parser(currentLexer.getTokens());
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c.c");
-
-    try
-    {
-        /* Perform test */
-        typeChecker.beginCheck();
-
-        /* Shouldn't reach here, collision exception MUST occur */
-        assert(false);
-    }
-    catch (CollidingNameException e)
-    {
-        /* Make sure the member a.b.c.c collided with a.b.c container */
-        assert(e.defined == container);
-    }
-}
-
-/* Test name colliding with member */
-unittest
-{
-    import std.file;
-    import std.stdio;
-    import compiler.lexer;
-    import compiler.parsing.core;
-
-    string sourceFile = "source/tlang/testing/collide_member.t";
-
-    File sourceFileFile;
-    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-    ulong fileSize = sourceFileFile.size();
-    byte[] fileBytes;
-    fileBytes.length = fileSize;
-    fileBytes = sourceFileFile.rawRead(fileBytes);
-    sourceFileFile.close();
-
-    string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
-
-    Parser parser = new Parser(currentLexer.getTokens());
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity memberFirst = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b");
-
-    try
-    {
-        /* Perform test */
-        typeChecker.beginCheck();
-
-        /* Shouldn't reach here, collision exception MUST occur */
-        assert(false);
-    }
-    catch (CollidingNameException e)
-    {
-        /* Make sure the member a.b.c.c collided with a.b.c container */
-        assert(e.attempted != memberFirst);
-    }
-}
-
-/* Test name colliding with member (check that the member defined is class (precendence test)) */
-unittest
-{
-    import std.file;
-    import std.stdio;
-    import compiler.lexer;
-    import compiler.parsing.core;
-
-    string sourceFile = "source/tlang/testing/precedence_collision_test.t";
-
-    File sourceFileFile;
-    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-    ulong fileSize = sourceFileFile.size();
-    byte[] fileBytes;
-    fileBytes.length = fileSize;
-    fileBytes = sourceFileFile.rawRead(fileBytes);
-    sourceFileFile.close();
-
-    string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
-
-    Parser parser = new Parser(currentLexer.getTokens());
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity ourClassA = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a");
-
-    try
-    {
-        /* Perform test */
-        typeChecker.beginCheck();
-
-        /* Shouldn't reach here, collision exception MUST occur */
-        assert(false);
-    }
-    catch (CollidingNameException e)
-    {
-        /* Make sure the member attempted was Variable and defined was Clazz */
-        assert(cast(Variable)e.attempted);
-        assert(cast(Clazz)e.defined);
-    }
-}
+//         /* Shouldn't reach here, collision exception MUST occur */
+//         assert(false);
+//     }
+//     catch (CollidingNameException e)
+//     {
+//         /* Make sure the member y.y collided with root container (module) y */
+//         assert(e.defined == container);
+//     }
+// }
 
 
-/* Test name colliding with container name (1/2) */
-unittest
-{
-    import std.file;
-    import std.stdio;
-    import compiler.lexer;
-    import compiler.parsing.core;
 
-    string sourceFile = "source/tlang/testing/collide_container.t";
+// /* Test name colliding with container name (2/3) [module, nested collider] */
+// unittest
+// {
+//     import std.file;
+//     import std.stdio;
+//     import compiler.lexer;
+//     import compiler.parsing.core;
 
-    File sourceFileFile;
-    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-    ulong fileSize = sourceFileFile.size();
-    byte[] fileBytes;
-    fileBytes.length = fileSize;
-    fileBytes = sourceFileFile.rawRead(fileBytes);
-    sourceFileFile.close();
+//     string sourceFile = "source/tlang/testing/collide_container_module2.t";
 
-    string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+//     File sourceFileFile;
+//     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+//     ulong fileSize = sourceFileFile.size();
+//     byte[] fileBytes;
+//     fileBytes.length = fileSize;
+//     fileBytes = sourceFileFile.rawRead(fileBytes);
+//     sourceFileFile.close();
 
-    Parser parser = new Parser(currentLexer.getTokens());
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
+//     string sourceCode = cast(string) fileBytes;
+//     Lexer currentLexer = new Lexer(sourceCode);
+//     currentLexer.performLex();
 
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
+//     Parser parser = new Parser(currentLexer.getTokens());
+//     Module modulle = parser.parse();
+//     TypeChecker typeChecker = new TypeChecker(modulle);
 
-    try
-    {
-        /* Perform test */
-        typeChecker.beginCheck();
+//     /* Setup testing variables */
+//     Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
+//     Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.a.b.c.y");
 
-        /* Shouldn't reach here, collision exception MUST occur */
-        assert(false);
-    }
-    catch (CollidingNameException e)
-    {
-        /* Make sure the member y.y collided with root container (module) y */
-        assert(e.defined == container);
-    }
-}
+//     try
+//     {
+//         /* Perform test */
+//         typeChecker.beginCheck();
+
+//         /* Shouldn't reach here, collision exception MUST occur */
+//         assert(false);
+//     }
+//     catch (CollidingNameException e)
+//     {
+//         /* Make sure the member y.a.b.c.y collided with root container (module) y */
+//         assert(e.defined == container);
+//     }
+// }
+
+// /* Test name colliding with container name (3/3) [container (non-module), nested collider] */
+// unittest
+// {
+//     import std.file;
+//     import std.stdio;
+//     import compiler.lexer;
+//     import compiler.parsing.core;
+
+//     string sourceFile = "source/tlang/testing/collide_container_non_module.t";
+
+//     File sourceFileFile;
+//     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+//     ulong fileSize = sourceFileFile.size();
+//     byte[] fileBytes;
+//     fileBytes.length = fileSize;
+//     fileBytes = sourceFileFile.rawRead(fileBytes);
+//     sourceFileFile.close();
+
+//     string sourceCode = cast(string) fileBytes;
+//     Lexer currentLexer = new Lexer(sourceCode);
+//     currentLexer.performLex();
+
+//     Parser parser = new Parser(currentLexer.getTokens());
+//     Module modulle = parser.parse();
+//     TypeChecker typeChecker = new TypeChecker(modulle);
+
+//     /* Setup testing variables */
+//     Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c");
+//     Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c.c");
+
+//     try
+//     {
+//         /* Perform test */
+//         typeChecker.beginCheck();
+
+//         /* Shouldn't reach here, collision exception MUST occur */
+//         assert(false);
+//     }
+//     catch (CollidingNameException e)
+//     {
+//         /* Make sure the member a.b.c.c collided with a.b.c container */
+//         assert(e.defined == container);
+//     }
+// }
+
+// /* Test name colliding with member */
+// unittest
+// {
+//     import std.file;
+//     import std.stdio;
+//     import compiler.lexer;
+//     import compiler.parsing.core;
+
+//     string sourceFile = "source/tlang/testing/collide_member.t";
+
+//     File sourceFileFile;
+//     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+//     ulong fileSize = sourceFileFile.size();
+//     byte[] fileBytes;
+//     fileBytes.length = fileSize;
+//     fileBytes = sourceFileFile.rawRead(fileBytes);
+//     sourceFileFile.close();
+
+//     string sourceCode = cast(string) fileBytes;
+//     Lexer currentLexer = new Lexer(sourceCode);
+//     currentLexer.performLex();
+
+//     Parser parser = new Parser(currentLexer.getTokens());
+//     Module modulle = parser.parse();
+//     TypeChecker typeChecker = new TypeChecker(modulle);
+
+//     /* Setup testing variables */
+//     Entity memberFirst = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b");
+
+//     try
+//     {
+//         /* Perform test */
+//         typeChecker.beginCheck();
+
+//         /* Shouldn't reach here, collision exception MUST occur */
+//         assert(false);
+//     }
+//     catch (CollidingNameException e)
+//     {
+//         /* Make sure the member a.b.c.c collided with a.b.c container */
+//         assert(e.attempted != memberFirst);
+//     }
+// }
+
+// /* Test name colliding with member (check that the member defined is class (precendence test)) */
+// unittest
+// {
+//     import std.file;
+//     import std.stdio;
+//     import compiler.lexer;
+//     import compiler.parsing.core;
+
+//     string sourceFile = "source/tlang/testing/precedence_collision_test.t";
+
+//     File sourceFileFile;
+//     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+//     ulong fileSize = sourceFileFile.size();
+//     byte[] fileBytes;
+//     fileBytes.length = fileSize;
+//     fileBytes = sourceFileFile.rawRead(fileBytes);
+//     sourceFileFile.close();
+
+//     string sourceCode = cast(string) fileBytes;
+//     Lexer currentLexer = new Lexer(sourceCode);
+//     currentLexer.performLex();
+
+//     Parser parser = new Parser(currentLexer.getTokens());
+//     Module modulle = parser.parse();
+//     TypeChecker typeChecker = new TypeChecker(modulle);
+
+//     /* Setup testing variables */
+//     Entity ourClassA = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a");
+
+//     try
+//     {
+//         /* Perform test */
+//         typeChecker.beginCheck();
+
+//         /* Shouldn't reach here, collision exception MUST occur */
+//         assert(false);
+//     }
+//     catch (CollidingNameException e)
+//     {
+//         /* Make sure the member attempted was Variable and defined was Clazz */
+//         assert(cast(Variable)e.attempted);
+//         assert(cast(Clazz)e.defined);
+//     }
+// }
 
 
-unittest
-{
-    /* TODO: Add some unit tests */
-    import std.file;
-    import std.stdio;
-    import compiler.lexer;
-    import compiler.parsing.core;
+// /* Test name colliding with container name (1/2) */
+// unittest
+// {
+//     import std.file;
+//     import std.stdio;
+//     import compiler.lexer;
+//     import compiler.parsing.core;
 
-    // isUnitTest = true;
+//     string sourceFile = "source/tlang/testing/collide_container.t";
 
-    string sourceFile = "source/tlang/testing/basic1.t";
+//     File sourceFileFile;
+//     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+//     ulong fileSize = sourceFileFile.size();
+//     byte[] fileBytes;
+//     fileBytes.length = fileSize;
+//     fileBytes = sourceFileFile.rawRead(fileBytes);
+//     sourceFileFile.close();
 
-    gprintln("Reading source file '" ~ sourceFile ~ "' ...");
-    File sourceFileFile;
-    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-    ulong fileSize = sourceFileFile.size();
-    byte[] fileBytes;
-    fileBytes.length = fileSize;
-    fileBytes = sourceFileFile.rawRead(fileBytes);
-    sourceFileFile.close();
+//     string sourceCode = cast(string) fileBytes;
+//     Lexer currentLexer = new Lexer(sourceCode);
+//     currentLexer.performLex();
 
-    gprintln("Performing tokenization on '" ~ sourceFile ~ "' ...");
+//     Parser parser = new Parser(currentLexer.getTokens());
+//     Module modulle = parser.parse();
+//     TypeChecker typeChecker = new TypeChecker(modulle);
 
-    /* TODO: Open source file */
-    string sourceCode = cast(string) fileBytes;
-    // string sourceCode = "hello \"world\"|| ";
-    //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
-    // string sourceCode = "hello;";
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+//     /* Setup testing variables */
+//     Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
+//     Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
+
+//     try
+//     {
+//         /* Perform test */
+//         typeChecker.beginCheck();
+
+//         /* Shouldn't reach here, collision exception MUST occur */
+//         assert(false);
+//     }
+//     catch (CollidingNameException e)
+//     {
+//         /* Make sure the member y.y collided with root container (module) y */
+//         assert(e.defined == container);
+//     }
+// }
+
+
+// unittest
+// {
+//     /* TODO: Add some unit tests */
+//     import std.file;
+//     import std.stdio;
+//     import compiler.lexer;
+//     import compiler.parsing.core;
+
+//     // isUnitTest = true;
+
+//     string sourceFile = "source/tlang/testing/basic1.t";
+
+//     gprintln("Reading source file '" ~ sourceFile ~ "' ...");
+//     File sourceFileFile;
+//     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+//     ulong fileSize = sourceFileFile.size();
+//     byte[] fileBytes;
+//     fileBytes.length = fileSize;
+//     fileBytes = sourceFileFile.rawRead(fileBytes);
+//     sourceFileFile.close();
+
+//     gprintln("Performing tokenization on '" ~ sourceFile ~ "' ...");
+
+//     /* TODO: Open source file */
+//     string sourceCode = cast(string) fileBytes;
+//     // string sourceCode = "hello \"world\"|| ";
+//     //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
+//     // string sourceCode = "hello;";
+//     Lexer currentLexer = new Lexer(sourceCode);
+//     currentLexer.performLex();
     
 
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+//     gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
 
-    gprintln("Parsing tokens...");
-    Parser parser = new Parser(currentLexer.getTokens());
-    Module modulle = parser.parse();
+//     gprintln("Parsing tokens...");
+//     Parser parser = new Parser(currentLexer.getTokens());
+//     Module modulle = parser.parse();
 
-    gprintln("Type checking and symbol resolution...");
-    try
-    {
-        TypeChecker typeChecker = new TypeChecker(modulle);
+//     gprintln("Type checking and symbol resolution...");
+//     try
+//     {
+//         TypeChecker typeChecker = new TypeChecker(modulle);
 
-    }
-    // catch(CollidingNameException e)
-    // {
-    //     gprintln(e.msg, DebugType.ERROR);
-    //     //gprintln("Stack trace:\n"~to!(string)(e.info));
-    // }
-    catch (TypeCheckerException e)
-    {
-        gprintln(e.msg, DebugType.ERROR);
-    }
+//     }
+//     // catch(CollidingNameException e)
+//     // {
+//     //     gprintln(e.msg, DebugType.ERROR);
+//     //     //gprintln("Stack trace:\n"~to!(string)(e.info));
+//     // }
+//     catch (TypeCheckerException e)
+//     {
+//         gprintln(e.msg, DebugType.ERROR);
+//     }
 
-    /* Test first-level resolution */
-    // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz1").getName(), "clazz1")==0);
+//     /* Test first-level resolution */
+//     // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz1").getName(), "clazz1")==0);
 
-    // /* Test n-level resolution */
-    // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
-    // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j").getName(), "j")==0);
-    // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.clazz_2_2_1").getName(), "clazz_2_2_1")==0);
-    // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
+//     // /* Test n-level resolution */
+//     // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
+//     // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j").getName(), "j")==0);
+//     // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.clazz_2_2_1").getName(), "clazz_2_2_1")==0);
+//     // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
 
-    // /* Test invalid access to j treating it as a Container (whilst it is a Variable) */
-    // assert(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j.p") is null);
+//     // /* Test invalid access to j treating it as a Container (whilst it is a Variable) */
+//     // assert(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j.p") is null);
 
-}
+// }

@@ -9,6 +9,7 @@ import compiler.symbols.check;
 import compiler.symbols.data;
 import compiler.typecheck.core;
 import compiler.typecheck.exceptions;
+import core.stdc.stdlib;
 
 void beginCompilation(string[] sourceFiles)
 {

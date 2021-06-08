@@ -1470,7 +1470,39 @@ unittest
 
     isUnitTest = true;
 
-    string sourceFile = "source/tlang/testing/basic1.t";
+    // string sourceFile = "source/tlang/testing/basic1.t";
+    
+    //     File sourceFileFile;
+    //     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    //     ulong fileSize = sourceFileFile.size();
+    //     byte[] fileBytes;
+    //     fileBytes.length = fileSize;
+    //     fileBytes = sourceFileFile.rawRead(fileBytes);
+    //     sourceFileFile.close();
+
+    
+
+    //     /* TODO: Open source file */
+    //     string sourceCode = cast(string)fileBytes;
+    //     // string sourceCode = "hello \"world\"|| ";
+    //     //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
+    //     // string sourceCode = "hello;";
+    //     Lexer currentLexer = new Lexer(sourceCode);
+    //     assert(currentLexer.performLex());
+        
+      
+    //     Parser parser = new Parser(currentLexer.getTokens());
+    //     parser.parse();
+}
+
+unittest
+{
+
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+
+    string sourceFile = "source/tlang/testing/simple1_module_positive.t";
     
         File sourceFileFile;
         sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
@@ -1492,6 +1524,15 @@ unittest
         
       
         Parser parser = new Parser(currentLexer.getTokens());
-        parser.parse();
-}
+        
+        try
+        {
+            Module modulle = parser.parse();
 
+            assert(cmp(modulle.getName(), "myModule")==0);
+        }
+        catch(TError)
+        {
+            assert(false);
+        }
+}
