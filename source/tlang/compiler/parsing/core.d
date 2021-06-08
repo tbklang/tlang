@@ -1630,6 +1630,16 @@ unittest
         assert(myClass2);
         assert(myClass1_myClass2_4);
         assert(myClass1_myClass2_5);
+
+        /**
+        * They should all be classes
+        */
+        Clazz c_myClass1_myClass2_1 = cast(Clazz)myClass1_myClass2_1;
+        Clazz c_myClass1_myClass2_2 = cast(Clazz)myClass1_myClass2_2;
+        Clazz c_myClass2 = cast(Clazz)myClass2;
+        Clazz c_myClass1_myClass2_4 = cast(Clazz)myClass1_myClass2_4;
+        Clazz c_myClass1_myClass2_5 = cast(Clazz)myClass1_myClass2_5;
+        
         
 
         
