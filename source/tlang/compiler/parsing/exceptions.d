@@ -8,3 +8,14 @@ public class ParserException : TError
     }
 }
 
+public final class SyntaxError : ParserException
+{
+    private SymbolType expected;
+    private SymbolType provided;
+
+    this(SymbolType expected, SymbolType provided)
+    {
+        this.expected = expected;
+        this.provided = provided;
+    }
+}
