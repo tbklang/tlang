@@ -55,11 +55,13 @@ public final class Parser
 
         if(isUnitTest)
         {
+            throw new TError(message);
             assert(false);
         }
         else
         {
-            exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
+            throw new TError(message);
+            //exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
         }
     }
 

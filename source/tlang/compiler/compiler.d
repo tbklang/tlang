@@ -45,7 +45,21 @@ void beginCompilation(string[] sourceFiles)
 
         gprintln("Parsing tokens...");
         Parser parser = new Parser(currentLexer.getTokens());
-        Module modulle = parser.parse();
+        Module modulle;
+        
+        import misc.exceptions;
+
+        try
+        {
+            modulle = parser.parse();
+        }
+        catch(TError e)
+        {
+            gprintln(e.msg, DebugType.ERROR);
+            exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
+        }
+        
+        
 
         gprintln("Type checking and symbol resolution...");
         try
