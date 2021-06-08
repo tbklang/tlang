@@ -4,7 +4,7 @@ class myClass1
 {
     class myClass1_1
     {
-
+        int entity;
     }
 
     class myClass2

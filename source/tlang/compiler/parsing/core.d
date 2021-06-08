@@ -1654,6 +1654,8 @@ unittest
         * myClass2.outer should exist in myClass2
         *
         * Vice-versa of the above should not be true
+        *
+        * Both should be variables
         */
         assert(myClass1_myClass2_5 != myClass2);
 
@@ -1661,11 +1663,25 @@ unittest
         Entity outerVariable = tc.getResolver().resolveBest(c_myClass2, "outer");
         assert(innerVariable !is null);
         assert(outerVariable !is null);
+        assert(cast(Variable)innerVariable);
+        assert(cast(Variable)outerVariable);
+
 
         innerVariable = tc.getResolver().resolveBest(c_myClass2, "inner");
         outerVariable = tc.getResolver().resolveBest(c_myClass1_myClass2_5, "outer");
         assert(innerVariable is null);
         assert(outerVariable is null); 
+
+        /**
+        * myClass1_1.entity should exist
+        *
+        * 1. Resolve from myClass1.myClass2 relative position
+        */
+        Entity variableEntity = tc.getResolver().resolveBest(c_myClass1_myClass2_5, "myClass1_1.entity");
+        assert(variableEntity);
+
+        /* Should be a variable */
+        assert(cast(Variable)variableEntity);
     }
     catch(TError)
     {
