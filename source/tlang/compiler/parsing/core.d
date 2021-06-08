@@ -1618,11 +1618,19 @@ unittest
         */
         Entity myClass1_myClass2_1 = tc.getResolver().resolveBest(modulle, "myModule.myClass1.myClass2");
         Entity myClass1_myClass2_2 = tc.getResolver().resolveBest(clazz1, "myClass2");
-        Entity myClass1_myClass2_3 = tc.getResolver().resolveBest(modulle, "myClass2");
+        Entity myClass2 = tc.getResolver().resolveBest(modulle, "myClass2");
         Entity myClass1_myClass2_4 = tc.getResolver().resolveBest(clazz2, "myClass1.myClass2");
         Entity myClass1_myClass2_5 = tc.getResolver().resolveBest(clazz2, "myClass1.myClass2");
         
-
+        /**
+        * All the above should exist
+        */
+        assert(myClass1_myClass2_1);
+        assert(myClass1_myClass2_2);
+        assert(myClass2);
+        assert(myClass1_myClass2_4);
+        assert(myClass1_myClass2_5);
+        
 
         
 
