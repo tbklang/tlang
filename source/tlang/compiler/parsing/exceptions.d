@@ -2,10 +2,14 @@ module compiler.parsing.exceptions;
 
 public class ParserException : TError
 {
-    this()
-    {
+    private Parser parser;
 
+    this(Parser parser)
+    {
+        this.parser = parser;
     }
+
+    
 }
 
 public final class SyntaxError : ParserException
@@ -13,8 +17,9 @@ public final class SyntaxError : ParserException
     private SymbolType expected;
     private SymbolType provided;
 
-    this(SymbolType expected, SymbolType provided)
+    this(Parser parser, SymbolType expected, SymbolType provided)
     {
+        super(parser);
         this.expected = expected;
         this.provided = provided;
     }
