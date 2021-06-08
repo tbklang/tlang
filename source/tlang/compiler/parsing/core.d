@@ -1647,6 +1647,23 @@ unittest
         assert(c_myClass1_myClass2_2 == myClass1_myClass2_4);
         assert(myClass1_myClass2_4 == myClass1_myClass2_5);
 
+        /**
+        * myClass1.myClass2 != myClass2
+        *
+        * myClass1.myClass2.inner should exist in myClass1.myClass2
+        * myClass2.outer should exist in myClass2
+        *
+        * Vice-versa of the above should not be true
+        */
+        assert(myClass1_myClass2_5 != myClass2);
+
+        Entity innerVariable = tc.getResolver().resolveBest(myClass1_myClass2_5, "inner");
+        Entity outerVariable = tc.getResolver().resolveBest(myClass2, "outer");
+        assert(innerVariable !is null);
+        assert(outerVariable !is null);
+        
+
+
 
         
         
