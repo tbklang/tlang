@@ -1657,10 +1657,12 @@ unittest
         */
         assert(myClass1_myClass2_5 != myClass2);
 
-        Entity innerVariable = tc.getResolver().resolveBest(myClass1_myClass2_5, "inner");
-        Entity outerVariable = tc.getResolver().resolveBest(myClass2, "outer");
+        Entity innerVariable = tc.getResolver().resolveBest(c_myClass1_myClass2_5, "inner");
+        Entity outerVariable = tc.getResolver().resolveBest(c_myClass2, "outer");
         assert(innerVariable !is null);
         assert(outerVariable !is null);
+
+        
         
 
 
