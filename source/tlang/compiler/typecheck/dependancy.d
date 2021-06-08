@@ -180,15 +180,7 @@ public final class StructuralOrganizer
         */
         if(clazz.getModifierType() != InitScope.STATIC)
         {
-            /**
-            * All module-level classes are static (even though not marked as such)
-            *
-            * TODO: Add this into the parser code to seth this
-            */
-            if(clazz.parentOf() != tc.getModule())
-            {
-                Parser.expect("Cannot use a class type that is of a class that is non-static");
-            }
+            Parser.expect("Cannot use a class type that is of a class that is non-static");
         }
 
         /**
