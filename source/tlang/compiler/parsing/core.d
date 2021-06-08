@@ -1619,7 +1619,7 @@ unittest
         Entity myClass1_myClass2_1 = tc.getResolver().resolveBest(modulle, "myModule.myClass1.myClass2");
         Entity myClass1_myClass2_2 = tc.getResolver().resolveBest(clazz1, "myClass2");
         Entity myClass2 = tc.getResolver().resolveBest(modulle, "myClass2");
-        Entity myClass1_myClass2_4 = tc.getResolver().resolveBest(clazz2, "myClass1.myClass2");
+        Entity myClass1_myClass2_4 = tc.getResolver().resolveBest(modulle, "myClass1.myClass2");
         Entity myClass1_myClass2_5 = tc.getResolver().resolveBest(clazz2, "myClass1.myClass2");
         
         /**
@@ -1639,6 +1639,15 @@ unittest
         Clazz c_myClass2 = cast(Clazz)myClass2;
         Clazz c_myClass1_myClass2_4 = cast(Clazz)myClass1_myClass2_4;
         Clazz c_myClass1_myClass2_5 = cast(Clazz)myClass1_myClass2_5;
+
+        /**
+        * These should all be equal `myClass1.myClass2`
+        */
+        assert(c_myClass1_myClass2_1 == c_myClass1_myClass2_2);
+        assert(c_myClass1_myClass2_2 == myClass1_myClass2_4);
+        assert(myClass1_myClass2_4 == myClass1_myClass2_5);
+
+
         
         
 
