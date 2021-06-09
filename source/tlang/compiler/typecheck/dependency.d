@@ -72,18 +72,36 @@ public class DNode
         return entity;
     }
 
+    public static ulong count(string bruh)
+    {
+        ulong i = 0;
+        foreach(char character; bruh)
+        {
+            if(character == '.')
+            {
+                i++;
+            }
+        }
+
+        return i;
+    }
+
     public string print()
     {
+        string spaces = "            ";
         /* The tree */ /*TODO: Make genral to statement */
-        string tree = "";
+        string tree = "   ";
         tree ~= resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+
+        ulong c = count(resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity));
+
         tree ~= "\n";
         foreach(DNode dependancy; dependencies)
         {
             if(!dependancy.isCompleted())
             {
                 dependancy.markCompleted();
-                tree ~= "   "~dependancy.print();
+                tree ~= spaces[0..(c+1)*3]~dependancy.print();
             }
             
         }
@@ -133,7 +151,7 @@ public class DNodeGenerator
         root = moduleDNode;
 
         /* Print tree */
-       gprintln(moduleDNode.print());
+       gprintln("\n"~moduleDNode.print());
     }
 
     private DNode pool(Statement entity)
