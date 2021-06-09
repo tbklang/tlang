@@ -105,7 +105,47 @@ public final class StructuralOrganizer
 
                     traceExpression(container, assignmentExpression);
                 }
+
+
+                /* TODO: Use this new method */
+                variableDeclare(container, variable);
             }
+        }
+    }
+
+
+
+    /**
+    * Check variable declaration relative to a container
+    */
+    private void variableDeclare(Container rel, Variable variable)
+    {
+        /* Get the variable's type */
+        Type type = tc.getType(rel, variable.getType());
+
+
+        /**
+        * If the variable declaration belongs to a Module
+        */
+        if(cast(Module)rel)
+        {
+
+        }
+        /*
+        * If the variable declaration belongs to a Class
+        */
+        else if(cast(Clazz)rel)
+        {
+            /* Static membership case */
+            if(variable.getModifierType() == InitScope.STATIC)
+            {
+
+            }
+            else
+            {
+                /* TODO: Implement me */
+            }
+
         }
     }
 
@@ -285,6 +325,9 @@ public final class StructuralOrganizer
                     {
 
                     }
+
+                    /* TODO: Use this new method */
+                    variableDeclare(clazz, variable);
                 }
                 /* Static class definitions */
                 else if(cast(Clazz)entity)
