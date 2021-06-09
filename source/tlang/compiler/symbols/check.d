@@ -24,6 +24,7 @@ public enum SymbolType
     OCURLY,
     CCURLY,
     MODULE,
+    NEW,
     IF,
     ELSE,
     WHILE,
@@ -306,6 +307,11 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "module") == 0)
     {
         return SymbolType.MODULE;
+    }
+    /* new keyword */
+    else if(cmp(token, "new") == 0)
+    {
+        return SymbolType.NEW;
     }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))
