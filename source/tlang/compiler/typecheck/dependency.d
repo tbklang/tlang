@@ -32,6 +32,7 @@ public class DNode
     private Resolver resolver;
 
     private bool visited;
+    private bool complete;
     private DNode[] dependencies;
 
     this(DNodeGenerator dnodegen, Statement entity)
@@ -56,6 +57,16 @@ public class DNode
         visited = true;
     }
 
+    public void markCompleted()
+    {
+        complete = true;
+    }
+
+    public bool isCompleted()
+    {
+        return complete;
+    }
+
     public Statement getEntity()
     {
         return entity;
@@ -69,8 +80,15 @@ public class DNode
         tree ~= "\n";
         foreach(DNode dependancy; dependencies)
         {
-            tree ~= "   "~dependancy.print();
+            if(!dependancy.isCompleted())
+            {
+                dependancy.markCompleted();
+                tree ~= "   "~dependancy.print();
+            }
+            
         }
+
+        markCompleted();
 
         return tree;
     }
@@ -115,7 +133,7 @@ public class DNodeGenerator
         root = moduleDNode;
 
         /* Print tree */
-        gprintln(moduleDNode.print());
+       gprintln(moduleDNode.print());
     }
 
     private DNode pool(Statement entity)
@@ -289,6 +307,8 @@ public class DNodeGenerator
             classDNode.markVisited();
         }
         
+        gprintln("poes");
+
         /**
         * Get the Entities
         */
