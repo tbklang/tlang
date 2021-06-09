@@ -1,31 +1,20 @@
 module typeChecking1;
 
-A aInstance = 1;
-B bInstance = new B();
-A.C cInstance;
-
-int jNumber = A.jStatic;
-
-class A
-{
-    static B bInstanceStatic;
-    static int jStatic;
-    static A aInstanceStatic;
-
-    static class C
-    {
-        static int pStatic;
-        static A.C ll;
-    }
-    
-    B bInstance;
-    int jInstance;
-}
+A aInstance;
+B bInstance;
 
 class B
 {
-    static A ds;
-    static int kStatic;
-    
+    static int jStatic;
+    static A aInstanceStatic;
+}
+
+class A
+{
+    static int pStatic;
+    static B bInstanceStatic;
+    static A aInstanceStaticMoi;
+
+    int poes;
 }
 

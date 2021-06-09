@@ -87,6 +87,9 @@ public final class TypeChecker
         /* TODO: Implement me */
         checkClassInherit(modulle);
 
+        import compiler.typecheck.dependency;
+        DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
+
         /* TODO: Process class ? vars funcs ?*/
 
         // import compiler.typecheck.dependancy;
