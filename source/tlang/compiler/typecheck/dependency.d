@@ -265,7 +265,7 @@ public class DNodeGenerator
         gprintln("fff");
 
         /* Crawl up the static initialization tree of parent static classes */
-        if(clazz.parentOf())
+        if(clazz.parentOf() && cast(Clazz)clazz.parentOf())
         {
             /* Get the dependency node for the parent class */
             ClassStaticNode parentClassDNode = classPassStatic(cast(Clazz)clazz.parentOf());
