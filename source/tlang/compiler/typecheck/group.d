@@ -39,10 +39,11 @@ public final class Grouper
 {
     // private TypeChecker tc;
     private Entity[] initQueue;
+    private TypeChecker tc;
 
-    this(Entity[] initQueue)
+    this(TypeChecker tc, Entity[] initQueue)
     {
-        // this.tc = tc;
+        this.tc = tc;
         this.initQueue = initQueue;
     }
 
@@ -72,11 +73,18 @@ public final class Grouper
     public Group[] begin()
     {
         gprintln("Grouping beginning...");
+        gprintln("GBegin: "~to!(string)(initQueue));
 
         foreach (Entity entity; initQueue)
         {
             /* The Container of the Entity */
             Container entityContainer = entity.parentOf();
+            gprintln(entityContainer);
+
+            // if(entityContainer is null)
+            // {
+            //     entityContainer = tc.getModule();
+            // }
 
             groupToContainer(entityContainer, entity);
         }
@@ -85,6 +93,8 @@ public final class Grouper
 
         foreach (Container container; keyOrder)
         {
+            gprintln(container);
+            gprintln(containers);
             groups ~= new Group(container, containers[container]);
         }
         gprintln("f");

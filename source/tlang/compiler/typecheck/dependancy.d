@@ -22,7 +22,10 @@ public final class StructuralOrganizer
 
     public void generate()
     {
+        /* Pool the Module */
         root = poolNode(tc.getModule());
+
+        /* Start checking from the Module-level */
         checkContainer(tc.getModule());
     }
 
@@ -325,6 +328,8 @@ public final class StructuralOrganizer
         }
         
 
+        gprintln("NodePOol"~to!(string)(nodePool));
+
         gprintln("InitQueue: "~to!(string)(initQueue));
     }
 
@@ -368,6 +373,11 @@ public final class StructuralOrganizer
                     figureOut(nodeDep);
                 }
             }
+
+            /* Add myself */
+            node.markCompleted();
+                initQueue ~= node.getEntity();
+
         }
     }
 

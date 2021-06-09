@@ -105,7 +105,7 @@ public final class TypeChecker
         }
 
         import compiler.typecheck.group;
-        Grouper g = new Grouper(so.initQueue);
+        Grouper g = new Grouper(this, so.initQueue);
         Group[] groups = g.begin();
         gprintln(groups);
     }
