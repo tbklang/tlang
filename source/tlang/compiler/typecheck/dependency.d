@@ -277,15 +277,16 @@ public class DNodeGenerator
 
         /* TODO: visiation loop prevention */
         /**
-        * If we have not been visited before then set ourselves as visited 
-        * and return
+        * If we have been visited then return nimmediately
         */
-        if(!classDNode.isVisisted())
+        if(classDNode.isVisisted())
+        {
+            return classDNode;
+        }
+        else
         {
             /* Set as visited */
             classDNode.markVisited();
-
-            return classDNode;
         }
         
         /**
