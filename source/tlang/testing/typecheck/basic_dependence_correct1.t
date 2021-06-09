@@ -1,7 +1,7 @@
 module typeChecking1;
 
 A aInstance = 1;
-B bInstance;
+B bInstance = new B();
 A.C cInstance;
 
 int jNumber = A.jStatic;
