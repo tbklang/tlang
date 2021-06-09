@@ -3,11 +3,6 @@ module typeChecking1;
 A aInstance;
 B bInstance;
 int k;
-class B
-{
-    static int jStatic;
-    static A aInstanceStatic;
-}
 
 class A
 {
@@ -18,3 +13,8 @@ class A
     int poes;
 }
 
+class B
+{
+    static int jStatic;
+    static A aInstanceStatic;
+}

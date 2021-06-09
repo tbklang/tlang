@@ -86,28 +86,29 @@ public class DNode
         return i;
     }
 
+    public static ulong c = 0;
+
     public string print()
     {
-        string spaces = "            ";
+        string spaces = "                                                ";
         /* The tree */ /*TODO: Make genral to statement */
         string tree = "   ";
         tree ~= resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
 
-        ulong c = count(resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity));
-
         tree ~= "\n";
+        c++;
         foreach(DNode dependancy; dependencies)
         {
             if(!dependancy.isCompleted())
             {
                 dependancy.markCompleted();
-                tree ~= spaces[0..(c+1)*3]~dependancy.print();
+                tree ~= spaces[0..(c)*3]~dependancy.print();
             }
             
         }
 
         markCompleted();
-
+        c--;
         return tree;
     }
 }
