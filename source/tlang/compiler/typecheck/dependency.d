@@ -115,7 +115,7 @@ public class DNodeGenerator
         root = moduleDNode;
 
         /* Print tree */
-        gprintln(moduleDNode.print());
+        //gprintln(moduleDNode.print());
     }
 
     private DNode pool(Statement entity)
@@ -143,6 +143,8 @@ public class DNodeGenerator
     {
         /* Get a DNode for the Module */
         DNode moduleDNode = pool(modulle);
+
+        gprintln("ddd");
 
         /**
         * Get the Entities
@@ -259,6 +261,8 @@ public class DNodeGenerator
             gprintln("classPassStatic(): Not static class", DebugType.ERROR);
             assert(false);
         }
+
+        gprintln("fff");
 
         /* Crawl up the static initialization tree of parent static classes */
         if(clazz.parentOf())
