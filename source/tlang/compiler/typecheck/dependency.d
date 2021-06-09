@@ -182,7 +182,11 @@ public class DNodeGenerator
                 /* Class-type */
                 else if(cast(Clazz)variableType)
                 {
-                    DNode classDependency = classPassStatic(cast(Clazz)variableType);
+                    /* Get the static class dependency */
+                    ClassStaticNode classDependency = classPassStatic(cast(Clazz)variableType);
+
+                    /* Make this variable declaration depend on static initalization of the class */
+                    variableDNode.needs(classDependency);
                 }
                 /* Struct-type */
                 else if(cast(Struct)variableType)
