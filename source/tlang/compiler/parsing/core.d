@@ -796,7 +796,14 @@ public final class Parser
         /* Consume the `discard` */
         nextToken();
 
-        return parseExpression();
+        /* Parse the following expression */
+        Expression expression = parseExpression();
+
+        /* Expect a semi-colon */
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+        nextToken();
+
+        return expression;
     }
 
 
