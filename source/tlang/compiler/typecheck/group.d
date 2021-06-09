@@ -79,27 +79,23 @@ public final class Grouper
         {
             /* The Container of the Entity */
             Container entityContainer = entity.parentOf();
-            gprintln(entityContainer);
 
-            // if(entityContainer is null)
-            // {
-            //     entityContainer = tc.getModule();
-            // }
-
-            groupToContainer(entityContainer, entity);
+            /* Dont' add Module's container (which would be null) */
+            if(entityContainer is null)
+            {
+                /* This should only ever occur whern the Entity is a Module */
+                assert(cast(Module)entity);
+            }
+            else
+            {
+                groupToContainer(entityContainer, entity);
+            }
         }
-
-        gprintln("fddsfdsf");
 
         foreach (Container container; keyOrder)
         {
-            gprintln(container);
-            gprintln(containers);
             groups ~= new Group(container, containers[container]);
         }
-        gprintln("f");
-
-        /* TODO: Why module didn't cause error earlier, idk, but we need to fix this */
 
         return groups;
     }

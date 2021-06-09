@@ -376,7 +376,7 @@ public final class StructuralOrganizer
 
             /* Add myself */
             node.markCompleted();
-                initQueue ~= node.getEntity();
+            initQueue ~= node.getEntity();
 
         }
     }
