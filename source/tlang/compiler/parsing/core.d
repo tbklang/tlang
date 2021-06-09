@@ -806,6 +806,10 @@ public final class Parser
         return expression;
     }
 
+    /**
+    * Parses the `new Class()` expression
+    */
+
 
     /**
     * Parses an expression
