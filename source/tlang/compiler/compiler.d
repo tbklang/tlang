@@ -78,9 +78,9 @@ void beginCompilation(string[] sourceFiles)
             gprintln(e.msg, DebugType.ERROR);
         }
 
-        import compiler.codegen.core;
-        CodeGenerator codegen = new DCodeGenerator(modulle);
-        codegen.build();
+        // import compiler.codegen.core;
+        // CodeGenerator codegen = new DCodeGenerator(modulle);
+        // codegen.build();
         
         // typeChecker.check();
     }
