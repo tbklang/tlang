@@ -59,56 +59,56 @@ public final class StructuralOrganizer
                 /* Variable being declared */
                 Variable variable = cast(Variable)entity;
 
-                /* Get the variable's type */
-                Type type = tc.getType(container, variable.getType());
+                // /* Get the variable's type */
+                // Type type = tc.getType(container, variable.getType());
 
-                /* If the variable has a class-type */
-                if(cast(Clazz)type)
-                {
-                    /* Get the class-type */
-                    Clazz classType = cast(Clazz)type;
+                // /* If the variable has a class-type */
+                // if(cast(Clazz)type)
+                // {
+                //     /* Get the class-type */
+                //     Clazz classType = cast(Clazz)type;
 
-                    /* TODO: Ensure that we set dependences as A.B.C with A B C all static */
+                //     /* TODO: Ensure that we set dependences as A.B.C with A B C all static */
             
-                    /* Statically initialize the class (make module depend on it) */
-                    TreeNode classWalkInitDep = staticInitializeClass(classType);
-                    root.addDep(classWalkInitDep);
+                //     /* Statically initialize the class (make module depend on it) */
+                //     TreeNode classWalkInitDep = staticInitializeClass(classType);
+                //     root.addDep(classWalkInitDep);
 
                     
-                }
-                /* If the variable has a basic type */
-                else if(cast(Primitive)type)
-                {
+                // }
+                // /* If the variable has a basic type */
+                // else if(cast(Primitive)type)
+                // {
 
-                }
-                else
-                {
-                    assert(false);
-                }
+                // }
+                // else
+                // {
+                //     assert(false);
+                // }
 
-                /* Make the Module depend on this variable being initialized */
-                TreeNode varNode = poolNode(variable);
-                root.addDep(varNode);
-
-
-
-                /* TODO: Handle assignment case */
-                if(variable.getAssignment())
-                {
-                    /* TODO: Implement me */
-                    VariableAssignment varAssign = variable.getAssignment();
-                    gprintln("Assignment: "~to!(string)(varAssign));
-
-                    /* Get the Expression */
-                    Expression assignmentExpression = varAssign.getExpression();
-
-
-                    traceExpression(container, assignmentExpression);
-                }
-
+                // /* Make the Module depend on this variable being initialized */
+                // TreeNode varNode = poolNode(variable);
+                // root.addDep(varNode);
 
                 /* TODO: Use this new method */
                 variableDeclare(container, variable);
+
+                // /* TODO: Handle assignment case */
+                // if(variable.getAssignment())
+                // {
+                //     /* TODO: Implement me */
+                //     VariableAssignment varAssign = variable.getAssignment();
+                //     gprintln("Assignment: "~to!(string)(varAssign));
+
+                //     /* Get the Expression */
+                //     Expression assignmentExpression = varAssign.getExpression();
+
+
+                //     traceExpression(container, assignmentExpression);
+                // }
+
+
+                
             }
         }
     }
@@ -129,17 +129,86 @@ public final class StructuralOrganizer
         */
         if(cast(Module)rel)
         {
+            /* If the variable has a basic type */
+            if(cast(Primitive)type)
+            {
+                /* Do nothing */
+            }
+            /* If the variable has a class-type */
+            else if(cast(Clazz)type)
+            {
+                /* Get the class-type */
+                Clazz classType = cast(Clazz)type;
 
+                /* TODO: Ensure that we set dependences as A.B.C with A B C all static */
+        
+                /* Statically initialize the class (make module depend on it) */
+                TreeNode classWalkInitDep = staticInitializeClass(classType);
+                root.addDep(classWalkInitDep);
+            }
+            /* TODO: I shouldn't have anything here */
+            else
+            {
+                assert(false);
+            }
+
+            /**
+            * In any case we need to make the Module depend on this variable
+            * (it must be initialized on module load)
+            */
+            TreeNode varNode = poolNode(variable);
+            root.addDep(varNode);
         }
         /*
         * If the variable declaration belongs to a Class
         */
         else if(cast(Clazz)rel)
         {
+            /* The Class */
+            Clazz clazz = cast(Clazz)rel;
+
             /* Static membership case */
             if(variable.getModifierType() == InitScope.STATIC)
             {
+                /* Fetch the pooled Class TreeNode and Variable TreeNode */
+                TreeNode classTreeNode = poolNode(clazz);
+                TreeNode variableTreeNode = poolNode(variable);
 
+                /* If the variable's type basic */
+                if(cast(Primitive)type)
+                {
+                    /* Do nothing */
+                }
+                /* If the variable's type is class-type */
+                else if(cast(Clazz)type)
+                {
+                    /* If it is ours */
+                    if(type == clazz)
+                    {
+                        /* Do nothing */
+                    }
+                    /* Else init the class AND then the variable */
+                    else
+                    {
+                        /* Attempt to initialize all classes (all static) on the way) */
+                        classTreeNode.addDep(staticInitializeClass(cast(Clazz)type));
+                    }
+                }
+                else
+                {
+                    /* TODO: dik */
+                    assert(false);
+                }
+
+                /* The class must depend on the static initialization of the variable (static member) */
+                classTreeNode.addDep(variableTreeNode);
+
+
+                /* TODO: Implement this later */
+                if(variable.getAssignment())
+                {
+
+                }
             }
             else
             {
@@ -286,45 +355,45 @@ public final class StructuralOrganizer
                 {
                     /* Variable being declared */
                     Variable variable = cast(Variable)entity;
-                    TreeNode variableTNode = poolNode(variable);
+                    // TreeNode variableTNode = poolNode(variable);
 
-                    /* Get the variable's type */
-                    Type type = tc.getType(clazz, variable.getType());
+                    // /* Get the variable's type */
+                    // Type type = tc.getType(clazz, variable.getType());
 
-                    /* If the variable's type basic */
-                    if(cast(Primitive)type)
-                    {
-                        /* TODO: Init */
-                        /* Immediately set as init, no further static recursion */
-                        treeNode.addDep(variableTNode);
-                    }
-                    /* If the variable's type is class-type */
-                    else if(cast(Clazz)type)
-                    {
-                        /* If it is ours */
-                        if(type == clazz)
-                        {
-                            /* Immediately set as init, no further static recursion */
-                            treeNode.addDep(variableTNode);
-                        }
-                        /* Else init the class AND then the variable */
-                        else
-                        {
-                            treeNode.addDep(staticInitializeClass(cast(Clazz)type));
-                            treeNode.addDep(variableTNode);
-                        }
-                    }
-                    else
-                    {
-                        /* TODO: dik */
-                    }
+                    // /* If the variable's type basic */
+                    // if(cast(Primitive)type)
+                    // {
+                    //     /* TODO: Init */
+                    //     /* Immediately set as init, no further static recursion */
+                    //     treeNode.addDep(variableTNode);
+                    // }
+                    // /* If the variable's type is class-type */
+                    // else if(cast(Clazz)type)
+                    // {
+                    //     /* If it is ours */
+                    //     if(type == clazz)
+                    //     {
+                    //         /* Immediately set as init, no further static recursion */
+                    //         treeNode.addDep(variableTNode);
+                    //     }
+                    //     /* Else init the class AND then the variable */
+                    //     else
+                    //     {
+                    //         treeNode.addDep(staticInitializeClass(cast(Clazz)type));
+                    //         treeNode.addDep(variableTNode);
+                    //     }
+                    // }
+                    // else
+                    // {
+                    //     /* TODO: dik */
+                    // }
 
 
-                    /* TODO: Implement this later */
-                    if(variable.getAssignment())
-                    {
+                    // /* TODO: Implement this later */
+                    // if(variable.getAssignment())
+                    // {
 
-                    }
+                    // }
 
                     /* TODO: Use this new method */
                     variableDeclare(clazz, variable);

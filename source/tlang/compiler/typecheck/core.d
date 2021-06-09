@@ -108,6 +108,10 @@ public final class TypeChecker
         Grouper g = new Grouper(this, so.initQueue);
         Group[] groups = g.begin();
         gprintln(groups);
+
+        import compiler.typecheck.koporaal;
+        Koporaal l = new Koporaal(groups);
+        l.printInit();
     }
 
     /**
