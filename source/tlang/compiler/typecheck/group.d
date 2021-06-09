@@ -30,7 +30,8 @@ public class Group
 
     public override string toString()
     {
-        return "GroupInit ("~(cast(Entity)groupingEntity).getName()~"): "~to!(string)(initQueue);
+        return "GroupInit (" ~ (cast(Entity) groupingEntity)
+            .getName() ~ "): " ~ to!(string)(initQueue);
     }
 }
 
@@ -45,17 +46,15 @@ public final class Grouper
         this.initQueue = initQueue;
     }
 
-
-Group[] groups;
-
-        Entity[][Container] containers;
-        Container[] keyOrder;
+    private Group[] groups;
+    private Entity[][Container] containers;
+    private Container[] keyOrder;
 
     private void groupToContainer(Container entityContainer, Entity entityToContain)
     {
-        foreach(Container container; keyOrder)
+        foreach (Container container; keyOrder)
         {
-            if(container == entityContainer)
+            if (container == entityContainer)
             {
                 goto add_to_container;
             }
@@ -63,8 +62,8 @@ Group[] groups;
 
         keyOrder ~= entityContainer;
 
-        add_to_container:
-            containers[entityContainer] ~= entityToContain;
+    add_to_container:
+        containers[entityContainer] ~= entityToContain;
     }
 
     /**
@@ -74,7 +73,7 @@ Group[] groups;
     {
         gprintln("Grouping beginning...");
 
-        foreach(Entity entity; initQueue)
+        foreach (Entity entity; initQueue)
         {
             /* The Container of the Entity */
             Container entityContainer = entity.parentOf();
@@ -84,7 +83,7 @@ Group[] groups;
 
         gprintln("fddsfdsf");
 
-        foreach(Container container; keyOrder)
+        foreach (Container container; keyOrder)
         {
             groups ~= new Group(container, containers[container]);
         }
