@@ -89,29 +89,29 @@ public final class TypeChecker
 
         /* TODO: Process class ? vars funcs ?*/
 
-        import compiler.typecheck.dependancy;
-        StructuralOrganizer so = new StructuralOrganizer(this);
-        so.generate();
-        so.printPool();
+        // import compiler.typecheck.dependancy;
+        // StructuralOrganizer so = new StructuralOrganizer(this);
+        // so.generate();
+        // so.printPool();
         
-        import compiler.codegen.core;
-        foreach(Entity entity; so.initQueue)
-        {
-            if(cast(Emittable)entity)
-            {
-                Emittable emittable = cast(Emittable)entity;
-                gprintln("Emit code: "~emittable.emit());
-            }
-        }
+        // import compiler.codegen.core;
+        // foreach(Entity entity; so.initQueue)
+        // {
+        //     if(cast(Emittable)entity)
+        //     {
+        //         Emittable emittable = cast(Emittable)entity;
+        //         gprintln("Emit code: "~emittable.emit());
+        //     }
+        // }
 
-        import compiler.typecheck.group;
-        Grouper g = new Grouper(this, so.initQueue);
-        Group[] groups = g.begin();
-        gprintln(groups);
+        // import compiler.typecheck.group;
+        // Grouper g = new Grouper(this, so.initQueue);
+        // Group[] groups = g.begin();
+        // gprintln(groups);
 
-        import compiler.typecheck.koporaal;
-        Koporaal l = new Koporaal(groups);
-        l.printInit();
+        // import compiler.typecheck.koporaal;
+        // Koporaal l = new Koporaal(groups);
+        // l.printInit();
     }
 
     /**

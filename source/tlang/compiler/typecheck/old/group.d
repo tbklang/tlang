@@ -1,4 +1,4 @@
-module compiler.typecheck.group;
+module compiler.typecheck.old.group;
 
 import gogga;
 import compiler.symbols.data;

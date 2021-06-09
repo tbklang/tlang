@@ -1,4 +1,4 @@
-module compiler.typecheck.dependancy;
+module compiler.typecheck.old.dependancy;
 
 import gogga;
 import compiler.symbols.data;

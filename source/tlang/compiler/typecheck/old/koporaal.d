@@ -1,4 +1,4 @@
-module compiler.typecheck.koporaal;
+module compiler.typecheck.old.koporaal;
 
 import gogga;
 import compiler.symbols.data;
@@ -6,7 +6,7 @@ import compiler.symbols.typing.core;
 import compiler.typecheck.core;
 import std.conv : to;
 import compiler.parsing.core;
-import compiler.typecheck.group;
+import compiler.typecheck.old.group;
 
 /**
 * Koporaal
