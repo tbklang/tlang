@@ -276,6 +276,17 @@ public class DNodeGenerator
 
 
         /* TODO: visiation loop prevention */
+        /**
+        * If we have not been visited before then set ourselves as visited 
+        * and return
+        */
+        if(!classDNode.isVisisted())
+        {
+            /* Set as visited */
+            classDNode.markVisited();
+
+            return classDNode;
+        }
         
         /**
         * Get the Entities
@@ -360,8 +371,6 @@ public class DNodeGenerator
                 }
             }
         }
-
-
 
         return classDNode;
     }
