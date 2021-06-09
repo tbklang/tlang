@@ -781,6 +781,25 @@ public final class Parser
         return bruh;
     }
 
+
+    /**
+    * Only a subset of expressions are parsed without coming after
+    * an assignment, functioncall parameters etc
+    *
+    * Therefore instead of mirroring a lot fo what is in expression, for now atleast
+    * I will support everything using discard
+    *
+    * TODO: Remove discard and implement the needed mirrors
+    */
+    private Expression parseDiscard()
+    {
+        /* Consume the `discard` */
+        nextToken();
+
+        return parseExpression();
+    }
+
+
     /**
     * Parses an expression
     *
@@ -963,7 +982,7 @@ public final class Parser
                 /* Get the identifier */
                 string identifier = getCurrentToken().getToken();
                 nextToken();
-                
+
 
                 Expression toAdd;
 
@@ -1443,6 +1462,13 @@ public final class Parser
 
                 /* Add the struct definition to the program */
                 modulle.addStatement(ztruct);
+            }
+            /* If it is a `discard` statement */
+            else if(symbol == SymbolType.DISCARD)
+            {
+                Expression expression = parseDiscard();
+
+                modulle.addStatement(expression);
             }
             else
             {

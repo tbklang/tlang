@@ -27,6 +27,7 @@ public enum SymbolType
     NEW,
     IF,
     ELSE,
+    DISCARD,
     WHILE,
     CLASS,
     INHERIT_OPP,
@@ -312,6 +313,11 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "new") == 0)
     {
         return SymbolType.NEW;
+    }
+    /* discard keyword */
+    else if(cmp(token, "discard") == 0)
+    {
+        return SymbolType.DISCARD;
     }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))
