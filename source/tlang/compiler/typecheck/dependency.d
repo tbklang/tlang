@@ -274,6 +274,8 @@ public class DNodeGenerator
             classDNode.needs(parentClassDNode);
         }
 
+
+        /* TODO: visiation loop prevention */
         
         /**
         * Get the Entities
@@ -296,7 +298,66 @@ public class DNodeGenerator
         {
             if(entity.getModifierType() == InitScope.STATIC)
             {
-                
+                /**
+                * Variable declarations
+                */
+                if(cast(Variable)entity)
+                {
+                    /* Get the Variable and information */
+                    Variable variable = cast(Variable)entity;
+                    Type variableType = tc.getType(clazz, variable.getType());
+                    gprintln(variable.getType());
+                    assert(variableType); /* TODO: Handle invalid variable type */
+                    DNode variableDNode = pool(variable);
+
+                    /* Basic type */
+                    if(cast(Primitive)variableType)
+                    {
+                        /* Do nothing */
+                    }
+                    /* Class-type */
+                    else if(cast(Clazz)variableType)
+                    {
+                        /* If the class type is THIS class */
+                        if(variableType == clazz)
+                        {
+                            /* Do nothing */
+                        }
+                        /* If it is another type */
+                        else
+                        {
+                            /* Get the static class dependency */
+                            ClassStaticNode classDependency = classPassStatic(cast(Clazz)variableType);
+
+                            /* Make this variable declaration depend on static initalization of the class */
+                            variableDNode.needs(classDependency);
+                        }
+                    }
+                    /* Struct-type */
+                    else if(cast(Struct)variableType)
+                    {
+
+                    }
+                    /* Anything else */
+                    else
+                    {
+                        /* This should never happen */
+                        assert(false);
+                    }
+
+
+                    /* Set this variable as a dependency of this module */
+                    classDNode.needs(variableDNode);
+
+                    /* If there is an assignment attached to this */
+                    if(variable.getAssignment())
+                    {
+                        /* (TODO) Process the assignment */
+                    }
+
+                    /* Set as visited */
+                    variableDNode.markVisited();
+                }
             }
         }
 
