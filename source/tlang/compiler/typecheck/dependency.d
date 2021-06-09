@@ -170,7 +170,7 @@ public class DNodeGenerator
             {
                 /* Get the Variable and information */
                 Variable variable = cast(Variable)entity;
-                Type variableType = cast(Type)resolver.resolveBest(modulle, variable.getType());
+                Type variableType = tc.getType(modulle, variable.getType());
                 assert(variableType); /* TODO: Handle invalid variable type */
                 DNode variableDNode = pool(variable);
 

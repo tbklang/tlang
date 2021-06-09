@@ -2,7 +2,7 @@ module typeChecking1;
 
 A aInstance;
 B bInstance;
-
+int k;
 class B
 {
     static int jStatic;
