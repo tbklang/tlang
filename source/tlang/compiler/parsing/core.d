@@ -952,6 +952,39 @@ public final class Parser
                 /* Consume the terminator */
                 nextToken();
             }
+            /**
+            * `new` operator
+            */
+            else if(symbol == SymbolType.NEW)
+            {
+                /* Cosume the `new` */
+                nextToken();
+
+                /* Get the identifier */
+                string identifier = getCurrentToken().getToken();
+                nextToken();
+                
+
+                Expression toAdd;
+
+                /* If the symbol is `(` then function call */
+                if (getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
+                {
+                    /* TODO: Implement function call parsing */
+                    previousToken();
+                    toAdd = parseFuncCall();
+                }
+                /* If not an `(` */
+                else
+                {
+                    /* Raise a syntax error */
+                    expect(SymbolType.LBRACE, getCurrentToken());
+                }
+
+                /* Add the expression */
+                addRetExp(toAdd);
+
+            }
             else
             {
                 //gprintln("parseExpression(): NO MATCH", DebugType.ERROR);
