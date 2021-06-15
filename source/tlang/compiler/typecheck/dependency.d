@@ -284,7 +284,7 @@ public class DNodeGenerator
 
     private DNode expressionPass(Expression exp, Context context)
     {
-        DNode dnode = poolT!(ExpressionDNode, Expression)(exp);
+        ExpressionDNode dnode = poolT!(ExpressionDNode, Expression)(exp);
 
         gprintln("expressionPass(Exp): Processing "~exp.toString(), DebugType.WARNING);
 
@@ -295,7 +295,8 @@ public class DNodeGenerator
         */
         if(cast(NumberLiteral)exp)
         {
-            return new DNode(this, exp);
+            /* TODO: Make number LiteralNode */
+            return dnode;
         }
         /**
         * Function calls (and struct constrctors)
@@ -360,7 +361,7 @@ public class DNodeGenerator
             /* TODO: Figure out where the variable lies */
 
             /* TODO: Change this later */
-            return new DNode(this, exp);
+            // return new DNode(this, exp);
 
 
         }
@@ -371,7 +372,6 @@ public class DNodeGenerator
         {
             /* Get the binary operator expression */
             BinaryOperatorExpression binOp = cast(BinaryOperatorExpression)exp;
-            dnode = new DNode(this, exp);
 
             /* Process left and right */
             DNode leftNode = expressionPass(binOp.getLeftExpression(), context);
@@ -384,7 +384,7 @@ public class DNodeGenerator
         }
         else
         {
-            dnode = new DNode(this, exp);
+            // dnode = new DNode(this, exp);
 
 
 
