@@ -69,6 +69,8 @@ public class Program
 
 public class Statement
 {
+    private static ulong rollingCount = 0;
+
     private Container container;
     private bool marked;
 
@@ -96,6 +98,11 @@ public class Statement
     public void mark()
     {
         marked = true;
+    }
+
+    public override string toString()
+    {
+        return to!(string)(rollingCount++);
     }
 }
 
@@ -331,9 +338,10 @@ public import compiler.symbols.expressions;
 
 
 
-public class VariableAssignment
+public class VariableAssignment : Statement
 {
     private Expression expression;
+    private Variable variable;
 
     this(Expression expression)
     {
@@ -343,6 +351,16 @@ public class VariableAssignment
     public Expression getExpression()
     {
         return expression;
+    }
+
+    public Variable getVariable()
+    {
+        return variable;
+    }
+
+    public void setVariable(Variable variable)
+    {
+        this.variable = variable;
     }
 }
 
