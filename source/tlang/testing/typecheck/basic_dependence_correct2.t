@@ -6,6 +6,7 @@ int p = p+p*2;
 int k =1+p+l;
 int o = new A().l.p.p;
 int o1 = new C().lplplp.p.p;
+int o2 = new C().lplplp.p.p;
 
 class A
 {
