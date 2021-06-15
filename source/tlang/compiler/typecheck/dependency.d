@@ -114,14 +114,16 @@ public class DNode
         /* The tree */ /*TODO: Make genral to statement */
         string tree = "   ";
 
-        if(cast(Entity)entity || cast(VariableAssignment)entity)
-        {
-            tree ~= name;
-        }
-        else
-        {
-            tree ~= entity.toString();
-        }
+        // if(cast(Entity)entity || cast(VariableAssignment)entity)
+        // {
+        //     tree ~= name;
+        // }
+        // else
+        // {
+        //     tree ~= entity.toString();
+        // }
+
+        tree ~= name;
 
         tree ~= "\n";
         c++;
@@ -282,7 +284,7 @@ public class DNodeGenerator
 
     private DNode expressionPass(Expression exp, Context context)
     {
-        DNode dnode;
+        DNode dnode = poolT!(ExpressionDNode, Expression)(exp);
 
         gprintln("expressionPass(Exp): Processing "~exp.toString(), DebugType.WARNING);
 
@@ -309,7 +311,6 @@ public class DNodeGenerator
         {
             /* The NewExpression */
             NewExpression newExpression = cast(NewExpression)exp;
-            dnode = poolT!(ExpressionDNode, NewExpression)(newExpression);
 
             /* Get the FunctionCall */
             FunctionCall constructorCall = newExpression.getFuncCall();
