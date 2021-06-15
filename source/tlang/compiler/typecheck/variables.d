@@ -39,7 +39,7 @@ public class ModuleVariableDeclaration : VariableNode
 
     private void initName()
     {
-        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        name = "(S) "~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
     }
 }
 
@@ -54,7 +54,7 @@ public class StaticVariableDeclaration : VariableNode
 
     private void initName()
     {
-        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        name = "(S) "~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
     }
 }
 
