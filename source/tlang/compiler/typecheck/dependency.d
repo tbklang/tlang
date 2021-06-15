@@ -93,7 +93,21 @@ public class DNode
         string spaces = "                                                ";
         /* The tree */ /*TODO: Make genral to statement */
         string tree = "   ";
-        tree ~= resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+
+        if(cast(Entity)entity)
+        {
+            tree ~= resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        }
+        else if(cast(VariableAssignment)entity)
+        {
+            VariableAssignment varAssign = cast(VariableAssignment)entity;
+            Variable variable = varAssign.getVariable();
+            tree ~= resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)variable)~":"~entity.toString();
+        }
+        else
+        {
+            tree ~= entity.toString();
+        }
 
         tree ~= "\n";
         c++;
@@ -188,7 +202,7 @@ public class DNodeGenerator
         */
         if(cast(NumberLiteral)exp)
         {
-            return null;
+            return new DNode(this, exp);
         }
         /**
         * Binary operator
@@ -294,9 +308,14 @@ public class DNodeGenerator
                     /* (TODO) Process the assignment */
                     VariableAssignment varAssign = variable.getAssignment();
 
+                    gprintln(varAssign.getExpression());
+
                     DNode expression = expressionPass(varAssign.getExpression());
 
+                    variableDNode.needs(expression);
+
                     gprintln(varAssign);
+                    gprintln(variable);
                 }
 
                 /* Set as visited */
