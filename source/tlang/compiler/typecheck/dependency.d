@@ -25,11 +25,11 @@ import compiler.symbols.typing.builtins;
 public class DNode
 {
     /* The Statement to be initialized */
-    private Statement entity;
+    protected Statement entity;
 
 
-    private DNodeGenerator dnodegen;
-    private Resolver resolver;
+    protected DNodeGenerator dnodegen;
+    protected Resolver resolver;
 
     private bool visited;
     private bool complete;
@@ -88,6 +88,18 @@ public class DNode
 
     public static ulong c = 0;
 
+
+    /**
+    * Should be overriden or have something set
+    * inherited variable, this should make the
+    * implementation of `print()` a lot more
+    * cleaner
+    */
+    private string getName()
+    {
+        return "";
+    }
+
     public string print()
     {
         string spaces = "                                                ";
@@ -96,7 +108,7 @@ public class DNode
 
         if(cast(Entity)entity)
         {
-            tree ~= resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+            tree ~= getName();
         }
         else if(cast(VariableAssignment)entity)
         {
@@ -326,7 +338,7 @@ public class DNodeGenerator
         return moduleDNode;
     }
 
-    import compiler.typecheck.classStaticDep;
+    import compiler.typecheck.classes.classStaticDep;
     private ClassStaticNode poolClassStatic(Clazz clazz)
     {
         /* Sanity check */
