@@ -97,7 +97,7 @@ public class DNode
     */
     private string getName()
     {
-        return "";
+        return resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
     }
 
     public string print()
