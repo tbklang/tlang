@@ -1,0 +1,29 @@
+module compiler.typecheck.variables;
+
+import compiler.typecheck.dependency;
+import compiler.symbols.data;
+
+/**
+* This module holds types related to variable declarations
+* at the module-level, class-level (static and instance)
+* and struct-level
+*/
+
+public class VariableNode : DNode
+{
+    private Variable variable;
+
+    this(DNodeGenerator dnodegen, Variable variable)
+    {
+        super(dnodegen, variable);
+
+        this.variable = variable;
+
+        initName();
+    }
+
+    private void initName()
+    {
+        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+    }
+}
