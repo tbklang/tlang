@@ -258,6 +258,32 @@ public class DNodeGenerator
         return dnode;
     }
 
+
+    import compiler.typecheck.variables;
+    private ModuleVariableDeclaration pool_module_vardec(Variable entity)
+    {
+        foreach(DNode dnode; nodePool)
+        {
+            if(dnode.getEntity() == entity)
+            {
+                return cast(ModuleVariableDeclaration)dnode;
+            }
+        }
+
+        /**
+        * If no DNode is found that is associated with
+        * the provided Entity then create a new one and
+        * pool it
+        */
+        ModuleVariableDeclaration newDNode = new ModuleVariableDeclaration(this, entity);
+        nodePool ~= newDNode;
+
+        return newDNode;
+    }
+
+
+
+
     private DNode modulePass(Module modulle)
     {
         /* Get a DNode for the Module */
@@ -292,7 +318,7 @@ public class DNodeGenerator
                 Variable variable = cast(Variable)entity;
                 Type variableType = tc.getType(modulle, variable.getType());
                 assert(variableType); /* TODO: Handle invalid variable type */
-                DNode variableDNode = pool(variable);
+                DNode variableDNode = pool_module_vardec(variable);
 
                 /* Basic type */
                 if(cast(Primitive)variableType)

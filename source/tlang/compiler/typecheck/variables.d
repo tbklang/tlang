@@ -27,3 +27,33 @@ public class VariableNode : DNode
         name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
     }
 }
+
+public class ModuleVariableDeclaration : VariableNode
+{
+    this(DNodeGenerator dnodegen, Variable variable)
+    {
+        super(dnodegen, variable);
+
+        initName();
+    }
+
+    private void initName()
+    {
+        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+    }
+}
+
+public class StaticVariableDeclaration : VariableNode
+{
+    this(DNodeGenerator dnodegen, Variable variable)
+    {
+        super(dnodegen, variable);
+
+        initName();
+    }
+
+    private void initName()
+    {
+        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+    }
+}
