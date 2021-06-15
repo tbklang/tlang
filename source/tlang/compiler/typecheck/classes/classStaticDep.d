@@ -1,4 +1,4 @@
-module compiler.typecheck.classStaticDep;
+module compiler.typecheck.classes.classStaticDep;
 
 import compiler.symbols.check;
 import compiler.symbols.data;
@@ -16,8 +16,14 @@ import compiler.typecheck.dependency;
 
 public class ClassStaticNode : DNode
 {
+
     this(DNodeGenerator dnodegen, Clazz entity)
     {
         super(dnodegen, entity);
+    }
+
+    public string getName()
+    {
+        return resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
     }
 }
