@@ -26,4 +26,5 @@ class C
 {
     static int j = 1+1+k;
     static int k;
+    int p;
 }
