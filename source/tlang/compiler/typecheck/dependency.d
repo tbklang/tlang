@@ -203,6 +203,35 @@ public class DNodeGenerator
         return newDNode;
     }
 
+    private DNode variablePass(Variable variable, InitScope context)
+    {
+        /* TODO: We should do all variable processing once in here */
+
+        /**
+        * If the variable is static then it can only access static
+        * entities
+        */
+        if(context == InitScope.STATIC)
+        {
+
+        }
+        /**
+        * If it is virtual
+        */
+        else if(context == InitScope.VIRTUAL)
+        {
+
+        }
+        else
+        {
+            /* This should neve rhappen */
+            assert(false);
+        }
+
+
+        return null;
+    }
+
     private DNode expressionPass(Expression exp)
     {
         DNode dnode;
@@ -222,7 +251,8 @@ public class DNodeGenerator
         */
         else if(cast(VariableExpression)exp)
         {
-            
+            /* TODO: Figure out where the variable lies */
+
         }
         /**
         * Binary operator
@@ -318,6 +348,8 @@ public class DNodeGenerator
                 Type variableType = tc.getType(modulle, variable.getType());
                 assert(variableType); /* TODO: Handle invalid variable type */
                 DNode variableDNode = pool_module_vardec(variable);
+
+                variablePass(variable, InitScope.STATIC);
 
                 /* Basic type */
                 if(cast(Primitive)variableType)
