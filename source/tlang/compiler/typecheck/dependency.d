@@ -176,6 +176,53 @@ public class DNodeGenerator
         return newDNode;
     }
 
+    private DNode expressionPass(Expression exp)
+    {
+        DNode dnode;
+
+        gprintln("expressionPass(Exp): Processing "~exp.toString(), DebugType.WARNING);
+
+
+        /**
+        * Number literal
+        */
+        if(cast(NumberLiteral)exp)
+        {
+            return null;
+        }
+        /**
+        * Binary operator
+        */
+        else if(cast(BinaryOperatorExpression)exp)
+        {
+            /* Get the binary operator expression */
+            BinaryOperatorExpression binOp = cast(BinaryOperatorExpression)exp;
+            dnode = new DNode(this, exp);
+
+            /* Process left and right */
+            DNode leftNode = expressionPass(binOp.getLeftExpression());
+            DNode rightNode = expressionPass(binOp.getRightExpression());
+
+            /* Require the evaluation of these */
+            /* TODO: Add specific DNode type dependent on the type of operator */
+            dnode.needs(leftNode);
+            dnode.needs(rightNode);
+        }
+        else
+        {
+            dnode = new DNode(this, exp);
+
+
+
+            // dnode.needs()
+        }
+        
+
+
+
+        return dnode;
+    }
+
     private DNode modulePass(Module modulle)
     {
         /* Get a DNode for the Module */
@@ -245,6 +292,11 @@ public class DNodeGenerator
                 if(variable.getAssignment())
                 {
                     /* (TODO) Process the assignment */
+                    VariableAssignment varAssign = variable.getAssignment();
+
+                    DNode expression = expressionPass(varAssign.getExpression());
+
+                    gprintln(varAssign);
                 }
 
                 /* Set as visited */
