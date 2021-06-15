@@ -2,7 +2,7 @@ module typeChecking2;
 
 A aInstance;
 B bInstance;
-int p;
+int p = 1;
 int k =1+p+l;
 
 class A

@@ -114,17 +114,9 @@ public class DNode
         /* The tree */ /*TODO: Make genral to statement */
         string tree = "   ";
 
-        gprintln("dfdsaffdsfdsfds");
-
-        if(cast(Entity)entity)
+        if(cast(Entity)entity || cast(VariableAssignment)entity)
         {
             tree ~= name;
-        }
-        else if(cast(VariableAssignment)entity)
-        {
-            VariableAssignment varAssign = cast(VariableAssignment)entity;
-            Variable variable = varAssign.getVariable();
-            tree ~= resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)variable)~":"~entity.toString();
         }
         else
         {
@@ -358,7 +350,10 @@ public class DNodeGenerator
 
                     DNode expression = expressionPass(varAssign.getExpression());
 
-                    variableDNode.needs(expression);
+                    VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
+                    varAssignNode.needs(expression);
+
+                    variableDNode.needs(varAssignNode);
                 }
 
                 /* Set as visited */

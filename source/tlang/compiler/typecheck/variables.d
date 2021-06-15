@@ -57,3 +57,25 @@ public class StaticVariableDeclaration : VariableNode
         name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
     }
 }
+
+public class VariableAssignmentNode : DNode
+{
+    private VariableAssignment variableAssignment;
+
+    this(DNodeGenerator dnodegen, VariableAssignment variableAssignment)
+    {
+        super(dnodegen, variableAssignment);
+
+        this.variableAssignment = variableAssignment;
+
+        initName();
+    }
+
+    private void initName()
+    {
+        /* get the associated variable */
+        Variable associatedVariable = variableAssignment.getVariable();
+
+        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), associatedVariable)~" (assignment)";
+    }
+}
