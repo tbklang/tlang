@@ -250,12 +250,32 @@ public class DNodeGenerator
     
     import compiler.typecheck.expression;
     import compiler.typecheck.classes.classObject;
+    import compiler.typecheck.classes.classVirtualInit;
+
+    /* TODO: As mentioned in classObject.d we should static init the class type here */
+    private ClassVirtualInit virtualInit(Clazz clazz)
+    {
+        /* TODO: Pass over variables but we need own pool as instance variable a, must be unique per object */
+        
+        /* TODO: COnstructor dependency, implicit super, climb class virtual hierachy */
+
+        /* TODO: Constructor run remainders */
+
+        /* TODO: Init classes, vars (check order) */
+
+
+
+        return null;
+    }
 
     private ObjectInitializationNode objectInitialize(Clazz clazz, NewExpression newExpression)
     {
         /* We don't pool anything here - a constructor call is unique */
         
         ObjectInitializationNode node = new ObjectInitializationNode(this, clazz, newExpression);
+
+
+        /* TODO: Call a virtual pass over the class */
 
         return node;
     }
