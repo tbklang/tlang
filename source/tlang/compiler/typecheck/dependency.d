@@ -27,6 +27,7 @@ public class DNode
     /* The Statement to be initialized */
     protected Statement entity;
 
+    protected string name;
 
     protected DNodeGenerator dnodegen;
     protected Resolver resolver;
@@ -40,6 +41,8 @@ public class DNode
         this.entity = entity;
         this.dnodegen = dnodegen;
         this.resolver = dnodegen.resolver;
+
+        initName();
     }
 
     public void needs(DNode dependency)
@@ -89,15 +92,20 @@ public class DNode
     public static ulong c = 0;
 
 
+    public final string getName()
+    {
+        return name;
+    }
+
     /**
     * Should be overriden or have something set
     * inherited variable, this should make the
     * implementation of `print()` a lot more
     * cleaner
     */
-    private string getName()
+    private void initName()
     {
-        return resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        name = "bruh";
     }
 
     public string print()
@@ -106,9 +114,11 @@ public class DNode
         /* The tree */ /*TODO: Make genral to statement */
         string tree = "   ";
 
+        gprintln("dfdsaffdsfdsfds");
+
         if(cast(Entity)entity)
         {
-            tree ~= getName();
+            tree ~= name;
         }
         else if(cast(VariableAssignment)entity)
         {
@@ -175,10 +185,9 @@ public class DNodeGenerator
 
         /* Recurse downwards */
         DNode moduleDNode = modulePass(modulle);
-        root = moduleDNode;
 
         /* Print tree */
-       gprintln("\n"~moduleDNode.print());
+        gprintln("\n"~moduleDNode.print());
     }
 
     private DNode pool(Statement entity)
@@ -253,6 +262,7 @@ public class DNodeGenerator
     {
         /* Get a DNode for the Module */
         DNode moduleDNode = pool(modulle);
+        root = moduleDNode;
 
         /**
         * Get the Entities

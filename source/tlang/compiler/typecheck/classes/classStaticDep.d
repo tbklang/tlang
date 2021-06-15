@@ -20,10 +20,12 @@ public class ClassStaticNode : DNode
     this(DNodeGenerator dnodegen, Clazz entity)
     {
         super(dnodegen, entity);
+
+        initName();
     }
 
-    public string getName()
+    private void initName()
     {
-        return resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);   
     }
 }
