@@ -37,10 +37,14 @@ public class UnaryOperatorExpression : OperatorExpression
 
 public class BinaryOperatorExpression : OperatorExpression
 {
+    private Expression lhs, rhs;
+
     /* TODO: Take in operator */
     this(SymbolType operator, Expression lhs, Expression rhs)
     {
         super(operator);
+        this.lhs = lhs;
+        this.rhs = rhs;
     }
 }
 
