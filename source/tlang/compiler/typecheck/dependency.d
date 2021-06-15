@@ -302,6 +302,9 @@ public class DNodeGenerator
                     dnode.needs(classDependency);
 
                     /* TODO: Process object initialization */
+                    ObjectInitializationNode objectDependency = classPassVirtual(NewExpression);
+                    dnode.needs(objectDependency);
+
                     /* TODO: Process function call argument */
                 }
                 else
