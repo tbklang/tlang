@@ -423,7 +423,7 @@ public class DNodeGenerator
                 Variable variable = cast(Variable)entity;
                 Type variableType = tc.getType(modulle, variable.getType());
                 assert(variableType); /* TODO: Handle invalid variable type */
-                DNode variableDNode = pool_module_vardec(variable);
+                DNode variableDNode = poolT!(ModuleVariableDeclaration, Variable)(variable);
 
                 /* Basic type */
                 if(cast(Primitive)variableType)
@@ -583,7 +583,7 @@ public class DNodeGenerator
                     Type variableType = tc.getType(clazz, variable.getType());
                     gprintln(variable.getType());
                     assert(variableType); /* TODO: Handle invalid variable type */
-                    DNode variableDNode = pool(variable);
+                    DNode variableDNode = poolT!(StaticVariableDeclaration, Variable)(variable);
 
                     /* Basic type */
                     if(cast(Primitive)variableType)
