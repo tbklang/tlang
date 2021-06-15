@@ -46,6 +46,16 @@ public class BinaryOperatorExpression : OperatorExpression
         this.lhs = lhs;
         this.rhs = rhs;
     }
+
+    public Expression getLeftExpression()
+    {
+        return lhs;
+    }
+
+    public Expression getRightExpression()
+    {
+        return rhs;
+    }
 }
 
 public class NumberLiteral : Expression
