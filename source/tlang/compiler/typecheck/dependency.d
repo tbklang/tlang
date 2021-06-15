@@ -203,9 +203,54 @@ public class DNodeGenerator
         return newDNode;
     }
 
-    
+    /**
+    * Templatised pooling mechanism
+    *
+    * Give the node type and entity type (required as not all take in Statement)
+    */
+    private DNodeType poolT(DNodeType, EntityType)(EntityType entity)
+    {
+        foreach(DNode dnode; nodePool)
+        {
+            if(dnode.getEntity() == entity)
+            {
+                return cast(DNodeType)dnode;
+            }
+        }
 
-    private DNode expressionPass(Expression exp, InitScope context)
+        /**
+        * If no DNode is found that is associated with
+        * the provided Entity then create a new one and
+        * pool it
+        */
+        DNodeType newDNode = new DNodeType(this, entity);
+        nodePool ~= newDNode;
+
+        return newDNode;
+    }
+
+
+    /**
+    * Passed around
+    *
+    * 1. Contains containership (some Statements are not contained) so we need to track this
+    * 2. InitScope, STATIC or VIRTUAL permission
+    */
+    private final class Context
+    {
+        InitScope initScope;
+        Container container;
+
+        this(Container container, InitScope initScope)
+        {
+            this.initScope = initScope;
+            this.container = container;
+        }
+    }
+    
+    import compiler.typecheck.expression;
+
+    private DNode expressionPass(Expression exp, Context context)
     {
         DNode dnode;
 
@@ -219,6 +264,59 @@ public class DNodeGenerator
         if(cast(NumberLiteral)exp)
         {
             return new DNode(this, exp);
+        }
+        /**
+        * Function calls (and struct constrctors)
+        */
+        else if (cast(FunctionCall)exp)
+        {
+
+        }
+        /**
+        * `new A()` expression
+        */
+        else if(cast(NewExpression)exp)
+        {
+            /* The NewExpression */
+            NewExpression newExpression = cast(NewExpression)exp;
+            dnode = poolT!(ExpressionDNode, NewExpression)(newExpression);
+
+            /* Get the FunctionCall */
+            FunctionCall constructorCall = newExpression.getFuncCall();
+
+            /* Get the name of the class the function call referes to */
+            string className = constructorCall.getName();
+            Type type = tc.getType(context.container, className);
+
+            if(type)
+            {
+                Clazz clazz = cast(Clazz)type;
+
+                if(clazz)
+                {
+                    /* TODO: Process class static initialization */
+                    /* Get the static class dependency */
+                    ClassStaticNode classDependency = classPassStatic(clazz);
+
+                    /* Make this expression depend on static initalization of the class */
+                    dnode.needs(classDependency);
+
+                    /* TODO: Process object initialization */
+                    /* TODO: Process function call argument */
+                }
+                else
+                {
+                    Parser.expect("Only class-type may be used with `new`");
+                    assert(false);
+                }
+                gprintln("Poe naais");
+            }
+            else
+            {
+                Parser.expect("Invalid ryp");
+                assert(false);
+            }
+            // FunctionCall 
         }
         /**
         * Variable expression
@@ -366,7 +464,7 @@ public class DNodeGenerator
                     /* (TODO) Process the assignment */
                     VariableAssignment varAssign = variable.getAssignment();
 
-                    DNode expression = expressionPass(varAssign.getExpression(), InitScope.STATIC);
+                    DNode expression = expressionPass(varAssign.getExpression(), new Context(modulle, InitScope.STATIC));
 
                     VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
                     varAssignNode.needs(expression);

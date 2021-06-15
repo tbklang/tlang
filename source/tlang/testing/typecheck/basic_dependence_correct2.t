@@ -5,6 +5,7 @@ B bInstance;
 int p = p+p*2;
 int k =1+p+l;
 int o = new A().l.p.p;
+int o1 = new C().lplplp.p.p;
 
 class A
 {
@@ -19,4 +20,9 @@ class B
 {
     static int jStatic;
     static A aInstanceStatic;
+}
+
+class C
+{
+    static int j;
 }
