@@ -218,6 +218,13 @@ public class DNodeGenerator
             return new DNode(this, exp);
         }
         /**
+        * Variable expression
+        */
+        else if(cast(VariableExpression)exp)
+        {
+            
+        }
+        /**
         * Binary operator
         */
         else if(cast(BinaryOperatorExpression)exp)
@@ -342,6 +349,9 @@ public class DNodeGenerator
                 /* Set this variable as a dependency of this module */
                 moduleDNode.needs(variableDNode);
 
+                /* Set as visited */
+                variableDNode.markVisited();
+
                 /* If there is an assignment attached to this */
                 if(variable.getAssignment())
                 {
@@ -356,8 +366,7 @@ public class DNodeGenerator
                     variableDNode.needs(varAssignNode);
                 }
 
-                /* Set as visited */
-                variableDNode.markVisited();
+                
             }
         }
 
