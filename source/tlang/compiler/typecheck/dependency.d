@@ -203,41 +203,15 @@ public class DNodeGenerator
         return newDNode;
     }
 
-    private DNode variablePass(Variable variable, InitScope context)
-    {
-        /* TODO: We should do all variable processing once in here */
+    
 
-        /**
-        * If the variable is static then it can only access static
-        * entities
-        */
-        if(context == InitScope.STATIC)
-        {
-
-        }
-        /**
-        * If it is virtual
-        */
-        else if(context == InitScope.VIRTUAL)
-        {
-
-        }
-        else
-        {
-            /* This should neve rhappen */
-            assert(false);
-        }
-
-
-        return null;
-    }
-
-    private DNode expressionPass(Expression exp)
+    private DNode expressionPass(Expression exp, InitScope context)
     {
         DNode dnode;
 
         gprintln("expressionPass(Exp): Processing "~exp.toString(), DebugType.WARNING);
 
+        /* TODO: Add pooling */
 
         /**
         * Number literal
@@ -253,6 +227,10 @@ public class DNodeGenerator
         {
             /* TODO: Figure out where the variable lies */
 
+            /* TODO: Change this later */
+            return new DNode(this, exp);
+
+
         }
         /**
         * Binary operator
@@ -264,8 +242,8 @@ public class DNodeGenerator
             dnode = new DNode(this, exp);
 
             /* Process left and right */
-            DNode leftNode = expressionPass(binOp.getLeftExpression());
-            DNode rightNode = expressionPass(binOp.getRightExpression());
+            DNode leftNode = expressionPass(binOp.getLeftExpression(), context);
+            DNode rightNode = expressionPass(binOp.getRightExpression(), context);
 
             /* Require the evaluation of these */
             /* TODO: Add specific DNode type dependent on the type of operator */
@@ -349,8 +327,6 @@ public class DNodeGenerator
                 assert(variableType); /* TODO: Handle invalid variable type */
                 DNode variableDNode = pool_module_vardec(variable);
 
-                variablePass(variable, InitScope.STATIC);
-
                 /* Basic type */
                 if(cast(Primitive)variableType)
                 {
@@ -390,7 +366,7 @@ public class DNodeGenerator
                     /* (TODO) Process the assignment */
                     VariableAssignment varAssign = variable.getAssignment();
 
-                    DNode expression = expressionPass(varAssign.getExpression());
+                    DNode expression = expressionPass(varAssign.getExpression(), InitScope.STATIC);
 
                     VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
                     varAssignNode.needs(expression);

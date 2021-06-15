@@ -2,8 +2,9 @@ module typeChecking2;
 
 A aInstance;
 B bInstance;
-int p = 1;
+int p = p+p*2;
 int k =1+p+l;
+int o = new A().l;
 
 class A
 {
