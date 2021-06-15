@@ -4,7 +4,7 @@ A aInstance;
 B bInstance;
 int p = p+p*2;
 int k =1+p+l;
-int o = new A().l;
+int o = new A().l.p.p;
 
 class A
 {

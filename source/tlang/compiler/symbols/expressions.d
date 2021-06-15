@@ -87,3 +87,18 @@ public class Expression : Statement
 
     /* TODO: Evalute this expression's type */
 }
+
+public final class NewExpression : Expression
+{
+    private FunctionCall funcCall;
+
+    this(FunctionCall funcCall)
+    {
+        this.funcCall = funcCall;
+    }
+
+    public FunctionCall getFuncCall()
+    {
+        return funcCall;
+    }
+}

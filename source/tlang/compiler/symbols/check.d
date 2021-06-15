@@ -44,6 +44,7 @@ public enum SymbolType
     CASE,
     GOTO,
     DO,
+    DOT,
     DELETE,
     STRUCT,
     UNKNOWN
@@ -369,6 +370,12 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.TILDE;
     }
+    /* Dot operator check */
+    else if (token[0] == '.')
+    {
+        return SymbolType.DOT;
+    }
+    
     
     
     

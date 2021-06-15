@@ -995,14 +995,15 @@ public final class Parser
                 nextToken();
 
 
-                Expression toAdd;
+                NewExpression toAdd;
+                FunctionCall functionCallPart;
 
                 /* If the symbol is `(` then function call */
                 if (getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
                 {
                     /* TODO: Implement function call parsing */
                     previousToken();
-                    toAdd = parseFuncCall();
+                    functionCallPart = parseFuncCall();
                 }
                 /* If not an `(` */
                 else
@@ -1011,9 +1012,27 @@ public final class Parser
                     expect(SymbolType.LBRACE, getCurrentToken());
                 }
 
+                /* Create a NewExpression with the associated FunctionCall */
+                toAdd = new NewExpression(functionCallPart);
+
                 /* Add the expression */
                 addRetExp(toAdd);
+            }
+            /* TODO: New addition (UNTESTED, remove if problem causer) */
+            else if(symbol == SymbolType.DOT)
+            {
+                /* Pop the previous expression */
+                Expression previousExpression = removeExp();
 
+                /* TODO: Get next expression */
+                nextToken();
+                Expression item = parseExpression();
+
+                /* TODO: Construct accessor expression from both and addRetExp */
+
+                BinaryOperatorExpression binOp = new BinaryOperatorExpression(SymbolType.DOT, previousExpression, item);
+
+                addRetExp(binOp);
             }
             else
             {
@@ -1324,7 +1343,7 @@ public final class Parser
         gprintln("parseStatement(): Leave", DebugType.WARNING);
     }
 
-    private Expression parseFuncCall()
+    private FunctionCall parseFuncCall()
     {
         gprintln("parseFuncCall(): Enter", DebugType.WARNING);
 
