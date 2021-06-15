@@ -356,14 +356,9 @@ public class DNodeGenerator
                     /* (TODO) Process the assignment */
                     VariableAssignment varAssign = variable.getAssignment();
 
-                    gprintln(varAssign.getExpression());
-
                     DNode expression = expressionPass(varAssign.getExpression());
 
                     variableDNode.needs(expression);
-
-                    gprintln(varAssign);
-                    gprintln(variable);
                 }
 
                 /* Set as visited */
