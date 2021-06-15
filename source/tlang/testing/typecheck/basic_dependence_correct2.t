@@ -24,5 +24,6 @@ class B
 
 class C
 {
-    static int j;
+    static int j = 1+1+k;
+    static int k;
 }
