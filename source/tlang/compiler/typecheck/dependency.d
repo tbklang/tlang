@@ -249,6 +249,16 @@ public class DNodeGenerator
     }
     
     import compiler.typecheck.expression;
+    import compiler.typecheck.classes.classObject;
+
+    private ObjectInitializationNode objectInitialize(Clazz clazz, NewExpression newExpression)
+    {
+        /* We don't pool anything here - a constructor call is unique */
+        
+        ObjectInitializationNode node = new ObjectInitializationNode(this, clazz, newExpression);
+
+        return node;
+    }
 
     private DNode expressionPass(Expression exp, Context context)
     {
@@ -302,7 +312,7 @@ public class DNodeGenerator
                     dnode.needs(classDependency);
 
                     /* TODO: Process object initialization */
-                    ObjectInitializationNode objectDependency = classPassVirtual(NewExpression);
+                    ObjectInitializationNode objectDependency = objectInitialize(clazz, newExpression);
                     dnode.needs(objectDependency);
 
                     /* TODO: Process function call argument */
