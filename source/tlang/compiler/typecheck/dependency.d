@@ -237,16 +237,30 @@ public class DNodeGenerator
     *
     * 1. Contains containership (some Statements are not contained) so we need to track this
     * 2. InitScope, STATIC or VIRTUAL permission
+    * 3. `allowUp`, when resolving names in this Context use
+    * resolveBest instead of resolveWithin (stay inside Context solely
+    * don't travel up parents)
     */
     private final class Context
     {
         InitScope initScope;
         Container container;
+        bool allowUp = true;
 
         this(Container container, InitScope initScope)
         {
             this.initScope = initScope;
             this.container = container;
+        }
+
+        public bool isAllowUp()
+        {
+            return allowUp;
+        }
+
+        public void noAllowUp()
+        {
+            allowUp = false;
         }
     }
     
@@ -370,11 +384,21 @@ public class DNodeGenerator
             VariableExpression varExp = cast(VariableExpression)exp;
             string path = varExp.getName();
 
-            /* TODO: We must now */
+            /**
+            * If we can resolve anywhere 
+            */
+            if(context.isAllowUp())
+            {
+                /* TODO: Use normal resolveBest */
+            }
+            /**
+            * Only donwards resolution allowed
+            */
+            else
+            {
+                gprintln("87er78fgy678fyg678g6f8gfyduhgfjfgdjkgfdhjkfgdhjfkgdhgfdjkhgfjkhgfdjkhgfdjkhgfdjkfgdhjkfgdhjkfdghjgkfdhgfdjkhgfdjkhgfdjkhfgdjkhfgd");
 
-            /* TODO: We cannot really get much info about ourselves */
-            /* TODO: How would we look this up */
-            /* TODO: Perhaps the dot operator should be special? */
+            }
 
 
             
@@ -435,8 +459,10 @@ public class DNodeGenerator
 
 
 
-
+                
                 Context objectContext = new Context(clazzContainer, InitScope.VIRTUAL);
+                /* Also, only resolve within */
+                objectContext.noAllowUp();
 
 
                 /**
