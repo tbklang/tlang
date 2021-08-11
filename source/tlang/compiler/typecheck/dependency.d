@@ -391,7 +391,7 @@ public class DNodeGenerator
             string currentName;
 
             /**
-            * If we can resolve anywhere 
+            * If we can resolve anywhere (TODO: Perhaps module level was better
             */
             if(context.isAllowUp())
             {
