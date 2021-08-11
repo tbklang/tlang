@@ -363,6 +363,14 @@ public class DNodeGenerator
             /* TODO: Change this later */
             // return new DNode(this, exp);
 
+            /**
+            * Extract the variable name
+            * I actually forgot how this worked lmao
+            */
+            // VariableEx pression varExp = cast(VariableExpression)exp;
+            // Variable variable = varExp.get
+
+            // gprintln(varExp);
 
         }
         /**
