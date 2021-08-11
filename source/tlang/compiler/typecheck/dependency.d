@@ -262,6 +262,11 @@ public class DNodeGenerator
         {
             allowUp = false;
         }
+
+        public Container getContainer()
+        {
+            return container;
+        }
     }
     
     import compiler.typecheck.expression;
@@ -383,6 +388,38 @@ public class DNodeGenerator
             */
             VariableExpression varExp = cast(VariableExpression)exp;
             string path = varExp.getName();
+            long nearestDot = indexOf(path, ".");
+
+            /**
+            * Current named entity
+            */
+            string nearestName;
+
+            /**
+            * If the `path` has no dots
+            *
+            * Example: `variableX`
+            */
+            if(nearestDot == -1)
+            {
+                /* The name is exactly the path */
+                nearestName = path;
+            }
+            /**
+            * If the `path` has dots
+            *
+            * Example: `container.variableX`
+            */
+            else
+            {
+                /* Get name before the first dot */
+                nearestName = path[0..nearestDot];
+            }
+
+            /* TODO: Process `nearestName` by doing a tc.resolveWithin() */
+
+
+            
 
             /* TODO: SPlit the path up and resolve the shit */
 
@@ -403,7 +440,9 @@ public class DNodeGenerator
             else
             {
                 gprintln("87er78fgy678fyg678g6f8gfyduhgfjfgdjkgfdhjkfgdhjfkgdhgfdjkhgfjkhgfdjkhgfdjkhgfdjkfgdhjkfgdhjkfdghjgkfdhgfdjkhgfdjkhgfdjkhfgdjkhfgd");
-                tc.getResolver().resolveWithin(context.getContainer(), typeString);;
+                Entity entity = tc.getResolver().resolveWithin(context.getContainer(), nearestName);
+
+                /* TODO: If dots remain then make sure cast(Container)entity is non-zero, i.e. is a container, else fail, typecheck error! */
             }
 
 
