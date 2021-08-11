@@ -5,7 +5,7 @@ B bInstance;
 int p = p+p*2;
 int k =1+p+l;
 int o = new A().l.p.p;
-int o1 = new C().lplplp.p.p;
+int o1 = new C().lplplp.p.p2221.p2;
 int o2 = new C().lplplp.p.p;
 
 class A
