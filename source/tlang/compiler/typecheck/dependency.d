@@ -386,6 +386,10 @@ public class DNodeGenerator
 
             /* TODO: SPlit the path up and resolve the shit */
 
+            /* TODO: gte start of path  (TODO)*/
+            /* TODO: Then check that within current context, then we shift context for another call */
+            string currentName;
+
             /**
             * If we can resolve anywhere 
             */
