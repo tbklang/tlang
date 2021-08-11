@@ -384,6 +384,8 @@ public class DNodeGenerator
             VariableExpression varExp = cast(VariableExpression)exp;
             string path = varExp.getName();
 
+            /* TODO: SPlit the path up and resolve the shit */
+
             /**
             * If we can resolve anywhere 
             */
@@ -392,12 +394,12 @@ public class DNodeGenerator
                 /* TODO: Use normal resolveBest */
             }
             /**
-            * Only donwards resolution allowed
+            * Only within resolution allowed
             */
             else
             {
                 gprintln("87er78fgy678fyg678g6f8gfyduhgfjfgdjkgfdhjkfgdhjfkgdhgfdjkhgfjkhgfdjkhgfdjkhgfdjkfgdhjkfgdhjkfdghjgkfdhgfdjkhgfdjkhgfdjkhfgdjkhfgd");
-
+                tc.getResolver().resolveWithin(context.getContainer(), typeString);;
             }
 
 
