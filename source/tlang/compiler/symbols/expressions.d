@@ -22,6 +22,11 @@ public class OperatorExpression : Expression
     {
         this.operator = operator;
     }
+
+    public SymbolType getOperator()
+    {
+        return operator;
+    }
 }
 
 public class UnaryOperatorExpression : OperatorExpression
