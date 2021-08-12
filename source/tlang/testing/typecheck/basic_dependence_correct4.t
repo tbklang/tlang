@@ -7,6 +7,7 @@ int j = 1;
 int k = j;
 int p = p;
 
+C cInstance;
 
 class A
 {
@@ -25,7 +26,7 @@ class B
 
 class C
 {
-    static int j=k;
+    static int j=1;
     static int k;
     int p;
 }
