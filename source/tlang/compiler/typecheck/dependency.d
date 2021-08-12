@@ -431,13 +431,33 @@ public class DNodeGenerator
                     /* FIXME: Below assumes basic variable declarations at module level, fix later */
 
                     /**
-                    * Get the Entity as a Variable 
+                    * Get the Entity as a Variable
                     */
                     Variable variable = cast(Variable)namedEntity;
 
                     if(variable)
                     {
+                        /* Pool the node */
+                        VariableNode varDecNode = poolT!(ModuleVariableDeclaration, Variable)(variable);
 
+                        /**
+                        * Check if the variable being referenced has been
+                        * visited (i.e. declared)
+                        *
+                        * If it has then setup dependency, if not then error
+                        * out
+                        */
+                        if(varDecNode.isVisisted())
+                        {
+                            
+                        }
+                        else
+                        {
+                            Parser.expect("Cannot reference variable that has yet to be declared");
+                        }
+
+
+                        /* Use the Context to make a decision */
                     }
                     else
                     {
@@ -445,10 +465,7 @@ public class DNodeGenerator
                     }
                     
 
-                    /* Make the current expression dnode require our var access dnode */
-                    dnode.needs(accessdnode);
-
-                    gprintln("dd");
+                    
                 }
                 else
                 {
@@ -749,7 +766,7 @@ public class DNodeGenerator
                 moduleDNode.needs(variableDNode);
 
                 /* Set as visited */
-                variableDNode.markVisited();
+                variableDNode.markVisited(); /* TODO: I may want to move this */
 
                 /* If there is an assignment attached to this */
                 if(variable.getAssignment())
