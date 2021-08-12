@@ -396,6 +396,11 @@ public class VariableExpression : IdentExpression
 
         return null;
     }
+
+    public override string toString()
+    {
+        return "[varExp: "~getName()~"]";
+    }
 }
 
 public class Call : IdentExpression
