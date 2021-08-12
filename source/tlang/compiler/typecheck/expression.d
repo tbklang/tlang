@@ -28,7 +28,7 @@ public class ExpressionDNode : DNode
 
     private void initName()
     {
-        name = "[expression]";
+        name = "[expression: "~entity.toString()~"]";
     }
 }
 
