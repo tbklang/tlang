@@ -403,20 +403,6 @@ public class DNodeGenerator
             * If the `path` has no dots
             *
             * Example: `variableX`
-            *
-            * TODO: We can jump around for some things 
-            * This should depend on context, nothing much can go wrong with objects
-            * however with staright up variable accesses those must be ordered (we
-            * should add weighting of like position of node in Parser tree to aid
-            * with this)
-            *
-            * VarienleDNode vs AccessNode
-            * I think we should probs init variables to zero hence dependency
-            * loopiness in terms of hardcoreness can be mitigated?
-            * FIXME: ABove sounds aids
-            *
-            * This should be done when we run through the trtee rather, it is easdier then,
-            * also we can do specific edge-case ordering checks easilier then
             */
             if(nearestDot == -1)
             {
