@@ -449,7 +449,7 @@ public class DNodeGenerator
                         */
                         if(varDecNode.isVisisted())
                         {
-                            
+                            dnode.needs(varDecNode);
                         }
                         else
                         {
@@ -766,7 +766,7 @@ public class DNodeGenerator
                 moduleDNode.needs(variableDNode);
 
                 /* Set as visited */
-                variableDNode.markVisited(); /* TODO: I may want to move this */
+                variableDNode.markVisited();
 
                 /* If there is an assignment attached to this */
                 if(variable.getAssignment())
