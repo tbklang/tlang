@@ -414,6 +414,9 @@ public class DNodeGenerator
             * I think we should probs init variables to zero hence dependency
             * loopiness in terms of hardcoreness can be mitigated?
             * FIXME: ABove sounds aids
+            *
+            * This should be done when we run through the trtee rather, it is easdier then,
+            * also we can do specific edge-case ordering checks easilier then
             */
             if(nearestDot == -1)
             {
@@ -426,21 +429,20 @@ public class DNodeGenerator
                 if(namedEntity)
                 {
                     /* FIXME: Below assumes basic variable declarations at module level, fix later */
-                    
-
-                    /* Pool the node */
-                    /* TODO: We need an accessNode pooling function, the variable is already pooled */
-                    AccessDNode accessdnode = new AccessDNode(this, namedEntity);
 
                     /**
-                    * If the variable being referred to is contained within a Module
-                    * (declared within the module)
+                    * Get the Entity as a Variable 
                     */
-                    if(cast(Module)context.getContainer())
-                    {
-                        
-                    }
+                    Variable variable = cast(Variable)namedEntity;
 
+                    if(variable)
+                    {
+
+                    }
+                    else
+                    {
+                        /* FIXME: We are not handling other cases as of now */    
+                    }
                     
 
                     /* Make the current expression dnode require our var access dnode */
