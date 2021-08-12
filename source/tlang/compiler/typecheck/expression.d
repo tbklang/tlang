@@ -14,7 +14,7 @@ import compiler.symbols.typing.core;
 import compiler.symbols.typing.builtins;
 import compiler.typecheck.dependency;
 
-public final class ExpressionDNode : DNode
+public class ExpressionDNode : DNode
 {
     private Expression expression;
 
@@ -29,5 +29,34 @@ public final class ExpressionDNode : DNode
     private void initName()
     {
         name = "[expression]";
+    }
+}
+
+/**
+* AccessNode
+*
+* An AccessNode represents a accessor call
+* This can be as simple as `a` or `a.a`
+*/
+public class AccessDNode : DNode
+{
+    /**
+    * Construct a new AccessNode given the `entity`
+    * being accessed
+    */
+    this(DNodeGenerator dnodegen, Entity entity)
+    {
+        super(dnodegen, entity);
+        // this.entity = entity;
+
+
+        initName();
+    }
+
+    private void initName()
+    {
+        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        name = "[AccessNode] (Name: "~name~")";
+        
     }
 }

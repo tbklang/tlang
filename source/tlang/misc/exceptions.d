@@ -12,6 +12,6 @@ public class TError : Exception
 
         //super(messageBytes);
 
-        super("");
+        super(message);
     }
 }
