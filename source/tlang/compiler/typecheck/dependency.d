@@ -374,6 +374,11 @@ public class DNodeGenerator
         }
         /**
         * Variable expression
+        *
+        * Example: `p`, `p.p.l`
+        *
+        * First example, `p`, would have expressionNode.needs(AccessNode)
+        * Second example, `p.p.l`, would have expressionNode.needs(AccessNode.needs(AccessNode.needs(AccessNode)))
         */
         else if(cast(VariableExpression)exp)
         {
@@ -384,7 +389,6 @@ public class DNodeGenerator
 
             /**
             * Extract the variable name
-            * I actually forgot how this worked lmao
             */
             VariableExpression varExp = cast(VariableExpression)exp;
             string path = varExp.getName();
@@ -399,11 +403,57 @@ public class DNodeGenerator
             * If the `path` has no dots
             *
             * Example: `variableX`
+            *
+            * TODO: We can jump around for some things 
+            * This should depend on context, nothing much can go wrong with objects
+            * however with staright up variable accesses those must be ordered (we
+            * should add weighting of like position of node in Parser tree to aid
+            * with this)
+            *
+            * VarienleDNode vs AccessNode
+            * I think we should probs init variables to zero hence dependency
+            * loopiness in terms of hardcoreness can be mitigated?
+            * FIXME: ABove sounds aids
             */
             if(nearestDot == -1)
             {
                 /* The name is exactly the path */
                 nearestName = path;
+
+                /* Resolve the Entity */
+                Entity namedEntity = tc.getResolver().resolveWithin(context.getContainer(), nearestName);
+                
+                if(namedEntity)
+                {
+                    /* FIXME: Below assumes basic variable declarations at module level, fix later */
+                    
+
+                    /* Pool the node */
+                    /* TODO: We need an accessNode pooling function, the variable is already pooled */
+                    AccessDNode accessdnode = new AccessDNode(this, namedEntity);
+
+                    /**
+                    * If the variable being referred to is contained within a Module
+                    * (declared within the module)
+                    */
+                    if(cast(Module)context.getContainer())
+                    {
+                        
+                    }
+
+                    
+
+                    /* Make the current expression dnode require our var access dnode */
+                    dnode.needs(accessdnode);
+
+                    gprintln("dd");
+                }
+                else
+                {
+                    Parser.expect("No entity by the name "~nearestName~" exists");
+                }
+
+               
             }
             /**
             * If the `path` has dots
@@ -414,7 +464,33 @@ public class DNodeGenerator
             {
                 /* Get name before the first dot */
                 nearestName = path[0..nearestDot];
+
+                /* Resolve the Entity */
+                Entity namedEntity = tc.getResolver().resolveWithin(context.getContainer(), nearestName);
+
+                /**
+                * If an entity by that name exists
+                */
+                if(namedEntity)
+                {
+                    /* TODO: Reusrse */
+
+
+
+                    /* TODO: Create a DNode for a variable access */
+                }
+                /**
+                * If an entity by that name doesn't exist then
+                * this is a typechecking error and we should
+                * break
+                */
+                else
+                {
+                    Parser.expect("Could not find an entity named "~nearestName);
+                }
             }
+
+            /* TODO:C lean up and mke DNode */
 
             /* TODO: Process `nearestName` by doing a tc.resolveWithin() */
 
