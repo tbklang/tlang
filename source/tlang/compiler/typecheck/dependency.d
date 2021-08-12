@@ -453,7 +453,7 @@ public class DNodeGenerator
                         }
                         else
                         {
-                            Parser.expect("Cannot reference variable that has yet to be declared");
+                            Parser.expect("Cannot reference variable "~nearestName~" as it has not yet been declared");
                         }
 
 
