@@ -6,7 +6,7 @@ B bInstance;
 int j = k;
 int k = j;
 
-
+ 
 class A
 {
     static int pStatic;
