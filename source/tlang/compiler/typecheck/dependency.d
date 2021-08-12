@@ -453,7 +453,7 @@ public class DNodeGenerator
                         }
                         else
                         {
-                            Parser.expect("Cannot reference variable "~nearestName~" as it has not yet been declared");
+                            Parser.expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
                         }
 
 
@@ -469,7 +469,7 @@ public class DNodeGenerator
                 }
                 else
                 {
-                    Parser.expect("No entity by the name "~nearestName~" exists");
+                    Parser.expect("No entity by the name "~nearestName~" exists (at all)");
                 }
 
                
