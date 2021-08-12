@@ -438,7 +438,7 @@ public class DNodeGenerator
                     if(variable)
                     {
                         /* Pool the node */
-                        VariableNode varDecNode = poolT!(ModuleVariableDeclaration, Variable)(variable);
+                        VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
 
                         /**
                         * Check if the variable being referenced has been
