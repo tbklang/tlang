@@ -934,14 +934,32 @@ public class DNodeGenerator
                     /* Set this variable as a dependency of this module */
                     classDNode.needs(variableDNode);
 
+                    /* Set as visited */
+                    variableDNode.markVisited();
+
+
                     /* If there is an assignment attached to this */
                     if(variable.getAssignment())
                     {
                         /* (TODO) Process the assignment */
+
+                        /**
+                        * WARNING I COPIED THIS FROM MODULE INIT AS A TEST I DONT
+                        * KNOW FOR SURE IF IT WILL WORK
+                        *
+                        * !!!!!!!!!!!!!!!!!!!!!!!!
+                        */
+                        VariableAssignment varAssign = variable.getAssignment();
+
+                        DNode expression = expressionPass(varAssign.getExpression(), new Context(clazz, InitScope.STATIC));
+
+                        VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
+                        varAssignNode.needs(expression);
+
+                        variableDNode.needs(varAssignNode);
                     }
 
-                    /* Set as visited */
-                    variableDNode.markVisited();
+                    
                 }
             }
         }
