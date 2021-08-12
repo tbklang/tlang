@@ -5,7 +5,7 @@ B bInstance;
 
 int j = 1;
 int k = j;
-
+int p = p;
  
 class A
 {
