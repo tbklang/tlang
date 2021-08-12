@@ -16,12 +16,9 @@ import compiler.typecheck.dependency;
 
 public class ExpressionDNode : DNode
 {
-    private Expression expression;
-
     this(DNodeGenerator dnodegen, Expression entity)
     {
         super(dnodegen, entity);
-        this.expression = expression;
 
         initName();
     }
