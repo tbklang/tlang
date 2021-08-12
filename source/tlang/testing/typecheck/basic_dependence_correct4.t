@@ -4,8 +4,8 @@ A aInstance;
 B bInstance;
 
 int j = 1;
-int k = j;
-int p = p;
+int k = j+1;
+int p = k+j;
 
 C cInstance;
 
