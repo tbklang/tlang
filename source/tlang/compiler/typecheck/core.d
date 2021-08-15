@@ -99,9 +99,9 @@ public final class TypeChecker
         */
         import compiler.typecheck.dependency;
         DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
-        DNode rootNode = dNodeGenerator.generate();
+        DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
 
-        /* Print the tree (acyclic) */
+        /* Print the tree */
         string tree = rootNode.print();
         gprintln(tree);
 
