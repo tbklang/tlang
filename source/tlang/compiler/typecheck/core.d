@@ -87,8 +87,29 @@ public final class TypeChecker
         /* TODO: Implement me */
         checkClassInherit(modulle);
 
+
+        /**
+        * Dependency tree generation
+        *
+        * Currently this generates a dependency tree
+        * just for the module, the tree must be run
+        * through after wards to make it
+        * non-cyclic
+        *
+        */
         import compiler.typecheck.dependency;
         DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
+        DNode rootNode = dNodeGenerator.generate();
+
+        /* Print the tree (acyclic) */
+        string tree = rootNode.print();
+        gprintln(tree);
+
+        /**
+        * TODO: What's next?
+        *
+        * 1. Fetch the tree from the DNodeGenerator
+        */
 
         /* TODO: Process class ? vars funcs ?*/
 

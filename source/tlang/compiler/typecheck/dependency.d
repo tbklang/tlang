@@ -166,13 +166,13 @@ public class DNodeGenerator
         this.resolver = tc.getResolver();
 
         /* TODO: Make this call in the TypeChecker instance */
-        generate();
+        //generate();
     }
 
     public DNode root;
 
 
-    private void generate()
+    public DNode generate()
     {
         /* Start at the top-level container, the module */
         Module modulle = tc.getModule();
@@ -181,7 +181,9 @@ public class DNodeGenerator
         DNode moduleDNode = modulePass(modulle);
 
         /* Print tree */
-        gprintln("\n"~moduleDNode.print());
+        // gprintln("\n"~moduleDNode.print());
+
+        return moduleDNode;
     }
 
     private DNode pool(Statement entity)
