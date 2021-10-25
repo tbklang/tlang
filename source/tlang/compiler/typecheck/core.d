@@ -105,7 +105,13 @@ public final class TypeChecker
         string tree = rootNode.print();
         gprintln(tree);
 
-        gprintln(rootNode.poes);
+        /* Get the action-list (linearised bottom up graph) */
+        DNode[] actionList = rootNode.poes;
+        gprintln("Action list: "~to!(string)(actionList));
+        foreach(DNode node; actionList)
+        {
+            gprintln("Process: "~to!(string)(node));
+        }
 
         /**
         * TODO: What's next?
