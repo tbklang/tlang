@@ -111,6 +111,21 @@ public final class TypeChecker
         foreach(DNode node; actionList)
         {
             gprintln("Process: "~to!(string)(node));
+
+            /**
+            * Now depending on thr DNode type we should
+            * place ambiguous intems on stack then
+            * move on, let the next process then
+            * pop the stack and then consume it
+            * for checking (typewise we can get 
+            * information out of it), then when
+            * done we should probably pop-the other
+            * guy off and push something that resembles
+            * an emmitable onto a EmitStack
+            */
+
+            /* TODO: typecheck(node) */
+            /* TODO: emit(node) */
         }
 
         /**
