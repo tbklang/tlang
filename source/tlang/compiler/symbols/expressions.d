@@ -72,6 +72,11 @@ public class NumberLiteral : Expression
     {
         this.numberLiteral = numberLiteral;
     }
+
+    public override string toString()
+    {
+        return "[numberLiteral: "~numberLiteral~"]";
+    }
 }
 
 public class Expression : Statement
