@@ -36,6 +36,10 @@ public class DNode
     private bool complete;
     private DNode[] dependencies;
 
+
+
+    public static DNode[] poes;
+
     this(DNodeGenerator dnodegen, Statement entity)
     {
         this.entity = entity;
@@ -132,14 +136,41 @@ public class DNode
             if(!dependancy.isCompleted())
             {
                 dependancy.markCompleted();
+
+               
+
                 tree ~= spaces[0..(c)*3]~dependancy.print();
             }
             
         }
 
         markCompleted();
+
+         /* TODO: I think using `isDone` we can linearise */
+        gprintln("Done/Not-done?: "~to!(string)(isDone));
+
+        if(isDone)
+        {
+            poes ~= this;
+        }
+
         c--;
         return tree;
+    }
+
+    private bool isDone()
+    {
+        bool done = false;
+
+        foreach(DNode dependency; dependencies)
+        {
+            if(!dependency.isCompleted())
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

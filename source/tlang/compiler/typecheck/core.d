@@ -105,6 +105,8 @@ public final class TypeChecker
         string tree = rootNode.print();
         gprintln(tree);
 
+        gprintln(rootNode.poes);
+
         /**
         * TODO: What's next?
         *
