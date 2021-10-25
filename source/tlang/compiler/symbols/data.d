@@ -69,6 +69,32 @@ public class Program
 
 public class Statement
 {
+
+    /* !!!! BEGIN TYPE CHECK ROUTINES AND DATA !!!! */
+    /* TODO: Used for type checking */
+    import compiler.typecheck.dependency ;
+    public DNodeGenerator.Context context;
+    public void setContext(DNodeGenerator.Context context)
+    {
+        this.context = context;
+    }
+
+    public DNodeGenerator.Context getContext()
+    {
+        return context;
+    }
+    /* !!!! END TYPE CHECK ROUTINES AND DATA !!!! */
+
+
+
+
+
+
+
+
+
+
+
     private static ulong rollingCount = 0;
 
     private Container container;
@@ -366,6 +392,9 @@ public class VariableAssignment : Statement
 
 public class IdentExpression : Expression
 {
+    
+
+
     /* name */
     private string name;
 
@@ -378,6 +407,11 @@ public class IdentExpression : Expression
     {
         return name;
     }
+
+    public void updateName(string newName)
+    {
+        name = newName;
+    }
 }
 
 public class VariableExpression : IdentExpression
@@ -387,6 +421,8 @@ public class VariableExpression : IdentExpression
     {
         super(identifier);
     }
+
+
 
     import compiler.typecheck.core;
     public override string evaluateType(TypeChecker typeChecker, Container c)

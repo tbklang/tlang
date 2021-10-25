@@ -274,7 +274,7 @@ public class DNodeGenerator
     * resolveBest instead of resolveWithin (stay inside Context solely
     * don't travel up parents)
     */
-    private final class Context
+    public final class Context
     {
         InitScope initScope;
         Container container;
@@ -424,6 +424,7 @@ public class DNodeGenerator
             * Extract the variable name
             */
             VariableExpression varExp = cast(VariableExpression)exp;
+            
             string path = varExp.getName();
             long nearestDot = indexOf(path, ".");
 
@@ -444,6 +445,18 @@ public class DNodeGenerator
 
                 /* Resolve the Entity */
                 Entity namedEntity = tc.getResolver().resolveWithin(context.getContainer(), nearestName);
+
+
+
+                 /**
+                * NEW CODE!!!! (Added 25th Oct)
+                *
+                * Update name for later typechecking resolution of var
+                * 
+                */
+                varExp.setContext(context);
+
+
                 
                 if(namedEntity)
                 {
@@ -750,6 +763,13 @@ public class DNodeGenerator
             {
                 /* Get the Variable and information */
                 Variable variable = cast(Variable)entity;
+
+                 /* TODO: 25Oct new */
+                Context d = new Context( cast(Container)modulle, InitScope.STATIC);
+                entity.setContext(d);
+                /* TODO: Above 25oct new */
+
+
                 Type variableType = tc.getType(modulle, variable.getType());
                 assert(variableType); /* TODO: Handle invalid variable type */
                 DNode variableDNode = poolT!(ModuleVariableDeclaration, Variable)(variable);

@@ -105,8 +105,91 @@ public final class TypeChecker
         string tree = rootNode.print();
         gprintln(tree);
 
+        /* TODO: Work in progress (NEW!!!) */
         /* Get the action-list (linearised bottom up graph) */
         DNode[] actionList = rootNode.poes;
+        doTypeCheck(actionList);
+
+        
+        
+
+        /**
+        * TODO: What's next?
+        *
+        * 1. Fetch the tree from the DNodeGenerator
+        */
+
+        
+    }
+
+    import compiler.typecheck.dependency;
+    import std.container.slist;
+
+
+    private SList!(Type) typeStack;
+
+    private void addType(Type typeName)
+    {
+        typeStack.insertAfter(typeStack[], typeName);
+    }
+
+    private Type popType()
+    {
+        Type typeCur = typeStack.front();
+        
+        typeStack.removeFront();
+
+        return typeCur;
+    }
+
+    public void typeCheckThing(DNode dnode)
+    {
+        /* ExpressionDNodes */
+        if(cast(compiler.typecheck.expression.ExpressionDNode)dnode)
+        {
+            compiler.typecheck.expression.ExpressionDNode expDNode = cast(compiler.typecheck.expression.ExpressionDNode)dnode;
+
+            Statement statement = expDNode.getEntity();
+            gprintln("Hdfsfdjfds"~to!(string)(statement));
+
+            /* Dependent on the type of Statement */
+
+            if(cast(NumberLiteral)statement)
+            {
+                /* TODO: For now */
+                gprintln("NUMBER LIT");
+                addType(getType(modulle, "int"));
+            }
+            else if(cast(StringExpression)statement)
+            {
+                /* TODO: For now */
+                // gprintln("STRING LIT");
+                // addType(getType(modulle, "int"));
+            }
+            else if(cast(VariableExpression)statement)
+            {
+                auto g  = cast(VariableExpression)statement;
+                auto gVar = cast(TypedEntity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
+                
+                /* TODO: Above TYpedEntity check */
+                /* TODO: still wip the expresison parser */
+
+                /* TODO: TYpe needs ansatz too `.updateName()` call */
+                addType(getType(gVar.getContext().getContainer(), gVar.getType()));
+            }
+        }
+
+    }
+
+    
+    private void doTypeCheck(DNode[] actionList)
+    {
+        /* Resource stack */
+        SList!(DNode) resStack;
+
+        /* Klaar list */
+        /* TODO: Add */
+
         gprintln("Action list: "~to!(string)(actionList));
         foreach(DNode node; actionList)
         {
@@ -121,20 +204,121 @@ public final class TypeChecker
             * information out of it), then when
             * done we should probably pop-the other
             * guy off and push something that resembles
-            * an emmitable onto a EmitStack
+            * an emmitable onto an EmitStack
             */
+
+            /* If ExpressionDNode then ambiguous */
+            if(cast(compiler.typecheck.expression.ExpressionDNode)node)
+            {
+                
+                resStack.insertAfter(resStack[], node);
+            }
+            /* If compiler.typecheck.variables.VariableAssignmentNode then amb */
+            else if(cast(compiler.typecheck.variables.VariableAssignmentNode)node)
+            {
+                resStack.insertAfter(resStack[], node);
+            }
+            /* Non-ambigous ModuleVarDev */
+            else if(cast(compiler.typecheck.variables.ModuleVariableDeclaration)node)
+            {
+                gprintln("fdsfds");
+                /* The stack can be empty */
+                if(resStack.empty)
+                {
+                    /* TODO: Add emit */
+                }
+                /* If not then process */
+                else
+                {
+                    /* Enforce popping two things off */
+                    /* These would be the var ass, + expression(s) */
+                    import std.range : walkLength;
+                    if(walkLength(resStack[]) >= 2)
+                    {
+                        gprintln("ff");
+
+                        while(!resStack.empty)
+                        {
+                            DNode curDNode = resStack.front();
+
+                            if(cast(compiler.typecheck.variables.VariableAssignmentNode)curDNode)
+                            {
+                                resStack.removeFront();
+                                break;
+                            }
+                            else
+                            {
+                                typeCheckThing(curDNode);
+                                resStack.removeFront();
+                            }
+                            
+                        }
+                        
+                        /* Get final type */
+                        Type typeCur = popType();
+
+                        /* Var type */
+                        auto varDNode = cast(compiler.typecheck.variables.ModuleVariableDeclaration)node;
+                        Type varType = getType((cast(Variable)varDNode.getEntity()).getContext().getContainer(), (cast(Variable)varDNode.getEntity()).getType());
+
+                        gprintln("VarAssign Type: "~typeCur.getName());
+                        gprintln("VarDec Type: "~varType.getName());
+                        
+
+                        /* If the variable is a numerical type */
+                        if(varType.classinfo == typeCur.classinfo)
+                        {
+                           /* TODO: Dpeending on type */
+
+                           /* TODO: Incase both are class-types, make sure they are compatible */
+                        }
+                        else
+                        {
+                            Parser.expect("Type mismatch between "~to!(string)(varType.classinfo)~" and "~to!(string)(typeCur.classinfo));
+                        }
+                        
+
+                        // /* Get the VarAssign */
+                        // compiler.typecheck.variables.VariableAssignmentNode varAssign = cast(compiler.typecheck.variables.VariableAssignmentNode)resStack.front();
+
+                        // /* Must be var assign */
+                        // if(varAssign)
+                        // {
+                        //     /* Remove the VarAssign from res-stack */
+                        //     resStack.removeFront();
+
+                        //     /* TODO: Typecheck, structs vars cannot be assigned to */
+
+                        //     /* TODO: Grab all expressions here and do type check */
+                        //     SList!(Expression) varAssignExpressions = cast(SList!(Expression))resStack;
+                        //     foreach(Expression exp; varAssignExpressions)
+                        //     {
+                        //         /* TODO: Add emit (if it makes sense) */
+
+                        //         /* TODO: CHeck expression type (may not have to process) */
+                        //     }
+                        // }
+                        // /* Error, if not VarAssign */
+                        // else
+                        // {
+                        //     Parser.expect("Variable declaration must be followed by assignment");
+                        // }
+
+
+                        /* Make sure VarAssign */
+                        // resStack.front()
+                    }
+                    /* Invalid */
+                    else
+                    {
+                        gprintln("fdsfd");
+                    }
+                }
+            }
 
             /* TODO: typecheck(node) */
             /* TODO: emit(node) */
         }
-
-        /**
-        * TODO: What's next?
-        *
-        * 1. Fetch the tree from the DNodeGenerator
-        */
-
-        
     }
 
     /**

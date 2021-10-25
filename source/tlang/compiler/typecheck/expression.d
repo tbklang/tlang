@@ -29,6 +29,21 @@ public class ExpressionDNode : DNode
     }
 }
 
+// public class LiteralDNode : ExpressionDNode
+// {
+//     this(DNodeGenerator dnodegen, Expression entity)
+//     {
+//         super(dnodegen, entity);
+
+//         // initName();
+//     }
+
+//     private void initName()
+//     {
+//         name = "[literal: "~entity.toString()~"]";
+//     }
+// }
+
 /**
 * AccessNode
 *
