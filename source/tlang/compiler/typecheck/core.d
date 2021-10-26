@@ -254,11 +254,11 @@ public final class TypeChecker
                 *
                 * Retrieve the two Value Instructions
                 *
-                * STACK AFFECT: We could swap these for correct ordering
-                * (FIXME, not urgent but needed)
+                * They would be placed as if they were on stack
+                * hence we need to burger-flip them around (swap)
                 */
-                Instruction vLhsInstr = popInstr();
                 Instruction vRhsInstr = popInstr();
+                Instruction vLhsInstr = popInstr();
                 
                 AddInstr addInst = new AddInstr(vLhsInstr, vRhsInstr);
                 addInstr(addInst);
