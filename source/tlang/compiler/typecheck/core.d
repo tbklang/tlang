@@ -245,6 +245,9 @@ public final class TypeChecker
             // else if(cast()) !!!! Continue here 
             else if(cast(BinaryOperatorExpression)statement)
             {
+                BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
+                SymbolType binOperator = binOpExp.getOperator();
+
                 /**
                 * Typechecking (TODO)
                 */
@@ -260,7 +263,7 @@ public final class TypeChecker
                 Instruction vRhsInstr = popInstr();
                 Instruction vLhsInstr = popInstr();
                 
-                AddInstr addInst = new AddInstr(vLhsInstr, vRhsInstr);
+                BinOpInstr addInst = new BinOpInstr(vLhsInstr, vRhsInstr, binOperator);
                 addInstr(addInst);
             }
         }

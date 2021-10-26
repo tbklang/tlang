@@ -98,21 +98,22 @@ public final class LiteralValue : Value
 }
 
 /**
-* Addition instruction
+* BinOpInstr instruction
 *
-* Type: integers
-* Signedness: unsigned/signed (two's complement)
+* Any sort of Binary Operator
 */
-public class AddInstr : Instruction
+public class BinOpInstr : Instruction
 {
+    import compiler.symbols.data;
     private Instruction lhs;
     private Instruction rhs;
+    private SymbolType operator;
 
-    this(Instruction lhs, Instruction rhs)
+    this(Instruction lhs, Instruction rhs, SymbolType operator)
     {
         this.lhs = lhs;
         this.rhs = rhs;
 
-        addInfo = "LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
+        addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
     }
 }
