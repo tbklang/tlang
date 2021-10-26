@@ -44,7 +44,7 @@ public class VariableAssignmentInstr : Instruction
         this.varName = varName;
         this.data = data;
 
-        addInfo = "assignTo: "~varName;
+        addInfo = "assignTo: "~varName~", valInstr: "~data.toString();
     }
 }
 
