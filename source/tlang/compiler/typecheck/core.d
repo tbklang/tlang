@@ -130,13 +130,24 @@ public final class TypeChecker
 
     public void addInstr(Instruction inst)
     {
+        codeQueue.insert(inst);
+    }
+
+    public void addInstrB(Instruction inst)
+    {
         codeQueue.insertAfter(codeQueue[], inst);
     }
 
     public Instruction popInstr()
     {
-        Instruction poppedInstr = codeQueue.front();
-        codeQueue.removeFront();
+        Instruction poppedInstr;
+
+        if(!codeQueue.empty)
+        {
+            poppedInstr = codeQueue.front();
+            codeQueue.removeFront();
+        }
+        
         return poppedInstr;
     }
     
@@ -253,6 +264,27 @@ public final class TypeChecker
                 addInstr(addInst);
             }
         }
+        /* VariableAssigbmentDNode */
+        else if(cast(compiler.typecheck.variables.VariableAssignmentNode)dnode)
+        {
+            import compiler.typecheck.variables;
+            /* Get the variable's name */
+            string variableName;
+            VariableAssignmentNode varAssignDNode = cast(compiler.typecheck.variables.VariableAssignmentNode)dnode;
+            Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
+            variableName = resolver.generateName(modulle, assignTo);
+
+            /**
+            * Codegen
+            *
+            * 1. Get the variable's name
+            * 2. Pop Value-instruction
+            * 3. Generate VarAssignInstruction with Value-instruction
+            */
+            Instruction valueInstr = popInstr();
+            VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
+            addInstr(varAssInstr);
+        }
 
     }
 
@@ -288,13 +320,14 @@ public final class TypeChecker
             /* If ExpressionDNode then ambiguous */
             if(cast(compiler.typecheck.expression.ExpressionDNode)node)
             {
-                
-                resStack.insertAfter(resStack[], node);
+                typeCheckThing(node);
+                // resStack.insertAfter(resStack[], node);
             }
             /* If compiler.typecheck.variables.VariableAssignmentNode then amb */
             else if(cast(compiler.typecheck.variables.VariableAssignmentNode)node)
             {
-                resStack.insertAfter(resStack[], node);
+                typeCheckThing(node);
+                // resStack.insertAfter(resStack[], node);
             }
             /* Non-ambigous ModuleVarDev */
             else if(cast(compiler.typecheck.variables.ModuleVariableDeclaration)node)
@@ -307,105 +340,41 @@ public final class TypeChecker
                 Variable variablePNode = cast(Variable)node.getEntity();
                 string variableName = resolver.generateName(modulle, variablePNode);
                 VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4);
-                addInstr(varDecInstr);
 
-                /* The stack can be empty */
-                if(resStack.empty)
+                /* Check if there is a VariableAssignmentInstruction */
+                Instruction possibleInstr = popInstr();
+                if(possibleInstr !is null)
                 {
-                    /* TODO: Add emit */
-                }
-                /* If not then process */
-                else
-                {
-                    /* Enforce popping two things off */
-                    /* These would be the var ass, + expression(s) */
-                    import std.range : walkLength;
-                    if(walkLength(resStack[]) >= 2)
+                    VariableAssignmentInstr varAssInstr = cast(VariableAssignmentInstr)possibleInstr;
+                    if(varAssInstr)
                     {
-                        gprintln("ff");
-
-                        while(!resStack.empty)
+                        /* Check if the assignment is to this variable */
+                        if(cmp(varAssInstr.varName, variableName) == 0)
                         {
-                            DNode curDNode = resStack.front();
-
-                            if(cast(compiler.typecheck.variables.VariableAssignmentNode)curDNode)
-                            {
-                                resStack.removeFront();
-                                break;
-                            }
-                            else
-                            {
-                                typeCheckThing(curDNode);
-                                resStack.removeFront();
-                            }
+                            /* If so, re-order (VarDec then VarAssign) */
                             
-                        }
-                        
-                        /* Get final type */
-                        Type typeCur = popType();
-
-                        /* Only one type before previous call should be on type-stack */
-                        //assert(typeStack.empty); 
-
-                        /* Var type */
-                        auto varDNode = cast(compiler.typecheck.variables.ModuleVariableDeclaration)node;
-                        Type varType = getType((cast(Variable)varDNode.getEntity()).getContext().getContainer(), (cast(Variable)varDNode.getEntity()).getType());
-
-                        gprintln("VarAssign Type: "~typeCur.getName());
-                        gprintln("VarDec Type: "~varType.getName());
-                        
-
-                        /* If the variable is a numerical type */
-                        if(varType.classinfo == typeCur.classinfo)
-                        {
-                           /* TODO: Dpeending on type */
-
-                           /* TODO: Incase both are class-types, make sure they are compatible */
+                            addInstrB(varDecInstr);
+                            addInstrB(varAssInstr);
                         }
                         else
                         {
-                            Parser.expect("Type mismatch between "~to!(string)(varType.classinfo)~" and "~to!(string)(typeCur.classinfo));
+                            /* If not, then no re-order */
+                            addInstrB(varAssInstr);
+                            addInstrB(varDecInstr);
                         }
-
-                        /* TODO: Emit var assign */
-                        
-
-                        // /* Get the VarAssign */
-                        // compiler.typecheck.variables.VariableAssignmentNode varAssign = cast(compiler.typecheck.variables.VariableAssignmentNode)resStack.front();
-
-                        // /* Must be var assign */
-                        // if(varAssign)
-                        // {
-                        //     /* Remove the VarAssign from res-stack */
-                        //     resStack.removeFront();
-
-                        //     /* TODO: Typecheck, structs vars cannot be assigned to */
-
-                        //     /* TODO: Grab all expressions here and do type check */
-                        //     SList!(Expression) varAssignExpressions = cast(SList!(Expression))resStack;
-                        //     foreach(Expression exp; varAssignExpressions)
-                        //     {
-                        //         /* TODO: Add emit (if it makes sense) */
-
-                        //         /* TODO: CHeck expression type (may not have to process) */
-                        //     }
-                        // }
-                        // /* Error, if not VarAssign */
-                        // else
-                        // {
-                        //     Parser.expect("Variable declaration must be followed by assignment");
-                        // }
-
-
-                        /* Make sure VarAssign */
-                        // resStack.front()
                     }
-                    /* Invalid */
                     else
                     {
-                        gprintln("fdsfd");
+                        /* Push it back if not a VariableAssignmentInstruction */
+                        
+                        addInstr(possibleInstr);
+                        addInstrB(varDecInstr);
+                        
                     }
                 }
+                
+
+                
 
                 
             }
@@ -413,6 +382,10 @@ public final class TypeChecker
             /* TODO: typecheck(node) */
             /* TODO: emit(node) */
         }
+
+        gprintln("<<<<< FINAL CODE QUEUE >>>>>");
+        /* Print the code queue each time */
+            printCodeQueue();
     }
 
     /**

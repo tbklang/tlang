@@ -32,6 +32,22 @@ public class StorageDeclaratio : Instruction
 
 }
 
+public class VariableAssignmentInstr : Instruction
+{
+    /* Name of variable being declared */
+    public string varName; /*TODO: Might not be needed */
+
+    public Instruction data;
+
+    this(string varName, Instruction data)
+    {
+        this.varName = varName;
+        this.data = data;
+
+        addInfo = "assignTo: "~varName;
+    }
+}
+
 public final class VariableDeclaration : StorageDeclaratio
 {
     /* Name of variable being declared */
@@ -44,6 +60,8 @@ public final class VariableDeclaration : StorageDeclaratio
     {
         this.varName = varName;
         this.length = len;
+
+        addInfo = "varName: "~varName;
     }
 }
 
