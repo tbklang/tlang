@@ -47,6 +47,10 @@ public enum SymbolType
     DOT,
     DELETE,
     STRUCT,
+    SUB,
+    ADD,
+    DIVIDE,
+    STAR,
     UNKNOWN
 }
 
@@ -375,6 +379,27 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.DOT;
     }
+    /* Add `+` operator check  */
+    else if(token[0] == '+')
+    {
+        return SymbolType.ADD;
+    }
+    /* Subtraction `-` operator check  */
+    else if(token[0] == '-')
+    {
+        return SymbolType.SUB;
+    }
+    /* Multiply `*` operator check  */
+    else if(token[0] == '*')
+    {
+        return SymbolType.STAR;
+    }
+    /* Divide `/` operator check  */
+    else if(token[0] == '/')
+    {
+        return SymbolType.DIVIDE;
+    }
+    
     
     
     
