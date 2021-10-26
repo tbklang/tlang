@@ -77,6 +77,8 @@ public final class FetchValueVar : Value
     {
         this.varName = varName;
         this.length = len;
+
+        addInfo = "fetchVarValName: "~varName~", VarLen: "~to!(string)(length);
     }
 }
 
