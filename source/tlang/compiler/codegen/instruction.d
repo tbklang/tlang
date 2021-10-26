@@ -112,5 +112,7 @@ public class AddInstr : Instruction
     {
         this.lhs = lhs;
         this.rhs = rhs;
+
+        addInfo = "LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
     }
 }
