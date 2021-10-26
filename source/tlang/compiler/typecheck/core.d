@@ -125,8 +125,38 @@ public final class TypeChecker
     import compiler.typecheck.dependency;
     import std.container.slist;
 
+    import compiler.codegen.instruction;
+    private SList!(Instruction) codeQueue;
+
+    public void addInstr(Instruction inst)
+    {
+        codeQueue.insertAfter(codeQueue[], inst);
+    }
+
+    public Instruction popInstr()
+    {
+        Instruction poppedInstr = codeQueue.front();
+        codeQueue.removeFront();
+        return poppedInstr;
+    }
+    
+    /*
+    * Prints the current contents of the code-queue
+    */
+    public void printCodeQueue()
+    {
+        import std.range : walkLength;
+        ulong i = 0;
+        foreach(Instruction instruction; codeQueue)
+        {
+            gprintln(to!(string)(i)~"/"~to!(string)(walkLength(codeQueue[]))~": "~instruction.toString());
+            i++;
+        }
+    }
+
 
     private SList!(Type) typeStack;
+
 
     private void addType(Type typeName)
     {
@@ -144,6 +174,8 @@ public final class TypeChecker
 
     public void typeCheckThing(DNode dnode)
     {
+        gprintln("typeCheckThing(): "~dnode.toString());
+
         /* ExpressionDNodes */
         if(cast(compiler.typecheck.expression.ExpressionDNode)dnode)
         {
@@ -157,8 +189,19 @@ public final class TypeChecker
             if(cast(NumberLiteral)statement)
             {
                 /* TODO: For now */
+
+                /**
+                * Typechecking
+                */
                 gprintln("NUMBER LIT");
                 addType(getType(modulle, "int"));
+
+                /**
+                * Codegen
+                */
+                ulong i = to!(ulong)((cast(NumberLiteral)statement).getNumber());
+                LiteralValue litValInstr = new LiteralValue(i, 4);
+                addInstr(litValInstr);
             }
             else if(cast(StringExpression)statement)
             {
@@ -170,12 +213,44 @@ public final class TypeChecker
             {
                 auto g  = cast(VariableExpression)statement;
                 auto gVar = cast(TypedEntity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
+
+                string variableName = resolver.generateName(modulle, gVar);
                 
                 /* TODO: Above TYpedEntity check */
                 /* TODO: still wip the expresison parser */
 
                 /* TODO: TYpe needs ansatz too `.updateName()` call */
                 addType(getType(gVar.getContext().getContainer(), gVar.getType()));
+
+
+                /**
+                * Codegen
+                *
+                * FIXME: Add type info, length
+                */
+                FetchValueVar fVV = new FetchValueVar(variableName, 4);
+                addInstr(fVV);
+            }
+            // else if(cast()) !!!! Continue here 
+            else if(cast(BinaryOperatorExpression)statement)
+            {
+                /**
+                * Typechecking (TODO)
+                */
+
+                /**
+                * Codegen
+                *
+                * Retrieve the two Value Instructions
+                */
+                Instruction vLhsInstr = popInstr();
+
+
+                printCodeQueue();
+                Instruction vRhsInstr = popInstr();
+                
+                AddInstr addInst = new AddInstr(vLhsInstr, vRhsInstr);
+                addInstr(addInst);
             }
         }
 
@@ -194,6 +269,9 @@ public final class TypeChecker
         foreach(DNode node; actionList)
         {
             gprintln("Process: "~to!(string)(node));
+
+            /* Print the code queue each time */
+            printCodeQueue();
 
             /**
             * Now depending on thr DNode type we should
@@ -221,7 +299,16 @@ public final class TypeChecker
             /* Non-ambigous ModuleVarDev */
             else if(cast(compiler.typecheck.variables.ModuleVariableDeclaration)node)
             {
-                gprintln("fdsfds");
+                /**
+                * Codegen
+                *
+                * Emit a variable declaration instruction
+                */
+                Variable variablePNode = cast(Variable)node.getEntity();
+                string variableName = resolver.generateName(modulle, variablePNode);
+                VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4);
+                addInstr(varDecInstr);
+
                 /* The stack can be empty */
                 if(resStack.empty)
                 {
@@ -257,6 +344,9 @@ public final class TypeChecker
                         /* Get final type */
                         Type typeCur = popType();
 
+                        /* Only one type before previous call should be on type-stack */
+                        //assert(typeStack.empty); 
+
                         /* Var type */
                         auto varDNode = cast(compiler.typecheck.variables.ModuleVariableDeclaration)node;
                         Type varType = getType((cast(Variable)varDNode.getEntity()).getContext().getContainer(), (cast(Variable)varDNode.getEntity()).getType());
@@ -276,6 +366,8 @@ public final class TypeChecker
                         {
                             Parser.expect("Type mismatch between "~to!(string)(varType.classinfo)~" and "~to!(string)(typeCur.classinfo));
                         }
+
+                        /* TODO: Emit var assign */
                         
 
                         // /* Get the VarAssign */
@@ -314,6 +406,8 @@ public final class TypeChecker
                         gprintln("fdsfd");
                     }
                 }
+
+                
             }
 
             /* TODO: typecheck(node) */

@@ -61,6 +61,12 @@ public class BinaryOperatorExpression : OperatorExpression
     {
         return rhs;
     }
+
+    public override string toString()
+    {
+        /* TODO: FIll in */
+        return "[BinOpExp: "~"TODO"~"]";
+    }
 }
 
 public class NumberLiteral : Expression
@@ -71,6 +77,11 @@ public class NumberLiteral : Expression
     this(string numberLiteral)
     {
         this.numberLiteral = numberLiteral;
+    }
+
+    public string getNumber()
+    {
+        return numberLiteral;
     }
 
     public override string toString()
