@@ -253,11 +253,11 @@ public final class TypeChecker
                 * Codegen
                 *
                 * Retrieve the two Value Instructions
+                *
+                * STACK AFFECT: We could swap these for correct ordering
+                * (FIXME, not urgent but needed)
                 */
                 Instruction vLhsInstr = popInstr();
-
-
-                printCodeQueue();
                 Instruction vRhsInstr = popInstr();
                 
                 AddInstr addInst = new AddInstr(vLhsInstr, vRhsInstr);
