@@ -1,7 +1,7 @@
 module typeChecking3;
 
 
-
+p=2;
 int p = 21;
 p=2+p;
 int j = 2;
