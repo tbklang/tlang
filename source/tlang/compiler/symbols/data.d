@@ -388,6 +388,11 @@ public class VariableAssignment : Statement
     {
         this.variable = variable;
     }
+
+    public override string toString()
+    {
+        return "[varAssign: To: "~variable.toString()~"]";
+    }
 }
 
 public class IdentExpression : Expression
