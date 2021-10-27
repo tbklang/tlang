@@ -740,12 +740,12 @@ public class DNodeGenerator
         /**
         * Get the Entities
         */
-        Entity[] entities;
+        Statement[] entities;
         foreach(Statement statement; modulle.getStatements())
         {
-            if(!(statement is null) && cast(Entity)statement)
+            if(!(statement is null))// && cast(Entity)statement)
             {
-                entities ~= cast(Entity)statement;
+                entities ~= cast(Statement)statement;
             }
         }
 
@@ -754,8 +754,10 @@ public class DNodeGenerator
         *
         * TODO: Non entities later
         */
-        foreach(Entity entity; entities)
+        foreach(Statement entity; entities)
         {
+            gprintln("modulePass(): Processing entity: "~entity.toString());
+
             /**
             * Variable declarations
             */
@@ -824,6 +826,12 @@ public class DNodeGenerator
                 
             }
         }
+
+
+
+
+
+        
 
         return moduleDNode;
     }

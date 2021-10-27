@@ -220,10 +220,10 @@ public final class Parser
         tokenPtr--;   
     }
 
-    public Assignment parseAssignment()
+    public VariableAssignmentStdAlone parseAssignment()
     {
         /* Generated Assignment statement */
-        Assignment assignment;
+        VariableAssignmentStdAlone assignment;
 
         /* The identifier being assigned to */
         string identifier = getCurrentToken().getToken();
@@ -235,7 +235,7 @@ public final class Parser
         Expression assignmentExpression = parseExpression();
 
 
-        assignment = new Assignment(identifier, assignmentExpression);
+        assignment = new VariableAssignmentStdAlone(identifier, assignmentExpression);
 
         /* TODO: Support for (a=1)? */
         /* Expect a semicolon */

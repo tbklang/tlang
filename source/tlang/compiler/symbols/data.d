@@ -61,6 +61,7 @@ public class Program
         return variables;
     }
 
+    /* TODO: Make this use weights */
     public Statement[] getStatements()
     {
         return statements;
@@ -69,6 +70,8 @@ public class Program
 
 public class Statement
 {
+
+    public byte weight = 0;
 
     /* !!!! BEGIN TYPE CHECK ROUTINES AND DATA !!!! */
     /* TODO: Used for type checking */
@@ -244,6 +247,9 @@ public class Function : TypedEntity
         super(name, returnType);
         this.bodyStatements = bodyStatements;
         this.params = args;
+
+        /* Weighted as 1 */
+        weight = 1;
     }
 
     /**
@@ -364,6 +370,9 @@ public import compiler.symbols.expressions;
 
 
 
+/**
+* TODO: Rename to `VariableDeclarationAssignment`
+*/
 public class VariableAssignment : Statement
 {
     private Expression expression;
@@ -391,9 +400,41 @@ public class VariableAssignment : Statement
 
     public override string toString()
     {
-        return "[varAssign: To: "~variable.toString()~"]";
+        return "[varAssignDec'd: To: "~variable.toString()~"]";
     }
 }
+
+/**
+* TODO: Rename to ``
+*/
+public class VariableAssignmentStdAlone : Statement
+{
+    private Expression expression;
+    private string varName;
+
+    this(string varName, Expression expression)
+    {
+        this.varName = varName;
+        this.expression = expression;
+    }
+
+    public Expression getExpression()
+    {
+        return expression;
+    }
+
+    public string getVariableName()
+    {
+        return varName;
+    }
+
+    public override string toString()
+    {
+        return "[varAssignStdAlone: To: "~varName~"]";
+    }
+}
+
+
 
 public class IdentExpression : Expression
 {

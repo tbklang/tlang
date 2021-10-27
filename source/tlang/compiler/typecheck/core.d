@@ -921,6 +921,22 @@ public final class TypeChecker
 
     }
 
+
+    /**
+    * TODO: Create a version of the below function that possibly
+    * returns the list of Statement[]s ordered like below but
+    * via a weighting system rather
+    */
+    public Statement[] getContainerMembers_W(Container c)
+    {
+        /* Statements */
+        Statement[] statements;
+
+        /* TODO: Implement me */
+
+        return statements;
+    }
+
     /**
     * Returns container members in order of
     * Clazz, Function, Variable
