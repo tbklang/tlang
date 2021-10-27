@@ -160,7 +160,7 @@ public final class TypeChecker
         ulong i = 0;
         foreach(Instruction instruction; codeQueue)
         {
-            gprintln(to!(string)(i)~"/"~to!(string)(walkLength(codeQueue[]))~": "~instruction.toString());
+            gprintln(to!(string)(i+1)~"/"~to!(string)(walkLength(codeQueue[]))~": "~instruction.toString());
             i++;
         }
     }
