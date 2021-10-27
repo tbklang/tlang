@@ -293,6 +293,37 @@ public final class TypeChecker
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
             addInstr(varAssInstr);
         }
+        /* TODO: ANy statement */
+        else if(cast(compiler.typecheck.dependency.DNode)dnode)
+        {
+            /* TODO: Get the STatement */
+            Statement statement = dnode.getEntity();
+
+            gprintln("Poes vavavas");
+
+            /* VariableAssignmentStdAlone */
+            if(cast(VariableAssignmentStdAlone)statement)
+            {
+                VariableAssignmentStdAlone vasa = cast(VariableAssignmentStdAlone)statement;
+                string variableName = vasa.getVariableName();
+
+                /**
+                * Codegen
+                *
+                * 1. Get the variable's name
+                * 2. Pop Value-instruction
+                * 3. Generate VarAssignInstruction with Value-instruction
+                */
+                Instruction valueInstr = popInstr();
+                VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
+                
+
+                VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, valueInstr);
+                addInstrB(vAInstr);
+            }
+        }
+        
+
 
     }
 
@@ -333,6 +364,12 @@ public final class TypeChecker
             }
             /* If compiler.typecheck.variables.VariableAssignmentNode then amb */
             else if(cast(compiler.typecheck.variables.VariableAssignmentNode)node)
+            {
+                typeCheckThing(node);
+                // resStack.insertAfter(resStack[], node);
+            }
+            /* If compiler.typecheck.variables.VariableAssignmentStdAlone then amb */
+            else if(cast(compiler.typecheck.variables.VariableAssignmentStdAlone)node)
             {
                 typeCheckThing(node);
                 // resStack.insertAfter(resStack[], node);
@@ -385,6 +422,11 @@ public final class TypeChecker
                 
 
                 
+            }
+            /* TODO: Remove above smh lmao */
+            else
+            {
+                typeCheckThing(node);
             }
 
             /* TODO: typecheck(node) */
@@ -949,29 +991,38 @@ public final class TypeChecker
         /* Get all classes */
         foreach (Statement statement; c.getStatements())
         {
-            if (statement !is null && cast(Clazz) statement)
+            if (statement !is null && cast(Entity) statement)
             {
-                entities ~= cast(Clazz) statement;
+                entities ~= cast(Entity) statement;
             }
         }
 
-        /* Get all functions */
-        foreach (Statement statement; c.getStatements())
-        {
-            if (statement !is null && cast(Function) statement)
-            {
-                entities ~= cast(Function) statement;
-            }
-        }
+        // /* Get all classes */
+        // foreach (Statement statement; c.getStatements())
+        // {
+        //     if (statement !is null && cast(Clazz) statement)
+        //     {
+        //         entities ~= cast(Clazz) statement;
+        //     }
+        // }
 
-        /* Get all variables */
-        foreach (Statement statement; c.getStatements())
-        {
-            if (statement !is null && cast(Variable) statement)
-            {
-                entities ~= cast(Variable) statement;
-            }
-        }
+        // /* Get all functions */
+        // foreach (Statement statement; c.getStatements())
+        // {
+        //     if (statement !is null && cast(Function) statement)
+        //     {
+        //         entities ~= cast(Function) statement;
+        //     }
+        // }
+
+        // /* Get all variables */
+        // foreach (Statement statement; c.getStatements())
+        // {
+        //     if (statement !is null && cast(Variable) statement)
+        //     {
+        //         entities ~= cast(Variable) statement;
+        //     }
+        // }
 
         return entities;
 

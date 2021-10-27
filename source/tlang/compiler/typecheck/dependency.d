@@ -825,6 +825,38 @@ public class DNodeGenerator
 
                 
             }
+            /**
+            * Variable asignments
+            */
+            else if(cast(VariableAssignmentStdAlone)entity)
+            {
+                VariableAssignmentStdAlone vAsStdAl = cast(VariableAssignmentStdAlone)entity;
+
+                /* TODO: CHeck avriable name even */
+                gprintln("VAGINA");
+                assert(tc.getResolver().resolveWithin(cast(Container)modulle, vAsStdAl.getVariableName()));
+                gprintln("VAGINA");
+                Variable variable = cast(Variable)tc.getResolver().resolveWithin(cast(Container)modulle, vAsStdAl.getVariableName());
+                assert(variable);
+                /* Pool the variable */
+                DNode varDecDNode = pool(variable);
+
+                /* TODO: Make sure a DNode exists (implying it's been declared already) */
+                if(varDecDNode.isVisisted())
+                        {
+                            /* Pool varass stdalone */
+                            DNode vStdAlDNode = pool(vAsStdAl);
+                            moduleDNode.needs(vStdAlDNode);
+
+                         DNode expression = expressionPass(vAsStdAl.getExpression(), new Context(modulle, InitScope.STATIC));
+                         vStdAlDNode.needs(expression);
+                            
+                        }
+                        else
+                        {
+                            Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
+                        }
+            }
         }
 
 

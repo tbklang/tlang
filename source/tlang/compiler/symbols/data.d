@@ -64,7 +64,18 @@ public class Program
     /* TODO: Make this use weights */
     public Statement[] getStatements()
     {
-        return statements;
+        /* Re-ordered by lowest wieght first */
+        Statement[] stmntsRed;
+
+        bool wCmp(Statement lhs, Statement rhs)
+        {
+            return lhs.weight < rhs.weight;
+        }
+        import std.algorithm.sorting;
+        stmntsRed = sort!(wCmp)(statements).release;
+    
+
+        return stmntsRed;
     }
 }
 
@@ -304,6 +315,10 @@ public class Variable : TypedEntity, Emittable
     this(string type, string identifier)
     {
         super(identifier, type);
+
+
+        /* Weighted as 2 */
+        weight = 2;
     }
 
     public void addAssignment(VariableAssignment assignment)
@@ -416,6 +431,9 @@ public class VariableAssignmentStdAlone : Statement
     {
         this.varName = varName;
         this.expression = expression;
+
+        /* Weighted as 2 */
+        weight = 2;
     }
 
     public Expression getExpression()

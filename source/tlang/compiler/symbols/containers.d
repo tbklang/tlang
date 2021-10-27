@@ -35,7 +35,18 @@ public class Module : Entity, Container
 
     public Statement[] getStatements()
     {
-        return statements;
+         /* Re-ordered by lowest wieght first */
+        Statement[] stmntsRed;
+
+        bool wCmp(Statement lhs, Statement rhs)
+        {
+            return lhs.weight < rhs.weight;
+        }
+        import std.algorithm.sorting;
+        stmntsRed = sort!(wCmp)(statements).release;
+    
+
+        return stmntsRed;
     }
 }
 
@@ -62,7 +73,18 @@ public class Struct : Type, Container
 
     public Statement[] getStatements()
     {
-        return statements;
+         /* Re-ordered by lowest wieght first */
+        Statement[] stmntsRed;
+
+        bool wCmp(Statement lhs, Statement rhs)
+        {
+            return lhs.weight < rhs.weight;
+        }
+        import std.algorithm.sorting;
+        stmntsRed = sort!(wCmp)(statements).release;
+    
+
+        return stmntsRed;
     }
 
     this(string name)
@@ -80,6 +102,9 @@ public class Clazz : Type, Container
     this(string name)
     {
         super(name);
+
+        /* Weighted as 0 */
+        weight = 0;
     }
 
     public void addInherit(string[] l)
@@ -109,7 +134,18 @@ public class Clazz : Type, Container
 
     public Statement[] getStatements()
     {
-        return statements;
+         /* Re-ordered by lowest wieght first */
+        Statement[] stmntsRed;
+
+        bool wCmp(Statement lhs, Statement rhs)
+        {
+            return lhs.weight < rhs.weight;
+        }
+        import std.algorithm.sorting;
+        stmntsRed = sort!(wCmp)(statements).release;
+    
+
+        return stmntsRed;
     }
     
 }
