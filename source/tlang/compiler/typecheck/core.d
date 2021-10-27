@@ -151,6 +151,11 @@ public final class TypeChecker
         return poppedInstr;
     }
     
+    public SList!(Instruction) getCodeQueue()
+    {
+        return codeQueue;
+    }
+
     /*
     * Prints the current contents of the code-queue
     */
