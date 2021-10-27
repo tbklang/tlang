@@ -293,6 +293,54 @@ public final class TypeChecker
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
             addInstr(varAssInstr);
         }
+        else if(cast(compiler.typecheck.variables.ModuleVariableDeclaration)dnode)
+        {
+            /**
+            * Codegen
+            *
+            * Emit a variable declaration instruction
+            */
+            Variable variablePNode = cast(Variable)dnode.getEntity();
+            string variableName = resolver.generateName(modulle, variablePNode);
+            VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4);
+
+            /* Check if there is a VariableAssignmentInstruction */
+            Instruction possibleInstr = popInstr();
+            if(possibleInstr !is null)
+            {
+                VariableAssignmentInstr varAssInstr = cast(VariableAssignmentInstr)possibleInstr;
+                if(varAssInstr)
+                {
+                    /* Check if the assignment is to this variable */
+                    if(cmp(varAssInstr.varName, variableName) == 0)
+                    {
+                        /* If so, re-order (VarDec then VarAssign) */
+                        
+                        addInstrB(varDecInstr);
+                        addInstrB(varAssInstr);
+                    }
+                    else
+                    {
+                        /* If not, then no re-order */
+                        addInstrB(varAssInstr);
+                        addInstrB(varDecInstr);
+                    }
+                }
+                else
+                {
+                    /* Push it back if not a VariableAssignmentInstruction */
+                    
+                    addInstr(possibleInstr);
+                    addInstrB(varDecInstr);
+                    
+                }
+            }
+            
+
+            
+
+            
+        }
         /* TODO: ANy statement */
         else if(cast(compiler.typecheck.dependency.DNode)dnode)
         {
@@ -356,78 +404,82 @@ public final class TypeChecker
             * an emmitable onto an EmitStack
             */
 
-            /* If ExpressionDNode then ambiguous */
-            if(cast(compiler.typecheck.expression.ExpressionDNode)node)
-            {
-                typeCheckThing(node);
-                // resStack.insertAfter(resStack[], node);
-            }
-            /* If compiler.typecheck.variables.VariableAssignmentNode then amb */
-            else if(cast(compiler.typecheck.variables.VariableAssignmentNode)node)
-            {
-                typeCheckThing(node);
-                // resStack.insertAfter(resStack[], node);
-            }
-            /* If compiler.typecheck.variables.VariableAssignmentStdAlone then amb */
-            else if(cast(compiler.typecheck.variables.VariableAssignmentStdAlone)node)
-            {
-                typeCheckThing(node);
-                // resStack.insertAfter(resStack[], node);
-            }
+
+            /* will.i.am is a literal cringe */
+            typeCheckThing(node);
+
+            // /* If ExpressionDNode then ambiguous */
+            // if(cast(compiler.typecheck.expression.ExpressionDNode)node)
+            // {
+            //     typeCheckThing(node);
+            //     // resStack.insertAfter(resStack[], node);
+            // }
+            // /* If compiler.typecheck.variables.VariableAssignmentNode then amb */
+            // else if(cast(compiler.typecheck.variables.VariableAssignmentNode)node)
+            // {
+            //     typeCheckThing(node);
+            //     // resStack.insertAfter(resStack[], node);
+            // }
+            // /* If compiler.typecheck.variables.VariableAssignmentStdAlone then amb */
+            // else if(cast(compiler.typecheck.variables.VariableAssignmentStdAlone)node)
+            // {
+            //     typeCheckThing(node);
+            //     // resStack.insertAfter(resStack[], node);
+            // }
             /* Non-ambigous ModuleVarDev */
-            else if(cast(compiler.typecheck.variables.ModuleVariableDeclaration)node)
-            {
-                /**
-                * Codegen
-                *
-                * Emit a variable declaration instruction
-                */
-                Variable variablePNode = cast(Variable)node.getEntity();
-                string variableName = resolver.generateName(modulle, variablePNode);
-                VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4);
+            // else if(cast(compiler.typecheck.variables.ModuleVariableDeclaration)node)
+            // {
+            //     /**
+            //     * Codegen
+            //     *
+            //     * Emit a variable declaration instruction
+            //     */
+            //     Variable variablePNode = cast(Variable)node.getEntity();
+            //     string variableName = resolver.generateName(modulle, variablePNode);
+            //     VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4);
 
-                /* Check if there is a VariableAssignmentInstruction */
-                Instruction possibleInstr = popInstr();
-                if(possibleInstr !is null)
-                {
-                    VariableAssignmentInstr varAssInstr = cast(VariableAssignmentInstr)possibleInstr;
-                    if(varAssInstr)
-                    {
-                        /* Check if the assignment is to this variable */
-                        if(cmp(varAssInstr.varName, variableName) == 0)
-                        {
-                            /* If so, re-order (VarDec then VarAssign) */
+            //     /* Check if there is a VariableAssignmentInstruction */
+            //     Instruction possibleInstr = popInstr();
+            //     if(possibleInstr !is null)
+            //     {
+            //         VariableAssignmentInstr varAssInstr = cast(VariableAssignmentInstr)possibleInstr;
+            //         if(varAssInstr)
+            //         {
+            //             /* Check if the assignment is to this variable */
+            //             if(cmp(varAssInstr.varName, variableName) == 0)
+            //             {
+            //                 /* If so, re-order (VarDec then VarAssign) */
                             
-                            addInstrB(varDecInstr);
-                            addInstrB(varAssInstr);
-                        }
-                        else
-                        {
-                            /* If not, then no re-order */
-                            addInstrB(varAssInstr);
-                            addInstrB(varDecInstr);
-                        }
-                    }
-                    else
-                    {
-                        /* Push it back if not a VariableAssignmentInstruction */
+            //                 addInstrB(varDecInstr);
+            //                 addInstrB(varAssInstr);
+            //             }
+            //             else
+            //             {
+            //                 /* If not, then no re-order */
+            //                 addInstrB(varAssInstr);
+            //                 addInstrB(varDecInstr);
+            //             }
+            //         }
+            //         else
+            //         {
+            //             /* Push it back if not a VariableAssignmentInstruction */
                         
-                        addInstr(possibleInstr);
-                        addInstrB(varDecInstr);
+            //             addInstr(possibleInstr);
+            //             addInstrB(varDecInstr);
                         
-                    }
-                }
+            //         }
+            //     }
                 
 
                 
 
                 
-            }
-            /* TODO: Remove above smh lmao */
-            else
-            {
-                typeCheckThing(node);
-            }
+            // }
+            // /* TODO: Remove above smh lmao */
+            // else
+            // {
+            //     typeCheckThing(node);
+            // }
 
             /* TODO: typecheck(node) */
             /* TODO: emit(node) */

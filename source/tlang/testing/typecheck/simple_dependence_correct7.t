@@ -4,7 +4,7 @@ module typeChecking3;
 
 
 int p = 21;
-p=2;
+p=2+p;
 int j = 2;
 discard "SO far the bottom is done as (p+j)/1";
 int k = p+j/1;
