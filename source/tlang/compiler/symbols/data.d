@@ -112,7 +112,7 @@ public class Statement
     private static ulong rollingCount = 0;
 
     private Container container;
-    private bool marked;
+    
 
     public final void parentTo(Container container)
     {
