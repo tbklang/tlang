@@ -98,6 +98,11 @@ public final class Parser
         return tokens[tokenPtr];
     }
 
+    private void previousToken()
+    {
+        tokenPtr--;   
+    }
+
     /**
     * Parses if statements
     *
@@ -213,11 +218,6 @@ public final class Parser
         nextToken();
 
         gprintln("parseWhile(): Leave", DebugType.WARNING);
-    }
-
-    private void previousToken()
-    {
-        tokenPtr--;   
     }
 
     public VariableAssignmentStdAlone parseAssignment()
