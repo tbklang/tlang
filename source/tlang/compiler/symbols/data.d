@@ -124,22 +124,6 @@ public class Statement
         return container;
     }
 
-    /**
-    * Returns the ready-to-reference state of this Statement
-    */
-    public bool isMarked()
-    {
-        return marked;
-    }
-
-    /**
-    * Marks this Statement as ready-to-reference
-    */
-    public void mark()
-    {
-        marked = true;
-    }
-
     public override string toString()
     {
         return to!(string)(rollingCount++);
