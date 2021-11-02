@@ -289,9 +289,7 @@ public class Function : TypedEntity
     }
 }
 
-import compiler.codegen.core;
-
-public class Variable : TypedEntity, Emittable
+public class Variable : TypedEntity
 {
     /* TODO: Just make this an Expression */
     private VariableAssignment assignment;
@@ -318,47 +316,6 @@ public class Variable : TypedEntity, Emittable
     public override string toString()
     {
         return "Variable (Ident: "~name~", Type: "~type~")";
-    }
-
-    /* Code gen */
-    public string emit()
-    {
-        string emittedCode;
-
-
-        /**
-        * If we are a class memeber
-        */
-        if(cast(Clazz)parentOf())
-        {
-            /* The class we are a member of */
-            Clazz parentingClass = cast(Clazz)parentOf();
-
-            /* If we are a static member */
-            if(initScope == InitScope.STATIC)
-            {
-                
-            }
-            /* TODO: Handle non-static case */
-            else
-            {
-
-            }
-        }
-
-
-
-        /* TODO: So far only emitting for non assignment */
-        if(!assignment)
-        {
-            /* TODO: Let's hope only primitive types */
-            emittedCode = type;
-            emittedCode ~= " ";
-            emittedCode ~= getName();
-            emittedCode ~= ";";
-        }
-
-        return emittedCode;
     }
 }
 
