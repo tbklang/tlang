@@ -1341,50 +1341,50 @@ unittest
     }
 }
 
-// /* Test name colliding with container name (3/3) [container (non-module), nested collider] */
-// unittest
-// {
-//     import std.file;
-//     import std.stdio;
-//     import compiler.lexer;
-//     import compiler.parsing.core;
+/* Test name colliding with container name (3/3) [container (non-module), nested collider] */
+unittest
+{
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.parsing.core;
 
-//     string sourceFile = "source/tlang/testing/collide_container_non_module.t";
+    string sourceFile = "source/tlang/testing/collide_container_non_module.t";
 
-//     File sourceFileFile;
-//     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-//     ulong fileSize = sourceFileFile.size();
-//     byte[] fileBytes;
-//     fileBytes.length = fileSize;
-//     fileBytes = sourceFileFile.rawRead(fileBytes);
-//     sourceFileFile.close();
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
 
-//     string sourceCode = cast(string) fileBytes;
-//     Lexer currentLexer = new Lexer(sourceCode);
-//     currentLexer.performLex();
+    string sourceCode = cast(string) fileBytes;
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
 
-//     Parser parser = new Parser(currentLexer.getTokens());
-//     Module modulle = parser.parse();
-//     TypeChecker typeChecker = new TypeChecker(modulle);
+    Parser parser = new Parser(currentLexer.getTokens());
+    Module modulle = parser.parse();
+    TypeChecker typeChecker = new TypeChecker(modulle);
 
-//     /* Setup testing variables */
-//     Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c");
-//     Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c.c");
+    /* Setup testing variables */
+    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c");
+    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c.c");
 
-//     try
-//     {
-//         /* Perform test */
-//         typeChecker.beginCheck();
+    try
+    {
+        /* Perform test */
+        typeChecker.beginCheck();
 
-//         /* Shouldn't reach here, collision exception MUST occur */
-//         assert(false);
-//     }
-//     catch (CollidingNameException e)
-//     {
-//         /* Make sure the member a.b.c.c collided with a.b.c container */
-//         assert(e.defined == container);
-//     }
-// }
+        /* Shouldn't reach here, collision exception MUST occur */
+        assert(false);
+    }
+    catch (CollidingNameException e)
+    {
+        /* Make sure the member a.b.c.c collided with a.b.c container */
+        assert(e.defined == container);
+    }
+}
 
 // /* Test name colliding with member */
 // unittest
