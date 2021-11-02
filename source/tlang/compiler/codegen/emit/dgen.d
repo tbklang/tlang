@@ -144,6 +144,23 @@ public final class DCodeEmitter : CodeEmitter
             registerToCheck = valReg;
 
         }
+        /**
+        * FIXME: Remove this as it is just to stop segfaulkts for 
+        * yet-to-be-suppirted recursive descent emitting
+        */
+        else
+        {
+            Register valReg = getRegister(1);
+
+            /* Emit setting code */
+            file.writeln(setRegisterValue(valReg, 65));
+
+            /* Set as return */
+            registerToCheck = valReg;
+        }
+
+
+        
 
 
         return registerToCheck;
