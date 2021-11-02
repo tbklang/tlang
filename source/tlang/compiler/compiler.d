@@ -70,8 +70,16 @@ void beginCompilation(string[] sourceFiles)
             TypeChecker typeChecker = new TypeChecker(modulle);
             typeChecker.beginCheck();
 
-            CodeEmitter emitter = new DCodeEmitter(typeChecker);
+
+            File outFile;
+            outFile.open("test.d", "w");
+            CodeEmitter emitter = new DCodeEmitter(typeChecker, outFile);
+
+            
+            
             emitter.emit();
+            outFile.close();
+
         }
         // catch(CollidingNameException e)
         // {

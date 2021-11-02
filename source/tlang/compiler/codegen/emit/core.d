@@ -2,6 +2,10 @@ module compiler.codegen.emit.core;
 
 import compiler.symbols.data;
 import compiler.typecheck.core;
+import std.container.slist : SList;
+import compiler.codegen.instruction;
+import std.stdio;
+import std.file;
 
 /**
 * TODO: Perhaps have an interface that can emit(Context/Parent, Statement)
@@ -11,11 +15,21 @@ import compiler.typecheck.core;
 
 public abstract class CodeEmitter
 {
-    private TypeChecker typeChecker;
+    protected TypeChecker typeChecker;
     
-    this(TypeChecker typeChecker)
+    /**
+    * The code queue
+    */
+    protected SList!(Instruction) codeQueue;
+    alias instructions = codeQueue;
+
+    protected File file;
+
+    this(TypeChecker typeChecker, File file)
     {
         this.typeChecker = typeChecker;
+        codeQueue = typeChecker.getCodeQueue();
+        this.file = file;
     }
 
     public abstract void emit();
