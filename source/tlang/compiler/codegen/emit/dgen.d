@@ -6,8 +6,9 @@ import std.container.slist : SList;
 import compiler.codegen.instruction;
 import std.stdio;
 import std.file;
-
-
+import std.conv : to;
+import std.string : cmp;
+import compiler.codegen.emit.dgenregs;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -54,6 +55,76 @@ public final class DCodeEmitter : CodeEmitter
             mov RSP, R15;
         }
         `);
+    }
+
+    
+    private SList!(Register) registers;
+
+
+    private void initRegisterFile()
+    {
+        /* R's registers */
+        for(ulong i = 0; i <= 6; i++)
+        {
+            /* Generate R-prefix */
+            string prefix = "R";
+            /* Tack on number */
+            prefix = prefix~to!(string)(i+8);
+
+            RichardRegister register = new RichardRegister(prefix);
+
+            
+
+            registers.insert(register);
+        }
+        
+        /* TODO: Add othe registers (and in dgenregs.d) */
+        
+    }
+
+    private Register getRegister(ubyte size)
+    {
+        
+        
+        foreach(Register register; registers)
+        {
+            if(!register.isInUse())
+            {
+                foreach(ubyte sizeC; register.getSupportedSizes())
+                {
+                    if(sizeC == size)
+                    {
+                        register.allocate(size);
+
+                        return register;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+
+    public string emitAndProcessExpression(Instruction instr)
+    {
+        string registerToCheck;
+
+        /**
+        * Literal case
+        */
+        if(cast(LiteralValue)instr)
+        {
+            LiteralValue litValInstr = cast(LiteralValue)instr;
+
+            Register valReg = getRegister(litValInstr.len);
+
+
+
+        }
+
+
+        return registerToCheck;
     }
 
     public override void emit()
@@ -129,7 +200,15 @@ public final class DCodeEmitter : CodeEmitter
             {
                 VariableAssignmentInstr varAssInstr = cast(compiler.codegen.instruction.VariableAssignmentInstr)instruction;
 
-                
+                /* Value Instruction */
+                Instruction valInstr = varAssInstr.data;
+
+                /**
+                * Process the expression (emitting code along the way)
+                * and return the register the value will be placed in
+                */
+                string valueRegister = emitAndProcessExpression(valInstr);
+
 
                 /* Recursively descend soon */
                 

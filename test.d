@@ -10,19 +10,16 @@ void main()
 asm
                     {
                         sub RSP, 4;
-                        mov dword ptr [RSP], 69;
                     }
                     
 asm
                     {
                         sub RSP, 4;
-                        mov dword ptr [RSP], 69;
                     }
                     
 asm
                     {
                         sub RSP, 4;
-                        mov dword ptr [RSP], 69;
                     }
                     
 
