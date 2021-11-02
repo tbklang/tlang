@@ -10,16 +10,16 @@ import std.conv : to;
 import std.string : cmp;
 
 
-public class Register
+public abstract class Register
 {
     public abstract bool isInUse();
-    public string getUsableName();
+    public abstract string getUsableName();
 
-    public void allocate(ubyte size);
-    public ubyte[] getSupportedSizes();
+    public abstract void allocate(ubyte size);
+    public abstract ubyte[] getSupportedSizes();
 
-    public void deallocate();
-    public void free();
+    public abstract void deallocate();
+    public abstract void free();
 }
 
 /**
