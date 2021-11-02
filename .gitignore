@@ -14,3 +14,6 @@ tlang-test-*
 *.obj
 *.lst
 dub.selections.json
+test
+.gitignore
+tets
