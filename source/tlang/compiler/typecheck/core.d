@@ -479,18 +479,6 @@ public final class TypeChecker
         return foundType;
     }
 
-    private void checkfClass(Clazz clazz)
-    {
-        gprintln("Checking class now...");
-
-        /* TODO: Get all typed entities */
-        
-
-        /* TODO: Check things ithin */
-        // checkTypedEntitiesTypeNames(clazz);
-    }
-
-
     /* TODO: TYpeEntity check sepeare */
     /* TODO: Parsing within function etc. */
 
