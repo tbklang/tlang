@@ -57,6 +57,11 @@ public final class RichardRegister : Register
         inUse = false;
     }
 
+    public override string getUsableName()
+    {
+        return curName;
+    }
+
     public override void allocate(ubyte size)
     {
         curSize = size;
