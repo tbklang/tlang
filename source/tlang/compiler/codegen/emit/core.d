@@ -20,16 +20,3 @@ public abstract class CodeEmitter
 
     public abstract void emit();
 }
-
-
-/**
-* Emittable
-*
-* All structures that can emit code go under here
-*
-* TODO: Remove this (unused)
-*/
-public interface Emittable
-{
-    public string emit();
-}
