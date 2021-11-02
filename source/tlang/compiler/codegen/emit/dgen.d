@@ -82,7 +82,6 @@ public final class DCodeEmitter : CodeEmitter
                     file.writeln(`asm
                     {
                         sub RSP, 1;
-                        mov byte ptr [RSP], 69;
                     }
                     `);
                 }
@@ -94,7 +93,6 @@ public final class DCodeEmitter : CodeEmitter
                     file.writeln(`asm
                     {
                         sub RSP, 2;
-                        mov word ptr [RSP], 69;
                     }
                     `);
                 }
@@ -106,7 +104,6 @@ public final class DCodeEmitter : CodeEmitter
                     file.writeln(`asm
                     {
                         sub RSP, 4;
-                        mov dword ptr [RSP], 69;
                     }
                     `);
                 }
@@ -118,7 +115,6 @@ public final class DCodeEmitter : CodeEmitter
                     file.writeln(`asm
                     {
                         sub RSP, 8;
-                        mov qword ptr [RSP], 69;
                     }
                     `);
                 }
