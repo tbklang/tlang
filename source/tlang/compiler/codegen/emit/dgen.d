@@ -25,6 +25,9 @@ public final class DCodeEmitter : CodeEmitter
     this(TypeChecker typeChecker, File file)
     {
         super(typeChecker, file);
+
+        /* Initialize the register file */
+        initRegisterFile();
     }
 
     /**
