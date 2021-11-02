@@ -35,40 +35,7 @@ public final class TypeChecker
         this.modulle = modulle;
         resolver = new Resolver(this);
         /* TODO: Module check?!?!? */
-        // initTrees();
     }
-
-    // import compiler.typecheck.visitor;
-    // private VTreeNode root;
-
-
-    // /**
-    // * Root of reliance (dependency) tree
-    // */
-    // import compiler.typecheck.reliance;
-    // private RelianceNode relianceRootNode;
-
-
-    // private void initTrees()
-    // {
-    //     // root = new VTreeNode(modulle);
-
-    //     /* Create a reliance node with no dependancies for the module */
-    //     relianceRootNode = new RelianceNode(modulle);
-    // }
-
-
-    // // private Statement[] visistedStatements;
-    // public void visit(VTreeNode level, Statement statement)
-    // {
-    //     // visistedStatements ~= statement;
-    //     level.addChild(new VTreeNode(statement));
-    // }
-
-    // public VTreeNode hasVisited(Statement statementInQuestion)
-    // {
-    //     return root.isInTree(statementInQuestion);
-    // }
 
     /**
     * I guess this should be called rather
