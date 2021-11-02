@@ -19,7 +19,6 @@ public abstract class Register
     public abstract ubyte[] getSupportedSizes();
 
     public abstract void deallocate();
-    public abstract void free();
 }
 
 /**
@@ -53,7 +52,7 @@ public final class RichardRegister : Register
         return [1,2,4,8];
     }
 
-    public override void free()
+    public override void deallocate()
     {
         inUse = false;
     }
