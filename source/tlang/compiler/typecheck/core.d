@@ -479,7 +479,7 @@ public final class TypeChecker
         return foundType;
     }
 
-    private void checkClass(Clazz clazz)
+    private void checkfClass(Clazz clazz)
     {
         gprintln("Checking class now...");
 
@@ -489,99 +489,6 @@ public final class TypeChecker
         /* TODO: Check things ithin */
         // checkTypedEntitiesTypeNames(clazz);
     }
-
-
-    
-
-  
-
-
-    /**
-    * Dependency encountering
-    *
-    * TODO: Move to own module
-    // */
-    // public string[][string] deps;
-    // public void encounter(string entityName, string dependentOn)
-    // {
-    //     deps[entityName] ~= dependentOn;
-    //     gprintln("[Encounter] Entity: \""~entityName~"\" set to be dependent on \""~dependentOn~"\"");
-    // }
-
-    // private void checkClass_DepTest(Clazz c)
-    // {
-    //     /**
-    //     * Get all static entities in class
-    //     */
-    //     Entity[] staticMembers;
-    //     foreach (Statement statement; c.getStatements())
-    //     {
-    //         if (statement !is null && cast(Entity) statement)
-    //         {
-    //             Entity member = cast(Entity)statement;
-    //             if(member.getModifierType() == InitScope.STATIC)
-    //             {
-    //                 staticMembers ~= cast(Entity) statement;    
-    //             }
-    //         }
-    //     }
-
-    //     gprintln("Static members: "~to!(string)(staticMembers));
-
-    //     /**
-    //     * Processes all Class definitions (first, ordered)
-    //     * Fucntions and Variables (TODO: I cannot recall that ordering)
-    //     */
-    //     foreach(Entity staticMember; staticMembers)
-    //     {
-    //         /**
-    //         * Handle static member classes (Class)
-    //         */
-    //         if(cast(Clazz)staticMember)
-    //         {
-    //             /* The class must be dependent on the current class */
-    //                 gprintln("fdhjdfshjfd");
-    //             /* Full path of thing depending on something else */
-    //             string dependee = resolver.generateName(modulle, staticMember);
-
-    //             /* Full path of the thing it is dependent on */
-    //             string dependency = resolver.generateName(modulle, c);
-                
-    //             /* Add this to the dependency list fpr the current dependent staticMemberType */
-    //             encounter(dependee, dependency);
-
-    //             /* If the static member is a class then apply the logic recursively to it */
-    //             Clazz staticMemberClass = cast(Clazz)staticMember;
-    //             checkTypedEntitiesTypeNames(staticMemberClass);
-    //         }
-    //         /**
-    //         * Handle static member functions/variables (Function/Variable)
-    //         */
-    //         else if(cast(TypedEntity)staticMember)
-    //         {
-    //             /* Typed static member */
-    //             TypedEntity typedStaticMember = cast(TypedEntity)staticMember;
-
-    //             /* Get the Type of the member */
-    //             Type staticMemberType = getType(c, typedStaticMember.getType());
-
-    //             /* Full path of thing depending on something else */
-    //             string dependee = resolver.generateName(modulle, typedStaticMember);
-
-    //             /* Full path of the thing it is dependent on */
-    //             string dependency = resolver.generateName(modulle, staticMemberType);
-                
-    //             /* Add this to the dependency list fpr the current dependent staticMemberType */
-    //             encounter(dependee, dependency);
-    //         }
-    //         else
-    //         {
-    //             assert(false);
-    //         }
-
-    //     }        
-    // }
-
 
 
     /* TODO: TYpeEntity check sepeare */
