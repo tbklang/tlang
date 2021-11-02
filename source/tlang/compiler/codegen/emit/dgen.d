@@ -105,10 +105,24 @@ public final class DCodeEmitter : CodeEmitter
         return null;
     }
 
-
-    public string emitAndProcessExpression(Instruction instr)
+    /**
+    * RegisterSet HelperMethod
+    */
+    private string setRegisterValue(Register register, ulong value)
     {
-        string registerToCheck;
+        string settingASM = `
+        asm
+        {
+            mov `~register.getUsableName()~", "~to!(string)(value)~";"~`
+        }
+        `;
+
+        return settingASM;
+    }
+
+    public Register emitAndProcessExpression(Instruction instr)
+    {
+        Register registerToCheck;
 
         /**
         * Literal case
@@ -119,7 +133,12 @@ public final class DCodeEmitter : CodeEmitter
 
             Register valReg = getRegister(litValInstr.len);
 
+            /* Emit setting code */
+            file.writeln(setRegisterValue(valReg, litValInstr.data));
 
+
+            /* Set as return */
+            registerToCheck = valReg;
 
         }
 
@@ -207,12 +226,15 @@ public final class DCodeEmitter : CodeEmitter
                 * Process the expression (emitting code along the way)
                 * and return the register the value will be placed in
                 */
-                string valueRegister = emitAndProcessExpression(valInstr);
+                Register valueRegister = emitAndProcessExpression(valInstr);
 
 
                 /* Recursively descend soon */
                 
                 // writeln("int "~varDecInstr.varName~";");
+
+                /* TODO: Emit assignment to var */
+                /* TODO: free->> valueRegister */
             }
             
         }
