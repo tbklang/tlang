@@ -8,8 +8,19 @@ import std.stdio;
 import std.file;
 
 
+
 public final class DCodeEmitter : CodeEmitter
 {
+
+    /**
+    * TODO:
+    *
+    * 1. We need to keep track of pushes
+    * 2. WHen entering a new function we save old, use a queue
+    * 3. So we need to do something like that to be able to restore
+    */
+
+
     this(TypeChecker typeChecker, File file)
     {
         super(typeChecker, file);
@@ -63,15 +74,56 @@ public final class DCodeEmitter : CodeEmitter
             {
                 VariableDeclaration varDecInstr = cast(compiler.codegen.instruction.VariableDeclaration)instruction;
 
-                file.writeln(`asm
+                /**
+                * Byte-sized variable
+                */
+                if(varDecInstr.length == 1)
                 {
-                    sub RSP, 4;
-                    mov dword ptr [RSP], 69;
+                    file.writeln(`asm
+                    {
+                        sub RSP, 1;
+                        mov byte ptr [RSP], 69;
+                    }
+                    `);
                 }
-                `);
-
+                /**
+                * Short-sized variable
+                */
+                else if(varDecInstr.length == 2)
+                {
+                    file.writeln(`asm
+                    {
+                        sub RSP, 2;
+                        mov word ptr [RSP], 69;
+                    }
+                    `);
+                }
+                /**
+                * Long-sized variable
+                */
+                else if(varDecInstr.length == 4)
+                {
+                    file.writeln(`asm
+                    {
+                        sub RSP, 4;
+                        mov dword ptr [RSP], 69;
+                    }
+                    `);
+                }
+                /**
+                * Quad-sized variable
+                */
+                else if(varDecInstr.length == 8)
+                {
+                    file.writeln(`asm
+                    {
+                        sub RSP, 8;
+                        mov qword ptr [RSP], 69;
+                    }
+                    `);
+                }
                 
-
+                
                 /* TODO: We need to build map of stakc positions, maybe not */
             }
             /**
@@ -80,6 +132,8 @@ public final class DCodeEmitter : CodeEmitter
             else if(cast(VariableAssignmentInstr)instruction)
             {
                 VariableAssignmentInstr varAssInstr = cast(compiler.codegen.instruction.VariableAssignmentInstr)instruction;
+
+                
 
                 /* Recursively descend soon */
                 

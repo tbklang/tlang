@@ -11,18 +11,24 @@ asm
                 {
                     sub RSP, 4;
                     mov dword ptr [RSP], 69;
+                    mov dword ptr CR3, 32;
+
                 }
                 
 asm
                 {
                     sub RSP, 4;
                     mov dword ptr [RSP], 69;
+                    mov dword ptr CR3, 32;
+
                 }
                 
 asm
                 {
                     sub RSP, 4;
                     mov dword ptr [RSP], 69;
+                    mov dword ptr CR3, 32;
+
                 }
                 
 
