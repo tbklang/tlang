@@ -9,6 +9,7 @@ import std.file;
 import std.conv : to;
 import std.string : cmp;
 import compiler.codegen.emit.dgenregs;
+import gogga;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -69,15 +70,11 @@ public final class DCodeEmitter : CodeEmitter
         /* R's registers */
         for(ulong i = 0; i <= 6; i++)
         {
-            /* Generate R-prefix */
-            string prefix = "R";
-            /* Tack on number */
-            prefix = prefix~to!(string)(i+8);
-
+            /* Generate number prefix */
+            string prefix = to!(string)(i+8);
             RichardRegister register = new RichardRegister(prefix);
 
             
-
             registers.insert(register);
         }
         
@@ -105,7 +102,9 @@ public final class DCodeEmitter : CodeEmitter
             }
         }
 
-        return null;
+        throw new Exception("Ran out of registers to allocate, this is a compiler bug!");
+
+        // return null;
     }
 
     /**
@@ -242,11 +241,14 @@ public final class DCodeEmitter : CodeEmitter
                 /* Value Instruction */
                 Instruction valInstr = varAssInstr.data;
 
+                gprintln("Testing");
+
                 /**
                 * Process the expression (emitting code along the way)
                 * and return the register the value will be placed in
                 */
                 Register valueRegister = emitAndProcessExpression(valInstr);
+                assert(valueRegister); /* Make sue we get one allocated */
 
 
                 /* Recursively descend soon */
