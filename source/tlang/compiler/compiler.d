@@ -10,6 +10,8 @@ import compiler.symbols.data;
 import compiler.typecheck.core;
 import compiler.typecheck.exceptions;
 import core.stdc.stdlib;
+import compiler.codegen.emit.core;
+import compiler.codegen.emit.dgen;
 
 void beginCompilation(string[] sourceFiles)
 {
@@ -67,6 +69,9 @@ void beginCompilation(string[] sourceFiles)
         {
             TypeChecker typeChecker = new TypeChecker(modulle);
             typeChecker.beginCheck();
+
+            CodeEmitter emitter = new DCodeEmitter(typeChecker);
+            emitter.emit();
         }
         // catch(CollidingNameException e)
         // {
@@ -76,7 +81,10 @@ void beginCompilation(string[] sourceFiles)
         catch(TypeCheckerException e)
         {
             gprintln(e.msg, DebugType.ERROR);
+            exit(0);
         }
+
+        
 
         // import compiler.codegen.core;
         // CodeGenerator codegen = new DCodeGenerator(modulle);

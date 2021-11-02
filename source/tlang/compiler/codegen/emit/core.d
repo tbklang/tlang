@@ -1,6 +1,7 @@
-module compiler.codegen.core;
+module compiler.codegen.emit.core;
 
 import compiler.symbols.data;
+import compiler.typecheck.core;
 
 /**
 * TODO: Perhaps have an interface that can emit(Context/Parent, Statement)
@@ -8,28 +9,25 @@ import compiler.symbols.data;
 
 /* TODO: Module linking (general overhaul required) */
 
-public class CodeGenerator
+public abstract class CodeEmitter
 {
-    /* The Module */
-    Module modulle;
-
-    this(Module modulle)
+    private TypeChecker typeChecker;
+    
+    this(TypeChecker typeChecker)
     {
-        this.modulle = modulle;
+        this.typeChecker = typeChecker;
     }
 
-    public string build()
-    {
-        return "";
-    }
+    public abstract void emit();
 }
 
-public import compiler.codegen.dgen;
 
 /**
 * Emittable
 *
 * All structures that can emit code go under here
+*
+* TODO: Remove this (unused)
 */
 public interface Emittable
 {
