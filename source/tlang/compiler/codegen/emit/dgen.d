@@ -74,7 +74,7 @@ public final class DCodeEmitter : CodeEmitter
             string prefix = to!(string)(i+8);
             RichardRegister register = new RichardRegister(prefix);
 
-            
+
             registers.insert(register);
         }
         
@@ -241,14 +241,11 @@ public final class DCodeEmitter : CodeEmitter
                 /* Value Instruction */
                 Instruction valInstr = varAssInstr.data;
 
-                gprintln("Testing");
-
                 /**
                 * Process the expression (emitting code along the way)
                 * and return the register the value will be placed in
                 */
                 Register valueRegister = emitAndProcessExpression(valInstr);
-                assert(valueRegister); /* Make sue we get one allocated */
 
 
                 /* Recursively descend soon */
