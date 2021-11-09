@@ -1,9 +1,13 @@
 module compiler.codegen.instruction;
 
 import std.conv : to;
+import compiler.typecheck.dependency : DNodeGenerator;
 
 public class Instruction
 {
+    /* Context for the Instruction (used in emitter for name resolution) */
+    public DNodeGenerator.Context context;
+
     protected string addInfo;
 
     this()
