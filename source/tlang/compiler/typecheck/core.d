@@ -273,6 +273,9 @@ public final class TypeChecker
             string variableName = resolver.generateName(modulle, variablePNode);
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4);
 
+            /* NEW CODE (9th November 2021) Set the context */
+            varDecInstr.context = variablePNode.context;
+
             /* Check if there is a VariableAssignmentInstruction */
             Instruction possibleInstr = popInstr();
             if(possibleInstr !is null)
