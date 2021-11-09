@@ -4,6 +4,31 @@ import compiler.symbols.data;
 import std.conv : to;
 import compiler.symbols.typing.core;
 
+/**
+* Used so often that we may as well
+* declare it once
+*
+* TODO: Check if we could do it with interfaces?
+*/
+private Statement[] weightReorder(Statement[] statements)
+{
+    import std.algorithm.sorting : sort;
+    import std.algorithm.mutation : SwapStrategy;
+
+    /* Re-ordered by lowest wieght first */
+    Statement[] stmntsRed;
+
+    /* Comparator for Statement objects */
+    bool wCmp(Statement lhs, Statement rhs)
+    {
+        return lhs.weight < rhs.weight;
+    }
+    
+    stmntsRed = sort!(wCmp, SwapStrategy.stable)(statements).release;
+
+    return stmntsRed;
+}
+
 public interface Container
 {
     public void addStatement(Statement statement);
@@ -35,25 +60,7 @@ public class Module : Entity, Container
 
     public Statement[] getStatements()
     {
-         /* Re-ordered by lowest wieght first */
-        Statement[] stmntsRed;
-import gogga;
-
-        bool wCmp(Statement lhs, Statement rhs)
-        {
-            gprintln("LHS:"~lhs.toString());
-        gprintln("RHS:"~rhs.toString());
-            return lhs.weight < rhs.weight;
-        }
-        import std.algorithm.sorting;
-        import std.algorithm.mutation : SwapStrategy;
-        stmntsRed = sort!(wCmp, SwapStrategy.stable)(statements).release;
-    
-        
-        gprintln(statements);
-        
-
-        return stmntsRed;
+        return weightReorder(statements);
     }
 }
 
@@ -80,18 +87,7 @@ public class Struct : Type, Container
 
     public Statement[] getStatements()
     {
-         /* Re-ordered by lowest wieght first */
-        Statement[] stmntsRed;
-
-        bool wCmp(Statement lhs, Statement rhs)
-        {
-            return lhs.weight < rhs.weight;
-        }
-        import std.algorithm.sorting;
-        stmntsRed = sort!(wCmp)(statements).release;
-    
-
-        return stmntsRed;
+        return weightReorder(statements);
     }
 
     this(string name)
@@ -141,18 +137,7 @@ public class Clazz : Type, Container
 
     public Statement[] getStatements()
     {
-         /* Re-ordered by lowest wieght first */
-        Statement[] stmntsRed;
-
-        bool wCmp(Statement lhs, Statement rhs)
-        {
-            return lhs.weight < rhs.weight;
-        }
-        import std.algorithm.sorting;
-        stmntsRed = sort!(wCmp)(statements).release;
-    
-
-        return stmntsRed;
+        return weightReorder(statements);
     }
     
 }
