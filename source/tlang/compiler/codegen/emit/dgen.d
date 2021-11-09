@@ -165,6 +165,36 @@ public final class DCodeEmitter : CodeEmitter
         return registerToCheck;
     }
 
+    /**
+    * Current stackpointer along with the offsets
+    * from it to variables (a varName -> offset map)
+    *
+    * The stack pointer is only used in a magnitude
+    * sense as in reality x86 grows downwards when we
+    * push variables
+    */
+    private ulong stackPointer;
+    private ulong[string] variableOffsets;
+
+    private void pushVariable(string name, ubyte size)
+    {
+        stackPointer+=size;
+    }
+
+    private ulong getVariableOffset(string name)
+    {
+
+        foreach(string variables; variableOffsets.keys())
+        {
+            if(cmp(name, variables) == 0)
+            {
+                return variableOffsets[name];
+            }
+        }
+        
+        throw new Exception("Could not find variable offset for variable '"~name~"'");
+    }
+
     public override void emit()
     {
         /* Emit initial struccture */
@@ -230,6 +260,8 @@ public final class DCodeEmitter : CodeEmitter
                 
                 
                 /* TODO: We need to build map of stakc positions, maybe not */
+
+                pushVariable(varDecInstr.varName, varDecInstr.length);
             }
             /**
             * compiler.codegen.instruction.VariableAssignmentInstr
@@ -249,6 +281,11 @@ public final class DCodeEmitter : CodeEmitter
 
 
                 /* Recursively descend soon */
+
+
+                /* Find the variable being assigned to */
+                /* TODO: */
+                // ulong variableStackOffset = 
                 
                 // writeln("int "~varDecInstr.varName~";");
 
