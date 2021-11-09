@@ -2,7 +2,7 @@ module compiler.symbols.data;
 
 public import compiler.symbols.check;
 import std.conv : to;
-import compiler.typecheck.dependency : Context;
+import compiler.typecheck.dependency.core : Context;
 
 
 /**

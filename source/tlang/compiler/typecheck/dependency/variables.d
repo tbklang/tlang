@@ -1,6 +1,6 @@
-module compiler.typecheck.variables;
+module compiler.typecheck.dependency.variables;
 
-import compiler.typecheck.dependency;
+import compiler.typecheck.dependency.core;
 import compiler.symbols.data;
 
 /**

@@ -64,7 +64,7 @@ public final class TypeChecker
         * non-cyclic
         *
         */
-        import compiler.typecheck.dependency;
+        import compiler.typecheck.dependency.core;
         DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
 
@@ -91,7 +91,7 @@ public final class TypeChecker
         
     }
 
-    import compiler.typecheck.dependency;
+    import compiler.typecheck.dependency.core;
     import std.container.slist;
 
     import compiler.codegen.instruction;
@@ -162,9 +162,9 @@ public final class TypeChecker
         gprintln("typeCheckThing(): "~dnode.toString());
 
         /* ExpressionDNodes */
-        if(cast(compiler.typecheck.expression.ExpressionDNode)dnode)
+        if(cast(compiler.typecheck.dependency.expression.ExpressionDNode)dnode)
         {
-            compiler.typecheck.expression.ExpressionDNode expDNode = cast(compiler.typecheck.expression.ExpressionDNode)dnode;
+            compiler.typecheck.dependency.expression.ExpressionDNode expDNode = cast(compiler.typecheck.dependency.expression.ExpressionDNode)dnode;
 
             Statement statement = expDNode.getEntity();
             gprintln("Hdfsfdjfds"~to!(string)(statement));
@@ -242,12 +242,12 @@ public final class TypeChecker
             }
         }
         /* VariableAssigbmentDNode */
-        else if(cast(compiler.typecheck.variables.VariableAssignmentNode)dnode)
+        else if(cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode)
         {
-            import compiler.typecheck.variables;
+            import compiler.typecheck.dependency.variables;
             /* Get the variable's name */
             string variableName;
-            VariableAssignmentNode varAssignDNode = cast(compiler.typecheck.variables.VariableAssignmentNode)dnode;
+            VariableAssignmentNode varAssignDNode = cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
             Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
             variableName = resolver.generateName(modulle, assignTo);
 
@@ -262,7 +262,7 @@ public final class TypeChecker
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
             addInstr(varAssInstr);
         }
-        else if(cast(compiler.typecheck.variables.ModuleVariableDeclaration)dnode)
+        else if(cast(compiler.typecheck.dependency.variables.ModuleVariableDeclaration)dnode)
         {
             /**
             * Codegen
@@ -314,7 +314,7 @@ public final class TypeChecker
             
         }
         /* TODO: ANy statement */
-        else if(cast(compiler.typecheck.dependency.DNode)dnode)
+        else if(cast(compiler.typecheck.dependency.core.DNode)dnode)
         {
             /* TODO: Get the STatement */
             Statement statement = dnode.getEntity();
@@ -1218,72 +1218,3 @@ unittest
         assert(e.defined == container);
     }
 }
-
-
-// unittest
-// {
-//     /* TODO: Add some unit tests */
-//     import std.file;
-//     import std.stdio;
-//     import compiler.lexer;
-//     import compiler.parsing.core;
-
-//     // isUnitTest = true;
-
-//     string sourceFile = "source/tlang/testing/basic1.t";
-
-//     gprintln("Reading source file '" ~ sourceFile ~ "' ...");
-//     File sourceFileFile;
-//     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-//     ulong fileSize = sourceFileFile.size();
-//     byte[] fileBytes;
-//     fileBytes.length = fileSize;
-//     fileBytes = sourceFileFile.rawRead(fileBytes);
-//     sourceFileFile.close();
-
-//     gprintln("Performing tokenization on '" ~ sourceFile ~ "' ...");
-
-//     /* TODO: Open source file */
-//     string sourceCode = cast(string) fileBytes;
-//     // string sourceCode = "hello \"world\"|| ";
-//     //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
-//     // string sourceCode = "hello;";
-//     Lexer currentLexer = new Lexer(sourceCode);
-//     currentLexer.performLex();
-    
-
-//     gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
-
-//     gprintln("Parsing tokens...");
-//     Parser parser = new Parser(currentLexer.getTokens());
-//     Module modulle = parser.parse();
-
-//     gprintln("Type checking and symbol resolution...");
-//     try
-//     {
-//         TypeChecker typeChecker = new TypeChecker(modulle);
-
-//     }
-//     // catch(CollidingNameException e)
-//     // {
-//     //     gprintln(e.msg, DebugType.ERROR);
-//     //     //gprintln("Stack trace:\n"~to!(string)(e.info));
-//     // }
-//     catch (TypeCheckerException e)
-//     {
-//         gprintln(e.msg, DebugType.ERROR);
-//     }
-
-//     /* Test first-level resolution */
-//     // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz1").getName(), "clazz1")==0);
-
-//     // /* Test n-level resolution */
-//     // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
-//     // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j").getName(), "j")==0);
-//     // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.clazz_2_2_1").getName(), "clazz_2_2_1")==0);
-//     // assert(cmp(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2").getName(), "clazz_2_2")==0);
-
-//     // /* Test invalid access to j treating it as a Container (whilst it is a Variable) */
-//     // assert(typeChecker.isValidEntity(modulle.getStatements(), "clazz_2_1.clazz_2_2.j.p") is null);
-
-// }

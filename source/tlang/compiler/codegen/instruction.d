@@ -1,7 +1,7 @@
 module compiler.codegen.instruction;
 
 import std.conv : to;
-import compiler.typecheck.dependency : Context;
+import compiler.typecheck.dependency.core : Context;
 
 public class Instruction
 {

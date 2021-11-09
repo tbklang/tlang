@@ -1,4 +1,4 @@
-module compiler.typecheck.classes.classStaticDep;
+module compiler.typecheck.dependency.classes.classStaticDep;
 
 import compiler.symbols.check;
 import compiler.symbols.data;
@@ -12,7 +12,7 @@ import compiler.typecheck.exceptions;
 import compiler.typecheck.core;
 import compiler.symbols.typing.core;
 import compiler.symbols.typing.builtins;
-import compiler.typecheck.dependency;
+import compiler.typecheck.dependency.core;
 
 public class ClassStaticNode : DNode
 {

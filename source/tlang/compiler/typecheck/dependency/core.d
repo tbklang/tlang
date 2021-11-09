@@ -1,4 +1,4 @@
-module compiler.typecheck.dependency;
+module compiler.typecheck.dependency.core;
 
 import compiler.symbols.check;
 import compiler.symbols.data;
@@ -50,6 +50,33 @@ public final class Context
     {
         return container;
     }
+}
+
+/**
+* FunctionData
+*
+* Contains the dependency tree for a function,
+* it's name, context as to where it is declared
+*
+*TODO: TO getn this to work DNode and DNoeGenerator
+* must become one to house `private static DNode root`
+* and `private static DNode[] pool`, which means FunctionData
+* may remain completely seperated from Module's DNode
+*
+* Of course DNode must have a FunctionData[] array irrespective
+* of the sub-type of DNode as we look up data using it
+* techncially it could be seperate, yeah, global function
+*
+* The FunctionData should, rather than Context perhaps,
+* take in the DNode of the Modulle, to be able to idk
+* maybe do some stuff
+*/
+private struct FunctionData
+{
+    public string name;
+    public Context context;
+
+    public DNodeGenerator ownGenerator;
 }
 
 /**
@@ -305,9 +332,9 @@ public class DNodeGenerator
 
     
     
-    import compiler.typecheck.expression;
-    import compiler.typecheck.classes.classObject;
-    import compiler.typecheck.classes.classVirtualInit;
+    import compiler.typecheck.dependency.expression;
+    import compiler.typecheck.dependency.classes.classObject;
+    import compiler.typecheck.dependency.classes.classVirtualInit;
 
     /* TODO: As mentioned in classObject.d we should static init the class type here */
     private ClassVirtualInit virtualInit(Clazz clazz)
@@ -709,7 +736,7 @@ public class DNodeGenerator
     }
 
 
-    import compiler.typecheck.variables;
+    import compiler.typecheck.dependency.variables;
     private ModuleVariableDeclaration pool_module_vardec(Variable entity)
     {
         foreach(DNode dnode; nodePool)
@@ -949,73 +976,48 @@ public class DNodeGenerator
         return moduleDNode;
     }
 
-    /**
-    * FunctionData
-    *
-    * Contains the dependency tree for a function,
-    * it's name, context as to where it is declared
-    *
-    *TODO: TO getn this to work DNode and DNoeGenerator
-    * must become one to house `private static DNode root`
-    * and `private static DNode[] pool`, which means FunctionData
-    * may remain completely seperated from Module's DNode
-    *
-    * Of course DNode must have a FunctionData[] array irrespective
-    * of the sub-type of DNode as we look up data using it
-    * techncially it could be seperate, yeah, global function
-    *
-    * The FunctionData should, rather than Context perhaps,
-    * take in the DNode of the Modulle, to be able to idk
-    * maybe do some stuff
-    */
-    private struct FunctionData
-    {
-        public string name;
-        public Context context;
+    
 
-        public DNode depRoot;
-    }
+    // private FunctionData processFunction(Function funcDec)
+    // {
+    //     FunctionData funcData;
+    //     funcData.name = funcDec.getName();
+    //     funcData.context = funcDec.context;
+    //     // funcData.depRoot = new DNode();
 
-    private FunctionData processFunction(Function funcDec)
-    {
-        FunctionData funcData;
-        funcData.name = funcDec.getName();
-        funcData.context = funcDec.context;
-        // funcData.depRoot = new DNode();
+    //     /* STart processing the internal dependencies*/
+    //     Statement[] statements = funcDec.getStatements();
+    //     foreach(Statement statement; statements)
+    //     {
 
-        /* STart processing the internal dependencies*/
-        Statement[] statements = funcDec.getStatements();
-        foreach(Statement statement; statements)
-        {
+    //     }
 
-        }
-
-        return funcData;
-    }
+    //     return funcData;
+    // }
 
 
 
-    /**
-    * WIP: TODO: BIG ONE, this is just for now
-    * TODO: REMOVE THIS
-    */
-    private DNode FunctionPass(Function func)
-    {
-        DNode dnode = pool(func);
+    // /**
+    // * WIP: TODO: BIG ONE, this is just for now
+    // * TODO: REMOVE THIS
+    // */
+    // private DNode FunctionPass(Function func)
+    // {
+    //     DNode dnode = pool(func);
 
-        /* Statements in body */
-        Statement[] bodyStatements = func.getStatements();
+    //     /* Statements in body */
+    //     Statement[] bodyStatements = func.getStatements();
 
-        foreach(Statement statement; bodyStatements)
-        {
-            DNode dNodeStat = pool(statement);
-            dNodeStat.needs(dnode);
-        }
+    //     foreach(Statement statement; bodyStatements)
+    //     {
+    //         DNode dNodeStat = pool(statement);
+    //         dNodeStat.needs(dnode);
+    //     }
 
-        return dnode;
-    }
+    //     return dnode;
+    // }
 
-    import compiler.typecheck.classes.classStaticDep;
+    import compiler.typecheck.dependency.classes.classStaticDep;
     private ClassStaticNode poolClassStatic(Clazz clazz)
     {
         /* Sanity check */
