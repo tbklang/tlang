@@ -247,6 +247,12 @@ public class Function : TypedEntity
         weight = 1;
     }
 
+    public Statement[] getStatements()
+    {
+        import compiler.symbols.containers : weightReorder;
+        return weightReorder(bodyStatements);
+    }
+
     /**
     * This will sift through all the `Statement[]`'s in held
     * within this Function and will find those which are Variable
