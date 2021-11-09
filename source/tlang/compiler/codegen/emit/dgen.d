@@ -263,6 +263,15 @@ public final class DCodeEmitter : CodeEmitter
                 
                 /* TODO: We need to build map of stakc positions, maybe not */
 
+
+                /**
+                * FIXME: We must grab the Context object here to get the Container
+                * to be able to resolve the absolute path of this variable using
+                * the grand resolver (solved, as of 9th November we have context)
+                *
+                * FIXME: NOT ALL HAVE CONTEXT YET!!!
+                */
+                gprintln(varDecInstr.context);
                 pushVariable(varDecInstr.varName, varDecInstr.length);
             }
             /**
