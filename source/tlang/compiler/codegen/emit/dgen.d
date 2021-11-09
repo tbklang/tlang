@@ -179,6 +179,8 @@ public final class DCodeEmitter : CodeEmitter
     private void pushVariable(string name, ubyte size)
     {
         stackPointer+=size;
+
+        variableOffsets[name] = size;
     }
 
     private ulong getVariableOffset(string name)
@@ -291,7 +293,7 @@ public final class DCodeEmitter : CodeEmitter
 
                 /* Find the variable being assigned to (TODO) */
                 // Variable variable = 
-                
+
                 /* Calculate the amount to be written to said offset (TODO) */
                 ulong writeSize = 0;
                 
