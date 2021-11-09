@@ -283,9 +283,17 @@ public final class DCodeEmitter : CodeEmitter
                 /* Recursively descend soon */
 
 
-                /* Find the variable being assigned to */
+                
                 /* TODO: */
-                // ulong variableStackOffset = 
+
+                /* Calculate the offset to be written to */
+                ulong variableStackOffset = getVariableOffset(varAssInstr.varName);
+
+                /* Find the variable being assigned to (TODO) */
+                // Variable variable = 
+                
+                /* Calculate the amount to be written to said offset (TODO) */
+                ulong writeSize = 0;
                 
                 // writeln("int "~varDecInstr.varName~";");
 
@@ -300,6 +308,26 @@ public final class DCodeEmitter : CodeEmitter
 
         /* Close the module */
         closeModule();
+    }
+
+    /**
+    * Writes the given `data` of `size` to the addresses of
+    * %rbp-|rbpOffsetMagnitude| at a stride of size
+    */
+    private void writeStackVar(ulong rbpOffsetMagnitutde, ubyte size, ulong data)
+    {
+
+    }
+
+    /**
+    * Same as `writeStackVar` but does muiltiple writes given a base address
+    *
+    * This is just to neaten up code (see this as a helper function as that is
+    * all that it really is)
+    */
+    private void writeStackVarMulti(ulong rbOffsetMagBase, ubyte[] sizes, ulong[] datas)
+    {
+
     }
 
     private void emitIninitailModule()
