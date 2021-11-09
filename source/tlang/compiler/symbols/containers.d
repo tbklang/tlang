@@ -37,14 +37,21 @@ public class Module : Entity, Container
     {
          /* Re-ordered by lowest wieght first */
         Statement[] stmntsRed;
+import gogga;
 
         bool wCmp(Statement lhs, Statement rhs)
         {
+            gprintln("LHS:"~lhs.toString());
+        gprintln("RHS:"~rhs.toString());
             return lhs.weight < rhs.weight;
         }
         import std.algorithm.sorting;
-        stmntsRed = sort!(wCmp)(statements).release;
+        import std.algorithm.mutation : SwapStrategy;
+        stmntsRed = sort!(wCmp, SwapStrategy.stable)(statements).release;
     
+        
+        gprintln(statements);
+        
 
         return stmntsRed;
     }
