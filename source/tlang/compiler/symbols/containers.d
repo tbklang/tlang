@@ -10,7 +10,7 @@ import compiler.symbols.typing.core;
 *
 * TODO: Check if we could do it with interfaces?
 */
-private Statement[] weightReorder(Statement[] statements)
+public Statement[] weightReorder(Statement[] statements)
 {
     import std.algorithm.sorting : sort;
     import std.algorithm.mutation : SwapStrategy;
