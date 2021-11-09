@@ -2,6 +2,7 @@ module compiler.symbols.data;
 
 public import compiler.symbols.check;
 import std.conv : to;
+import compiler.typecheck.dependency : Context;
 
 
 /**
@@ -86,14 +87,14 @@ public class Statement
 
     /* !!!! BEGIN TYPE CHECK ROUTINES AND DATA !!!! */
     /* TODO: Used for type checking */
-    import compiler.typecheck.dependency ;
-    public DNodeGenerator.Context context;
-    public void setContext(DNodeGenerator.Context context)
+    
+    public Context context;
+    public void setContext(Context context)
     {
         this.context = context;
     }
 
-    public DNodeGenerator.Context getContext()
+    public Context getContext()
     {
         return context;
     }

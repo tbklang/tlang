@@ -16,10 +16,41 @@ import compiler.symbols.typing.builtins;
 
 
 /**
-* December update
+* Passed around
 *
-* This is for future additions and
+* 1. Contains containership (some Statements are not contained) so we need to track this
+* 2. InitScope, STATIC or VIRTUAL permission
+* 3. `allowUp`, when resolving names in this Context use
+* resolveBest instead of resolveWithin (stay inside Context solely
+* don't travel up parents)
 */
+public final class Context
+{
+    InitScope initScope;
+    Container container;
+    bool allowUp = true;
+
+    this(Container container, InitScope initScope)
+    {
+        this.initScope = initScope;
+        this.container = container;
+    }
+
+    public bool isAllowUp()
+    {
+        return allowUp;
+    }
+
+    public void noAllowUp()
+    {
+        allowUp = false;
+    }
+
+    public Container getContainer()
+    {
+        return container;
+    }
+}
 
 /**
 * DNode
@@ -272,42 +303,7 @@ public class DNodeGenerator
     }
 
 
-    /**
-    * Passed around
-    *
-    * 1. Contains containership (some Statements are not contained) so we need to track this
-    * 2. InitScope, STATIC or VIRTUAL permission
-    * 3. `allowUp`, when resolving names in this Context use
-    * resolveBest instead of resolveWithin (stay inside Context solely
-    * don't travel up parents)
-    */
-    public final class Context
-    {
-        InitScope initScope;
-        Container container;
-        bool allowUp = true;
-
-        this(Container container, InitScope initScope)
-        {
-            this.initScope = initScope;
-            this.container = container;
-        }
-
-        public bool isAllowUp()
-        {
-            return allowUp;
-        }
-
-        public void noAllowUp()
-        {
-            allowUp = false;
-        }
-
-        public Container getContainer()
-        {
-            return container;
-        }
-    }
+    
     
     import compiler.typecheck.expression;
     import compiler.typecheck.classes.classObject;
