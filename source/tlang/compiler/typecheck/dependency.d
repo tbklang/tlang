@@ -14,6 +14,13 @@ import compiler.symbols.typing.core;
 import compiler.symbols.typing.builtins;
 
 
+
+/**
+* December update
+*
+* This is for future additions and
+*/
+
 /**
 * DNode
 *
@@ -857,6 +864,84 @@ public class DNodeGenerator
                             Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
                         }
             }
+            /**
+            * Function declarations
+            * Status: Not done (TODO)
+            */
+            else if(cast(Function)entity)
+            {
+                // /* Grab the function */
+                // Function func = cast(Function)entity;
+
+                // /* Set the context to be STATIC and relative to this Module */
+                // Context d = new Context( cast(Container)modulle, InitScope.STATIC);
+                // func.setContext(d);
+
+                // /* Pass the function declaration */
+                // DNode funcDep = FunctionPass(func);
+
+                // /* TODO: Surely we only require the module, it doesn't need us? */
+                // /* TODO: Perhaps, no, it needs us to make it into the tree */
+                // /* TODO: But NOT it's subcompnents */
+                // funcDep.needs(moduleDNode);
+                // moduleDNode.needs(funcDep); /* TODO: Nah fam looks weird */
+
+                /**
+                * TODO:
+                *
+                * Perhaps all function calls should look up this node
+                * via pooling it and then they should depend on it
+                * which depends on module init
+                *
+                * Then whatever depends on function call will have module dependent
+                * on it, which does this but morr round about but seems to make more
+                * sense, idk
+                */
+
+                /**
+                * SOLUTION
+                *
+                * DOn;'t process declarations
+                * Process function calls, then look up the Function (declaration)
+                * and go through it pooling and seeing it's needs
+                */
+
+                /**
+                * Other SOLUTION
+                * 
+                * We go through and process the declaration and get
+                * what each variable depends on, we then return this
+                * And we have a function that does that for us
+                * but WE DON'T IMPLEMENT THAT HERE IN modulePass()
+                *
+                * Rather each call will do it, and because we pool
+                * we will add DNOdes that then flatten out
+                */
+
+                /**
+                * EVEN BETTER (+PREVIOUS SOLUTION)
+                *
+                * We process it here yet we do not
+                * add thre entity themselves as dnodes
+                * only their dependents and return that
+                * Accounting ONLY for external dependencies
+                * WE STORE THIS INA  FUNCTIONMAP
+                *
+                * We DO call this here
+                *
+                * On a FUNCTION **CALL** do a normal pass on
+                * the FUNCTIONMAP entity, in a way that doesn't
+                * add to our tree for Modulle. Effectively
+                * giving us a uniue dependecny tree per call
+                * which is fine for checking things and also
+                * for (what is to come - code generation) AS
+                * THEN we want duplication. Calling something
+                * twice means two sets of instructions, not one
+                * (as a result from pooled dependencies or USING
+                * the same pool)
+                */
+            }
+
         }
 
 
@@ -866,6 +951,72 @@ public class DNodeGenerator
         
 
         return moduleDNode;
+    }
+
+    /**
+    * FunctionData
+    *
+    * Contains the dependency tree for a function,
+    * it's name, context as to where it is declared
+    *
+    *TODO: TO getn this to work DNode and DNoeGenerator
+    * must become one to house `private static DNode root`
+    * and `private static DNode[] pool`, which means FunctionData
+    * may remain completely seperated from Module's DNode
+    *
+    * Of course DNode must have a FunctionData[] array irrespective
+    * of the sub-type of DNode as we look up data using it
+    * techncially it could be seperate, yeah, global function
+    *
+    * The FunctionData should, rather than Context perhaps,
+    * take in the DNode of the Modulle, to be able to idk
+    * maybe do some stuff
+    */
+    private struct FunctionData
+    {
+        public string name;
+        public Context context;
+
+        public DNode depRoot;
+    }
+
+    private FunctionData processFunction(Function funcDec)
+    {
+        FunctionData funcData;
+        funcData.name = funcDec.getName();
+        funcData.context = funcDec.context;
+        // funcData.depRoot = new DNode();
+
+        /* STart processing the internal dependencies*/
+        Statement[] statements = funcDec.getStatements();
+        foreach(Statement statement; statements)
+        {
+
+        }
+
+        return funcData;
+    }
+
+
+
+    /**
+    * WIP: TODO: BIG ONE, this is just for now
+    * TODO: REMOVE THIS
+    */
+    private DNode FunctionPass(Function func)
+    {
+        DNode dnode = pool(func);
+
+        /* Statements in body */
+        Statement[] bodyStatements = func.getStatements();
+
+        foreach(Statement statement; bodyStatements)
+        {
+            DNode dNodeStat = pool(statement);
+            dNodeStat.needs(dnode);
+        }
+
+        return dnode;
     }
 
     import compiler.typecheck.classes.classStaticDep;
