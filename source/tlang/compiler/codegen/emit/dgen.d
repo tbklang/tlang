@@ -166,6 +166,29 @@ public final class DCodeEmitter : CodeEmitter
     }
 
     /**
+    * Represents a function's code
+    *
+    * Includes: Name, address, the assembly
+    * for it (for all entities within)
+    */
+    private struct FunctionCode
+    {
+        public string functionName;
+        public ulong entryAddress;
+
+        /**
+        * Block-by-block asm-D emitted
+        * blocks
+        */
+        public string[] asmLines;
+
+        /* TODO: Return register name (Actually use standard rax, eax for compat) */
+    }
+
+
+    // private string[] emitFunctionEnter()
+
+    /**
     * Current stackpointer along with the offsets
     * from it to variables (a varName -> offset map)
     *
