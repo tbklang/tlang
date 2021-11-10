@@ -277,7 +277,12 @@ public final class TypeChecker
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
             addInstr(varAssInstr);
         }
-        else if(cast(compiler.typecheck.dependency.variables.ModuleVariableDeclaration)dnode)
+        /* TODO: Add support */
+        /**
+        * TODO: We need to emit different code dependeing on variable declaration TYPE
+        * We could use context for this, ClassVariableDec vs ModuleVariableDec
+        */
+        else if(cast(compiler.typecheck.dependency.variables.StaticVariableDeclaration)dnode)
         {
             /**
             * Codegen

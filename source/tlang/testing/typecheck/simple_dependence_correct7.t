@@ -20,5 +20,21 @@ j=232321213;
 
 class F
 {
+    static G f1;
 
+    P p1;
+    static P p2;
+
+    static class P
+    {
+
+    }
 }
+
+class G
+{
+    static F g1;
+}
+
+
+F f;

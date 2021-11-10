@@ -388,7 +388,8 @@ public class DNodeGenerator
         Module modulle = tc.getModule();
 
         /* Recurse downwards */
-        DNode moduleDNode = modulePass(modulle);
+        Context context = new Context(modulle, InitScope.STATIC);
+        DNode moduleDNode = generalPass(modulle, context);
 
         /* Print tree */
         // gprintln("\n"~moduleDNode.print());
@@ -907,6 +908,12 @@ public class DNodeGenerator
         {
             gprintln("generalPass(): Processing entity: "~entity.toString());
 
+            Entity ent = cast(Entity)entity;
+            if(ent && ent.getModifierType() != InitScope.STATIC)
+            {
+                continue;
+            }
+
             /**
             * Variable declarations
             */
@@ -923,7 +930,7 @@ public class DNodeGenerator
 
                 Type variableType = tc.getType(c, variable.getType());
                 assert(variableType); /* TODO: Handle invalid variable type */
-                DNode variableDNode = poolT!(ModuleVariableDeclaration, Variable)(variable);
+                DNode variableDNode = poolT!(StaticVariableDeclaration, Variable)(variable);
 
                 /* Basic type */
                 if(cast(Primitive)variableType)
@@ -1360,7 +1367,12 @@ public class DNodeGenerator
     private ClassStaticNode poolClassStatic(Clazz clazz)
     {
         /* Sanity check */
-        assert(clazz.getModifierType() == InitScope.STATIC);
+        if(clazz.getModifierType() != InitScope.STATIC)
+        {
+            Parser.expect("SanityCheck: poolClassStatic(): Cannot pool a non-static class");
+            // assert(clazz.getModifierType() == InitScope.STATIC);
+        }
+        
 
         foreach(DNode dnode; nodePool)
         {
@@ -1429,107 +1441,110 @@ public class DNodeGenerator
         
         gprintln("poes");
 
-        /**
-        * Get the Entities
-        */
-        Entity[] entities;
-        foreach(Statement statement; clazz.getStatements())
-        {
-            if(!(statement is null) && cast(Entity)statement)
-            {
-                entities ~= cast(Entity)statement;
-            }
-        }
-
-        /**
-        * Process all static members
-        *
-        * TODO: Non-Entities later
-        */
-        foreach(Entity entity; entities)
-        {
-            if(entity.getModifierType() == InitScope.STATIC)
-            {
-                /**
-                * Variable declarations
-                */
-                if(cast(Variable)entity)
-                {
-                    /* Get the Variable and information */
-                    Variable variable = cast(Variable)entity;
-                    Type variableType = tc.getType(clazz, variable.getType());
-                    gprintln(variable.getType());
-                    assert(variableType); /* TODO: Handle invalid variable type */
-                    DNode variableDNode = poolT!(StaticVariableDeclaration, Variable)(variable);
-
-                    /* Basic type */
-                    if(cast(Primitive)variableType)
-                    {
-                        /* Do nothing */
-                    }
-                    /* Class-type */
-                    else if(cast(Clazz)variableType)
-                    {
-                        /* If the class type is THIS class */
-                        if(variableType == clazz)
-                        {
-                            /* Do nothing */
-                        }
-                        /* If it is another type */
-                        else
-                        {
-                            /* Get the static class dependency */
-                            ClassStaticNode classDependency = classPassStatic(cast(Clazz)variableType);
-
-                            /* Make this variable declaration depend on static initalization of the class */
-                            variableDNode.needs(classDependency);
-                        }
-                    }
-                    /* Struct-type */
-                    else if(cast(Struct)variableType)
-                    {
-
-                    }
-                    /* Anything else */
-                    else
-                    {
-                        /* This should never happen */
-                        assert(false);
-                    }
+        generalPass(clazz, new Context(clazz.parentOf(), InitScope.STATIC));
 
 
-                    /* Set this variable as a dependency of this module */
-                    classDNode.needs(variableDNode);
+        // /**
+        // * Get the Entities
+        // */
+        // Entity[] entities;
+        // foreach(Statement statement; clazz.getStatements())
+        // {
+        //     if(!(statement is null) && cast(Entity)statement)
+        //     {
+        //         entities ~= cast(Entity)statement;
+        //     }
+        // }
 
-                    /* Set as visited */
-                    variableDNode.markVisited();
+        // /**
+        // * Process all static members
+        // *
+        // * TODO: Non-Entities later
+        // */
+        // foreach(Entity entity; entities)
+        // {
+        //     if(entity.getModifierType() == InitScope.STATIC)
+        //     {
+        //         /**
+        //         * Variable declarations
+        //         */
+        //         if(cast(Variable)entity)
+        //         {
+        //             /* Get the Variable and information */
+        //             Variable variable = cast(Variable)entity;
+        //             Type variableType = tc.getType(clazz, variable.getType());
+        //             gprintln(variable.getType());
+        //             assert(variableType); /* TODO: Handle invalid variable type */
+        //             DNode variableDNode = poolT!(StaticVariableDeclaration, Variable)(variable);
+
+        //             /* Basic type */
+        //             if(cast(Primitive)variableType)
+        //             {
+        //                 /* Do nothing */
+        //             }
+        //             /* Class-type */
+        //             else if(cast(Clazz)variableType)
+        //             {
+        //                 /* If the class type is THIS class */
+        //                 if(variableType == clazz)
+        //                 {
+        //                     /* Do nothing */
+        //                 }
+        //                 /* If it is another type */
+        //                 else
+        //                 {
+        //                     /* Get the static class dependency */
+        //                     ClassStaticNode classDependency = classPassStatic(cast(Clazz)variableType);
+
+        //                     /* Make this variable declaration depend on static initalization of the class */
+        //                     variableDNode.needs(classDependency);
+        //                 }
+        //             }
+        //             /* Struct-type */
+        //             else if(cast(Struct)variableType)
+        //             {
+
+        //             }
+        //             /* Anything else */
+        //             else
+        //             {
+        //                 /* This should never happen */
+        //                 assert(false);
+        //             }
 
 
-                    /* If there is an assignment attached to this */
-                    if(variable.getAssignment())
-                    {
-                        /* (TODO) Process the assignment */
+        //             /* Set this variable as a dependency of this module */
+        //             classDNode.needs(variableDNode);
 
-                        /**
-                        * WARNING I COPIED THIS FROM MODULE INIT AS A TEST I DONT
-                        * KNOW FOR SURE IF IT WILL WORK
-                        *
-                        * !!!!!!!!!!!!!!!!!!!!!!!!
-                        */
-                        VariableAssignment varAssign = variable.getAssignment();
+        //             /* Set as visited */
+        //             variableDNode.markVisited();
 
-                        DNode expression = expressionPass(varAssign.getExpression(), new Context(clazz, InitScope.STATIC));
 
-                        VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
-                        varAssignNode.needs(expression);
+        //             /* If there is an assignment attached to this */
+        //             if(variable.getAssignment())
+        //             {
+        //                 /* (TODO) Process the assignment */
 
-                        variableDNode.needs(varAssignNode);
-                    }
+        //                 /**
+        //                 * WARNING I COPIED THIS FROM MODULE INIT AS A TEST I DONT
+        //                 * KNOW FOR SURE IF IT WILL WORK
+        //                 *
+        //                 * !!!!!!!!!!!!!!!!!!!!!!!!
+        //                 */
+        //                 VariableAssignment varAssign = variable.getAssignment();
+
+        //                 DNode expression = expressionPass(varAssign.getExpression(), new Context(clazz, InitScope.STATIC));
+
+        //                 VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
+        //                 varAssignNode.needs(expression);
+
+        //                 variableDNode.needs(varAssignNode);
+        //             }
 
                     
-                }
-            }
-        }
+        //         }
+        //     }
+        // }
 
         return classDNode;
     }
