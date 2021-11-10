@@ -4,6 +4,7 @@ import std.container.slist;
 import gogga;
 import std.conv : to;
 import std.string : cmp;
+import std.ascii : isDigit;
 
 /* TODO: Add Token type (which matches column and position too) */
 public final class Token
@@ -69,6 +70,8 @@ public final class Lexer
     {
         return position-1 < sourceCode.length;
     }
+
+
 
     /**
     * Used for tokenising a2.b2
@@ -292,6 +295,141 @@ public final class Lexer
                     return false;
                 }
             }
+            /**
+            * If we are building up a number
+            *
+            * TODO: Build up token right at the end (#DuplicateCode)
+            */
+            else if(isBuildUpNumerical())
+            {
+                gprintln("jfdjkhfdjkhfsdkj");
+                /* fetch the encoder segment */
+                char[] encoderSegment = numbericalEncoderSegmentFetch();
+
+                gprintln("isBuildUpNumerical(): Enter");
+
+                /**
+                * If we don't have any encoders
+                */
+                if(encoderSegment.length == 0)
+                {
+                    /* We can add a signage encoder */
+                    if(isNumericalEncoder_Signage(currentChar))
+                    {
+                        gprintln("Hello");
+
+                        /* Check if the next character is a size (it MUST be) */
+                        if(isForward() && isNumericalEncoder_Size(sourceCode[position+1]))
+                        {
+                            currentToken ~= currentChar;
+                            column++;
+                            position++;
+
+                            
+                        }
+                        else
+                        {
+                            gprintln("You MUST specify a size encoder after a signagae encoder", DebugType.ERROR);
+                            return false;
+                        }
+
+
+
+                        
+                    }
+                    /* We can add a size encoder */
+                    else if(isNumericalEncoder_Size(currentChar))
+                    {
+                        currentToken ~= currentChar;
+                        column++;
+                        position++;
+                    }
+                    /* We can add more numbers */
+                    else if(isDigit(currentChar))
+                    {
+                        currentToken ~= currentChar;
+                        column++;
+                        position++;
+                    }
+                    /* Splitter (TODO) */
+                    else if(isSpliter(currentChar))
+                    {
+                        /* Add the numerical literal as a new token */
+                        currentTokens ~= new Token(currentToken, line, column);
+
+                        /* Add the splitter token if not a newline */
+                        if(currentChar != '\n')
+                        {
+                            currentTokens ~= new Token(""~currentChar, line, column);
+                        }
+    
+
+                        /* Flush the token */
+                        currentToken = "";
+
+                        /* TODO: Check these */
+                        column += 2;
+                        position += 2;
+                    }
+                    /* Anything else is invalid */
+                    else
+                    {
+                        gprintln("Not valid TODO", DebugType.ERROR);
+                        return false;
+                    }
+                }
+                /**
+                * If we have one encoder
+                */
+                else if((encoderSegment.length == 1))
+                {
+                    /* Check what the encoder is */
+
+                    /**
+                    * If we had a signage then we must have a size after it
+                    */
+                    if(isNumericalEncoder_Signage(encoderSegment[0]))
+                    {
+                        /**
+                        * Size encoder must then follow
+                        */
+                        if(isNumericalEncoder_Size(currentChar))
+                        {
+                            currentToken ~= currentChar;
+                            column++;
+                            position++;
+
+                            /* Add the numerical literal as a new token */
+                            currentTokens ~= new Token(currentToken, line, column);
+
+                            /* Flush the token */
+                            currentToken = "";
+
+                        }
+                        /**
+                        * Anything else is invalid
+                        */
+                        else
+                        {
+                            gprintln("A size-encoder must follow a signage encoder", DebugType.ERROR);
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        gprintln("Cannot have another encoder after a size encoder", DebugType.ERROR);
+                        return false;
+                    }
+                }
+                /* It is impossible to reach this as flushing means we cannot add more */
+                else
+                {
+                    assert(false);
+                }
+                
+                
+            }
+            /* Any other case, keep building the curent token */
             else
             {
                 currentToken ~= currentChar;
@@ -311,6 +449,88 @@ public final class Lexer
         return true;
     }
 
+    private char[] numbericalEncoderSegmentFetch()
+    {
+        char[] numberPart;
+        ulong stopped;
+        for(ulong i = 0; i < currentToken.length; i++)
+        {
+            char character = currentToken[i];
+
+            if(isDigit(character))
+            {
+                numberPart~=character;
+            }
+            else
+            {
+                stopped = i;
+                break;
+            }
+        }
+
+        char[] remaining = cast(char[])currentToken[stopped..currentToken.length];
+
+        return remaining;
+    }
+
+    /**
+    * Returns true if the current build up is entirely
+    * numerical
+    *
+    * FIXME: THis, probably by its own will pick up `UL`
+    * as a number, or even just ``
+    */
+    private bool isBuildUpNumerical()
+    {
+        import std.ascii : isDigit;
+
+
+        char[] numberPart;
+        ulong stopped;
+        for(ulong i = 0; i < currentToken.length; i++)
+        {
+            char character = currentToken[i];
+
+            if(isDigit(character))
+            {
+                numberPart~=character;
+            }
+            else
+            {
+                stopped = i;
+                break;
+            }
+        }
+
+        /**
+        * We need SOME numerical stuff
+        */
+        if(stopped == 0)
+        {
+            return false;
+        }
+
+        char[] remaining = cast(char[])currentToken[stopped..currentToken.length];
+
+        char lstEncoder;
+
+        for(ulong i = 0; i < remaining.length; i++)
+        {
+            char character = remaining[i];
+
+            if(!isNumericalEncoder(character))
+            {
+                return false;
+            }
+        }
+
+        return true;
+
+
+       
+    }
+
+
     /* Return the tokens */
     public Token[] getTokens()
     {
@@ -326,7 +546,24 @@ public final class Lexer
                 character == '{' || character == '}' || character == '=' ||
                 character == '|' || character == '^' || character == '!' ||
                 character == '\n' || character == '~' || character =='.' ||
-                character == ':';
+                character == ':'; //|| isNumericalEncoder(character);
+    }
+
+    private bool isNumericalEncoder(char character)
+    {
+        return isNumericalEncoder_Size(character) ||
+               isNumericalEncoder_Signage(character);
+    }
+
+    private bool isNumericalEncoder_Size(char character)
+    {
+        return character == 'B' || character == 'W' ||
+               character == 'I' || character == 'L';
+    }
+
+    private bool isNumericalEncoder_Signage(char character)
+    {
+        return character == 'S' || character == 'U';
     }
 
     /* Supported escapes \" */
@@ -435,6 +672,48 @@ unittest
     assert(currentLexer.getTokens() == [new Token("2121", 0, 0), new Token("2121", 0, 0)]);
 }
 
+/**
+* Test: Literal value encoding
+*
+* Tests validity
+*/
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode;
+    Lexer currentLexer;
 
+    /* 21L (valid) */
+    sourceCode = "21L";
+    currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [new Token("21L", 0, 0)]);
+
+    /* 21UL (valid) */
+    sourceCode = "21UL";
+    currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [new Token("21UL", 0, 0)]);
+
+    /* 21U (invalid) */
+    sourceCode = "21U ";
+    currentLexer = new Lexer(sourceCode);
+    // gprintln(currentLexer.performLex());
+    bool status = currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(!status);
+
+
+    // /* 21UL (valid) */
+    // sourceCode = "21UL";
+    // currentLexer = new Lexer(sourceCode);
+    // currentLexer.performLex();
+    // gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    // assert(currentLexer.getTokens() == [new Token("21UL", 0, 0)]);
+
+    
+}
 
 /* TODO: Add more tests */
