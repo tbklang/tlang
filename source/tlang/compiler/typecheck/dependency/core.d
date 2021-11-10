@@ -1103,7 +1103,7 @@ public class DNodeGenerator
     /**
     * Can we some how generalise this?
     */
-    private DNode modulePass(Module modulle)
+    private DNode modulePass_disabled(Module modulle)
     {
         /* Get a DNode for the Module */
         DNode moduleDNode = pool(modulle);
@@ -1398,8 +1398,6 @@ public class DNodeGenerator
             /* Set as visited */
             classDNode.markVisited();
         }
-        
-        gprintln("poes");
 
         generalPass(clazz, new Context(clazz.parentOf(), InitScope.STATIC));
 

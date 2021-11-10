@@ -36,8 +36,13 @@ class G
 {
     static F g1;
     static int g2Number;
+
+    static class P
+    {
+        static F.P otherP1;
+        static G.P thisp1;
+    }
 }
 
 
 F f;
-G g;

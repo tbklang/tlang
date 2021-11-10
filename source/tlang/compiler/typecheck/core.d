@@ -333,6 +333,8 @@ public final class TypeChecker
 
             
         }
+        /* TODO: Add class init */
+        /* It will pop a bunch of shiiit */
         /* TODO: ANy statement */
         else if(cast(compiler.typecheck.dependency.core.DNode)dnode)
         {
