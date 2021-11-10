@@ -27,13 +27,15 @@ class F
 
     static class P
     {
-
+        int p1;
+        static int p2;
     }
 }
 
 class G
 {
     static F g1;
+    static int g2Number;
 }
 
 
