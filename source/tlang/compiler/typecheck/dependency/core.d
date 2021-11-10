@@ -1322,46 +1322,6 @@ public class DNodeGenerator
         return moduleDNode;
     }
 
-    
-
-    // private FunctionData processFunction(Function funcDec)
-    // {
-    //     FunctionData funcData;
-    //     funcData.name = funcDec.getName();
-    //     funcData.context = funcDec.context;
-    //     // funcData.depRoot = new DNode();
-
-    //     /* STart processing the internal dependencies*/
-    //     Statement[] statements = funcDec.getStatements();
-    //     foreach(Statement statement; statements)
-    //     {
-
-    //     }
-
-    //     return funcData;
-    // }
-
-
-
-    // /**
-    // * WIP: TODO: BIG ONE, this is just for now
-    // * TODO: REMOVE THIS
-    // */
-    // private DNode FunctionPass(Function func)
-    // {
-    //     DNode dnode = pool(func);
-
-    //     /* Statements in body */
-    //     Statement[] bodyStatements = func.getStatements();
-
-    //     foreach(Statement statement; bodyStatements)
-    //     {
-    //         DNode dNodeStat = pool(statement);
-    //         dNodeStat.needs(dnode);
-    //     }
-
-    //     return dnode;
-    // }
 
     import compiler.typecheck.dependency.classes.classStaticDep;
     private ClassStaticNode poolClassStatic(Clazz clazz)
