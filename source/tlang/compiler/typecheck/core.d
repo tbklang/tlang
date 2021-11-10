@@ -284,6 +284,10 @@ public final class TypeChecker
         */
         else if(cast(compiler.typecheck.dependency.variables.StaticVariableDeclaration)dnode)
         {
+            /* TODO: Add skipping if context is within a class */
+            /* We need to wait for class static node, to do an InitInstruction (static init) */
+            /* It probably makes sense , IDK, we need to allocate both classes */
+
             /**
             * Codegen
             *
@@ -334,6 +338,14 @@ public final class TypeChecker
             
         }
         /* TODO: Add class init */
+        else if(cast(compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
+        {
+            Clazz clazzPNode = cast(Clazz)dnode.getEntity();
+            string clazzName = resolver.generateName(modulle, clazzPNode);
+
+            /* TODO: I am rushing so idk which quantum op to use */
+            addInstrB(new ClassStaticInitAllocate(clazzName));
+        }
         /* It will pop a bunch of shiiit */
         /* TODO: ANy statement */
         else if(cast(compiler.typecheck.dependency.core.DNode)dnode)

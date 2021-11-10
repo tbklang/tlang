@@ -26,6 +26,8 @@ public class VariableNode : DNode
     {
         name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
     }
+
+    
 }
 
 public class ModuleVariableDeclaration : VariableNode

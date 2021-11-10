@@ -36,6 +36,14 @@ public class StorageDeclaratio : Instruction
 
 }
 
+public class ClassStaticInitAllocate : Instruction
+{
+    this(string className)
+    {
+        addInfo = "classStaticInitAllocate: "~className;
+    }
+}
+
 public class VariableAssignmentInstr : Instruction
 {
     /* Name of variable being declared */
