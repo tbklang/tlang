@@ -65,12 +65,27 @@ public final class TypeChecker
         *
         */
         import compiler.typecheck.dependency.core;
+
+        // DNodeGenerator.staticTC = this;
+
         DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
 
         /* Print the tree */
         string tree = rootNode.print();
         gprintln(tree);
+
+
+
+        /* Grab functionData ??? */
+        FunctionData[string] functions = grabFunctionDefs();
+        gprintln("Defined functions: "~to!(string)(functions));
+        /* TODO: Disable, this is just to peep */
+        foreach(FunctionData funcData; functions.values)
+        {
+            DNode funcNode = funcData.generate();
+            gprintln(funcNode.print());
+        }
 
         /* TODO: Work in progress (NEW!!!) */
         /* Get the action-list (linearised bottom up graph) */

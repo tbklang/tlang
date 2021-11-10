@@ -71,12 +71,65 @@ public final class Context
 * take in the DNode of the Modulle, to be able to idk
 * maybe do some stuff
 */
-private struct FunctionData
+public struct FunctionData
 {
     public string name;
-    public Context context;
-
     public DNodeGenerator ownGenerator;
+    public Function func;
+
+    public DNode generate()
+    {
+        return ownGenerator.generate();
+    }
+}
+
+/**
+* All declared functions
+*/
+private FunctionData[string] functions;
+
+
+/**
+* Returns the declared functions
+*/
+public FunctionData[string] grabFunctionDefs()
+{
+    return functions;
+}
+
+/**
+* Creates a new FunctionData and adds it to the
+* list of declared functions
+*
+* Requires a TypeChecker `tc`
+*/
+private void addFunctionDef(TypeChecker tc, Function func)
+{
+    /* (Sanity Check) This should never be called again */
+    foreach(string cFuncKey; functions.keys())
+    {
+        FunctionData cFuncData = functions[cFuncKey];
+        Function cFunc = cFuncData.func;
+
+        if(cFunc == func)
+        {
+            assert(false);
+        }
+    }
+
+    /**
+    * Create the FunctionData, coupled with it own DNodeGenerator
+    * context etc.
+    */
+    FunctionData funcData;
+    funcData.ownGenerator = new DFunctionInnerGenerator(tc, func);
+    funcData.name = func.getName();
+    funcData.func = func;
+
+
+    functions[funcData.name] = funcData;
+
+
 }
 
 /**
@@ -240,6 +293,63 @@ public class DNode
 }
 
 
+public final class DFunctionInnerGenerator : DNodeGenerator
+{
+    private Function func;
+
+    this(TypeChecker tc, Function func)
+    {
+        super(tc);
+        this.func = func;
+    }
+
+    public override DNode generate()
+    {
+        DNode node = funcInnerPass();
+
+
+        return node;
+    }
+
+    private DNode funcInnerPass()
+    {
+        /* Pool myself (would need for recursive stuff probably) */
+        DNode self  = pool(func);
+
+        /* Look at the body statements */
+        Statement[] statements = func.getStatements();
+        foreach(Statement statement; statements)
+        {
+            gprintln("funcInnerPass(): Processing "~statement.toString());
+
+            /**
+            * Variable declarations
+            */
+            if(cast(Variable)statement)
+            {
+                Variable variable = cast(Variable)statement;
+                DNode varDNode = pool(variable);
+
+
+                /**
+                * TODO: Handling of external dependencies
+                *
+                * Handling of external factors, perhaps
+                * we need our outer DNodeGenerator, we can
+                * then visit those things perhaps
+                */
+
+
+                /* Make the function call (us) require this */
+                self.needs(varDNode);
+            }
+        }
+
+
+        return self;
+    }
+}
+
 
 public class DNodeGenerator
 {
@@ -248,6 +358,10 @@ public class DNodeGenerator
     */
     private TypeChecker tc;
     public Resolver resolver;
+
+
+    // public static TypeChecker staticTC
+
 
     /**
     * DNode pool
@@ -758,9 +872,230 @@ public class DNodeGenerator
         return newDNode;
     }
 
+    private DNode generalPass(Container c, Context context)
+    {
+        Entity namedContainer = cast(Entity)c;
+        assert(namedContainer);
+
+        DNode node = pool(namedContainer);
+
+        /* If this is a Module then it must become the root */
+        if(cast(Module)namedContainer)
+        {
+            root = node;
+        }
 
 
+        /**
+        * Get the statements of this Container
+        */
+        Statement[] entities;
+        foreach(Statement statement; c.getStatements())
+        {
+            if(!(statement is null))
+            {
+                entities ~= cast(Statement)statement;
+            }
+        }
 
+        /**
+        * Process each Entity
+        *
+        * TODO: Non entities later
+        */
+        foreach(Statement entity; entities)
+        {
+            gprintln("generalPass(): Processing entity: "~entity.toString());
+
+            /**
+            * Variable declarations
+            */
+            if(cast(Variable)entity)
+            {
+                /* Get the Variable and information */
+                Variable variable = cast(Variable)entity;
+
+                 /* TODO: 25Oct new */
+                // Context d = new Context( cast(Container)modulle, InitScope.STATIC);
+                entity.setContext(context);
+                /* TODO: Above 25oct new */
+
+
+                Type variableType = tc.getType(c, variable.getType());
+                assert(variableType); /* TODO: Handle invalid variable type */
+                DNode variableDNode = poolT!(ModuleVariableDeclaration, Variable)(variable);
+
+                /* Basic type */
+                if(cast(Primitive)variableType)
+                {
+                    /* Do nothing */
+                }
+                /* Class-type */
+                else if(cast(Clazz)variableType)
+                {
+                    /* Get the static class dependency */
+                    ClassStaticNode classDependency = classPassStatic(cast(Clazz)variableType);
+
+                    /* Make this variable declaration depend on static initalization of the class */
+                    variableDNode.needs(classDependency);
+                }
+                /* Struct-type */
+                else if(cast(Struct)variableType)
+                {
+
+                }
+                /* Anything else */
+                else
+                {
+                    /* This should never happen */
+                    assert(false);
+                }
+
+
+                /* Set this variable as a dependency of this module */
+                node.needs(variableDNode);
+
+                /* Set as visited */
+                variableDNode.markVisited();
+
+                /* If there is an assignment attached to this */
+                if(variable.getAssignment())
+                {
+                    /* (TODO) Process the assignment */
+                    VariableAssignment varAssign = variable.getAssignment();
+
+                    DNode expression = expressionPass(varAssign.getExpression(), context);
+
+                    VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
+                    varAssignNode.needs(expression);
+
+                    variableDNode.needs(varAssignNode);
+                }
+
+                
+            }
+            /**
+            * Variable asignments
+            */
+            else if(cast(VariableAssignmentStdAlone)entity)
+            {
+                VariableAssignmentStdAlone vAsStdAl = cast(VariableAssignmentStdAlone)entity;
+
+                /* TODO: CHeck avriable name even */
+                gprintln("VAGINA");
+                assert(tc.getResolver().resolveWithin(c, vAsStdAl.getVariableName()));
+                gprintln("VAGINA");
+                Variable variable = cast(Variable)tc.getResolver().resolveWithin(c, vAsStdAl.getVariableName());
+                assert(variable);
+                /* Pool the variable */
+                DNode varDecDNode = pool(variable);
+
+                /* TODO: Make sure a DNode exists (implying it's been declared already) */
+                if(varDecDNode.isVisisted())
+                        {
+                            /* Pool varass stdalone */
+                            DNode vStdAlDNode = pool(vAsStdAl);
+                            node.needs(vStdAlDNode);
+
+                         DNode expression = expressionPass(vAsStdAl.getExpression(), context);
+                         vStdAlDNode.needs(expression);
+                            
+                        }
+                        else
+                        {
+                            Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
+                        }
+            }
+            /**
+            * Function declarations
+            * Status: Not done (TODO)
+            */
+            else if(cast(Function)entity)
+            {
+                // /* Grab the function */
+                Function func = cast(Function)entity;
+
+                // /* Set the context to be STATIC and relative to this Module */
+                // Context d = new Context( cast(Container)modulle, InitScope.STATIC);
+                // func.setContext(d);
+
+                // /* Pass the function declaration */
+                // DNode funcDep = FunctionPass(func);
+
+                // /* TODO: Surely we only require the module, it doesn't need us? */
+                // /* TODO: Perhaps, no, it needs us to make it into the tree */
+                // /* TODO: But NOT it's subcompnents */
+                // funcDep.needs(moduleDNode);
+                // moduleDNode.needs(funcDep); /* TODO: Nah fam looks weird */
+
+                /**
+                * TODO:
+                *
+                * Perhaps all function calls should look up this node
+                * via pooling it and then they should depend on it
+                * which depends on module init
+                *
+                * Then whatever depends on function call will have module dependent
+                * on it, which does this but morr round about but seems to make more
+                * sense, idk
+                */
+
+                /**
+                * SOLUTION
+                *
+                * DOn;'t process declarations
+                * Process function calls, then look up the Function (declaration)
+                * and go through it pooling and seeing it's needs
+                */
+
+                /**
+                * Other SOLUTION
+                * 
+                * We go through and process the declaration and get
+                * what each variable depends on, we then return this
+                * And we have a function that does that for us
+                * but WE DON'T IMPLEMENT THAT HERE IN modulePass()
+                *
+                * Rather each call will do it, and because we pool
+                * we will add DNOdes that then flatten out
+                */
+
+                /**
+                * EVEN BETTER (+PREVIOUS SOLUTION)
+                *
+                * We process it here yet we do not
+                * add thre entity themselves as dnodes
+                * only their dependents and return that
+                * Accounting ONLY for external dependencies
+                * WE STORE THIS INA  FUNCTIONMAP
+                *
+                * We DO call this here
+                *
+                * On a FUNCTION **CALL** do a normal pass on
+                * the FUNCTIONMAP entity, in a way that doesn't
+                * add to our tree for Modulle. Effectively
+                * giving us a uniue dependecny tree per call
+                * which is fine for checking things and also
+                * for (what is to come - code generation) AS
+                * THEN we want duplication. Calling something
+                * twice means two sets of instructions, not one
+                * (as a result from pooled dependencies or USING
+                * the same pool)
+                */
+
+                /* Add funtion definition */
+                gprintln("Hello");
+                addFunctionDef(tc, func);
+            }
+
+        }
+
+        return node;
+    }
+
+    /**
+    * Can we some how generalise this?
+    */
     private DNode modulePass(Module modulle)
     {
         /* Get a DNode for the Module */
@@ -894,7 +1229,7 @@ public class DNodeGenerator
             else if(cast(Function)entity)
             {
                 // /* Grab the function */
-                // Function func = cast(Function)entity;
+                Function func = cast(Function)entity;
 
                 // /* Set the context to be STATIC and relative to this Module */
                 // Context d = new Context( cast(Container)modulle, InitScope.STATIC);
@@ -963,6 +1298,10 @@ public class DNodeGenerator
                 * (as a result from pooled dependencies or USING
                 * the same pool)
                 */
+
+                /* Add funtion definition */
+                gprintln("Hello");
+                addFunctionDef(tc, func);
             }
 
         }
