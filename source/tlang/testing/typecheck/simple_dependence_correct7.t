@@ -38,3 +38,4 @@ class G
 
 
 F f;
+G g;
