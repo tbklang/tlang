@@ -134,6 +134,11 @@ public final class TypeChecker
         
         return poppedInstr;
     }
+
+    public bool isInstrEmpty()
+    {
+        return codeQueue.empty;
+    }
     
     public SList!(Instruction) getCodeQueue()
     {
@@ -300,38 +305,50 @@ public final class TypeChecker
             /* NEW CODE (9th November 2021) Set the context */
             varDecInstr.context = variablePNode.context;
 
-            /* Check if there is a VariableAssignmentInstruction */
-            Instruction possibleInstr = popInstr();
-            if(possibleInstr !is null)
+
+            /* If it is a Module variable declaration */
+            if(cast(Module)variablePNode.context.container)
             {
-                VariableAssignmentInstr varAssInstr = cast(VariableAssignmentInstr)possibleInstr;
-                if(varAssInstr)
+                /* Check if there is a VariableAssignmentInstruction */
+                Instruction possibleInstr = popInstr();
+                if(possibleInstr !is null)
                 {
-                    /* Check if the assignment is to this variable */
-                    if(cmp(varAssInstr.varName, variableName) == 0)
+                    VariableAssignmentInstr varAssInstr = cast(VariableAssignmentInstr)possibleInstr;
+                    if(varAssInstr)
                     {
-                        /* If so, re-order (VarDec then VarAssign) */
-                        
-                        addInstrB(varDecInstr);
-                        addInstrB(varAssInstr);
+                        /* Check if the assignment is to this variable */
+                        if(cmp(varAssInstr.varName, variableName) == 0)
+                        {
+                            /* If so, re-order (VarDec then VarAssign) */
+                            
+                            addInstrB(varDecInstr);
+                            addInstrB(varAssInstr);
+                        }
+                        else
+                        {
+                            /* If not, then no re-order */
+                            addInstrB(varAssInstr);
+                            addInstrB(varDecInstr);
+                        }
                     }
                     else
                     {
-                        /* If not, then no re-order */
-                        addInstrB(varAssInstr);
+                        /* Push it back if not a VariableAssignmentInstruction */
+                        
+                        addInstr(possibleInstr);
                         addInstrB(varDecInstr);
+                        
                     }
                 }
-                else
-                {
-                    /* Push it back if not a VariableAssignmentInstruction */
-                    
-                    addInstr(possibleInstr);
-                    addInstrB(varDecInstr);
-                    
-                }
             }
-            
+            /* If it is a Class (static) variable declaration */
+            else if(cast(Clazz)variablePNode.context.container)
+            {
+                /* TODO: Make sure this is correct */
+                addInstr(varDecInstr);
+                gprintln("Hello>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+
+            }
 
             
 
@@ -345,6 +362,41 @@ public final class TypeChecker
 
             /* TODO: I am rushing so idk which quantum op to use */
             addInstrB(new ClassStaticInitAllocate(clazzName));
+
+            /* TODO: We should pop till we can't and whilst related to us */
+            while(!isInstrEmpty())
+            {
+                Instruction instr = popInstr();
+                gprintln("Bruh"~to!(string)(instr));
+
+                /* TODO: THis should never fail, we should ALWAYS have class-related things */
+                VariableDeclaration varDecInstr = cast(compiler.codegen.instruction.VariableDeclaration)instr;
+                
+                /* If not VariableDeclaration push back */
+                if(!varDecInstr)
+                {
+                    addInstr(varDecInstr);
+                }
+                /* If, then make sure related to this class */
+                else
+                {
+                    /* TODO: Fetch the variable's context */
+                    Variable varDecPNode = cast(Variable)resolver.resolveBest(modulle, varDecInstr.varName);
+                    gprintln(varDecPNode);
+                    gprintln(varDecInstr.varName);
+                    assert(varDecPNode);
+                    /* If it belongs to this class */
+                    if(varDecPNode)
+                    {
+
+                    }
+                }
+                // assert(varDecInstr);
+                // assert()
+
+                
+                
+            }
         }
         /* It will pop a bunch of shiiit */
         /* TODO: ANy statement */
