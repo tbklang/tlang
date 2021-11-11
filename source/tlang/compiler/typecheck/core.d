@@ -363,6 +363,8 @@ public final class TypeChecker
             /* TODO: I am rushing so idk which quantum op to use */
             addInstrB(new ClassStaticInitAllocate(clazzName));
 
+            SList!(Instruction) kept;
+
             /* TODO: We should pop till we can't and whilst related to us */
             while(!isInstrEmpty())
             {
@@ -372,10 +374,11 @@ public final class TypeChecker
                 /* TODO: THis should never fail, we should ALWAYS have class-related things */
                 VariableDeclaration varDecInstr = cast(compiler.codegen.instruction.VariableDeclaration)instr;
                 
-                /* If not VariableDeclaration push back */
+                /* If not VariableDeclaration push back and end */
                 if(!varDecInstr)
                 {
                     addInstr(varDecInstr);
+                    break;
                 }
                 /* If, then make sure related to this class */
                 else
@@ -384,11 +387,27 @@ public final class TypeChecker
                     Variable varDecPNode = cast(Variable)resolver.resolveBest(clazzPNode, varDecInstr.varName);
                     gprintln(varDecPNode);
                     gprintln(varDecInstr.varName);
+    
+                    /* If we cast'd successfully to a VariableDclaration then it must mean a Variable exists */
                     assert(varDecPNode);
-                    /* If it belongs to this class */
-                    if(varDecPNode)
-                    {
 
+                    /**
+                    * The VariableDeclaration is only related to the class
+                    * if it is a direct sibling of it (contained by it)
+                    */
+                    if(varDecPNode.context.container == clazzPNode)
+                    {
+                        /* TODO: Add the static variable declARATION INITIALIZATIONS HERE */
+                        kept.insert(varDecInstr);
+                    }
+                    /**
+                    * If not, then put it back where it was
+                    * and end
+                    */
+                    else
+                    {
+                        addInstr(varDecInstr);
+                        break;
                     }
                 }
                 // assert(varDecInstr);
@@ -396,6 +415,14 @@ public final class TypeChecker
 
                 
                 
+            }
+
+            /**
+            * Add the collected instructions
+            */
+            foreach(Instruction instruction; kept)
+            {
+                addInstrB(instruction);
             }
         }
         /* It will pop a bunch of shiiit */
