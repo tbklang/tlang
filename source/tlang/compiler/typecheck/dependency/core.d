@@ -1399,7 +1399,7 @@ public class DNodeGenerator
             classDNode.markVisited();
         }
 
-        generalPass(clazz, new Context(clazz.parentOf(), InitScope.STATIC));
+        generalPass(clazz, new Context(clazz, InitScope.STATIC));
 
 
         // /**
