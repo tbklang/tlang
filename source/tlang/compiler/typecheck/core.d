@@ -381,7 +381,7 @@ public final class TypeChecker
                 else
                 {
                     /* TODO: Fetch the variable's context */
-                    Variable varDecPNode = cast(Variable)resolver.resolveBest(modulle, varDecInstr.varName);
+                    Variable varDecPNode = cast(Variable)resolver.resolveBest(clazzPNode, varDecInstr.varName);
                     gprintln(varDecPNode);
                     gprintln(varDecInstr.varName);
                     assert(varDecPNode);
