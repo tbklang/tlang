@@ -299,6 +299,7 @@ public final class TypeChecker
             * Emit a variable declaration instruction
             */
             Variable variablePNode = cast(Variable)dnode.getEntity();
+            gprintln("HELLO NIGGA");
             string variableName = resolver.generateName(modulle, variablePNode);
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4);
 
@@ -361,6 +362,11 @@ public final class TypeChecker
             string clazzName = resolver.generateName(modulle, clazzPNode);
 
             /* TODO: I am rushing so idk which quantum op to use */
+            // addInstrB(new ClassStaticInitAllocate(clazzName));
+
+            /**
+            * Add the class allocator instruction
+            */
             addInstrB(new ClassStaticInitAllocate(clazzName));
 
             SList!(Instruction) kept;
@@ -417,6 +423,8 @@ public final class TypeChecker
                 
             }
 
+            
+            
             /**
             * Add the collected instructions
             */
@@ -1330,4 +1338,39 @@ unittest
         /* Make sure the member y.y collided with root container (module) y */
         assert(e.defined == container);
     }
+}
+
+/* Test name colliding with container name (1/2) */
+unittest
+{
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.parsing.core;
+
+    string sourceFile = "source/tlang/testing/typecheck/simple_dependence_correct7.t";
+
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
+
+    string sourceCode = cast(string) fileBytes;
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+
+    Parser parser = new Parser(currentLexer.getTokens());
+    Module modulle = parser.parse();
+    TypeChecker typeChecker = new TypeChecker(modulle);
+
+   
+
+        /* Perform test */
+        typeChecker.beginCheck();
+
+
+ 
 }

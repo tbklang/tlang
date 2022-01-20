@@ -18,12 +18,16 @@ p = 4;
 p = 4;
 j=232321213;
 
+discard "Must look at case the above line doesn't exist and STILL we should allocate (line 28)";
+
 class F
 {
     static G f1;
 
     P p1;
     static P p2;
+
+    
 
     static class P
     {
@@ -46,3 +50,4 @@ class G
 
 
 F f;
+G g;
