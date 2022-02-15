@@ -1,4 +1,4 @@
-module typeChecking3;
+module simple;
 void main()
 {
 
@@ -15,52 +15,19 @@ asm
 
         asm
         {
-            mov R14D, 21;
+            mov R14B, 65;
         }
         
 
         asm
         {
-            mov R13B, 65;
-        }
-        
-asm
-                    {
-                        sub RSP, 4;
-                    }
-                    
-
-        asm
-        {
-            mov R12D, 2;
-        }
-        
-asm
-                    {
-                        sub RSP, 4;
-                    }
-                    
-
-        asm
-        {
-            mov R11B, 65;
+            mov RSP, R15;
         }
         
 
-        asm
-        {
-            mov R10D, 4;
-        }
+        int h = -1;
+        h = *((&h)-4);
+        import std.stdio;
+        writeln(h);
         
-
-        asm
-        {
-            mov R9D, 4;
-        }
-        
-
-        asm
-        {
-            mov R8D, 4;
-        }
-        
+}

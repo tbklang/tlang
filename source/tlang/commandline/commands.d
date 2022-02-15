@@ -47,7 +47,6 @@ struct compileCommand
     }
 }
 
-
 /**
 * Only perform tokenization of the given source files
 */

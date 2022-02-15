@@ -260,6 +260,23 @@ public final class TypeChecker
                 BinOpInstr addInst = new BinOpInstr(vLhsInstr, vRhsInstr, binOperator);
                 addInstr(addInst);
             }
+            /* Function calls */
+            else if(cast(FunctionCall)statement)
+            {
+                /* TODO: Implement me */
+                gprintln("FuncCall hehe (REMOVE AFTER DONE)");
+
+                /**
+                * TODO:
+                *
+                * 1. Create FUncCallInstr
+                * 2. Evaluate args and process them?! wait done elsewhere yeah
+                * 3. Pop arts into here
+                * 4. AddInstr(combining those args)
+                * 5. DOne
+                */
+                addInstr(new FuncCallInstr());
+            }
         }
         /* VariableAssigbmentDNode */
         else if(cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode)
@@ -279,6 +296,7 @@ public final class TypeChecker
             * 3. Generate VarAssignInstruction with Value-instruction
             */
             Instruction valueInstr = popInstr();
+            gprintln(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
             addInstr(varAssInstr);
         }

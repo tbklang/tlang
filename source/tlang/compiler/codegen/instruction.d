@@ -129,3 +129,18 @@ public class BinOpInstr : Instruction
         addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
     }
 }
+
+/**
+* 2022 New things
+*
+*/
+
+public class CallInstr : Instruction
+{
+
+}
+
+public class FuncCallInstr : CallInstr
+{
+    
+}
