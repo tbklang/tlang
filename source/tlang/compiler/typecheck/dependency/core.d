@@ -500,7 +500,19 @@ public class DNodeGenerator
         */
         else if (cast(FunctionCall)exp)
         {
+            /* TODO: Implement argument expression dependency */
+            FunctionCall funcCall = cast(FunctionCall)exp;
 
+            /**
+            * Go through each argument generating a fresh DNode for each expression
+            */
+            foreach(Expression actualArgument; funcCall.getCallArguments())
+            {
+                ExpressionDNode actualArgumentDNode = poolT!(ExpressionDNode, Expression)(actualArgument);
+                dnode.needs(actualArgumentDNode);
+
+                gprintln("Hello baba", DebugType.ERROR);
+            }
         }
         /**
         * `new A()` expression

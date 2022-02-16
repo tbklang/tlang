@@ -471,4 +471,9 @@ public final class FunctionCall : Call
         super(functionName);
         this.arguments = arguments;
     }
+
+    public Expression[] getCallArguments()
+    {
+        return arguments;
+    }
 }
