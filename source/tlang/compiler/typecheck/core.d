@@ -159,6 +159,50 @@ public final class TypeChecker
         }
     }
 
+    /*
+    * Prints the current contents of the code-queue
+    */
+    public void printTypeQueue()
+    {
+        import std.range : walkLength;
+        ulong i = 0;
+        foreach(Type instruction; typeStack)
+        {
+            gprintln("TypeQueue: "~to!(string)(i+1)~"/"~to!(string)(walkLength(typeStack[]))~": "~instruction.toString());
+            i++;
+        }
+    }
+
+    /**
+    * There are several types and comparing them differs
+    */
+    private bool isSameType(Type type1, Type type2)
+    {
+        bool same = false;
+
+        /* Handling for Integers */
+        if(typeid(type1) == typeid(type2) && cast(Integer)type1 !is null)
+        {
+            Integer i1 = cast(Integer)type1, i2 = cast(Integer)type2;
+
+            /* Both same size? */
+            if(i1.getSize() == i2.getSize())
+            {
+                /* Matching signedness ? */
+                return i1.isSigned() == i2.isSigned();
+            }
+            /* Size mismatch */
+            else
+            {
+                return false;
+            }
+        }
+
+
+        return same;
+    }
+
+
 
     private SList!(Type) typeStack;
 
@@ -213,6 +257,7 @@ public final class TypeChecker
                 /* TODO: For now */
                 // gprintln("STRING LIT");
                 // addType(getType(modulle, "int"));
+                //addType();
             }
             else if(cast(VariableExpression)statement)
             {
@@ -265,6 +310,84 @@ public final class TypeChecker
             {
                 /* TODO: Implement me */
                 gprintln("FuncCall hehe (REMOVE AFTER DONE)");
+                printTypeQueue();
+
+                FunctionCall funcCall = cast(FunctionCall)statement;
+
+                /* TODO: Look up func def to know when popping stops (types-based delimiting) */
+                Function func = cast(Function)resolver.resolveBest(modulle, funcCall.getName());
+                assert(func);
+                Variable[] paremeters = func.getParams();
+                gprintln(func.getParams());
+                ulong parmCount = paremeters.length-1;
+
+                /* TODO: Current bug is that the instructions are byte then int but types are popping int then byte
+                due to the insertion being puishing infront, I recommend we do an initial run through first */
+
+
+
+                /* If there are paremeters for this function (as per definition) */
+                if(!paremeters.length)
+                {
+
+                }
+                /* Pop all args per type */
+                else
+                {
+                    while(!isInstrEmpty())
+                    {
+                        Instruction instr = popInstr();
+                        
+                        Value valueInstr = cast(Value)instr;
+                        
+
+                        /* Must be a value instruction */
+                        if(valueInstr && parmCount!=-1)
+                        {
+                            /* TODO: Determine type and match up */
+                            gprintln("Yeah");
+                            gprintln(valueInstr);
+                            Type argType = popType();
+                            gprintln(argType);
+
+                            Variable parameter = paremeters[parmCount];
+                            gprintln(parameter);
+                            parmCount--;
+
+                            Type parmType = getType(func.parentOf(), parameter.getType());
+                            gprintln("FuncCall(Actual): "~argType.getName());
+                            gprintln("FuncCall(Formal): "~parmType.getName());
+                            gprintln("FuncCall(Actual): "~valueInstr.toString());
+
+
+printTypeQueue();
+                            /* Match up types */
+                            //if(argType == parmType)
+                            if(isSameType(argType, parmType))
+                            {
+                                gprintln("Match type");
+                            }
+                            else
+                            {
+                                printCodeQueue();
+                                gprintln("Wrong actual argument type for function call", DebugType.ERROR);
+                                gprintln("Cannot pass value of type '"~argType.getName()~"' to function accepting '"~parmType.getName()~"'", DebugType.ERROR);
+                                assert(false);
+                            }
+                        }
+                        else
+                        {
+                            /* Push it back */
+                            addInstr(instr);
+                            break;
+                        }
+                    }
+                }
+
+                /* TODO: Pass in FUnction, so we get function's body for calling too */
+                FuncCallInstr funcCallInstr = new FuncCallInstr(func.getName(), paremeters.length);
+                
+                
 
                 /**
                 * TODO:
@@ -275,7 +398,10 @@ public final class TypeChecker
                 * 4. AddInstr(combining those args)
                 * 5. DOne
                 */
-                addInstr(new FuncCallInstr());
+                addInstr(funcCallInstr);
+                addType(getType(func.parentOf(), func.getType()));
+                gprintln("Genaai");
+                gprintln(getType(func.parentOf(), func.getType()));
             }
         }
         /* VariableAssigbmentDNode */

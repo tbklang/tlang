@@ -52,6 +52,11 @@ public class Number : Primitive
         super(name);
         this.width = width;
     }
+
+    public final ubyte getSize()
+    {
+        return width;
+    }
 }
 
 public class Integer : Number
@@ -63,6 +68,17 @@ public class Integer : Number
     {
         super(name, width);
         this.signed = signed;
+    }
+
+    public final bool isSigned()
+    {
+        return signed;
+    }
+
+    /* TODO: Remove ig */
+    public override string toString()
+    {
+        return name;
     }
 }
 

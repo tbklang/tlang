@@ -135,12 +135,29 @@ public class BinOpInstr : Instruction
 *
 */
 
-public class CallInstr : Instruction
+//public class CallInstr : Instruction
+public class CallInstr : Value
 {
 
 }
 
 public class FuncCallInstr : CallInstr
 {
-    
+    /* Per-argument instrructions */
+    private Instruction[] evaluationInstructions;
+
+    private string functionName;
+
+    this(string functionName, ulong argEvalInstrsSize)
+    {
+        this.functionName = functionName;
+        evaluationInstructions.length = argEvalInstrsSize;
+
+        addInfo = "FunctionName: "~functionName;
+    }
+
+    public void setEvalInstr(ulong argPos, Instruction instr)
+    {
+        evaluationInstructions[argPos] = instr;
+    }
 }

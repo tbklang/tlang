@@ -248,6 +248,11 @@ public class Function : TypedEntity
         weight = 1;
     }
 
+    public Variable[] getParams()
+    {
+        return params;
+    }
+
     public Statement[] getStatements()
     {
         import compiler.symbols.containers : weightReorder;
