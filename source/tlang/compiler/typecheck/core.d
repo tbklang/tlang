@@ -323,7 +323,8 @@ public final class TypeChecker
 
                 /* TODO: Current bug is that the instructions are byte then int but types are popping int then byte
                 due to the insertion being puishing infront, I recommend we do an initial run through first */
-
+                Type[] reversedFormalTypes;
+                
 
 
                 /* If there are paremeters for this function (as per definition) */
