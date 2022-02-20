@@ -344,48 +344,50 @@ public final class TypeChecker
                 /* TODO: Current bug is that the instructions are byte then int but types are popping int then byte
                 due to the insertion being puishing infront, I recommend we do an initial run through first */
 
-                /* Formal types (per function definition) */
-                Type[] formalTypes;
-                foreach(Variable parameter; paremeters)
-                {
-                    formalTypes ~= getType(func.parentOf(), parameter.getType());
-                }
+                ulong parmCount = paremeters.length-1;
 
-                /* If there are no parameters */
-                if(!paremeters.length)
-                {
+                // /* Formal types (per function definition) */
+                // Type[] formalTypes;
+                // foreach(Variable parameter; paremeters)
+                // {
+                //     formalTypes ~= getType(func.parentOf(), parameter.getType());
+                // }
 
-                }
-                else
-                {
-                    ulong formalTypeCount = 0;
+                // /* If there are no parameters */
+                // if(!paremeters.length)
+                // {
+
+                // }
+                // else
+                // {
+                //     ulong formalTypeCount = 0;
 
 
-                    while(formalTypeackCount < formalTypes.length)
-                    {
-                        /* Check if the type stack is empty */
-                        if(isTypesEmpty)
-                        {
-                            gprintln("Expected arguments for function that still requires formal parameters", DebugType.ERROR);
-                            assert(false);
-                        }
-                        /* If the type stack is not empty */
-                        else
-                        {
-                            /* Pop a type of the type stack (argument/actual type) */
-                            Type actualType = popType();
+                //     while(formalTypeackCount < formalTypes.length)
+                //     {
+                //         /* Check if the type stack is empty */
+                //         if(isTypesEmpty)
+                //         {
+                //             gprintln("Expected arguments for function that still requires formal parameters", DebugType.ERROR);
+                //             assert(false);
+                //         }
+                //         /* If the type stack is not empty */
+                //         else
+                //         {
+                //             /* Pop a type of the type stack (argument/actual type) */
+                //             Type actualType = popType();
 
-                            /* Get the formal type */
-                        }
+                //             /* Get the formal type */
+                //         }
 
-                        /* Get current formal type */
-                        Type formalType = formalTypes[]
+                //         /* Get current formal type */
+                //         Type formalType = formalTypes[]
 
-                        isSameType
+                //         isSameType
 
-                        formalTypeackCount++;
-                    }
-                }
+                //         formalTypeackCount++;
+                //     }
+                // }
                 
 
                 
