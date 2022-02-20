@@ -221,6 +221,11 @@ public final class TypeChecker
         return typeCur;
     }
 
+    public bool isTypesEmpty()
+    {
+        return typeStack.empty;
+    }
+
     public void typeCheckThing(DNode dnode)
     {
         gprintln("typeCheckThing(): "~dnode.toString());
@@ -324,6 +329,10 @@ public final class TypeChecker
                 /* TODO: Current bug is that the instructions are byte then int but types are popping int then byte
                 due to the insertion being puishing infront, I recommend we do an initial run through first */
                 Type[] reversedFormalTypes;
+                gprintln("Here are shit");
+                gprintln(paremeters);
+
+                
                 
 
 
