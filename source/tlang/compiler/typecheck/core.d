@@ -328,7 +328,7 @@ public final class TypeChecker
             {
                 /* TODO: Implement me */
                 gprintln("FuncCall hehe (REMOVE AFTER DONE)");
-                printTypeQueue();
+                // printTypeQueue();
 
                 FunctionCall funcCall = cast(FunctionCall)statement;
 
@@ -375,24 +375,28 @@ public final class TypeChecker
                             gprintln("Yeah");
                             gprintln(valueInstr);
                             Type argType = popType();
-                            gprintln(argType);
+                            // gprintln(argType);
 
                             Variable parameter = paremeters[parmCount];
-                            gprintln(parameter);
-                            parmCount--;
+                            // gprintln(parameter);
+                            
 
                             Type parmType = getType(func.parentOf(), parameter.getType());
-                            gprintln("FuncCall(Actual): "~argType.getName());
-                            gprintln("FuncCall(Formal): "~parmType.getName());
-                            gprintln("FuncCall(Actual): "~valueInstr.toString());
+                            // gprintln("FuncCall(Actual): "~argType.getName());
+                            // gprintln("FuncCall(Formal): "~parmType.getName());
+                            // gprintln("FuncCall(Actual): "~valueInstr.toString());
 
 
-printTypeQueue();
+                            // printTypeQueue();
                             /* Match up types */
                             //if(argType == parmType)
                             if(isSameType(argType, parmType))
                             {
                                 gprintln("Match type");
+
+                                /* Add the instruction into the FunctionCallInstr */
+                                funcCallInstr.setEvalInstr(parmCount, valueInstr);
+                                gprintln(funcCallInstr.getEvaluationInstructions());
                             }
                             else
                             {
@@ -401,6 +405,8 @@ printTypeQueue();
                                 gprintln("Cannot pass value of type '"~argType.getName()~"' to function accepting '"~parmType.getName()~"'", DebugType.ERROR);
                                 assert(false);
                             }
+
+                            parmCount--;
                         }
                         else
                         {
