@@ -144,7 +144,7 @@ public class CallInstr : Value
 public class FuncCallInstr : CallInstr
 {
     /* Per-argument instrructions */
-    private Instruction[] evaluationInstructions;
+    private Value[] evaluationInstructions;
 
     private string functionName;
 
@@ -164,13 +164,13 @@ public class FuncCallInstr : CallInstr
         addInfo = "FunctionName: "~functionName ~" EvalInstrs: "~ to!(string)(getEvaluationInstructions());
     }
 
-    public void setEvalInstr(ulong argPos, Instruction instr)
+    public void setEvalInstr(ulong argPos, Value instr)
     {
         evaluationInstructions[argPos] = instr;
         updateAddInfo();
     }
 
-    public Instruction[] getEvaluationInstructions()
+    public Value[] getEvaluationInstructions()
     {
         return evaluationInstructions;
     }
