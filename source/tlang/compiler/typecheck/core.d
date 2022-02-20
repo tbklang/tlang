@@ -341,11 +341,6 @@ public final class TypeChecker
                 /* TODO: Pass in FUnction, so we get function's body for calling too */
                 FuncCallInstr funcCallInstr = new FuncCallInstr(func.getName(), paremeters.length);
 
-                /* TODO: Current bug is that the instructions are byte then int but types are popping int then byte
-                due to the insertion being puishing infront, I recommend we do an initial run through first */
-
-                ulong parmCount = paremeters.length-1;
-
                 /* If there are paremeters for this function (as per definition) */
                 if(!paremeters.length)
                 {
@@ -354,6 +349,8 @@ public final class TypeChecker
                 /* Pop all args per type */
                 else
                 {
+                    ulong parmCount = paremeters.length-1;
+
                     while(!isInstrEmpty())
                     {
                         Instruction instr = popInstr();
