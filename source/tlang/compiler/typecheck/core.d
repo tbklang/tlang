@@ -207,7 +207,20 @@ public final class TypeChecker
     private SList!(Type) typeStack;
 
 
+    /**
+    * Adds a Type to the type queue right at the beginning
+    * of it
+    */
     private void addType(Type typeName)
+    {
+        typeStack.insert(typeName);
+    }
+
+    /**
+    * Adds a Type to the type queue right at the end
+    * of it
+    */
+    private void addTypeB(Type typeName)
     {
         typeStack.insertAfter(typeStack[], typeName);
     }
@@ -323,14 +336,57 @@ public final class TypeChecker
                 Function func = cast(Function)resolver.resolveBest(modulle, funcCall.getName());
                 assert(func);
                 Variable[] paremeters = func.getParams();
-                gprintln(func.getParams());
-                ulong parmCount = paremeters.length-1;
+
+
+                /* TODO: Pass in FUnction, so we get function's body for calling too */
+                FuncCallInstr funcCallInstr = new FuncCallInstr(func.getName(), paremeters.length);
 
                 /* TODO: Current bug is that the instructions are byte then int but types are popping int then byte
                 due to the insertion being puishing infront, I recommend we do an initial run through first */
-                Type[] reversedFormalTypes;
-                gprintln("Here are shit");
-                gprintln(paremeters);
+
+                /* Formal types (per function definition) */
+                Type[] formalTypes;
+                foreach(Variable parameter; paremeters)
+                {
+                    formalTypes ~= getType(func.parentOf(), parameter.getType());
+                }
+
+                /* If there are no parameters */
+                if(!paremeters.length)
+                {
+
+                }
+                else
+                {
+                    ulong formalTypeCount = 0;
+
+
+                    while(formalTypeackCount < formalTypes.length)
+                    {
+                        /* Check if the type stack is empty */
+                        if(isTypesEmpty)
+                        {
+                            gprintln("Expected arguments for function that still requires formal parameters", DebugType.ERROR);
+                            assert(false);
+                        }
+                        /* If the type stack is not empty */
+                        else
+                        {
+                            /* Pop a type of the type stack (argument/actual type) */
+                            Type actualType = popType();
+
+                            /* Get the formal type */
+                        }
+
+                        /* Get current formal type */
+                        Type formalType = formalTypes[]
+
+                        isSameType
+
+                        formalTypeackCount++;
+                    }
+                }
+                
 
                 
                 
@@ -394,8 +450,7 @@ printTypeQueue();
                     }
                 }
 
-                /* TODO: Pass in FUnction, so we get function's body for calling too */
-                FuncCallInstr funcCallInstr = new FuncCallInstr(func.getName(), paremeters.length);
+                
                 
                 
 
