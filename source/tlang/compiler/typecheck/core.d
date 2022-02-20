@@ -93,7 +93,7 @@ public final class TypeChecker
         doTypeCheck(actionList);
 
         
-        
+        printTypeQueue();
         
 
 
@@ -308,6 +308,9 @@ public final class TypeChecker
                 /**
                 * Typechecking (TODO)
                 */
+                Type vRhsType = popType();
+                Type vLhsType = popType();
+                
 
                 /**
                 * Codegen
@@ -326,8 +329,7 @@ public final class TypeChecker
             /* Function calls */
             else if(cast(FunctionCall)statement)
             {
-                /* TODO: Implement me */
-                gprintln("FuncCall hehe (REMOVE AFTER DONE)");
+                // gprintln("FuncCall hehe (REMOVE AFTER DONE)");
                 // printTypeQueue();
 
                 FunctionCall funcCall = cast(FunctionCall)statement;
@@ -422,8 +424,6 @@ public final class TypeChecker
                 */
                 addInstr(funcCallInstr);
                 addType(getType(func.parentOf(), func.getType()));
-                gprintln("Genaai");
-                gprintln(getType(func.parentOf(), func.getType()));
             }
         }
         /* VariableAssigbmentDNode */
