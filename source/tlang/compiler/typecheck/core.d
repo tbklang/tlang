@@ -346,13 +346,6 @@ public final class TypeChecker
 
                 ulong parmCount = paremeters.length-1;
 
-                
-                
-
-                
-                
-
-
                 /* If there are paremeters for this function (as per definition) */
                 if(!paremeters.length)
                 {
