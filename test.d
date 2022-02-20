@@ -21,13 +21,6 @@ asm
 
         asm
         {
-            mov RSP, R15;
+            mov R13B, 65;
         }
         
-
-        int h = -1;
-        h = *((&h)-4);
-        import std.stdio;
-        writeln(h);
-        
-}

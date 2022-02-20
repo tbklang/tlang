@@ -310,6 +310,21 @@ public final class TypeChecker
                 */
                 Type vRhsType = popType();
                 Type vLhsType = popType();
+
+                /**
+                * TODO:
+                * Types must either BE THE SAME or BE COMPATIBLE
+                */
+                if(isSameType(vLhsType, vRhsType))
+                {
+                    /* Left type + Right type = left/right type (just use left - it doesn't matter) */
+                    addType(vLhsType);
+                }
+                else
+                {
+                    gprintln("Binary operator expression requires both types be same, but got '"~vRhsType.toString()~"' and '"~vLhsType.toString()~"'", DebugType.ERROR);
+                    assert(false);
+                }
                 
 
                 /**
