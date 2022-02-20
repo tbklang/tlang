@@ -153,11 +153,25 @@ public class FuncCallInstr : CallInstr
         this.functionName = functionName;
         evaluationInstructions.length = argEvalInstrsSize;
 
-        addInfo = "FunctionName: "~functionName;
+        updateAddInfo();
+    }
+
+    /**
+    * FuncCallInstr is built-bit-by-bit so toString information will change
+    */
+    private void updateAddInfo()
+    {
+        addInfo = "FunctionName: "~functionName ~" EvalInstrs: "~ to!(string)(getEvaluationInstructions());
     }
 
     public void setEvalInstr(ulong argPos, Instruction instr)
     {
         evaluationInstructions[argPos] = instr;
+        updateAddInfo();
+    }
+
+    public Instruction[] getEvaluationInstructions()
+    {
+        return evaluationInstructions;
     }
 }
