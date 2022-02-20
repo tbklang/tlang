@@ -346,48 +346,7 @@ public final class TypeChecker
 
                 ulong parmCount = paremeters.length-1;
 
-                // /* Formal types (per function definition) */
-                // Type[] formalTypes;
-                // foreach(Variable parameter; paremeters)
-                // {
-                //     formalTypes ~= getType(func.parentOf(), parameter.getType());
-                // }
-
-                // /* If there are no parameters */
-                // if(!paremeters.length)
-                // {
-
-                // }
-                // else
-                // {
-                //     ulong formalTypeCount = 0;
-
-
-                //     while(formalTypeackCount < formalTypes.length)
-                //     {
-                //         /* Check if the type stack is empty */
-                //         if(isTypesEmpty)
-                //         {
-                //             gprintln("Expected arguments for function that still requires formal parameters", DebugType.ERROR);
-                //             assert(false);
-                //         }
-                //         /* If the type stack is not empty */
-                //         else
-                //         {
-                //             /* Pop a type of the type stack (argument/actual type) */
-                //             Type actualType = popType();
-
-                //             /* Get the formal type */
-                //         }
-
-                //         /* Get current formal type */
-                //         Type formalType = formalTypes[]
-
-                //         isSameType
-
-                //         formalTypeackCount++;
-                //     }
-                // }
+                
                 
 
                 
