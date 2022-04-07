@@ -307,9 +307,6 @@ public final class TypeChecker
             {
                 BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
                 SymbolType binOperator = binOpExp.getOperator();
-                gprintln("BinOp: "~to!(string)(binOperator), DebugType.ERROR);
-
-
                 
 
                 /**
@@ -344,12 +341,9 @@ public final class TypeChecker
                 */
                 Instruction vRhsInstr = popInstr();
                 Instruction vLhsInstr = popInstr();
-                gprintln("BinOP L: "~vLhsInstr.toString(),DebugType.ERROR);
-                gprintln("BinOP R: "~vRhsInstr.toString(),DebugType.ERROR);
                 
                 BinOpInstr addInst = new BinOpInstr(vLhsInstr, vRhsInstr, binOperator);
                 addInstr(addInst);
-                gprintln("Added binOp compunded instr: "~addInst.toString());
             }
             /* Function calls */
             else if(cast(FunctionCall)statement)
