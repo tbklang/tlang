@@ -502,6 +502,7 @@ public class DNodeGenerator
         {
             /* TODO: Implement argument expression dependency */
             FunctionCall funcCall = cast(FunctionCall)exp;
+            gprintln("FuncCall: "~funcCall.getName());
 
             /**
             * Go through each argument generating a fresh DNode for each expression
@@ -509,9 +510,14 @@ public class DNodeGenerator
             foreach(Expression actualArgument; funcCall.getCallArguments())
             {
                 ExpressionDNode actualArgumentDNode = poolT!(ExpressionDNode, Expression)(actualArgument);
-                dnode.needs(actualArgumentDNode);
+                // dnode.needs(actualArgumentDNode);
 
+                gprintln("We need to add recursion here", DebugType.ERROR);
+                gprintln("Func?: "~to!(string)(cast(FunctionCall)actualArgument));
+                gprintln("Literal?: "~to!(string)(cast(NumberLiteral)actualArgument));
                 gprintln("Hello baba", DebugType.ERROR);
+
+                dnode.needs(expressionPass(actualArgument, context));
             }
         }
         /**
