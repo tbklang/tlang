@@ -180,6 +180,8 @@ public final class TypeChecker
     {
         bool same = false;
 
+        
+
         /* Handling for Integers */
         if(typeid(type1) == typeid(type2) && cast(Integer)type1 !is null)
         {
@@ -189,16 +191,17 @@ public final class TypeChecker
             if(i1.getSize() == i2.getSize())
             {
                 /* Matching signedness ? */
-                return i1.isSigned() == i2.isSigned();
+                same =  i1.isSigned() == i2.isSigned();
             }
             /* Size mismatch */
             else
             {
-                return false;
+                same = false;
             }
         }
 
 
+        gprintln("isSameType("~to!(string)(type1)~","~to!(string)(type2)~"): "~to!(string)(same), DebugType.ERROR);
         return same;
     }
 
@@ -304,6 +307,10 @@ public final class TypeChecker
             {
                 BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
                 SymbolType binOperator = binOpExp.getOperator();
+                gprintln("BinOp: "~to!(string)(binOperator), DebugType.ERROR);
+
+
+                
 
                 /**
                 * Typechecking (TODO)
@@ -337,9 +344,12 @@ public final class TypeChecker
                 */
                 Instruction vRhsInstr = popInstr();
                 Instruction vLhsInstr = popInstr();
+                gprintln("BinOP L: "~vLhsInstr.toString(),DebugType.ERROR);
+                gprintln("BinOP R: "~vRhsInstr.toString(),DebugType.ERROR);
                 
                 BinOpInstr addInst = new BinOpInstr(vLhsInstr, vRhsInstr, binOperator);
                 addInstr(addInst);
+                gprintln("Added binOp compunded instr: "~addInst.toString());
             }
             /* Function calls */
             else if(cast(FunctionCall)statement)
@@ -357,16 +367,18 @@ public final class TypeChecker
 
                 /* TODO: Pass in FUnction, so we get function's body for calling too */
                 FuncCallInstr funcCallInstr = new FuncCallInstr(func.getName(), paremeters.length);
+                gprintln("Name of func call: "~func.getName(), DebugType.ERROR);
 
                 /* If there are paremeters for this function (as per definition) */
                 if(!paremeters.length)
                 {
-
+                    gprintln("No parameters for deez nuts: "~func.getName(), DebugType.ERROR);
                 }
                 /* Pop all args per type */
                 else
                 {
                     ulong parmCount = paremeters.length-1;
+                    gprintln("Kachow: "~to!(string)(parmCount),DebugType.ERROR);
 
                     while(!isInstrEmpty())
                     {
