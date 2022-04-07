@@ -477,6 +477,11 @@ public final class FunctionCall : Call
         this.arguments = arguments;
     }
 
+    public override string toString()
+    {
+        return super.toString()~" "~name~"()";
+    }
+
     public Expression[] getCallArguments()
     {
         return arguments;
