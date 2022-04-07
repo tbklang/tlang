@@ -114,7 +114,7 @@ public final class LiteralValue : Value
 *
 * Any sort of Binary Operator
 */
-public class BinOpInstr : Instruction
+public class BinOpInstr : Value
 {
     import compiler.symbols.data;
     private Instruction lhs;
