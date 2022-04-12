@@ -1,6 +1,7 @@
 module compiler.symbols.expressions;
 
 import compiler.symbols.data;
+import std.conv : to;
 
 /* TODO: Look into arrays later */
 public class StringExpression : Expression
@@ -37,6 +38,16 @@ public class UnaryOperatorExpression : OperatorExpression
     {
         super(operator);
         this.exp = exp;
+    }
+
+    public override string toString()
+    {
+        return "[unaryOperator: Op: "~to!(string)(operator)~", Expr: "~to!(string)(exp);
+    }
+
+    public Expression getExpression()
+    {
+        return exp;
     }
 }
 
