@@ -131,6 +131,25 @@ public class BinOpInstr : Value
 }
 
 /**
+* UnaryOpInstr instruction
+*
+* Any sort of Unary Operator
+*/
+public class UnaryOpInstr : Value
+{
+    import compiler.symbols.data;
+    private Instruction exp;
+    private SymbolType operator;
+
+    this(Instruction exp, SymbolType operator)
+    {
+        this.exp = exp;
+
+        addInfo = "UnaryOpType: "~to!(string)(operator)~", Instr: "~exp.toString();
+    }
+}
+
+/**
 * 2022 New things
 *
 */
