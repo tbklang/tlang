@@ -862,14 +862,13 @@ public class DNodeGenerator
             /* Get the unary operator expression */
             UnaryOperatorExpression unaryOp = cast(UnaryOperatorExpression)exp;
 
-             /* Process the expression */
-                DNode expressioNode = expressionPass(unaryOp.getExpression(), context);
+            /* Process the expression */
+            DNode expressionNode = expressionPass(unaryOp.getExpression(), context);
                 
 
-                /* Require the evaluation of the expression */
-                /* TODO: Add specific DNode type dependent on the type of operator */
-                dnode.needs(expressioNode);
-        
+            /* Require the evaluation of the expression */
+            /* TODO: Add specific DNode type dependent on the type of operator */
+            dnode.needs(expressionNode);
         }
         else
         {
