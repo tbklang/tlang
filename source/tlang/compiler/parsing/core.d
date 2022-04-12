@@ -904,10 +904,19 @@ public final class Parser
                 /* Check if unary or not (if so no expressions on stack) */
                 if(!hasExp())
                 {
-                    Expression rhs = parseExpression();
+                    /* Only `*`, `+` and `-` are valid */
+                    if(operatorType == SymbolType.STAR || operatorType == SymbolType.ADD || operatorType == SymbolType.SUB)
+                    {
+                        /* Parse the expression following the unary operator */
+                        Expression rhs = parseExpression();
 
-                    /* Create UnaryExpression */
-                    opExp = new UnaryOperatorExpression(operatorType, rhs);
+                        /* Create UnaryExpression comprised of the operator and the right-hand side expression */
+                        opExp = new UnaryOperatorExpression(operatorType, rhs);
+                    }
+                    else
+                    {
+                        expect("Expected *, + or - as unary operators but got "~to!(string)(operatorType));
+                    }
                 }
                 /* If has, then binary */
                 else
