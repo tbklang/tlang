@@ -854,6 +854,23 @@ public class DNodeGenerator
                 dnode.needs(rightNode);
             }
         }
+        /**
+        * Unary operator
+        */
+        else if(cast(UnaryOperatorExpression)exp)
+        {
+            /* Get the unary operator expression */
+            UnaryOperatorExpression unaryOp = cast(UnaryOperatorExpression)exp;
+
+             /* Process the expression */
+                DNode expressioNode = expressionPass(unaryOp.getExpression(), context);
+                
+
+                /* Require the evaluation of the expression */
+                /* TODO: Add specific DNode type dependent on the type of operator */
+                dnode.needs(expressioNode);
+        
+        }
         else
         {
             // dnode = new DNode(this, exp);
