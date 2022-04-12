@@ -1588,3 +1588,43 @@ unittest
 
  
 }
+
+
+
+/** 
+ * Code generation and typechecking
+ *
+ * Testing file: `simple_function_call.t`
+ */
+unittest
+{
+    import std.file;
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.parsing.core;
+
+    string sourceFile = "source/tlang/testing/typecheck/simple_function_call.t";
+
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
+
+    string sourceCode = cast(string) fileBytes;
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+
+    Parser parser = new Parser(currentLexer.getTokens());
+    Module modulle = parser.parse();
+    TypeChecker typeChecker = new TypeChecker(modulle);
+
+   
+
+    /* Perform test */
+    typeChecker.beginCheck();
+
+    /* TODO: Actually test generated code queue */
+}
