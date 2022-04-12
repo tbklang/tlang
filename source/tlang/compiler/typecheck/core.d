@@ -345,6 +345,33 @@ public final class TypeChecker
                 BinOpInstr addInst = new BinOpInstr(vLhsInstr, vRhsInstr, binOperator);
                 addInstr(addInst);
             }
+            /* Unary operator expressions */
+            else if(cast(UnaryOperatorExpression)statement)
+            {
+                UnaryOperatorExpression unaryOpExp = cast(UnaryOperatorExpression)statement;
+                SymbolType unaryOperator = unaryOpExp.getOperator();
+                
+
+                /**
+                * Typechecking (TODO)
+                */
+                Type expType = popType();
+
+                /* TODO: Ad type check for operator */
+                
+
+                /**
+                * Codegen
+                *
+                * Retrieve the instruction
+                *
+                */
+                Instruction expInstr = popInstr();
+                gprintln("UnaryOperatorCGen: "~expInstr.toString(), DebugType.ERROR);
+                
+                UnaryOpInstr addInst = new UnaryOpInstr(expInstr, unaryOperator);
+                addInstr(addInst);
+            }
             /* Function calls */
             else if(cast(FunctionCall)statement)
             {
