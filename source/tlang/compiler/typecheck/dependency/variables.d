@@ -30,6 +30,27 @@ public class VariableNode : DNode
     
 }
 
+public class FuncDecNode : DNode
+{
+    private Function funcHandle;
+
+    this(DNodeGenerator dnodegen, Function funcHandle)
+    {
+        super(dnodegen, funcHandle);
+
+        this.funcHandle = funcHandle;
+
+        initName();
+    }
+
+    private void initName()
+    {
+        name = "FuncHandle:"~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+    }
+
+    
+}
+
 public class ModuleVariableDeclaration : VariableNode
 {
     this(DNodeGenerator dnodegen, Variable variable)
