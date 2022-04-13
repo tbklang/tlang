@@ -891,7 +891,8 @@ public final class Parser
                 nextToken();
             }
             /* If it is a maths operator */
-            else if (isMathOp(getCurrentToken()))
+            /* TODO: Handle all operators here (well most), just include bit operators */
+            else if (isMathOp(getCurrentToken()) || isBinaryOp(getCurrentToken()))
             {
                 SymbolType operatorType = getSymbolType(getCurrentToken());
 
@@ -904,14 +905,30 @@ public final class Parser
                 /* Check if unary or not (if so no expressions on stack) */
                 if(!hasExp())
                 {
-                    /* Only `*`, `+` and `-` are valid */
-                    if(operatorType == SymbolType.STAR || operatorType == SymbolType.ADD || operatorType == SymbolType.SUB)
+                    /* Only `*`, `+` and `-` are valid or `~` */
+                    if(operatorType == SymbolType.STAR || operatorType == SymbolType.ADD || operatorType == SymbolType.SUB || operatorType == SymbolType.TILDE)
                     {
                         /* Parse the expression following the unary operator */
                         Expression rhs = parseExpression();
 
                         /* Create UnaryExpression comprised of the operator and the right-hand side expression */
                         opExp = new UnaryOperatorExpression(operatorType, rhs);
+                    }
+                    /* Support for ampersand (&) */
+                    else if(operatorType == SymbolType.AMPERSAND)
+                    {
+                        /* Expression can only be a `VariableExpression` which accounts for Function Handles and Variable Identifiers */
+                        Expression rhs = parseExpression();
+                        gprintln("hhshhshshsh");
+                        if(cast(VariableExpression)rhs)
+                        {
+                            /* Create UnaryExpression comprised of the operator and the right-hand side expression */
+                            opExp = new UnaryOperatorExpression(operatorType, rhs);
+                        }
+                        else
+                        {
+                            expect("& operator can only be followed by a variable expression");
+                        }
                     }
                     else
                     {
@@ -967,6 +984,11 @@ public final class Parser
                     /* TODO: Just leave it, yeah */
                     // expect("poes");
                     toAdd = new VariableExpression(identifier);
+
+                    /**
+                    * FIXME: To properly support function handles I think we are going to need a new type
+                    * Well not here, this should technically be IdentExpression.
+                    */
                 }
 
                 /* TODO: Change this later, for now we doing this */
