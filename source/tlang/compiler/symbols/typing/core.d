@@ -105,9 +105,12 @@ public class Pointer : Integer
     /* Data type being pointed to */
     private Type dataType;
 
-    this(string name, Type dataType)
+    this(Type dataType)
     {
-        /* TODO: Change below, per architetcure */
+        /* The name should be `dataType*` */
+        string name = dataType.toString()~"*";
+        
+        /* TODO: Change below, per architetcure (the 8 byte width) */
         super(name, 8);
         this.dataType = dataType;
     }
