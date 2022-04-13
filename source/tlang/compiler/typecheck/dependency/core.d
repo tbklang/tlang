@@ -592,6 +592,8 @@ public class DNodeGenerator
             string path = varExp.getName();
             long nearestDot = indexOf(path, ".");
 
+
+
             /**
             * Current named entity
             */
@@ -619,6 +621,7 @@ public class DNodeGenerator
                 * 
                 */
                 varExp.setContext(context);
+                gprintln("Kont: "~to!(string)(context));
 
 
                 
@@ -655,9 +658,41 @@ public class DNodeGenerator
 
                         /* Use the Context to make a decision */
                     }
+                    else if(cast(Function)namedEntity)
+                    {
+                        /**
+                        * FIXME: Yes it isn't a funcall not, and it is not a variable and is probably
+                        * being returned as the lookup, so a FUnction node i guess 
+                        */
+                        Function funcHandle = cast(Function)namedEntity;
+                        
+                        /**
+                        * FIXME: Find the best place for this. Functions will always
+                        * be declared (atleast for basic examples as like now) in
+                        * the module level
+                        */
+                        Context cont = new Context(tc.getModule(), InitScope.STATIC);
+                        // cont.container = tc.getModule();
+                        // cont.
+                        funcHandle.setContext(cont);
+
+                        // funcHandle
+                        
+
+                        /**
+                        * FIXME: Do we have to visit the function, I am not sure, like maybe declaration
+                        * or surely it is already declared??!?!?
+                        *
+                        * Does pooling it make sense? Do we force a visitation?
+                        */
+                        FuncDecNode funcDecNode = poolT!(FuncDecNode, Function)(funcHandle);
+                        dnode.needs(funcDecNode);
+
+                        gprintln("Muh function handle: "~namedEntity.toString(), DebugType.WARNING);
+                    }
                     else
                     {
-                        /* FIXME: We are not handling other cases as of now */    
+                        /* TODO: Add check ? */
                     }
                     
 
