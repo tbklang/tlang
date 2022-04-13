@@ -76,7 +76,7 @@ public class BinaryOperatorExpression : OperatorExpression
     public override string toString()
     {
         /* TODO: FIll in */
-        return "[BinOpExp: "~"TODO"~"]";
+        return "[BinOpExp: Op: "~to!(string)(operator)~", Lhs: "~lhs.toString()~", Rhs: "~rhs.toString()~"]";
     }
 }
 
