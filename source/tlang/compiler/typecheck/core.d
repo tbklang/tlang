@@ -282,16 +282,25 @@ public final class TypeChecker
             }
             else if(cast(VariableExpression)statement)
             {
+
+                gprintln("Yaa, it's rewind time");
                 auto g  = cast(VariableExpression)statement;
                 auto gVar = cast(TypedEntity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
 
                 string variableName = resolver.generateName(modulle, gVar);
+
+                gprintln("VarName: "~variableName);
+
+                gprintln("Yaa, it's rewind time1: "~to!(string)(gVar.getType()));
+                gprintln("Yaa, it's rewind time2: "~to!(string)(gVar.getContext()));
                 
                 /* TODO: Above TYpedEntity check */
                 /* TODO: still wip the expresison parser */
 
                 /* TODO: TYpe needs ansatz too `.updateName()` call */
                 addType(getType(gVar.getContext().getContainer(), gVar.getType()));
+
+                gprintln("Yaa, it's rewind time");
 
 
                 /**
@@ -352,12 +361,50 @@ public final class TypeChecker
                 SymbolType unaryOperator = unaryOpExp.getOperator();
                 
 
+                
+
                 /**
                 * Typechecking (TODO)
                 */
                 Type expType = popType();
 
                 /* TODO: Ad type check for operator */
+
+                /* If the unary operation is an arithmetic one */
+                if(unaryOperator == SymbolType.ADD || unaryOperator == SymbolType.SUB)
+                {
+                    /* TODO: I guess any type fr */
+                }
+                /* If pointer dereference */
+                else if(unaryOperator == SymbolType.STAR)
+                {
+                    /* TODO: Add support */
+                }
+                /* If pointer create `&` */
+                else if(unaryOperator == SymbolType.AMPERSAND)
+                {
+                    /* TODO: Should we make a PointerFetchInstruction maybe? */
+                    /* Answer: Nah, waste of Dtype, we have needed information */
+
+                    /**
+                    * NOTE:
+                    *
+                    * We are going to end up here with `unaryOpExp` being a `FetchVarInstr`
+                    * which I guess I'd like to, not rework but pull data out of and put
+                    * some pointer fetch, infact surely the whole instruction we return
+                    * can be a subset of UnaryOpInstruction just for the pointer case
+                    *
+                    * I think it is important we obtain Context, Name, Type of variable
+                    * (so that we can construct the Type* (the pointer type))
+                    */
+                    gprintln("ExpType: "~expType.toString());
+                }
+                /* This should never occur */
+                else
+                {
+                    gprintln("UnaryOperatorExpression: This should NEVER happen: "~to!(string)(unaryOperator), DebugType.ERROR);
+                    assert(false);
+                }
                 
 
                 /**
@@ -367,7 +414,7 @@ public final class TypeChecker
                 *
                 */
                 Instruction expInstr = popInstr();
-                gprintln("UnaryOperatorCGen: "~expInstr.toString(), DebugType.ERROR);
+                
                 
                 UnaryOpInstr addInst = new UnaryOpInstr(expInstr, unaryOperator);
                 addInstr(addInst);
