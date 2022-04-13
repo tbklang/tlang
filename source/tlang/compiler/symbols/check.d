@@ -51,6 +51,7 @@ public enum SymbolType
     ADD,
     DIVIDE,
     STAR,
+    AMPERSAND,
     UNKNOWN
 }
 
@@ -399,6 +400,11 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.DIVIDE;
     }
+    /* Ampersand `&` operator check  */
+    else if(token[0] == '&')
+    {
+        return SymbolType.AMPERSAND;
+    }
     
     
     
@@ -415,6 +421,15 @@ public bool isMathOp(Token token)
 
     return tokenStr[0] == '+' || tokenStr[0] == '-' ||
             tokenStr[0] == '*' || tokenStr[0] == '/';
+}
+
+public bool isBinaryOp(Token token)
+{
+    string tokenStr = token.getToken();
+
+    return tokenStr[0] == '&' ||  cmp("&&", tokenStr) == 0 ||
+            tokenStr[0] == '|' || cmp("||", tokenStr) == 0 ||
+            tokenStr[0] == '^' || tokenStr[0] == '~';
 }
 
 
