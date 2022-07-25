@@ -1,0 +1,3 @@
+module simple;
+
+char[] string;
