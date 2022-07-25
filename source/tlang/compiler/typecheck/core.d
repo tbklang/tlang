@@ -284,6 +284,12 @@ public final class TypeChecker
                 * interned
                 */
                 addType(getType(modulle, "char*")); /* FIXME: Make char* */
+                
+                /**
+                * Add the instruction (TODO: add comment)
+                */
+                StringLiteral strLitInstr = new StringLiteral();
+                addInstr(strLitInstr);
 
                 gprintln("Typecheck(): String literal processing... [done]");
             }
