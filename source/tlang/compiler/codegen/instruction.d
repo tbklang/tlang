@@ -109,6 +109,21 @@ public final class LiteralValue : Value
     }
 }
 
+/* FIXME: Implement this */
+/**
+* TODO: This should take in:
+*
+* 1. The string literal
+* 2. It should assign it to an interning pool and get the ID (associate one with the string literal if equal/in-the-pool)
+*/
+public final class StringLiteral : Value
+{
+    this()
+    {
+
+    }
+}
+
 /**
 * BinOpInstr instruction
 *
