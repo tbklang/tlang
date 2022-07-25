@@ -273,12 +273,19 @@ public final class TypeChecker
                 LiteralValue litValInstr = new LiteralValue(i, 4);
                 addInstr(litValInstr);
             }
+            /* String literal */
             else if(cast(StringExpression)statement)
             {
                 /* TODO: For now */
-                // gprintln("STRING LIT");
-                // addType(getType(modulle, "int"));
-                //addType();
+                gprintln("Typecheck(): String literal processing...");
+
+                /**
+                * Add the char* type as string literals should be
+                * interned
+                */
+                addType(getType(modulle, "char*")); /* FIXME: Make char* */
+
+                gprintln("Typecheck(): String literal processing... [done]");
             }
             else if(cast(VariableExpression)statement)
             {
@@ -855,7 +862,7 @@ public final class TypeChecker
         Type foundType;
 
         /* Check if the type is built-in */
-        foundType = getBuiltInType(typeString);
+        foundType = getBuiltInType(this, typeString);
 
         /* If it isn't then check for a type (resolve it) */
         if(!foundType)

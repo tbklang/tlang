@@ -1,0 +1,4 @@
+module simple;
+
+
+int g = "";

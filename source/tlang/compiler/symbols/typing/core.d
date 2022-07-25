@@ -2,6 +2,7 @@ module compiler.symbols.typing.core;
 
 import compiler.symbols.data;
 import std.string : cmp;
+import std.conv : to;
 
 public import compiler.symbols.typing.builtins;
 
@@ -113,5 +114,27 @@ public class Pointer : Integer
         /* TODO: Change below, per architetcure (the 8 byte width) */
         super(name, 8);
         this.dataType = dataType;
+    }
+}
+
+/**
+* Array type
+* 
+* TODO: Might need investigation
+*/
+public class Array : Type
+{
+    private Type elementType;
+
+    this(Type elementType)
+    {
+        /* The name should be `elementType[]` */
+
+        // super(name, )
+
+        /* TODO: Differentiate between stack arrays and heap */
+        super(to!(string)(elementType)~"[]");
+
+        this.elementType = elementType;
     }
 }
