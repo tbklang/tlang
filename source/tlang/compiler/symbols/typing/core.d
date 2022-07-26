@@ -85,19 +85,9 @@ public class Integer : Number
 
 public class Float : Number
 {
-    this(string name)
+    this(string name, ubyte width)
     {
-        /* TODO: Change */
-        super(name, 69);
-    }
-}
-
-public class Double : Number
-{
-    this(string name)
-    {
-        /* TODO: Change */
-        super(name, 69);
+        super(name, width);
     }
 }
 
