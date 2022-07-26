@@ -283,12 +283,16 @@ public final class TypeChecker
                 * Add the char* type as string literals should be
                 * interned
                 */
-                addType(getType(modulle, "char*")); /* FIXME: Make char* */
+                addType(getType(modulle, "char*"));
                 
                 /**
                 * Add the instruction (TODO: add comment)
+                * and pass the literal to it
                 */
-                StringLiteral strLitInstr = new StringLiteral();
+                StringExpression strExp = cast(StringExpression)statement;
+                string strLit = strExp.getStringLiteral();
+                gprintln("String literal: `"~strLit~"`");
+                StringLiteral strLitInstr = new StringLiteral(strLit);
                 addInstr(strLitInstr);
 
                 gprintln("Typecheck(): String literal processing... [done]");
