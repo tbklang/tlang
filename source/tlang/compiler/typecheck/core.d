@@ -286,8 +286,7 @@ public final class TypeChecker
                 addType(getType(modulle, "char*"));
                 
                 /**
-                * Add the instruction (TODO: add comment)
-                * and pass the literal to it
+                * Add the instruction and pass the literal to it
                 */
                 StringExpression strExp = cast(StringExpression)statement;
                 string strLit = strExp.getStringLiteral();
