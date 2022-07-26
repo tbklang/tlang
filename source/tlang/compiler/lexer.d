@@ -125,6 +125,12 @@ public final class Lexer
                 /* The splitter token to finally insert */
                 string splitterToken;
 
+                gprintln("Build up: "~currentToken);
+                gprintln("Current char: "~currentChar);
+
+                /* FIXME: Add floating point support here */
+                /* TODO: IF buildUp is all numerical and we have dot go into float mode */
+
 
                 /**
                 * Here we check if we have a `.` and that the characters
