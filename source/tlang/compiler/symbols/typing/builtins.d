@@ -64,15 +64,34 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
         return new Integer("ubyte", 1, false);
     }
 
+
+    /**
+    * FIXME: For the below we need to find which is the RIGHT-MOST and THEN
+    * go from there
+    *
+    * This is so that we can support things such as:
+    *
+    * `char*[]`
+    */
+
+
     /* Pointer handling `<type>*` */
     else if(lastIndexOf(typeString, "*") > -1)
     {
-        /* FIXME: We may need to recurse call, for Pointer generation */
         long ptrTypePos = lastIndexOf(typeString, "*");
         string ptrType = typeString[0..(ptrTypePos)];
         gprintln("Pointer to '"~ptrType~"'");
 
         return new Pointer(tc.getType(tc.getModule(), ptrType));
+    }
+    /* Array handling `<type>[]` */
+    else if(lastIndexOf(typeString, "[]") > -1)
+    {
+        long arrayTypePos = lastIndexOf(typeString, "[]");
+        string arrayType = typeString[0..(arrayTypePos)];
+        gprintln("Array of '"~arrayType~"'");
+
+        return new Array(tc.getType(tc.getModule(), arrayType));
     }
     
     
@@ -80,13 +99,6 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
     /* If unknown, return null */
     else
     {
-        
-        /* If it contains a `[]` then its an array type */
-        if(indexOf(typeString, "[]") > -1)
-        {
-            /* FIXME: Implement me */
-        }
-        
 
 
 
