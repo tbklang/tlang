@@ -57,6 +57,18 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
     {
         return new Void();
     }
+    /* TODO: Decide on these (floats and doubles need to be specced out) */
+    /* `float` */
+    else if(cmp(typeString, "float") == 0)
+    {
+        return new Float("float", 4);
+    }
+    /* `double` */
+    else if(cmp(typeString, "double") == 0)
+    {
+        return new Float("double", 8);
+    }
+    
     
     /* TODO: What do we want? Char enforcement is kind of cringe I guess */
     else if(cmp(typeString, "char") == 0)
