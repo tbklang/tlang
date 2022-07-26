@@ -58,7 +58,7 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
         return new Void();
     }
     
-    /* TODO: char */
+    /* TODO: What do we want? Char enforcement is kind of cringe I guess */
     else if(cmp(typeString, "char") == 0)
     {
         return new Integer("ubyte", 1, false);

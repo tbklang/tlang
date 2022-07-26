@@ -276,7 +276,6 @@ public final class TypeChecker
             /* String literal */
             else if(cast(StringExpression)statement)
             {
-                /* TODO: For now */
                 gprintln("Typecheck(): String literal processing...");
 
                 /**
