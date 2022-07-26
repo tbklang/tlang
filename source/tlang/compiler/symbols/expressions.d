@@ -12,6 +12,11 @@ public class StringExpression : Expression
     {
         this.ztring = ztring;
     }
+
+    public string getStringLiteral()
+    {
+        return ztring;
+    }
 }
 
 public class OperatorExpression : Expression
