@@ -2,6 +2,7 @@ module compiler.codegen.instruction;
 
 import std.conv : to;
 import compiler.typecheck.dependency.core : Context;
+import std.string : cmp;
 
 public class Instruction
 {
@@ -118,9 +119,43 @@ public final class LiteralValue : Value
 */
 public final class StringLiteral : Value
 {
-    this()
-    {
+    /* String interning pool */
+    private static int[string] internmentCamp;
+    private static int rollCount = 0;
+    private string stringLiteral;
 
+    
+    this(string stringLiteral)
+    {
+        this.stringLiteral = stringLiteral;
+
+        /* Intern the string */
+        intern(stringLiteral);
+
+        addInfo = "StrLit: `"~stringLiteral~"`, InternID: "~to!(string)(intern(stringLiteral));
+    }
+
+    public static int intern(string strLit)
+    {
+        /* Search for the string (if it exists return it's pool ID) */
+        foreach(string curStrLit; internmentCamp.keys())
+        {
+            if(cmp(strLit, curStrLit) == 0)
+            {
+                return internmentCamp[strLit];
+            }
+        }
+
+        /* If not, create a new entry (pool it) and return */
+        internmentCamp[strLit] = rollCount;
+        rollCount++; /* TODO: Overflow check */
+
+        return rollCount-1;
+    }
+
+    public string getStringLiteral()
+    {
+        return stringLiteral;
     }
 }
 
