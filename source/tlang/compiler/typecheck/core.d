@@ -262,16 +262,39 @@ public final class TypeChecker
 
                 /**
                 * Typechecking
+                *
+                * TODO: Find the type of literal. Integer v.s. floating point
                 */
-                gprintln("NUMBER LIT");
-                addType(getType(modulle, "int"));
+                NumberLiteral numLit = cast(NumberLiteral)statement;
+                import std.string : indexOf;
+                bool isFloat = indexOf(numLit.getNumber(), ".") > -1; 
+                gprintln("NUMBER LIT: isFloat: "~to!(string)(isFloat));
+                addType(getType(modulle, isFloat ? "float" : "int"));
 
                 /**
                 * Codegen
+                *
+                * FIXME: Add support for floats
+                * TODO: We just assume (for integers) byte size 4?
                 */
-                ulong i = to!(ulong)((cast(NumberLiteral)statement).getNumber());
-                LiteralValue litValInstr = new LiteralValue(i, 4);
-                addInstr(litValInstr);
+                Value valInstr;
+
+                if(!isFloat)
+                {
+                    ulong i = to!(ulong)((cast(NumberLiteral)statement).getNumber());
+                    LiteralValue litValInstr = new LiteralValue(i, 4);
+
+                    valInstr = litValInstr;
+                }
+                else
+                {
+                    double i = to!(float)((cast(NumberLiteral)statement).getNumber());
+                    LiteralValueFloat litValInstr = new LiteralValueFloat(i, 4);
+
+                    valInstr = litValInstr;
+                }
+                
+                addInstr(valInstr);
             }
             /* String literal */
             else if(cast(StringExpression)statement)

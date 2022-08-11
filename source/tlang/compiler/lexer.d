@@ -52,6 +52,7 @@ public final class Lexer
     private ulong position; /* Current character position */
     private char currentChar; /* Current character */
     private bool stringMode; /* Whether we are in a string "we are here" or not */
+    private bool floatMode; /* Whether or not we are building a floating point constant */
 
     /* The tokens */
     private Token[] tokens;
@@ -108,7 +109,38 @@ public final class Lexer
 
             currentChar = sourceCode[position];
 
-            if(currentChar == ' ' && !stringMode)
+            if(floatMode == true)
+            {
+                if(isDigit(currentChar))
+                {
+                    /* tack on and move to next iteration */
+                    currentToken~=currentChar;
+                    position++;
+                    column++;
+                    continue;
+                }
+                /* TODO; handle closer case and error case */
+                else
+                {
+                    /* TODO: Throw erropr here */
+                    if(isSpliter(currentChar))
+                    {
+                        floatMode = false;
+                        currentTokens ~= new Token(currentToken, line, column);
+                        currentToken = "";
+
+                        /* We just flush and catch splitter in next round, hence below is commented out */
+                        // column++;                        
+                        // position++;
+                    }
+                    else
+                    {
+                        gprintln("Floating point '"~currentToken~"' cannot be followed by a '"~currentChar~"'", DebugType.ERROR);
+                        return false;
+                    }
+                }
+            }
+            else if(currentChar == ' ' && !stringMode)
             {
                 /* TODO: Check if current token is fulled, then flush */
                 if(currentToken.length != 0)
@@ -128,8 +160,23 @@ public final class Lexer
                 gprintln("Build up: "~currentToken);
                 gprintln("Current char: "~currentChar);
 
+                
+
                 /* FIXME: Add floating point support here */
                 /* TODO: IF buildUp is all numerical and we have dot go into float mode */
+                /* TODO: Error checking will need to be added */
+                if(isNumericalStr(currentToken) && currentChar == '.')
+                {
+                    /* Tack on the dot */
+                    currentToken~=".";
+
+                    /* Enable floating point mode and go to next iteration*/
+                    floatMode = true;
+                    gprintln("Halo");
+                    column++;
+                    position++;
+                    continue;
+                }
 
 
                 /**
@@ -534,6 +581,21 @@ public final class Lexer
 
 
        
+    }
+
+    private static bool isNumericalStr(string input)
+    {
+        for(ulong i = 0; i < input.length; i++)
+        {
+            char character = input[i];
+
+            if(!isDigit(character))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 

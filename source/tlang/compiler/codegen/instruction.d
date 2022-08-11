@@ -95,6 +95,7 @@ public final class FetchValueVar : Value
     }
 }
 
+/* Used for integers */
 public final class LiteralValue : Value
 {
     /* Data */
@@ -102,6 +103,21 @@ public final class LiteralValue : Value
     public byte len;
 
     this(ulong data, byte len)
+    {
+        this.data = data;
+        this.len = len;
+
+        addInfo = "Data: "~to!(string)(data)~", Length: "~to!(string)(len);
+    }
+}
+
+public final class LiteralValueFloat : Value
+{
+    /* Data */
+    public double data; /* TODO: Is this best way to store? Consirring floats/doubles */
+    public byte len;
+
+    this(double data, byte len)
     {
         this.data = data;
         this.len = len;
