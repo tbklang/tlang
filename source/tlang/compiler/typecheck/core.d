@@ -263,7 +263,9 @@ public final class TypeChecker
                 /**
                 * Typechecking
                 *
-                * TODO: Find the type of literal. Integer v.s. floating point
+                * If the number literal contains a `.` then it is a float
+                * else if is an int (NOTE: This may need to be more specific
+                * with literal encoders down the line)
                 */
                 NumberLiteral numLit = cast(NumberLiteral)statement;
                 import std.string : indexOf;
@@ -274,11 +276,14 @@ public final class TypeChecker
                 /**
                 * Codegen
                 *
-                * FIXME: Add support for floats
                 * TODO: We just assume (for integers) byte size 4?
+                * 
+                * Generate the correct value instruction depending
+                * on the number literal's type
                 */
                 Value valInstr;
 
+                /* Generate a LiteralValue (Integer literal) */
                 if(!isFloat)
                 {
                     ulong i = to!(ulong)((cast(NumberLiteral)statement).getNumber());
@@ -286,6 +291,7 @@ public final class TypeChecker
 
                     valInstr = litValInstr;
                 }
+                /* Generate a LiteralValueFloat (Floating point literal) */
                 else
                 {
                     double i = to!(float)((cast(NumberLiteral)statement).getNumber());
