@@ -12,6 +12,8 @@ import compiler.compiler : beginCompilation;
 import std.exception : ErrnoException;
 import compiler.lexer : Lexer;
 
+// import jcli.cli;
+
 @Command("help", "Shows the help screen")
 struct helpCommand
 {
@@ -28,7 +30,7 @@ struct helpCommand
 @Command("compile", "Compiles the given file(s)")
 struct compileCommand
 {
-    @CommandPositionalArg(0, "source file", "The source file to compile")
+    @ArgPositional("source file", "The source file to compile")
     string sourceFile;
 
     // @CommandRawListArg
@@ -53,7 +55,7 @@ struct compileCommand
 @Command("lex", "Performs tokenization of the given file(s)")
 struct lexCommand
 {
-    @CommandPositionalArg(0, "source file", "The source file to compile")
+    @ArgPositional("source file", "The source file to compile")
     string sourceFile;
 
     void onExecute()
