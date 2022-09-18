@@ -688,8 +688,6 @@ public final class TypeChecker
                 if(!varDecInstr)
                 {
                     addInstr(instr);
-                    assert(varDecInstr is null);
-                    assert(instr);
                     break;
                 }
                 /* If, then make sure related to this class */
