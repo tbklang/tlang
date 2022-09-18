@@ -653,7 +653,6 @@ public final class TypeChecker
                 /* TODO: Make sure this is correct */
                 addInstr(varDecInstr);
                 gprintln("Hello>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-
             }
 
             
@@ -688,12 +687,16 @@ public final class TypeChecker
                 /* If not VariableDeclaration push back and end */
                 if(!varDecInstr)
                 {
-                    addInstr(varDecInstr);
+                    addInstr(instr);
+                    assert(varDecInstr is null);
+                    assert(instr);
                     break;
                 }
                 /* If, then make sure related to this class */
                 else
                 {
+                    gprintln("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+
                     /* TODO: Fetch the variable's context */
                     Variable varDecPNode = cast(Variable)resolver.resolveBest(clazzPNode, varDecInstr.varName);
                     gprintln(varDecPNode);
@@ -767,6 +770,11 @@ public final class TypeChecker
                 VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, valueInstr);
                 addInstrB(vAInstr);
             }
+            /* Case of no matches */
+            else
+            {
+                gprintln("NO MATCHES FIX ME FOR: "~to!(string)(statement), DebugType.WARNING);
+            }
         }
         
 
@@ -788,7 +796,9 @@ public final class TypeChecker
             gprintln("Process: "~to!(string)(node));
 
             /* Print the code queue each time */
+            gprintln("sdfhjkhdsfjhfdsj 1");
             printCodeQueue();
+            gprintln("sdfhjkhdsfjhfdsj 2");
 
             /**
             * Now depending on thr DNode type we should
