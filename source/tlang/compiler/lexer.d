@@ -172,7 +172,7 @@ public final class Lexer
 
                     /* Enable floating point mode and go to next iteration*/
                     floatMode = true;
-                    gprintln("Halo");
+                    gprintln("Float mode just got enabled: Current build up: \""~currentToken~"\"");
                     column++;
                     position++;
                     continue;
@@ -583,8 +583,25 @@ public final class Lexer
        
     }
 
+    /**
+    * Given a string return true if all characters
+    * are digits, false otherwise and false if
+    * the string is empty
+    */
     private static bool isNumericalStr(string input)
     {
+        /**
+        * If the given input is empty then return false
+        */
+        if(input.length == 0)
+        {
+            return false;
+        }
+
+        /** 
+         * If there are any characters in the string then
+         * check if all are digits
+         */
         for(ulong i = 0; i < input.length; i++)
         {
             char character = input[i];
@@ -782,6 +799,17 @@ unittest
     // assert(currentLexer.getTokens() == [new Token("21UL", 0, 0)]);
 
     
+}
+
+/* Test input: `1.5` */
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = "1.5";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [new Token("1.5", 0, 0)]);
 }
 
 /* TODO: Add more tests */
