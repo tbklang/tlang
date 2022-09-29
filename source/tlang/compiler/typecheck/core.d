@@ -693,8 +693,6 @@ public final class TypeChecker
                 /* If, then make sure related to this class */
                 else
                 {
-                    gprintln("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-
                     /* TODO: Fetch the variable's context */
                     Variable varDecPNode = cast(Variable)resolver.resolveBest(clazzPNode, varDecInstr.varName);
                     gprintln(varDecPNode);
