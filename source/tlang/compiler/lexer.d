@@ -812,4 +812,26 @@ unittest
     assert(currentLexer.getTokens() == [new Token("1.5", 0, 0)]);
 }
 
-/* TODO: Add more tests */
+/**
+* Test correct handling of dot-operator for
+* non-floating point cases
+*
+* Input: `new A().l.p.p;`
+*/
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = "new A().l.p.p;";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+        new Token("new", 0, 0),
+        new Token("A", 0, 0),
+        new Token("(", 0, 0),
+        new Token(")", 0, 0),
+        new Token(".", 0, 0),
+        new Token("l.p.p", 0, 0),
+        new Token(";", 0, 0)
+    ]);
+}
