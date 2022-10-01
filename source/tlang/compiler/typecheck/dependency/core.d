@@ -1259,6 +1259,7 @@ public class DNodeGenerator
 
                 /* TODO: New code from 1st October */
                 /* Recurse downwards */
+                /* FIXME: The context container must be fixed, see passClazz, we pass the euiavlent of `func` in there */
                 Context funcContext = new Context(tc.getModule(), InitScope.STATIC);
                 DNode funcDefDNode = generalPass(func, funcContext);
 
