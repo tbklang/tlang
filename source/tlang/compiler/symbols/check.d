@@ -52,6 +52,10 @@ public enum SymbolType
     DIVIDE,
     STAR,
     AMPERSAND,
+    GREATER_THAN,
+    SMALLER_THAN,
+    GREATER_THAN_OR_EQUALS,
+    SMALLER_THAN_OR_EQUALS,
     UNKNOWN
 }
 
@@ -405,11 +409,26 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.AMPERSAND;
     }
-    
-    
-    
-    
-    
+    /* Greater than `>` operator check */
+    else if(token[0] == '>')
+    {
+        return SymbolType.GREATER_THAN;
+    }
+    /* Smaller than `<` operator check */
+    else if(token[0] == '<')
+    {
+        return SymbolType.SMALLER_THAN;
+    }
+    /* Greater than or equals to `>=` operator check */
+    else if(cmp(">=", token) == 0)
+    {
+        return SymbolType.GREATER_THAN_OR_EQUALS;
+    }
+    /* Smaller than or equals to `<=` operator check */
+    else if(cmp("<=", token) == 0)
+    {
+        return SymbolType.SMALLER_THAN_OR_EQUALS;
+    }
     
 
     return SymbolType.UNKNOWN;
@@ -429,7 +448,9 @@ public bool isBinaryOp(Token token)
 
     return tokenStr[0] == '&' ||  cmp("&&", tokenStr) == 0 ||
             tokenStr[0] == '|' || cmp("||", tokenStr) == 0 ||
-            tokenStr[0] == '^' || tokenStr[0] == '~';
+            tokenStr[0] == '^' || tokenStr[0] == '~'       ||
+            tokenStr[0] == '<' || tokenStr[0] == '>'       ||
+            cmp(">=", tokenStr) == 0 || cmp("<=", tokenStr) == 0;
 }
 
 
