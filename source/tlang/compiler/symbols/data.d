@@ -233,7 +233,7 @@ public class ArgumentList
 
 /* TODO: Don't make this a Container, or maybe (make sure I don't rely on COntainer casting for other shit
 * though, also the recent changes) */
-public class Function : TypedEntity
+public class Function : TypedEntity, Container
 {
     private Variable[] params;
     private Statement[] bodyStatements;
@@ -251,6 +251,16 @@ public class Function : TypedEntity
     public Variable[] getParams()
     {
         return params;
+    }
+
+    public void addStatement(Statement statement)
+    {
+        this.bodyStatements~=statement;
+    }
+
+    public void addStatements(Statement[] statements)
+    {
+        this.bodyStatements~=statements;
     }
 
     public Statement[] getStatements()

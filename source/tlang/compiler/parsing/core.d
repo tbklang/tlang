@@ -1119,6 +1119,9 @@ public final class Parser
             
             import std.stdio;
             writeln(to!(string)((cast(Function)generated).getVariables()));
+
+
+            parentToContainer(cast(Container)generated, pair.bodyStatements);
         }
         /* Check for semi-colon (var dec) */
         else if (symbolType == SymbolType.SEMICOLON)
