@@ -1677,13 +1677,10 @@ unittest
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
-   
+    /* Perform test */
+    typeChecker.beginCheck();
 
-        /* Perform test */
-        typeChecker.beginCheck();
-
-
- 
+    /* TODO: Insert checks here */
 }
 
 
