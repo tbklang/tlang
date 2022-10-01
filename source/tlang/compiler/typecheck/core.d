@@ -90,10 +90,16 @@ public final class TypeChecker
         /* TODO: Work in progress (NEW!!!) */
         /* Get the action-list (linearised bottom up graph) */
         DNode[] actionList = rootNode.poes;
-        doTypeCheck(actionList);
-
-        
+        doTypeCheck(actionList);        
         printTypeQueue();
+
+        foreach(FunctionData funcData; functions.values)
+        {
+            DNode funcNode = funcData.generate();
+            DNode[] actionListFunc = funcNode.poes;
+            doTypeCheck(actionListFunc);
+            printTypeQueue();
+        }
         
 
 
