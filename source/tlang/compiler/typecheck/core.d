@@ -81,26 +81,20 @@ public final class TypeChecker
         FunctionData[string] functions = grabFunctionDefs();
         gprintln("Defined functions: "~to!(string)(functions));
         /* TODO: Disable, this is just to peep */
-        foreach(FunctionData funcData; functions.values)
-        {
-            DNode funcNode = funcData.generate();
-            gprintln(funcNode.print());
-        }
+        // foreach(FunctionData funcData; functions.values)
+        // {
+            // DNode funcNode = funcData.generate();
+            // DNode[] actionListFunc = funcNode.poes;
+            // doTypeCheck(actionListFunc);
+            // printTypeQueue();
+            // gprintln(funcNode.print());
+        // }
 
         /* TODO: Work in progress (NEW!!!) */
         /* Get the action-list (linearised bottom up graph) */
         DNode[] actionList = rootNode.poes;
         doTypeCheck(actionList);        
         printTypeQueue();
-
-        foreach(FunctionData funcData; functions.values)
-        {
-            DNode funcNode = funcData.generate();
-            DNode[] actionListFunc = funcNode.poes;
-            doTypeCheck(actionListFunc);
-            printTypeQueue();
-        }
-        
 
 
         /**
