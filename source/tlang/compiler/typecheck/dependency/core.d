@@ -346,45 +346,6 @@ public final class DFunctionInnerGenerator : DNodeGenerator
         DNode funcDNode = generalPass(func, context);
 
         return funcDNode;
-        // return funcInnerPass();
-    }
-
-    private DNode funcInnerPass()
-    {
-        /* Pool myself (would need for recursive stuff probably) */
-        DNode self  = pool(func);
-
-        /* Look at the body statements */
-        Statement[] statements = func.getStatements();
-        foreach(Statement statement; statements)
-        {
-            gprintln("funcInnerPass(): Processing "~statement.toString());
-
-            /**
-            * Variable declarations
-            */
-            if(cast(Variable)statement)
-            {
-                Variable variable = cast(Variable)statement;
-                DNode varDNode = pool(variable);
-
-
-                /**
-                * TODO: Handling of external dependencies
-                *
-                * Handling of external factors, perhaps
-                * we need our outer DNodeGenerator, we can
-                * then visit those things perhaps
-                */
-
-
-                /* Make the function call (us) require this */
-                self.needs(varDNode);
-            }
-        }
-
-
-        return self;
     }
 }
 
@@ -564,6 +525,7 @@ public class DNodeGenerator
         ExpressionDNode dnode = poolT!(ExpressionDNode, Expression)(exp);
 
         gprintln("expressionPass(Exp): Processing "~exp.toString(), DebugType.WARNING);
+        gprintln("expressionPass(Exp): Context coming in "~to!(string)(context));
 
         /* TODO: Add pooling */
 
@@ -583,6 +545,14 @@ public class DNodeGenerator
             /* TODO: Implement argument expression dependency */
             FunctionCall funcCall = cast(FunctionCall)exp;
             gprintln("FuncCall: "~funcCall.getName());
+
+
+            /* TODO: We need to fetch the cached function definition here and call it */
+            Entity funcEntity = resolver.resolveWithin(context.container, funcCall.getName());
+            DNode funcDefDNode = retrieveFunctionDefinitionNode(tc.getResolver().generateName(tc.getModule(), funcEntity));
+            gprintln("FuncCall (FuncDefNode): "~to!(string)(funcDefDNode));
+            dnode.needs(funcDefDNode); /* NOTE: New code as of 4th October 2022 */
+
 
             /**
             * Go through each argument generating a fresh DNode for each expression
@@ -671,6 +641,23 @@ public class DNodeGenerator
             
             string path = varExp.getName();
             long nearestDot = indexOf(path, ".");
+
+
+            gprintln("VariableExpressionPass(): Path: "~path, DebugType.WARNING);
+            gprintln("VarExp Context set? (before): "~to!(string)(varExp.getContext()));
+
+            /* See issue #9 on Gitea */
+            /* FIXME: We only set context in some situations - we MUST fix this */
+            /* NOTE: I think THIS is wrong -   varExp.setContext(context); */
+            /* What we need to do is set the variable itself me thinks */
+            /* NOTE: But the above seems to also be needed */
+
+            /* NOTE: Fix is below I think (it doesn't crash then) */
+            /* Set context for expression and the variable itself */
+            // varExp.setContext(context);
+            // Entity bruh = tc.getResolver().resolveBest(context.getContainer(), path);
+            // bruh.setContext(context);
+          
 
 
 
@@ -852,7 +839,7 @@ public class DNodeGenerator
             }
 
 
-            
+            gprintln("VarExp Context set? (after): "~to!(string)(varExp.getContext()));
 
         }
         /**

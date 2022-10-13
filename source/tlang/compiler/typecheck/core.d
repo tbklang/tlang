@@ -329,6 +329,10 @@ public final class TypeChecker
 
                 gprintln("Yaa, it's rewind time");
                 auto g  = cast(VariableExpression)statement;
+
+                /* FIXME: It would seem that g.getContext() is returning null, so within function body's context is not being set */
+                gprintln("VarExp: "~g.getName());
+                gprintln(g.getContext());
                 auto gVar = cast(TypedEntity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
 
                 string variableName = resolver.generateName(modulle, gVar);

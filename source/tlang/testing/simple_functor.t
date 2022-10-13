@@ -6,11 +6,20 @@ class TestClass
 }
 
 
+int p = main();
+
+int testFunc()
+{
+ 
+}
+
 int main()
 {
     int j = 0;
 
     j = 2+TestClass.value;
+
+    j=testFunc();
 
     while(j < 10)
     {
