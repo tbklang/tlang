@@ -823,6 +823,12 @@ public class DNodeGenerator
                     VariableExpression varExpCont = new VariableExpression(nearestName);
 
                     /* TODO: We need to add a chck to which type of Container it is, if it is a Class then we need to do a static init */
+                    if(cast(Clazz)namedEntity)
+                    {
+                        Clazz clazz = cast(Clazz)namedEntity;
+
+                        dnode.needs(classPassStatic(clazz));
+                    }
 
                     /* TODO: Recurse on `newPath` */
                     /* FIXME: Context is bad so lookup fails, must be neweer upsdated local container */
