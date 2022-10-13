@@ -785,12 +785,14 @@ public class DNodeGenerator
                 /* Resolve the Entity */
                 Entity namedEntity = tc.getResolver().resolveWithin(context.getContainer(), nearestName);
 
+                /* FIXME: We should add a `namedEntity.setContext()` here */
+
                 /**
                 * If an entity by that name exists
                 */
                 if(namedEntity)
                 {
-                    /* TODO: Reusrse */
+                    /* TODO: Recurse and do dependency generation (this should include #8 on Gitea) */
 
 
 
