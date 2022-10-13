@@ -833,7 +833,7 @@ public class DNodeGenerator
                     /* TODO: Recurse on `newPath` */
                     /* FIXME: Context is bad so lookup fails, must be neweer upsdated local container */
                     tc.getResolver().resolveWithin((context.getContainer()), nearestName);
-                    expressionPass(varExpCont, new Context(cast(Container)namedEntity, context.initScope));
+                    dnode.needs(expressionPass(varExpCont, new Context(cast(Container)namedEntity, context.initScope)));
 
                     /* NOTE: We need to extract the nearest name and chekc the type of what it (the name) resolves to */
 
