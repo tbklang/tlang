@@ -782,8 +782,13 @@ public class DNodeGenerator
                 /* Get name before the first dot */
                 nearestName = path[0..nearestDot];
 
+                gprintln("Nereast name: "~to!(string)(nearestName));
+
                 /* Resolve the Entity */
                 Entity namedEntity = tc.getResolver().resolveWithin(context.getContainer(), nearestName);
+                
+                /* NOTE: This assertion should be true as it should be a container */
+                assert(cast(Container)namedEntity);
 
                 /* FIXME: We should add a `namedEntity.setContext()` here */
 
@@ -793,6 +798,38 @@ public class DNodeGenerator
                 if(namedEntity)
                 {
                     /* TODO: Recurse and do dependency generation (this should include #8 on Gitea) */
+
+                    long previousDot = nearestDot;
+                    string newPath = path[nearestDot+1..path.length];
+                    gprintln("NewPath (full): "~to!(string)(newPath));
+
+                    /* Extract the first segment */
+                    nearestDot = indexOf(newPath, ".");
+                    if(nearestDot == -1)
+                    {
+                        nearestName = newPath[0..newPath.length];
+                    }
+                    else
+                    {
+                        nearestName = newPath[0..nearestDot];
+                    }
+
+                    gprintln("Local segment: "~to!(string)(nearestName));
+
+                    /**
+                    * TODO: I think we need to construct a new VariableExpression for this sub-part now
+                    * in order to be able to visit sub-parts using our `passExpression()` method.
+                    */
+                    VariableExpression varExpCont = new VariableExpression(nearestName);
+
+                    /* TODO: We need to add a chck to which type of Container it is, if it is a Class then we need to do a static init */
+
+                    /* TODO: Recurse on `newPath` */
+                    /* FIXME: Context is bad so lookup fails, must be neweer upsdated local container */
+                    tc.getResolver().resolveWithin((context.getContainer()), nearestName);
+                    expressionPass(varExpCont, new Context(cast(Container)namedEntity, context.initScope));
+
+                    /* NOTE: We need to extract the nearest name and chekc the type of what it (the name) resolves to */
 
 
 
