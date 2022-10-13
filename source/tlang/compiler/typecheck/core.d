@@ -663,7 +663,7 @@ public final class TypeChecker
 
             
         }
-        /* TODO: Add class init */
+        /* TODO: Add class init, see #8 */
         else if(cast(compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
         {
             Clazz clazzPNode = cast(Clazz)dnode.getEntity();
