@@ -334,10 +334,14 @@ public final class TypeChecker
                 gprintln("VarExp: "~g.getName());
                 gprintln(g.getContext());
                 auto gVar = cast(TypedEntity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
+                gprintln("gVar nullity?: "~to!(string)(gVar is null));
+
+                /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
 
                 string variableName = resolver.generateName(modulle, gVar);
 
                 gprintln("VarName: "~variableName);
+                gprintln("Halo");
 
                 gprintln("Yaa, it's rewind time1: "~to!(string)(gVar.getType()));
                 gprintln("Yaa, it's rewind time2: "~to!(string)(gVar.getContext()));

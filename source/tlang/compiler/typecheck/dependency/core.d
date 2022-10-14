@@ -50,6 +50,11 @@ public final class Context
     {
         return container;
     }
+
+    public override string toString()
+    {
+        return "Context [ContPtr(valid?): "~to!(string)(!(container is null))~", InitScope: "~to!(string)(initScope)~"]";
+    }
 }
 
 /**
