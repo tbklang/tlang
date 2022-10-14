@@ -869,7 +869,7 @@ public class DNodeGenerator
 
                             gprintln("No mord to accevssor(): "~to!(string)(dnode));
 
-                            
+                            /* TODO: We now have `TestClass.P` so accessor op or what? */
                         }
 
 
