@@ -821,7 +821,10 @@ public class DNodeGenerator
 
                 /* TODO: Check th container passed in */
                 /* Lookup the name within the current entity's context */
-                Entity namedEntity = tc.getResolver().resolveWithin(bruh.getContext().getContainer(), remainingSegment);
+                gprintln("Now looking up: "~remainingSegment);
+                Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), remainingSegment);
+                gprintln("namedEntity: "~to!(string)(namedEntity));
+                gprintln("Context used for resolution: "~to!(string)(context.getContainer()));
 
                 /* The remaining segment must EXIST */
                 if(namedEntity)
@@ -855,7 +858,7 @@ public class DNodeGenerator
                             */
                             Context varExpRemContext = new Context(tc.getModule(), InitScope.STATIC);
                             VariableExpression varExpRem = new VariableExpression(remainingSegment);
-                            DNode varExpRemDNode = expressionPass(varExpRem, varExpRemContext);
+                            DNode varExpRemDNode = expressionPass(varExpRem, context);
 
                             dnode.needs(varExpRemDNode);
                         }
