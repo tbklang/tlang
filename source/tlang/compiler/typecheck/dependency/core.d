@@ -803,74 +803,61 @@ public class DNodeGenerator
             * If the `path` has dots
             *
             * Example: `container.variableX`
+            *
+            * We want to start left to right, first look at `variableX`,
+            * take that node, then recurse on `container.` (everything
+            * without the last segment) as this results in the correct
+            * dependency sub-tree
             */
             else
             {
-                /* Get name before the first dot */
-                nearestName = path[0..nearestDot];
+                /* Chop off the last segment */
+                long lastDot = lastIndexOf(path, ".");
+                string remainingSegment = path[0..(lastDot)];
 
-                gprintln("Nereast name: "~to!(string)(nearestName));
+                /* Lookup the name within the current entity's context */
+                Entity namedEntity = tc.getResolver().resolveWithin(bruh.getContext().getContainer(), remainingSegment);
 
-                /* Resolve the Entity */
-                Entity namedEntity = tc.getResolver().resolveWithin(context.getContainer(), nearestName);
-                
-                /* NOTE: This assertion should be true as it should be a container */
-                assert(cast(Container)namedEntity);
-
-                /* FIXME: We should add a `namedEntity.setContext()` here */
-
-                /**
-                * If an entity by that name exists
-                */
+                /* The remaining segment must EXIST */
                 if(namedEntity)
                 {
-                    /* TODO: Recurse and do dependency generation (this should include #8 on Gitea) */
-
-                    long previousDot = nearestDot;
-                    string newPath = path[nearestDot+1..path.length];
-                    gprintln("NewPath (full): "~to!(string)(newPath));
-
-                    /* Extract the first segment */
-                    nearestDot = indexOf(newPath, ".");
-                    if(nearestDot == -1)
+                    /* The remaining segment must be a CONTAINER */
+                    Container container = cast(Container)namedEntity;
+                    if(container)
                     {
-                        nearestName = newPath[0..newPath.length];
+                        /* If we have a class then it needs static init */
+                        if(cast(Clazz)container)
+                        {
+                            Clazz containerClass = cast(Clazz)container;
+                            DNode classStaticAllocate = classPassStatic(containerClass);
+                            dnode.needs(classStaticAllocate);
+                            gprintln("Hello "~remainingSegment, DebugType.ERROR);
+                        }
+
+
+                        /**
+                        * Create a VariableExpression for the remaining segment,
+                        * run `passExpression()` on it (recurse) and make the CURRENT
+                        * DNode (`dnode`) depend on the returned DNode
+                        *
+                        * FIXME: Fix the context
+                        */
+                        // Context varExpRemContext = new Context();
+                        VariableExpression varExpRem = new VariableExpression(remainingSegment);
+                        DNode varExpRemDNode = expressionPass(varExpRem, context);
+
+                        dnode.needs(varExpRemDNode);
+
+                        gprintln(varExpRemDNode);
+                        
+
+
                     }
                     else
                     {
-                        nearestName = newPath[0..nearestDot];
+                        Parser.expect("Could not acces \""~remainingSegment~"\" as it is not a container");
                     }
 
-                    gprintln("Local segment: "~to!(string)(nearestName));
-
-                    /**
-                    * TODO: I think we need to construct a new VariableExpression for this sub-part now
-                    * in order to be able to visit sub-parts using our `passExpression()` method.
-                    */
-                    VariableExpression varExpCont = new VariableExpression(nearestName);
-
-                    /* TODO: We need to add a chck to which type of Container it is, if it is a Class then we need to do a static init */
-                    if(cast(Clazz)namedEntity)
-                    {
-                        Clazz clazz = cast(Clazz)namedEntity;
-
-
-                        /* TODO: This actually gives a wrong dependency order, we would have to swap a lot */
-                        /* IDEA: We could change what we return here, such that we return a different dnode with it dependent on class? */
-                        dnode.needs(classPassStatic(clazz));
-                        // addToPathTrail(tc.getResolver().generateName(context.getContainer(), ))
-                    }
-
-                    /* TODO: Recurse on `newPath` */
-                    /* FIXME: Context is bad so lookup fails, must be neweer upsdated local container */
-                    tc.getResolver().resolveWithin((context.getContainer()), nearestName);
-                    dnode.needs(expressionPass(varExpCont, new Context(cast(Container)namedEntity, context.initScope)));
-
-                    /* NOTE: We need to extract the nearest name and chekc the type of what it (the name) resolves to */
-
-
-
-                    /* TODO: Create a DNode for a variable access */
                 }
                 /**
                 * If an entity by that name doesn't exist then
@@ -879,7 +866,7 @@ public class DNodeGenerator
                 */
                 else
                 {
-                    Parser.expect("Could not find an entity named "~nearestName);
+                    Parser.expect("Could not find an entity named "~remainingSegment);
                 }
             }
 
@@ -1055,6 +1042,7 @@ public class DNodeGenerator
 
 
             // dnode.needs()
+            gprintln("Interesting", DebugType.ERROR);
         }
         
 
@@ -1155,6 +1143,7 @@ public class DNodeGenerator
                 assert(variableType); /* TODO: Handle invalid variable type */
                 DNode variableDNode = poolT!(StaticVariableDeclaration, Variable)(variable);
                 writeln("Hello");
+                writeln("VarTyope: "~to!(string)(variableType));
 
                 /* Basic type */
                 if(cast(Primitive)variableType)
@@ -1164,6 +1153,8 @@ public class DNodeGenerator
                 /* Class-type */
                 else if(cast(Clazz)variableType)
                 {
+                    writeln("Literally hello");
+                    
                     /* Get the static class dependency */
                     ClassStaticNode classDependency = classPassStatic(cast(Clazz)variableType);
 
@@ -1381,6 +1372,8 @@ public class DNodeGenerator
     {
         /* Get a DNode for the Class */
         ClassStaticNode classDNode = poolClassStatic(clazz);
+
+        gprintln("classPassStatic(): Static init check for?: "~to!(string)(clazz));
 
         /* Make sure we are static */
         if(clazz.getModifierType()!=InitScope.STATIC)
