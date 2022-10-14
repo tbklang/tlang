@@ -856,7 +856,7 @@ public class DNodeGenerator
                             *
                             * TOOD: Double check the Context passed in
                             */
-                            Context varExpRemContext = new Context(tc.getModule(), InitScope.STATIC);
+                            // Context varExpRemContext = new Context(tc.getModule(), InitScope.STATIC);
                             VariableExpression varExpRem = new VariableExpression(remainingSegment);
                             DNode varExpRemDNode = expressionPass(varExpRem, context);
 
