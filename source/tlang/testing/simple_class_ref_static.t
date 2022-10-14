@@ -10,7 +10,7 @@ class TestClass
     static int x = 2;
     static A y;
 
-    class P
+    static class P
     {
         static int h;
     }
