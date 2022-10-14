@@ -8,7 +8,12 @@ class A
 class TestClass
 {
     static int x = 2;
-    static A y = 3;
+    static A y;
+
+    class P
+    {
+        static int h;
+    }
 }
 
-int testValue = TestClass.x;
+int testValue = TestClass.P.h;

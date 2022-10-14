@@ -685,8 +685,9 @@ public class DNodeGenerator
             Entity bruh = tc.getResolver().resolveBest(context.getContainer(), path);
             bruh.setContext(context);
           
-
-
+            /* Has two dots? */
+            bool hasTwoDots = indexOf(path, ".", nearestDot+1) == lastIndexOf(path, ".") && indexOf(path, ".", nearestDot+1) > -1;
+            gprintln(indexOf(path, ".", nearestDot+1));
 
             /**
             * Current named entity
@@ -808,6 +809,9 @@ public class DNodeGenerator
             * take that node, then recurse on `container.` (everything
             * without the last segment) as this results in the correct
             * dependency sub-tree
+            *
+            * FIXME: We should stop at `x.y` and not go further as we need
+            * to know what we are acessing
             */
             else
             {
@@ -815,6 +819,7 @@ public class DNodeGenerator
                 long lastDot = lastIndexOf(path, ".");
                 string remainingSegment = path[0..(lastDot)];
 
+                /* TODO: Check th container passed in */
                 /* Lookup the name within the current entity's context */
                 Entity namedEntity = tc.getResolver().resolveWithin(bruh.getContext().getContainer(), remainingSegment);
 
@@ -835,20 +840,39 @@ public class DNodeGenerator
                         }
 
 
-                        /**
-                        * Create a VariableExpression for the remaining segment,
-                        * run `passExpression()` on it (recurse) and make the CURRENT
-                        * DNode (`dnode`) depend on the returned DNode
-                        *
-                        * FIXME: Fix the context
-                        */
-                        // Context varExpRemContext = new Context();
-                        VariableExpression varExpRem = new VariableExpression(remainingSegment);
-                        DNode varExpRemDNode = expressionPass(varExpRem, context);
+                        /* If we only have one dot left s(TODO: implement ) */
+                        bool hasMoreDot = indexOf(remainingSegment, ".") > -1;
+                        if(hasMoreDot)
+                        {
+                            gprintln("has mor dot");
 
-                        dnode.needs(varExpRemDNode);
+                            /**
+                            * Create a VariableExpression for the remaining segment,
+                            * run `passExpression()` on it (recurse) and make the CURRENT
+                            * DNode (`dnode`) depend on the returned DNode
+                            *
+                            * TOOD: Double check the Context passed in
+                            */
+                            Context varExpRemContext = new Context(tc.getModule(), InitScope.STATIC);
+                            VariableExpression varExpRem = new VariableExpression(remainingSegment);
+                            DNode varExpRemDNode = expressionPass(varExpRem, varExpRemContext);
 
-                        gprintln(varExpRemDNode);
+                            dnode.needs(varExpRemDNode);
+                        }
+                        else
+                        {
+                            /* Do access operation here */
+                            gprintln("No more dot");
+
+                            gprintln("No mord to accevssor(): "~to!(string)(dnode));
+
+                            
+                        }
+
+
+                        
+
+
                         
 
 
