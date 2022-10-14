@@ -578,6 +578,7 @@ public final class TypeChecker
             VariableAssignmentNode varAssignDNode = cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
             Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
             variableName = resolver.generateName(modulle, assignTo);
+            gprintln("VariableAssignmentNode: "~to!(string)(variableName));
 
             /**
             * Codegen
@@ -608,7 +609,7 @@ public final class TypeChecker
             * Emit a variable declaration instruction
             */
             Variable variablePNode = cast(Variable)dnode.getEntity();
-            gprintln("HELLO NIGGA");
+            gprintln("HELLO FELLA");
             string variableName = resolver.generateName(modulle, variablePNode);
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4);
 
@@ -712,7 +713,9 @@ public final class TypeChecker
                     if(varDecPNode.context.container == clazzPNode)
                     {
                         /* TODO: Add the static variable declARATION INITIALIZATIONS HERE */
+                        /* FIXME: Surely after, to preserve ordering */
                         kept.insert(varDecInstr);
+                        // kept.insertAfter(kept[], varDecInstr);
                     }
                     /**
                     * If not, then put it back where it was

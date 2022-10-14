@@ -1,8 +1,14 @@
 module simple_class_ref;
 
-class TestClass
+class A
 {
-    static int value = 2;
+    static int aVal;
 }
 
-int testValue = TestClass.value;
+class TestClass
+{
+    static int x = 2;
+    static int A = 3;
+}
+
+int testValue = TestClass.x;

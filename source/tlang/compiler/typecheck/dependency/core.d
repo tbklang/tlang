@@ -520,6 +520,33 @@ public class DNodeGenerator
         return node;
     }
 
+
+    /**
+    * Used for maintaining dependencies along a trail of `x.y.z`
+    */
+    private DNode[][string] pathTrailDeps;
+    private void addToPathTrail(string finalEntityName, DNode dep)
+    {
+        bool found = false;
+        foreach(string entityName; pathTrailDeps.keys)
+        {
+            if(cmp(entityName, finalEntityName) == 0)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if(found == false)
+        {
+            pathTrailDeps[finalEntityName] = [];
+        }
+        
+        pathTrailDeps[finalEntityName] ~= dep;
+        
+    }
+
+
     private DNode expressionPass(Expression exp, Context context)
     {
         ExpressionDNode dnode = poolT!(ExpressionDNode, Expression)(exp);
@@ -654,9 +681,9 @@ public class DNodeGenerator
 
             /* NOTE: Fix is below I think (it doesn't crash then) */
             /* Set context for expression and the variable itself */
-            // varExp.setContext(context);
-            // Entity bruh = tc.getResolver().resolveBest(context.getContainer(), path);
-            // bruh.setContext(context);
+            varExp.setContext(context);
+            Entity bruh = tc.getResolver().resolveBest(context.getContainer(), path);
+            bruh.setContext(context);
           
 
 
@@ -827,7 +854,11 @@ public class DNodeGenerator
                     {
                         Clazz clazz = cast(Clazz)namedEntity;
 
+
+                        /* TODO: This actually gives a wrong dependency order, we would have to swap a lot */
+                        /* IDEA: We could change what we return here, such that we return a different dnode with it dependent on class? */
                         dnode.needs(classPassStatic(clazz));
+                        // addToPathTrail(tc.getResolver().generateName(context.getContainer(), ))
                     }
 
                     /* TODO: Recurse on `newPath` */
