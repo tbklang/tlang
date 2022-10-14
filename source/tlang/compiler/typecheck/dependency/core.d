@@ -847,6 +847,13 @@ public class DNodeGenerator
                             gprintln("Hello "~remainingSegment, DebugType.ERROR);
                         }
 
+                        /**
+                        * FIXME: Decide what requires new dep and what doesn't, instance vs class access etc
+                        *
+                        * How detailed we need to be? Will we combine these and consume later, we need to take these things
+                        * into account. I am erring on the side of one single access, the only things along the way are possible static
+                        * allocations, but that is my feeling - each path segment doesn't need something for simply existing
+                        */
 
                         /* If we only have one dot left s(TODO: implement ) */
                         bool hasMoreDot = indexOf(remainingSegment, ".") > -1;
