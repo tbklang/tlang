@@ -117,10 +117,24 @@ public final class TypeChecker
     /* Initialization queue */
     private SList!(Instruction) initQueue;
 
-    /* Adds an initialization instruction to the initialization queue */
+    /* Adds an initialization instruction to the initialization queue (at the back) */
     public void addInit(Instruction initInstruction)
     {
         initQueue.insertAfter(initQueue[], initInstruction);
+    }
+
+    /*
+    * Prints the current contents of the init-queue
+    */
+    public void printInitQueue()
+    {
+        import std.range : walkLength;
+        ulong i = 0;
+        foreach(Instruction instruction; initQueue)
+        {
+            gprintln("InitQueue: "~to!(string)(i+1)~"/"~to!(string)(walkLength(initQueue[]))~": "~instruction.toString());
+            i++;
+        }
     }
 
     /* Adds an instruction to the front of code queue */
@@ -887,9 +901,14 @@ public final class TypeChecker
             /* TODO: emit(node) */
         }
 
+        
+        /* Print the init queue */
+        gprintln("<<<<< FINAL ALLOCATE QUEUE >>>>>");
+        printInitQueue();
+
+        /* Print the code queue */
         gprintln("<<<<< FINAL CODE QUEUE >>>>>");
-        /* Print the code queue each time */
-            printCodeQueue();
+        printCodeQueue();
     }
 
     /**
