@@ -1,4 +1,4 @@
-module simple;
+module simple_class_ref;
 void main()
 {
 
@@ -7,20 +7,16 @@ void main()
             mov R15, RSP;
         }
         
-asm
-                    {
-                        sub RSP, 4;
-                    }
-                    
 
         asm
         {
-            mov R14B, 65;
+            mov RSP, R15;
         }
         
 
-        asm
-        {
-            mov R13B, 65;
-        }
+        int h = -1;
+        h = *((&h)-4);
+        import std.stdio;
+        writeln(h);
         
+}
