@@ -1267,19 +1267,18 @@ public class DNodeGenerator
 
                 /* TODO: Make sure a DNode exists (implying it's been declared already) */
                 if(varDecDNode.isVisisted())
-                        {
-                            /* Pool varass stdalone */
-                            DNode vStdAlDNode = pool(vAsStdAl);
-                            node.needs(vStdAlDNode);
+                {
+                    /* Pool varass stdalone */
+                    DNode vStdAlDNode = pool(vAsStdAl);
+                    node.needs(vStdAlDNode);
 
-                         DNode expression = expressionPass(vAsStdAl.getExpression(), context);
-                         vStdAlDNode.needs(expression);
-                            
-                        }
-                        else
-                        {
-                            Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
-                        }
+                    DNode expression = expressionPass(vAsStdAl.getExpression(), context);
+                    vStdAlDNode.needs(expression);            
+                }
+                else
+                {
+                    Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
+                }
             }
             /**
             * Function declarations
