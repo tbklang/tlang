@@ -681,7 +681,7 @@ public final class TypeChecker
             /* TODO: Get the STatement */
             Statement statement = dnode.getEntity();
 
-            gprintln("Poes vavavas");
+            gprintln("Generic DNode typecheck(): Begin");
 
             /* VariableAssignmentStdAlone */
             if(cast(VariableAssignmentStdAlone)statement)
