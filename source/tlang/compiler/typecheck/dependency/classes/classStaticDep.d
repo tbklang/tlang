@@ -26,6 +26,6 @@ public class ClassStaticNode : DNode
 
     private void initName()
     {
-        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);   
+        name = "ClassStaticInit: "~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);   
     }
 }
