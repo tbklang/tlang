@@ -110,18 +110,32 @@ public final class TypeChecker
     import std.container.slist;
 
     import compiler.codegen.instruction;
+
+    /* Main code queue */
     private SList!(Instruction) codeQueue;
 
+    /* Initialization queue */
+    private SList!(Instruction) initQueue;
+
+    /* Adds an initialization instruction to the initialization queue */
+    public void addInit(Instruction initInstruction)
+    {
+        initQueue.insertAfter(initQueue[], initInstruction);
+    }
+
+    /* Adds an instruction to the front of code queue */
     public void addInstr(Instruction inst)
     {
         codeQueue.insert(inst);
     }
 
+    /* Adds an instruction to the back of the code queue */
     public void addInstrB(Instruction inst)
     {
         codeQueue.insertAfter(codeQueue[], inst);
     }
 
+    /* Removes the instruction at the front of the code queue and returns it */
     public Instruction popInstr()
     {
         Instruction poppedInstr;
@@ -643,6 +657,9 @@ public final class TypeChecker
             Clazz clazzPNode = cast(Clazz)dnode.getEntity();
             string clazzName = resolver.generateName(modulle, clazzPNode);
             ClassStaticInitAllocate clazzStaticInitAllocInstr = new ClassStaticInitAllocate(clazzName);
+
+            /* Add this static initialization to the list of global allocations required */
+            addInit(clazzStaticInitAllocInstr);
 
             // /* TODO: I am rushing so idk which quantum op to use */
             // // addInstrB(new ClassStaticInitAllocate(clazzName));
