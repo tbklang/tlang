@@ -872,6 +872,7 @@ public class DNodeGenerator
                             VariableExpression varExpRem = new VariableExpression(remainingSegment);
                             DNode varExpRemDNode = expressionPass(varExpRem, context);
 
+                            /* TODO: Double check if we need this, problems lie here and when we NEED to do and and when NOT */
                             dnode.needs(varExpRemDNode);
                         }
                         else
@@ -1218,6 +1219,19 @@ public class DNodeGenerator
 
                 /* Set as visited */
                 variableDNode.markVisited();
+
+
+                /**
+                * FIXME
+                *
+                * I propose a major restructuring of variable and assignments
+                * along with typecheck and the way it does things. It doesn't
+                * make sense that varNode -> (depends on) varAss. No, varAss
+                * depends on varNode. Doing so would also then give us
+                * the correct ordering and NO swapping would be required.
+                *
+                */
+
 
                 /* If there is an assignment attached to this */
                 if(variable.getAssignment())
