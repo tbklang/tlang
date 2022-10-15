@@ -792,9 +792,6 @@ public final class TypeChecker
     
     private void doTypeCheck(DNode[] actionList)
     {
-        /* Resource stack */
-        SList!(DNode) resStack;
-
         /* Klaar list */
         /* TODO: Add */
 
