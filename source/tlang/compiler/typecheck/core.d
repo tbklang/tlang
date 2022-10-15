@@ -584,6 +584,13 @@ public final class TypeChecker
             variableName = resolver.generateName(modulle, assignTo);
             gprintln("VariableAssignmentNode: "~to!(string)(variableName));
 
+
+            /**
+            * FIXME: Now with ClassStaticAllocate we will have wrong instructoins for us
+            * ontop of the stack (at the beginning of the queue), I think this leads us
+            * to potentially opping wrong thing off - we should filter pop perhaps
+            */
+
             /**
             * Codegen
             *
@@ -592,6 +599,7 @@ public final class TypeChecker
             * 3. Generate VarAssignInstruction with Value-instruction
             */
             Instruction valueInstr = popInstr();
+            gprintln("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr), DebugType.WARNING);
             gprintln(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
             addInstrB(varAssInstr);
@@ -628,84 +636,85 @@ public final class TypeChecker
             
         }
         /* TODO: Add class init, see #8 */
+        /* FIXME: This is probably wrong */
         else if(cast(compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
         {
-            Clazz clazzPNode = cast(Clazz)dnode.getEntity();
-            string clazzName = resolver.generateName(modulle, clazzPNode);
+            // Clazz clazzPNode = cast(Clazz)dnode.getEntity();
+            // string clazzName = resolver.generateName(modulle, clazzPNode);
 
-            /* TODO: I am rushing so idk which quantum op to use */
+            // /* TODO: I am rushing so idk which quantum op to use */
+            // // addInstrB(new ClassStaticInitAllocate(clazzName));
+
+            // /**
+            // * Add the class allocator instruction
+            // */
             // addInstrB(new ClassStaticInitAllocate(clazzName));
 
-            /**
-            * Add the class allocator instruction
-            */
-            addInstrB(new ClassStaticInitAllocate(clazzName));
+            // SList!(Instruction) kept;
 
-            SList!(Instruction) kept;
+            // /* TODO: We should pop till we can't and whilst related to us */
+            // while(!isInstrEmpty())
+            // {
+            //     Instruction instr = popInstr();
+            //     gprintln("Bruh"~to!(string)(instr));
 
-            /* TODO: We should pop till we can't and whilst related to us */
-            while(!isInstrEmpty())
-            {
-                Instruction instr = popInstr();
-                gprintln("Bruh"~to!(string)(instr));
-
-                /* TODO: THis should never fail, we should ALWAYS have class-related things */
-                VariableDeclaration varDecInstr = cast(compiler.codegen.instruction.VariableDeclaration)instr;
+            //     /* TODO: THis should never fail, we should ALWAYS have class-related things */
+            //     VariableDeclaration varDecInstr = cast(compiler.codegen.instruction.VariableDeclaration)instr;
                 
-                /* If not VariableDeclaration push back and end */
-                if(!varDecInstr)
-                {
-                    addInstr(instr);
-                    break;
-                }
-                /* If, then make sure related to this class */
-                else
-                {
-                    /* TODO: Fetch the variable's context */
-                    Variable varDecPNode = cast(Variable)resolver.resolveBest(clazzPNode, varDecInstr.varName);
-                    gprintln(varDecPNode);
-                    gprintln(varDecInstr.varName);
+            //     /* If not VariableDeclaration push back and end */
+            //     if(!varDecInstr)
+            //     {
+            //         addInstr(instr);
+            //         break;
+            //     }
+            //     /* If, then make sure related to this class */
+            //     else
+            //     {
+            //         /* TODO: Fetch the variable's context */
+            //         Variable varDecPNode = cast(Variable)resolver.resolveBest(clazzPNode, varDecInstr.varName);
+            //         gprintln(varDecPNode);
+            //         gprintln(varDecInstr.varName);
     
-                    /* If we cast'd successfully to a VariableDclaration then it must mean a Variable exists */
-                    assert(varDecPNode);
+            //         /* If we cast'd successfully to a VariableDclaration then it must mean a Variable exists */
+            //         assert(varDecPNode);
 
-                    /**
-                    * The VariableDeclaration is only related to the class
-                    * if it is a direct sibling of it (contained by it)
-                    */
-                    if(varDecPNode.context.container == clazzPNode)
-                    {
-                        /* TODO: Add the static variable declARATION INITIALIZATIONS HERE */
-                        /* FIXME: Surely after, to preserve ordering */
-                        kept.insert(varDecInstr);
-                        // kept.insertAfter(kept[], varDecInstr);
-                    }
-                    /**
-                    * If not, then put it back where it was
-                    * and end
-                    */
-                    else
-                    {
-                        addInstr(varDecInstr);
-                        break;
-                    }
-                }
-                // assert(varDecInstr);
-                // assert()
+            //         /**
+            //         * The VariableDeclaration is only related to the class
+            //         * if it is a direct sibling of it (contained by it)
+            //         */
+            //         if(varDecPNode.context.container == clazzPNode)
+            //         {
+            //             /* TODO: Add the static variable declARATION INITIALIZATIONS HERE */
+            //             /* FIXME: Surely after, to preserve ordering */
+            //             kept.insert(varDecInstr);
+            //             // kept.insertAfter(kept[], varDecInstr);
+            //         }
+            //         /**
+            //         * If not, then put it back where it was
+            //         * and end
+            //         */
+            //         else
+            //         {
+            //             addInstr(varDecInstr);
+            //             break;
+            //         }
+            //     }
+            //     // assert(varDecInstr);
+            //     // assert()
 
                 
                 
-            }
+            // }
 
             
             
-            /**
-            * Add the collected instructions
-            */
-            foreach(Instruction instruction; kept)
-            {
-                addInstrB(instruction);
-            }
+            // /**
+            // * Add the collected instructions
+            // */
+            // foreach(Instruction instruction; kept)
+            // {
+            //     addInstrB(instruction);
+            // }
         }
         /* It will pop a bunch of shiiit */
         /* TODO: ANy statement */
