@@ -789,7 +789,10 @@ public final class TypeChecker
 
     }
 
-    
+    /**
+    * Perform type-checking and code-generation
+    * on the provided linearized dependency tree
+    */
     private void doTypeCheck(DNode[] actionList)
     {
         /* Klaar list */
