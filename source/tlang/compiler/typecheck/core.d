@@ -639,8 +639,10 @@ public final class TypeChecker
         /* FIXME: This is probably wrong */
         else if(cast(compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
         {
-            // Clazz clazzPNode = cast(Clazz)dnode.getEntity();
-            // string clazzName = resolver.generateName(modulle, clazzPNode);
+            /* Extract the class node and create a static allocation instruction out of it */
+            Clazz clazzPNode = cast(Clazz)dnode.getEntity();
+            string clazzName = resolver.generateName(modulle, clazzPNode);
+            ClassStaticInitAllocate clazzStaticInitAllocInstr = new ClassStaticInitAllocate(clazzName);
 
             // /* TODO: I am rushing so idk which quantum op to use */
             // // addInstrB(new ClassStaticInitAllocate(clazzName));
