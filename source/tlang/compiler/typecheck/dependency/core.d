@@ -1215,7 +1215,7 @@ public class DNodeGenerator
 
 
                 /* Set this variable as a dependency of this module */
-                node.needs(variableDNode);
+                // node.needs(variableDNode);
 
                 /* Set as visited */
                 variableDNode.markVisited();
@@ -1236,15 +1236,26 @@ public class DNodeGenerator
                 /* If there is an assignment attached to this */
                 if(variable.getAssignment())
                 {
-                    /* (TODO) Process the assignment */
+                    /* Extract the assignment and pool it to get a DNode */
                     VariableAssignment varAssign = variable.getAssignment();
+                    DNode expressionNode = expressionPass(varAssign.getExpression(), context);
 
-                    DNode expression = expressionPass(varAssign.getExpression(), context);
-
+                    /* This assignment depends on an expression being evaluated */
                     VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
-                    varAssignNode.needs(expression);
+                    varAssignNode.needs(expressionNode);
 
-                    variableDNode.needs(varAssignNode);
+                    /* This assignment is now dependent on the variable declaration */
+                    varAssignNode.needs(variableDNode);
+
+                    /* The current container is dependent on this running */
+                    node.needs(varAssignNode);
+                    continue;
+                }
+                /* If there is no assignment */
+                else
+                {
+                    /* The current container is dependent on this variable declaration */
+                    node.needs(variableDNode);
                 }
 
                 

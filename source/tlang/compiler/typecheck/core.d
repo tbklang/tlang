@@ -594,7 +594,7 @@ public final class TypeChecker
             Instruction valueInstr = popInstr();
             gprintln(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
-            addInstr(varAssInstr);
+            addInstrB(varAssInstr);
         }
         /* TODO: Add support */
         /**
@@ -621,48 +621,7 @@ public final class TypeChecker
             varDecInstr.context = variablePNode.context;
 
 
-            /* If it is a Module variable declaration */
-            if(cast(Module)variablePNode.context.container)
-            {
-                /* Check if there is a VariableAssignmentInstruction */
-                Instruction possibleInstr = popInstr();
-                if(possibleInstr !is null)
-                {
-                    VariableAssignmentInstr varAssInstr = cast(VariableAssignmentInstr)possibleInstr;
-                    if(varAssInstr)
-                    {
-                        /* Check if the assignment is to this variable */
-                        if(cmp(varAssInstr.varName, variableName) == 0)
-                        {
-                            /* If so, re-order (VarDec then VarAssign) */
-                            
-                            addInstrB(varDecInstr);
-                            addInstrB(varAssInstr);
-                        }
-                        else
-                        {
-                            /* If not, then no re-order */
-                            addInstrB(varAssInstr);
-                            addInstrB(varDecInstr);
-                        }
-                    }
-                    else
-                    {
-                        /* Push it back if not a VariableAssignmentInstruction */
-                        
-                        addInstr(possibleInstr);
-                        addInstrB(varDecInstr);
-                        
-                    }
-                }
-            }
-            /* If it is a Class (static) variable declaration */
-            else if(cast(Clazz)variablePNode.context.container)
-            {
-                /* TODO: Make sure this is correct */
-                addInstr(varDecInstr);
-                gprintln("Hello>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-            }
+            addInstrB(varDecInstr);
 
             
 
