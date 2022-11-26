@@ -720,10 +720,13 @@ public final class TypeChecker
     */
     private void doTypeCheck(DNode[] actionList)
     {
-        /* Klaar list */
-        /* TODO: Add */
-
+        /* Print the action list provided to us */
         gprintln("Action list: "~to!(string)(actionList));
+
+        /**
+        * Lopp through each dependency-node in the action list
+        * and perform the type-checking/code generation
+        */
         foreach(DNode node; actionList)
         {
             gprintln("Process: "~to!(string)(node));
@@ -733,20 +736,7 @@ public final class TypeChecker
             printCodeQueue();
             gprintln("sdfhjkhdsfjhfdsj 2");
 
-            /**
-            * Now depending on thr DNode type we should
-            * place ambiguous intems on stack then
-            * move on, let the next process then
-            * pop the stack and then consume it
-            * for checking (typewise we can get 
-            * information out of it), then when
-            * done we should probably pop-the other
-            * guy off and push something that resembles
-            * an emmitable onto an EmitStack
-            */
-
-
-            /* will.i.am is a literal cringe */
+            /* Type-check/code-gen this node */
             typeCheckThing(node);
         }
 
