@@ -738,7 +738,11 @@ public final class TypeChecker
 
             /* Type-check/code-gen this node */
             typeCheckThing(node);
+            writeln("--------------");
         }
+
+
+        writeln("\n################# Results from type-checking/code-generation #################\n");
 
         
         /* Print the init queue */
