@@ -724,7 +724,7 @@ public final class TypeChecker
         gprintln("Action list: "~to!(string)(actionList));
 
         /**
-        * Lopp through each dependency-node in the action list
+        * Loop through each dependency-node in the action list
         * and perform the type-checking/code generation
         */
         foreach(DNode node; actionList)
