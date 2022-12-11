@@ -4,6 +4,7 @@ import compiler.typecheck.core;
 import gogga;
 import compiler.symbols.data;
 import std.string;
+import std.conv : to;
 
 public final class Resolver
 {
@@ -123,6 +124,9 @@ public final class Resolver
                 * cast should never fail
                 */
                 assert(cast(Entity) currentEntity.parentOf());
+                // FIXME: Enable this below whenever we have any sort of crash
+                // (There is a case where we have it fail on `Variable (Ident: p, Type: int)`)
+                gprintln("AssertFail Check: "~to!(string)(currentEntity));
                 currentEntity = cast(Entity)(currentEntity.parentOf());
 
                 if (currentEntity == c)

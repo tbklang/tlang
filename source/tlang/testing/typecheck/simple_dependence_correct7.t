@@ -1,7 +1,8 @@
 module typeChecking3;
 
 
-
+discard "rsolution.d(126) seems to fail below (REMOVE THIS WHEN FIXED)";
+int t;
 int p = 21;
 p=2+p;
 int j = 2;
