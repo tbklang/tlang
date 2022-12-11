@@ -69,13 +69,13 @@ public class VariableAssignmentInstr : Instruction
 public final class VariableDeclaration : StorageDeclaration
 {
     /* Name of variable being declared */
-    public string varName;
+    public const string varName;
 
     /* Length */
-    public byte length;
+    public const byte length;
 
     /* Type of the variable being declared */
-    public string varType;
+    public const string varType;
 
     //TODO: This must take in type information
     this(string varName, byte len, string varType)
