@@ -8,7 +8,6 @@ import std.stdio;
 import std.file;
 import std.conv : to;
 import std.string : cmp;
-import compiler.codegen.emit.dgenregs;
 import gogga;
 import std.range : walkLength;
 
@@ -77,5 +76,10 @@ public final class DCodeEmitter : CodeEmitter
     private void emitCodeQueue(SList!(Instruction) codeQueue)
     {
         //TODO: Implement me
+
+        foreach(Instruction currentInstruction; codeQueue)
+        {
+            file.writeln(currentInstruction);
+        }
     }
 }
