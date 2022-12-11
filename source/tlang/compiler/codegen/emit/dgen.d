@@ -10,6 +10,7 @@ import std.conv : to;
 import std.string : cmp;
 import compiler.codegen.emit.dgenregs;
 import gogga;
+import std.range : walkLength;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -20,6 +21,45 @@ public final class DCodeEmitter : CodeEmitter
 
     public override void emit()
     {
-        // TODO: Implement me
+        // Emit header comment
+        emitHeaderComment("Hello this is an additional phrase added to the header");
+
+        gprintln("Static allocations needed: "~to!(string)(walkLength(initQueue[])));
+        emitStaticAllocations(initQueue);
+
+        gprintln("Code emittings needed: "~to!(string)(walkLength(codeQueue[])));
+    }
+
+    private void emitHeaderComment(string headerPhrase = "")
+    {
+        string moduleName = typeChecker.getModule().toString(); //TODO: Lookup actual module name (I was lazy)
+        string outputCFilename = file.name();
+
+        file.write(`
+/**
+ * TLP compiler generated code
+ *
+ * Module name: `);
+
+        file.writeln(moduleName);
+
+        file.write(" * Output C file: ");
+
+        file.writeln(outputCFilename);
+
+        file.writeln(" */");
+
+        
+    }
+
+    /** 
+     * Emits the static allocations provided
+     *
+     * Params:
+     *   initQueue = The allocation queue to emit static allocations from
+     */
+    private void emitStaticAllocations(SList!(Instruction) initQueue)
+    {
+
     }
 }
