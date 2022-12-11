@@ -26,6 +26,9 @@ import compiler.symbols.typing.builtins;
 */
 public final class Context
 {
+    // Required for cases where we need the functionality of the type checker
+    static TypeChecker tc;
+
     InitScope initScope;
     Container container;
     bool allowUp = true;

@@ -68,7 +68,11 @@ public final class TypeChecker
         *
         */
 
+        // Allow Context class access to the type checker (used in Instruction where only Context is available)
+        Context.tc = this;
+
         // DNodeGenerator.staticTC = this;
+        
 
         DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
