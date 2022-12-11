@@ -30,6 +30,13 @@ public final class DCodeEmitter : CodeEmitter
         gprintln("Code emittings needed: "~to!(string)(walkLength(codeQueue[])));
     }
 
+    /** 
+     * Emits the header comment which contains information about the source
+     * file and the generated code file
+     *
+     * Params:
+     *   headerPhrase = Optional additional string information to add to the header comment
+     */
     private void emitHeaderComment(string headerPhrase = "")
     {
         string moduleName = typeChecker.getResolver().generateName(typeChecker.getModule(), typeChecker.getModule()); //TODO: Lookup actual module name (I was lazy)
