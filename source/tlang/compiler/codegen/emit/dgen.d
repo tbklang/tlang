@@ -11,12 +11,38 @@ import std.string : cmp;
 import gogga;
 import std.range : walkLength;
 import std.string : wrap;
+import std.process : spawnProcess, Pid, ProcessException, wait;
 
 public final class DCodeEmitter : CodeEmitter
 {
     this(TypeChecker typeChecker, File file)
     {
         super(typeChecker, file);
+    }
+
+    public override void finalize()
+    {
+        try
+        {
+            //NOTE: Change to system compiler (maybe, we need to choose a good C compiler)
+            Pid ccPID = spawnProcess(["gcc", "-o", "tlang.out", file.name()]);
+
+            //NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?
+            int code = wait(ccPID);
+            gprintln(code);
+
+            if(code)
+            {
+                //NOTE: Make this a TLang exception
+                throw new Exception("The CC exited with a non-zero exit code");
+            }
+        }
+        catch(ProcessException e)
+        {
+            gprintln("NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?", DebugType.ERROR);
+            assert(false);
+
+        }
     }
 
     public override void emit()
@@ -29,6 +55,11 @@ public final class DCodeEmitter : CodeEmitter
 
         gprintln("Code emittings needed: "~to!(string)(walkLength(codeQueue[])));
         emitCodeQueue(codeQueue);
+
+        //TODO: Emit function definitions
+
+        //TODO: Emit main (entry point)
+        emitEntryPoint();
     }
 
     /** 
@@ -82,5 +113,16 @@ public final class DCodeEmitter : CodeEmitter
         {
             file.writeln(currentInstruction.emit());
         }
+    }
+
+    private void emitEntryPoint()
+    {
+        //TODO: Implement me
+
+        file.writeln(`
+int main()
+{
+    return 0;
+}`);
     }
 }

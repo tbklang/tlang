@@ -80,6 +80,8 @@ void beginCompilation(string[] sourceFiles)
             emitter.emit();
             outFile.close();
 
+            // Cause the generation to happen
+            emitter.finalize();
         }
         // catch(CollidingNameException e)
         // {

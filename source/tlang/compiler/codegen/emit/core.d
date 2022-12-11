@@ -41,4 +41,6 @@ public abstract class CodeEmitter
     }
 
     public abstract void emit();
+
+    public abstract void finalize();
 }

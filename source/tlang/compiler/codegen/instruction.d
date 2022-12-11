@@ -104,6 +104,8 @@ public final class VariableDeclaration : StorageDeclaration
         // a custom CodeEmitter should be allowed, so let's call it a general rule)
         //
         //simple_variables.x -> simple_variables_x
+        //NOTE: We may need to create a symbol table actually and add to that and use that as these names
+        //could get out of hand (too long)
         string renamedSymbol = symbolRename(typedEntityVariableName);
 
         return varType~" "~renamedSymbol~";";
