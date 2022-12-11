@@ -10,6 +10,7 @@ import std.conv : to;
 import std.string : cmp;
 import gogga;
 import std.range : walkLength;
+import std.string : wrap;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -20,8 +21,8 @@ public final class DCodeEmitter : CodeEmitter
 
     public override void emit()
     {
-        // Emit header comment
-        emitHeaderComment(); // NOTE: We can pass a string with extra information to it if we want to
+        // Emit header comment (NOTE: Change this to a useful piece of text)
+        emitHeaderComment("Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
 
         gprintln("Static allocations needed: "~to!(string)(walkLength(initQueue[])));
         emitStaticAllocations(initQueue);
@@ -52,13 +53,12 @@ public final class DCodeEmitter : CodeEmitter
         file.write(" * Output C file: ");
         file.writeln(outputCFilename);
 
-        // NOTE: We ought to loop through the linefeeds in `headerPhrase` and "* "-prefix each of them
         if(headerPhrase.length)
         {
-            file.writeln(" *\n * "~headerPhrase);
+            file.write(wrap(headerPhrase, 40, " *\n * ", " * "));
         }
         
-        file.writeln(" */\n");
+        file.write(" */\n");
     }
 
     /** 
