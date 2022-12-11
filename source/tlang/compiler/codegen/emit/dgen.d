@@ -28,6 +28,7 @@ public final class DCodeEmitter : CodeEmitter
         emitStaticAllocations(initQueue);
 
         gprintln("Code emittings needed: "~to!(string)(walkLength(codeQueue[])));
+        emitCodeQueue(codeQueue);
     }
 
     /** 
@@ -59,7 +60,7 @@ public final class DCodeEmitter : CodeEmitter
             file.writeln(" *\n * "~headerPhrase);
         }
         
-        file.writeln(" */");
+        file.writeln(" */\n");
     }
 
     /** 
@@ -71,5 +72,10 @@ public final class DCodeEmitter : CodeEmitter
     private void emitStaticAllocations(SList!(Instruction) initQueue)
     {
 
+    }
+
+    private void emitCodeQueue(SList!(Instruction) codeQueue)
+    {
+        //TODO: Implement me
     }
 }
