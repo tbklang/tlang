@@ -22,7 +22,7 @@ public final class DCodeEmitter : CodeEmitter
     public override void emit()
     {
         // Emit header comment
-        emitHeaderComment("Hello this is an additional phrase added to the header");
+        emitHeaderComment(); // NOTE: We can pass a string with extra information to it if we want to
 
         gprintln("Static allocations needed: "~to!(string)(walkLength(initQueue[])));
         emitStaticAllocations(initQueue);
@@ -40,16 +40,16 @@ public final class DCodeEmitter : CodeEmitter
  * TLP compiler generated code
  *
  * Module name: `);
-
         file.writeln(moduleName);
-
         file.write(" * Output C file: ");
-
         file.writeln(outputCFilename);
 
-        file.writeln(" */");
-
+        if(headerPhrase.length)
+        {
+            file.writeln(" *\n * "~headerPhrase);
+        }
         
+        file.writeln(" */");
     }
 
     /** 
