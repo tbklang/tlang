@@ -72,7 +72,7 @@ void beginCompilation(string[] sourceFiles)
 
 
             File outFile;
-            outFile.open("test.d", "w");
+            outFile.open("tlangout.c", "w");
             CodeEmitter emitter = new DCodeEmitter(typeChecker, outFile);
 
             
