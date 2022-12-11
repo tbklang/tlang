@@ -87,12 +87,19 @@ public final class VariableDeclaration : StorageDeclaration
         addInfo = "varName: "~varName;
     }
 
+    /** 
+     * Emits a string of the form: 
+     *
+     *      <varType> <varName>;
+     *
+     * Returns: The emitted code
+     */
     public override string emit()
     {
-        string type = varType;
-        string fullEntityName = context.tc.getResolver().generateName(context.getContainer(), context.tc.getResolver().resolveBest(context.getContainer(), varName));
+        auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varName); //TODO: Remove `auto`
+        string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
-        return type~" "~fullEntityName~";";
+        return varType~" "~typedEntityVariableName~";";
     }
 }
 
