@@ -40,23 +40,6 @@ public final class TypeChecker
         /* TODO: Module check?!?!? */
     }
 
-    /** 
-     * Call this function once the typechecking/codequeue generation
-     * is completed
-     *
-     * Params:
-     *   initQueue = The allocation queue
-     *   codeQueue = The code queue
-     */
-    private void beginEmit(SList!(Instruction) initQueue, SList!(Instruction) codeQueue)
-    {
-        // TODO: Implement me
-    }
-
-
-
-
-
     /**
     * I guess this should be called rather
     * when processing assignments but I also
@@ -121,27 +104,18 @@ public final class TypeChecker
         *
         * 1. Fetch the tree from the DNodeGenerator
         */
-
-
-
-        /** 
-         * (TODO)
-         *
-         * Create a code genertaor here and pass it the needed information
-         * 1. Init queue
-         * 2. Code queue
-         * 3. Types?!?!? (probably not)
-         */
-        beginEmit(initQueue, codeQueue);
     }
-
-    
 
     /* Main code queue */
     private SList!(Instruction) codeQueue;
 
     /* Initialization queue */
     private SList!(Instruction) initQueue;
+
+    public SList!(Instruction) getInitQueue()
+    {
+        return initQueue;
+    }
 
     /* Adds an initialization instruction to the initialization queue (at the back) */
     public void addInit(Instruction initInstruction)

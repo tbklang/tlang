@@ -18,9 +18,11 @@ public abstract class CodeEmitter
     protected TypeChecker typeChecker;
     
     /**
-    * The code queue
+    * Required queues
     */
+    protected SList!(Instruction) initQueue;
     protected SList!(Instruction) codeQueue;
+
     alias instructions = codeQueue;
 
     protected File file;
@@ -28,7 +30,13 @@ public abstract class CodeEmitter
     this(TypeChecker typeChecker, File file)
     {
         this.typeChecker = typeChecker;
+
+        /* Extract the allocation queue, the code queue */
+        initQueue = typeChecker.getInitQueue();
         codeQueue = typeChecker.getCodeQueue();
+        
+
+
         this.file = file;
     }
 
