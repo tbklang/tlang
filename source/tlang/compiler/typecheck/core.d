@@ -655,7 +655,7 @@ public final class TypeChecker
             Variable variablePNode = cast(Variable)dnode.getEntity();
             gprintln("HELLO FELLA");
             string variableName = resolver.generateName(modulle, variablePNode);
-            VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4);
+            VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variablePNode.getType());
 
             /* NEW CODE (9th November 2021) Set the context */
             varDecInstr.context = variablePNode.context;

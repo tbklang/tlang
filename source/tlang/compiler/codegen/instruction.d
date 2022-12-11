@@ -74,20 +74,22 @@ public final class VariableDeclaration : StorageDeclaration
     /* Length */
     public byte length;
 
+    /* Type of the variable being declared */
+    public string varType;
+
     //TODO: This must take in type information
-    this(string varName, byte len)
+    this(string varName, byte len, string varType)
     {
         this.varName = varName;
         this.length = len;
+        this.varType = varType;
 
         addInfo = "varName: "~varName;
     }
 
     public override string emit()
     {
-        // TODO: This should change
-        // TODO: We should be having a type pushed into this thing (lookup via Context?)
-        string type = "<type: TODO>";
+        string type = varType;
         string fullEntityName = context.tc.getResolver().generateName(context.getContainer(), context.tc.getResolver().resolveBest(context.getContainer(), varName));
 
         return type~" "~fullEntityName~";";
