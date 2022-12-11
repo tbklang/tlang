@@ -20,6 +20,11 @@ public class Instruction
     {
         return "[Instruction: "~this.classinfo.name~":"~addInfo~"]";
     }
+
+    public string emit()
+    {
+        return "TODO: This instruction has not provided an emit text yet! (This is an error!)";
+    }
 }
 
 public class FetchInst :  Instruction
@@ -32,7 +37,7 @@ public class Value : Instruction
 
 }
 
-public class StorageDeclaratio : Instruction
+public class StorageDeclaration : Instruction
 {
 
 }
@@ -61,7 +66,7 @@ public class VariableAssignmentInstr : Instruction
     }
 }
 
-public final class VariableDeclaration : StorageDeclaratio
+public final class VariableDeclaration : StorageDeclaration
 {
     /* Name of variable being declared */
     public string varName;
@@ -75,6 +80,12 @@ public final class VariableDeclaration : StorageDeclaratio
         this.length = len;
 
         addInfo = "varName: "~varName;
+    }
+
+    public override string emit()
+    {
+        // TODO: This should change
+        return "my var";
     }
 }
 
