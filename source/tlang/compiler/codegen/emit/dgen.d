@@ -76,6 +76,8 @@ public final class DCodeEmitter : CodeEmitter
     private void emitCodeQueue(SList!(Instruction) codeQueue)
     {
         //TODO: Implement me
+        //NOTE: I think that every `Instruction` will need an `emit()` method
+        //of which sometimes can be recursive for instructions that are nested
 
         foreach(Instruction currentInstruction; codeQueue)
         {
