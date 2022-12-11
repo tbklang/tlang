@@ -39,6 +39,8 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitHeaderComment(string headerPhrase = "")
     {
+        // NOTE: We could maybe fetch input fiel info too? Although it would have to be named similiarly in any case
+        // so perhaps just appending a `.t` to the module name below would be fine
         string moduleName = typeChecker.getResolver().generateName(typeChecker.getModule(), typeChecker.getModule()); //TODO: Lookup actual module name (I was lazy)
         string outputCFilename = file.name();
 
@@ -51,6 +53,7 @@ public final class DCodeEmitter : CodeEmitter
         file.write(" * Output C file: ");
         file.writeln(outputCFilename);
 
+        // NOTE: We ought to loop through the linefeeds in `headerPhrase` and "* "-prefix each of them
         if(headerPhrase.length)
         {
             file.writeln(" *\n * "~headerPhrase);
