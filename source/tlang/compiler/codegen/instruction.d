@@ -74,6 +74,7 @@ public final class VariableDeclaration : StorageDeclaration
     /* Length */
     public byte length;
 
+    //TODO: This must take in type information
     this(string varName, byte len)
     {
         this.varName = varName;
@@ -85,7 +86,11 @@ public final class VariableDeclaration : StorageDeclaration
     public override string emit()
     {
         // TODO: This should change
-        return "my var";
+        // TODO: We should be having a type pushed into this thing (lookup via Context?)
+        string type = "<type: TODO>";
+        string fullEntityName = context.tc.getResolver().generateName(context.getContainer(), context.tc.getResolver().resolveBest(context.getContainer(), varName));
+
+        return type~" "~fullEntityName~";";
     }
 }
 
