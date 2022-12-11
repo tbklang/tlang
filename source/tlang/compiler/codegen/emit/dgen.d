@@ -80,7 +80,7 @@ public final class DCodeEmitter : CodeEmitter
 
         foreach(Instruction currentInstruction; codeQueue)
         {
-            file.writeln(currentInstruction);
+            file.writeln(currentInstruction.emit());
         }
     }
 }
