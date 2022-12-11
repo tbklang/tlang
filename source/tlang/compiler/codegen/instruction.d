@@ -3,6 +3,7 @@ module compiler.codegen.instruction;
 import std.conv : to;
 import compiler.typecheck.dependency.core : Context;
 import std.string : cmp;
+import misc.utils : symbolRename;
 
 public class Instruction
 {
@@ -99,7 +100,13 @@ public final class VariableDeclaration : StorageDeclaration
         auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varName); //TODO: Remove `auto`
         string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
-        return varType~" "~typedEntityVariableName~";";
+        //NOTE: We should remove all dots from generated symbol names as it won't be valid C (I don't want to say C because
+        // a custom CodeEmitter should be allowed, so let's call it a general rule)
+        //
+        //simple_variables.x -> simple_variables_x
+        string renamedSymbol = symbolRename(typedEntityVariableName);
+
+        return varType~" "~renamedSymbol~";";
     }
 }
 
