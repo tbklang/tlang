@@ -10,6 +10,9 @@ import compiler.parsing.core;
 import compiler.typecheck.resolution;
 import compiler.typecheck.exceptions;
 import compiler.symbols.typing.core;
+import compiler.typecheck.dependency.core;
+import compiler.codegen.instruction;
+import std.container.slist;
 
 /**
 * The Parser only makes sure syntax
@@ -36,6 +39,23 @@ public final class TypeChecker
         resolver = new Resolver(this);
         /* TODO: Module check?!?!? */
     }
+
+    /** 
+     * Call this function once the typechecking/codequeue generation
+     * is completed
+     *
+     * Params:
+     *   initQueue = The allocation queue
+     *   codeQueue = The code queue
+     */
+    private void beginEmit(SList!(Instruction) initQueue, SList!(Instruction) codeQueue)
+    {
+        // TODO: Implement me
+    }
+
+
+
+
 
     /**
     * I guess this should be called rather
@@ -64,7 +84,6 @@ public final class TypeChecker
         * non-cyclic
         *
         */
-        import compiler.typecheck.dependency.core;
 
         // DNodeGenerator.staticTC = this;
 
@@ -103,13 +122,20 @@ public final class TypeChecker
         * 1. Fetch the tree from the DNodeGenerator
         */
 
-        
+
+
+        /** 
+         * (TODO)
+         *
+         * Create a code genertaor here and pass it the needed information
+         * 1. Init queue
+         * 2. Code queue
+         * 3. Types?!?!? (probably not)
+         */
+        beginEmit(initQueue, codeQueue);
     }
 
-    import compiler.typecheck.dependency.core;
-    import std.container.slist;
-
-    import compiler.codegen.instruction;
+    
 
     /* Main code queue */
     private SList!(Instruction) codeQueue;
