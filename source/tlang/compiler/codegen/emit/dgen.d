@@ -32,7 +32,7 @@ public final class DCodeEmitter : CodeEmitter
 
     private void emitHeaderComment(string headerPhrase = "")
     {
-        string moduleName = typeChecker.getModule().toString(); //TODO: Lookup actual module name (I was lazy)
+        string moduleName = typeChecker.getResolver().generateName(typeChecker.getModule(), typeChecker.getModule()); //TODO: Lookup actual module name (I was lazy)
         string outputCFilename = file.name();
 
         file.write(`
