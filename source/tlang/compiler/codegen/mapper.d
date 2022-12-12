@@ -35,7 +35,7 @@ public final class SymbolMapper
 
         // Generate the name as `_<hexOfAbsPath>`
         string symbolName = toHexString!(LetterCase.lower)(md5Of(entityNameAbsolute));
-        symbolName="_"~symbolName;
+        symbolName="t_"~symbolName;
 
         return symbolName;
     }
