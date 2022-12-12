@@ -47,3 +47,28 @@ public string symbolRename(string symbolIn)
     string symbolOut = replace(symbolIn, ".", "_");
     return symbolOut;
 }
+
+
+template Stack(T)
+{
+    public final class Stack
+    {
+        import std.container.slist : SList;
+
+        private SList!(T) queue;
+
+        public void push(T item)
+        {
+            queue.insertFront(item);
+        }
+
+        public T pop()
+        {
+            //FIXME: Handling for emoty stack
+            T stackTop = queue.front();
+            queue.removeFront();
+
+            return stackTop;
+        }
+    }
+}
