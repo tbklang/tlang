@@ -14,7 +14,7 @@ import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import compiler.typecheck.dependency.core : Context;
 import compiler.codegen.mapper : SymbolMapper;
-import compiler.symbols.data : SymbolType;
+import compiler.symbols.data : SymbolType, Variable;
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 
@@ -42,12 +42,23 @@ public final class DCodeEmitter : CodeEmitter
             Context context = varAs.getContext();
 
             gprintln("Is ContextNull?: "~to!(string)(context is null));
-            auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
+            Variable typedEntityVariable = cast(Variable)context.tc.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
             string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
 
             import compiler.codegen.mapper : SymbolMapper;
             string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), typedEntityVariableName);
+
+            /* TODO: Add check for variable assigmen tto here */
+            if(typedEntityVariable.getAssignment())
+            {
+                //TODO: Set a field here that gets checked for VariableDeclaration instruction
+                //to return only RHS (and not assignment with variable)
+                //It will then reset said bit
+                //TODO: We will also then need a peak (cursor rather than an iterator I think)
+                //and in such case the VariableDeclaration branch (under that bit set - once again)
+                //must then progress the cursor (such that we skip it next time)
+            }
 
 
             return renamedSymbol~" = "~transform(varAs.data)~";";
@@ -72,6 +83,10 @@ public final class DCodeEmitter : CodeEmitter
             string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), varDecInstr.varName);
 
             /* TODO: We might need to do a hold and emit */
+            /* TODO: We would need a way to then manioulate and remove the next upcoming instruction */
+            /* TODO: A loop of sorts (rather than an iterator) may be needed */
+
+            /* TODO: I like the hold technique */
 
 
 

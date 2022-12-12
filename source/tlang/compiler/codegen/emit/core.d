@@ -28,6 +28,20 @@ public abstract class CodeEmitter
 
     protected File file;
 
+
+    protected string currentEmitBuildUp;
+
+    public void buildEmit(string data)
+    {
+        currentEmitBuildUp~=data;
+    }
+
+    public void flushEmit()
+    {
+        file.writeln(currentEmitBuildUp);
+        currentEmitBuildUp = "";
+    }
+
     this(TypeChecker typeChecker, File file)
     {
         this.typeChecker = typeChecker;
