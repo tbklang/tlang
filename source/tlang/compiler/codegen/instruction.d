@@ -29,6 +29,11 @@ public class Instruction
     {
         return "TODO: This instruction has not provided an emit text yet! (This is an error!)";
     }
+
+    public final Context getContext()
+    {
+        return context;
+    }
 }
 
 public class FetchInst :  Instruction
