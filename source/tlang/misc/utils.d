@@ -33,20 +33,7 @@ public bool isCharacterNumber(char character)
 }
 
 
-/** 
- * Takes in a symbol name (string) and replaces
- * all the "."s with an underscore as to make
- * the names ready for ceoe emitting
- *
- * Params:
- *   symbolIn = The symbol name to transform
- * Returns: The transformed symbol name 
- */
-public string symbolRename(string symbolIn)
-{
-    string symbolOut = replace(symbolIn, ".", "_");
-    return symbolOut;
-}
+
 
 
 template Stack(T)
