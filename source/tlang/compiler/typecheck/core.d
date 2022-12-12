@@ -712,10 +712,11 @@ public final class TypeChecker
                 * 3. Generate VarAssignInstruction with Value-instruction
                 */
                 Instruction valueInstr = popInstr();
-                VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
-                
-
                 VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, valueInstr);
+
+                /* Set the VariableAssigmmentInstruction's context to that of the stdalone entity */
+                vAInstr.context = vasa.getContext();
+
                 addInstrB(vAInstr);
             }
             /* Case of no matches */
