@@ -5,6 +5,8 @@ import compiler.typecheck.dependency.core : Context;
 import std.string : cmp;
 import misc.utils : symbolRename;
 import compiler.symbols.data : SymbolType;
+import compiler.symbols.check : getCharacter;
+import gogga;
 
 public class Instruction
 {
@@ -69,7 +71,13 @@ public class VariableAssignmentInstr : Instruction
 
     public override string emit()
     {
-        return "<TODO: VarAssAssignment ("~data.emit()~")";
+        gprintln("Is ContextNull?: "~to!(string)(context is null));
+        auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varName); //TODO: Remove `auto`
+        string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
+
+
+        return typedEntityVariableName~" = "~data.emit()~";";
+        // return "<TODO: VarAssAssignment ("~data.emit()~")";
     }
 }
 
@@ -246,8 +254,7 @@ public class BinOpInstr : Value
 
     public override string emit()
     {
-        //TODO: Map SymbolType to maths operator (add support in the check.d module)
-        return lhs.emit()~to!(string)(operator)~rhs.emit();
+        return lhs.emit()~to!(string)(getCharacter(operator))~rhs.emit();
     }
 }
 

@@ -4,6 +4,7 @@ import compiler.lexer : Token;
 import std.conv : to;
 import std.string : isNumeric, cmp;
 import misc.utils;
+import gogga;
 
 /**
     * All allowed symbols
@@ -453,7 +454,28 @@ public bool isBinaryOp(Token token)
             cmp(">=", tokenStr) == 0 || cmp("<=", tokenStr) == 0;
 }
 
-
+/** 
+ * Returns the corresponding character for a given SymbolType
+ *
+ * For example <code>SymbolType.ADD</code> returns +
+ *
+ * Params:
+ *   symbolIn = The symbol to lookup against
+ * Returns: The corresponding character
+ *
+ */
+public string getCharacter(SymbolType symbolIn)
+{
+    if(symbolIn == SymbolType.ADD)
+    {
+        return "+";
+    }
+    else
+    {
+        gprintln("getCharacter: No back-mapping for "~to!(string)(symbolIn), DebugType.ERROR);
+        assert(false);
+    }
+}
 
 /* Test: Character literal */
 unittest

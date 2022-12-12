@@ -613,12 +613,16 @@ public final class TypeChecker
         else if(cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode)
         {
             import compiler.typecheck.dependency.variables;
+
             /* Get the variable's name */
             string variableName;
             VariableAssignmentNode varAssignDNode = cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
             Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
             variableName = resolver.generateName(modulle, assignTo);
             gprintln("VariableAssignmentNode: "~to!(string)(variableName));
+
+            /* Get the Context of the Variable Assigmnent */
+            Context variableAssignmentContext = (cast(VariableAssignment)varAssignDNode.getEntity()).context;
 
 
             /**
@@ -633,11 +637,14 @@ public final class TypeChecker
             * 1. Get the variable's name
             * 2. Pop Value-instruction
             * 3. Generate VarAssignInstruction with Value-instruction
+            * 4. Set the VarAssignInstr's Context to that of the Variable assigning to
             */
             Instruction valueInstr = popInstr();
             gprintln("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr), DebugType.WARNING);
             gprintln(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
+            varAssInstr.context = variableAssignmentContext;
+            
             addInstrB(varAssInstr);
         }
         /* TODO: Add support */

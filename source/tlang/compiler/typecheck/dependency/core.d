@@ -1186,7 +1186,7 @@ public class DNodeGenerator
                 assert(variableType); /* TODO: Handle invalid variable type */
                 DNode variableDNode = poolT!(StaticVariableDeclaration, Variable)(variable);
                 writeln("Hello");
-                writeln("VarTyope: "~to!(string)(variableType));
+                writeln("VarType: "~to!(string)(variableType));
 
                 /* Basic type */
                 if(cast(Primitive)variableType)
@@ -1239,8 +1239,13 @@ public class DNodeGenerator
                 /* If there is an assignment attached to this */
                 if(variable.getAssignment())
                 {
-                    /* Extract the assignment and pool it to get a DNode */
+                    /* Extract the assignment */
                     VariableAssignment varAssign = variable.getAssignment();
+
+                    /* Set the Context of the assignment to the current context */
+                    varAssign.setContext(context);
+
+                    /* Pool the assignment to get a DNode */
                     DNode expressionNode = expressionPass(varAssign.getExpression(), context);
 
                     /* This assignment depends on an expression being evaluated */
