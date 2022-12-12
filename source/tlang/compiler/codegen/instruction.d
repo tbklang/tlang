@@ -76,7 +76,11 @@ public class VariableAssignmentInstr : Instruction
         string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
 
-        return typedEntityVariableName~" = "~data.emit()~";";
+        import compiler.codegen.mapper : SymbolMapper;
+        string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), typedEntityVariableName);
+
+
+        return renamedSymbol~" = "~data.emit()~";";
         // return "<TODO: VarAssAssignment ("~data.emit()~")";
     }
 }
