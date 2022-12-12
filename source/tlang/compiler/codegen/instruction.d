@@ -4,6 +4,7 @@ import std.conv : to;
 import compiler.typecheck.dependency.core : Context;
 import std.string : cmp;
 import misc.utils : symbolRename;
+import compiler.symbols.data : SymbolType;
 
 public class Instruction
 {
@@ -64,6 +65,11 @@ public class VariableAssignmentInstr : Instruction
         this.data = data;
 
         addInfo = "assignTo: "~varName~", valInstr: "~data.toString();
+    }
+
+    public override string emit()
+    {
+        return "<TODO: VarAssAssignment ("~data.emit()~")";
     }
 }
 
@@ -147,6 +153,11 @@ public final class LiteralValue : Value
 
         addInfo = "Data: "~to!(string)(data)~", Length: "~to!(string)(len);
     }
+
+    public override string emit()
+    {
+        return "<TODO: LiteralValue>";
+    }
 }
 
 public final class LiteralValueFloat : Value
@@ -220,7 +231,6 @@ public final class StringLiteral : Value
 */
 public class BinOpInstr : Value
 {
-    import compiler.symbols.data;
     private Instruction lhs;
     private Instruction rhs;
     private SymbolType operator;
@@ -229,8 +239,14 @@ public class BinOpInstr : Value
     {
         this.lhs = lhs;
         this.rhs = rhs;
+        this.operator = operator;
 
         addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
+    }
+
+    public override string emit()
+    {
+        return "<TODO: BinOpInstr (Op: "~to!(string)(operator)~", Lhs: "~lhs.emit()~", Rhs: "~rhs.emit()~")>";
     }
 }
 
@@ -241,13 +257,13 @@ public class BinOpInstr : Value
 */
 public class UnaryOpInstr : Value
 {
-    import compiler.symbols.data;
     private Instruction exp;
     private SymbolType operator;
 
     this(Instruction exp, SymbolType operator)
     {
         this.exp = exp;
+        this.operator = operator;
 
         addInfo = "UnaryOpType: "~to!(string)(operator)~", Instr: "~exp.toString();
     }
