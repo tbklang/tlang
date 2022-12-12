@@ -179,7 +179,7 @@ int main()
         try
         {
             //NOTE: Change to system compiler (maybe, we need to choose a good C compiler)
-            Pid ccPID = spawnProcess(["gcc", "-o", "tlang.out", file.name()]);
+            Pid ccPID = spawnProcess(["clang", "-o", "tlang.out", file.name()]);
 
             //NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?
             int code = wait(ccPID);
