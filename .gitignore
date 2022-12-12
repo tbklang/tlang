@@ -3,7 +3,7 @@ tlangout.c
 tlang.out
 
 # Build files
-tlang
+#tlang
 tlang-test-library
 
 # Package management
