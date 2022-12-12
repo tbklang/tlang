@@ -23,7 +23,10 @@ public final class DCodeEmitter : CodeEmitter
     private Stack!(Instruction) varAssStack;
     
 
-
+    // Set to true when processing a variable declaration
+    // which expects an assignment. Set to false when
+    // said variable assignment has been processed
+    private bool varDecWantsConsumeVarAss = false;
 
 
     this(TypeChecker typeChecker, File file)
@@ -42,22 +45,24 @@ public final class DCodeEmitter : CodeEmitter
             Context context = varAs.getContext();
 
             gprintln("Is ContextNull?: "~to!(string)(context is null));
-            Variable typedEntityVariable = cast(Variable)context.tc.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
+            auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
             string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
 
             import compiler.codegen.mapper : SymbolMapper;
             string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), typedEntityVariableName);
 
-            /* TODO: Add check for variable assigmen tto here */
-            if(typedEntityVariable.getAssignment())
+            
+            // If we are needed as part of a VariabvleDeclaration-with-assignment
+            if(varDecWantsConsumeVarAss)
             {
-                //TODO: Set a field here that gets checked for VariableDeclaration instruction
-                //to return only RHS (and not assignment with variable)
-                //It will then reset said bit
-                //TODO: We will also then need a peak (cursor rather than an iterator I think)
-                //and in such case the VariableDeclaration branch (under that bit set - once again)
-                //must then progress the cursor (such that we skip it next time)
+                // Generate the code to emit (only the RHS of the = sign)
+                string emitCode = transform(varAs.data);
+
+                // Reset flag
+                varDecWantsConsumeVarAss = false;
+
+                return emitCode;
             }
 
 
@@ -69,7 +74,7 @@ public final class DCodeEmitter : CodeEmitter
             VariableDeclaration varDecInstr = cast(VariableDeclaration)instruction;
             Context context = varDecInstr.getContext();
 
-            auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
+            Variable typedEntityVariable = cast(Variable)context.tc.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
             string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
             //NOTE: We should remove all dots from generated symbol names as it won't be valid C (I don't want to say C because
@@ -87,6 +92,31 @@ public final class DCodeEmitter : CodeEmitter
             /* TODO: A loop of sorts (rather than an iterator) may be needed */
 
             /* TODO: I like the hold technique */
+
+            /* TODO: Add check for variable assigmen tto here */
+            if(typedEntityVariable.getAssignment())
+            {
+                //TODO: Set a field here that gets checked for VariableDeclaration instruction
+                //to return only RHS (and not assignment with variable)
+                //It will then reset said bit
+                //TODO: We will also then need a peak (cursor rather than an iterator I think)
+                //and in such case the VariableDeclaration branch (under that bit set - once again)
+                //must then progress the cursor (such that we skip it next time)
+                varDecWantsConsumeVarAss = true;
+
+                // Fetch the variable assignment instruction
+                nextCodeInstruction();
+                Instruction varAssInstr = getCurrentCodeInstruction();
+                
+                // Generate the code to emit
+                string emit = varDecInstr.varType~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
+
+
+                
+
+
+                return emit;
+            }
 
 
 
@@ -115,11 +145,11 @@ public final class DCodeEmitter : CodeEmitter
         // Emit header comment (NOTE: Change this to a useful piece of text)
         emitHeaderComment("Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
 
-        gprintln("Static allocations needed: "~to!(string)(walkLength(initQueue[])));
-        emitStaticAllocations(initQueue);
+        gprintln("Static allocations needed: "~to!(string)(getInitQueueLen()));
+        emitStaticAllocations();
 
-        gprintln("Code emittings needed: "~to!(string)(walkLength(codeQueue[])));
-        emitCodeQueue(codeQueue);
+        gprintln("Code emittings needed: "~to!(string)(getCodeQueueLen()));
+        emitCodeQueue();
 
         //TODO: Emit function definitions
 
@@ -163,21 +193,19 @@ public final class DCodeEmitter : CodeEmitter
      * Params:
      *   initQueue = The allocation queue to emit static allocations from
      */
-    private void emitStaticAllocations(SList!(Instruction) initQueue)
+    private void emitStaticAllocations()
     {
 
     }
 
-    private void emitCodeQueue(SList!(Instruction) codeQueue)
+    private void emitCodeQueue()
     {
-        //TODO: Implement me
-        //NOTE: I think that every `Instruction` will need an `emit()` method
-        //of which sometimes can be recursive for instructions that are nested
-
-        foreach(Instruction currentInstruction; codeQueue)
+        while(hasCodeInstructions())
         {
-            // file.writeln(currentInstruction.emit());
+            Instruction currentInstruction = getCurrentCodeInstruction();
             file.writeln(transform(currentInstruction));
+
+            nextCodeInstruction();
         }
     }
 

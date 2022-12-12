@@ -7,6 +7,7 @@ import compiler.codegen.instruction;
 import std.stdio;
 import std.file;
 import compiler.codegen.instruction : Instruction;
+import std.range : walkLength;
 
 /**
 * TODO: Perhaps have an interface that can emit(Context/Parent, Statement)
@@ -21,37 +22,63 @@ public abstract class CodeEmitter
     /**
     * Required queues
     */
-    protected SList!(Instruction) initQueue;
-    protected SList!(Instruction) codeQueue;
+    private Instruction[] initQueue;
+    private Instruction[] codeQueue;
 
-    alias instructions = codeQueue;
+    // alias instructions = codeQueue;
 
     protected File file;
 
 
-    protected string currentEmitBuildUp;
+    private ulong codeQueueIdx = 0;
 
-    public void buildEmit(string data)
+
+    public final Instruction getCurrentCodeInstruction()
     {
-        currentEmitBuildUp~=data;
+        return codeQueue[codeQueueIdx];
     }
 
-    public void flushEmit()
+    public final bool hasCodeInstructions()
     {
-        file.writeln(currentEmitBuildUp);
-        currentEmitBuildUp = "";
+        return codeQueueIdx < codeQueue.length;
     }
+
+    public final void nextCodeInstruction()
+    {
+        codeQueueIdx++;
+    }
+
+    public final void previousCodeInstruction()
+    {
+        codeQueueIdx--;
+    }
+
+
+    public final ulong getInitQueueLen()
+    {
+        return initQueue.length;
+    }
+
+    public final ulong getCodeQueueLen()
+    {
+        return codeQueue.length;
+    }
+
 
     this(TypeChecker typeChecker, File file)
     {
         this.typeChecker = typeChecker;
 
         /* Extract the allocation queue, the code queue */
-        initQueue = typeChecker.getInitQueue();
-        codeQueue = typeChecker.getCodeQueue();
+        foreach(Instruction currentInstruction; typeChecker.getInitQueue())
+        {
+            initQueue~=currentInstruction;
+        }
+        foreach(Instruction currentInstruction; typeChecker.getCodeQueue())
+        {
+            codeQueue~=currentInstruction;
+        }
         
-
-
         this.file = file;
     }
 
