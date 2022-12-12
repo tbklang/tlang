@@ -8,6 +8,11 @@ import compiler.symbols.data : SymbolType;
 import compiler.symbols.check : getCharacter;
 import gogga;
 
+/** 
+ * TODO: We should actually remove the emits from here probably and rather do those in DGen
+ * as they are C specific
+ */
+
 public class Instruction
 {
     /* Context for the Instruction (used in emitter for name resolution) */
