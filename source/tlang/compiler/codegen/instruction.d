@@ -106,7 +106,11 @@ public final class VariableDeclaration : StorageDeclaration
         //simple_variables.x -> simple_variables_x
         //NOTE: We may need to create a symbol table actually and add to that and use that as these names
         //could get out of hand (too long)
+        // NOTE: Best would be identity-mapping Entity's to a name
         string renamedSymbol = symbolRename(typedEntityVariableName);
+
+        import compiler.codegen.mapper : SymbolMapper;
+        renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), varName);
 
         return varType~" "~renamedSymbol~";";
     }
