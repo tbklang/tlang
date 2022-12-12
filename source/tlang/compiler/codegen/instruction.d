@@ -3,7 +3,6 @@ module compiler.codegen.instruction;
 import std.conv : to;
 import compiler.typecheck.dependency.core : Context;
 import std.string : cmp;
-import misc.utils : symbolRename;
 import compiler.symbols.data : SymbolType;
 import compiler.symbols.check : getCharacter;
 import gogga;
