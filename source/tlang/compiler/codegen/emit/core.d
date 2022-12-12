@@ -6,6 +6,7 @@ import std.container.slist : SList;
 import compiler.codegen.instruction;
 import std.stdio;
 import std.file;
+import compiler.codegen.instruction : Instruction;
 
 /**
 * TODO: Perhaps have an interface that can emit(Context/Parent, Statement)
@@ -40,7 +41,24 @@ public abstract class CodeEmitter
         this.file = file;
     }
 
+    /** 
+     * Begins the emit process
+     */
     public abstract void emit();
 
+    /** 
+     * Finalizes the emitting process (only
+     * to be called after the `emit()` finishes)
+     */
     public abstract void finalize();
+
+    /** 
+     * Transforms or emits a single Instruction
+     * and returns the transformation
+     *
+     * Params:
+     *   instruction = The Instruction to transform/emit
+     * Returns: The Instruction emit as a string
+     */
+    public abstract string transform(Instruction instruction);
 }

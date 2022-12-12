@@ -12,6 +12,10 @@ import gogga;
 import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
+import compiler.typecheck.dependency.core : Context;
+import compiler.codegen.mapper : SymbolMapper;
+import compiler.symbols.data : SymbolType;
+import compiler.symbols.check : getCharacter;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -20,30 +24,63 @@ public final class DCodeEmitter : CodeEmitter
         super(typeChecker, file);
     }
 
-    public override void finalize()
+    public override string transform(const Instruction instruction)
     {
-        try
+        /* VariableAssignmentInstr */
+        if(cast(VariableAssignmentInstr)instruction)
         {
-            //NOTE: Change to system compiler (maybe, we need to choose a good C compiler)
-            Pid ccPID = spawnProcess(["gcc", "-o", "tlang.out", file.name()]);
+            VariableAssignmentInstr varAs = cast(VariableAssignmentInstr)instruction;
+            Context context = varAs.getContext();
 
-            //NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?
-            int code = wait(ccPID);
-            gprintln(code);
+            gprintln("Is ContextNull?: "~to!(string)(context is null));
+            auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
+            string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
-            if(code)
-            {
-                //NOTE: Make this a TLang exception
-                throw new Exception("The CC exited with a non-zero exit code");
-            }
+
+            import compiler.codegen.mapper : SymbolMapper;
+            string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), typedEntityVariableName);
+
+
+            return renamedSymbol~" = "~transform(varAs.data)~";";
         }
-        catch(ProcessException e)
+        /* VariableDeclaration */
+        else if(cast(VariableDeclaration)instruction)
         {
-            gprintln("NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?", DebugType.ERROR);
-            assert(false);
+            VariableDeclaration varDecInstr = cast(VariableDeclaration)instruction;
+            Context context = varDecInstr.getContext();
 
+            auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
+            string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
+
+            //NOTE: We should remove all dots from generated symbol names as it won't be valid C (I don't want to say C because
+            // a custom CodeEmitter should be allowed, so let's call it a general rule)
+            //
+            //simple_variables.x -> simple_variables_x
+            //NOTE: We may need to create a symbol table actually and add to that and use that as these names
+            //could get out of hand (too long)
+            // NOTE: Best would be identity-mapping Entity's to a name
+            import compiler.codegen.mapper : SymbolMapper;
+            string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), varDecInstr.varName);
+
+            return varDecInstr.varType~" "~renamedSymbol~";";
         }
+        /* LiteralValue */
+        else if(cast(LiteralValue)instruction)
+        {
+            LiteralValue literalValueInstr = cast(LiteralValue)instruction;
+
+            return to!(string)(literalValueInstr.data);
+        }
+        /* BinOpInstr */
+        else if(cast(BinOpInstr)instruction)
+        {
+            BinOpInstr binOpInstr = cast(BinOpInstr)instruction;
+
+            return transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
+        }
+        return "<TODO: Base emit>";
     }
+
 
     public override void emit()
     {
@@ -111,7 +148,8 @@ public final class DCodeEmitter : CodeEmitter
 
         foreach(Instruction currentInstruction; codeQueue)
         {
-            file.writeln(currentInstruction.emit());
+            // file.writeln(currentInstruction.emit());
+            file.writeln(transform(currentInstruction));
         }
     }
 
@@ -124,5 +162,40 @@ int main()
 {
     return 0;
 }`);
+    }
+
+
+
+
+
+
+
+
+
+
+
+    public override void finalize()
+    {
+        try
+        {
+            //NOTE: Change to system compiler (maybe, we need to choose a good C compiler)
+            Pid ccPID = spawnProcess(["gcc", "-o", "tlang.out", file.name()]);
+
+            //NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?
+            int code = wait(ccPID);
+            gprintln(code);
+
+            if(code)
+            {
+                //NOTE: Make this a TLang exception
+                throw new Exception("The CC exited with a non-zero exit code");
+            }
+        }
+        catch(ProcessException e)
+        {
+            gprintln("NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?", DebugType.ERROR);
+            assert(false);
+
+        }
     }
 }

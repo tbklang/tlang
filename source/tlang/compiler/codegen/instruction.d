@@ -8,11 +8,6 @@ import compiler.symbols.data : SymbolType;
 import compiler.symbols.check : getCharacter;
 import gogga;
 
-/** 
- * TODO: We should actually remove the emits from here probably and rather do those in DGen
- * as they are C specific
- */
-
 public class Instruction
 {
     /* Context for the Instruction (used in emitter for name resolution) */
@@ -28,11 +23,6 @@ public class Instruction
     public final override string toString()
     {
         return "[Instruction: "~this.classinfo.name~":"~addInfo~"]";
-    }
-
-    public string emit()
-    {
-        return "TODO: This instruction has not provided an emit text yet! (This is an error!)";
     }
 
     public final Context getContext()
@@ -69,7 +59,7 @@ public class VariableAssignmentInstr : Instruction
     /* Name of variable being declared */
     public string varName; /*TODO: Might not be needed */
 
-    public Instruction data;
+    public const Instruction data;
 
     this(string varName, Instruction data)
     {
@@ -77,21 +67,6 @@ public class VariableAssignmentInstr : Instruction
         this.data = data;
 
         addInfo = "assignTo: "~varName~", valInstr: "~data.toString();
-    }
-
-    public override string emit()
-    {
-        gprintln("Is ContextNull?: "~to!(string)(context is null));
-        auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varName); //TODO: Remove `auto`
-        string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
-
-
-        import compiler.codegen.mapper : SymbolMapper;
-        string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), typedEntityVariableName);
-
-
-        return renamedSymbol~" = "~data.emit()~";";
-        // return "<TODO: VarAssAssignment ("~data.emit()~")";
     }
 }
 
@@ -114,33 +89,6 @@ public final class VariableDeclaration : StorageDeclaration
         this.varType = varType;
 
         addInfo = "varName: "~varName;
-    }
-
-    /** 
-     * Emits a string of the form: 
-     *
-     *      <varType> <varName>;
-     *
-     * Returns: The emitted code
-     */
-    public override string emit()
-    {
-        auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varName); //TODO: Remove `auto`
-        string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
-
-        //NOTE: We should remove all dots from generated symbol names as it won't be valid C (I don't want to say C because
-        // a custom CodeEmitter should be allowed, so let's call it a general rule)
-        //
-        //simple_variables.x -> simple_variables_x
-        //NOTE: We may need to create a symbol table actually and add to that and use that as these names
-        //could get out of hand (too long)
-        // NOTE: Best would be identity-mapping Entity's to a name
-        string renamedSymbol = symbolRename(typedEntityVariableName);
-
-        import compiler.codegen.mapper : SymbolMapper;
-        renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), varName);
-
-        return varType~" "~renamedSymbol~";";
     }
 }
 
@@ -174,11 +122,6 @@ public final class LiteralValue : Value
         this.len = len;
 
         addInfo = "Data: "~to!(string)(data)~", Length: "~to!(string)(len);
-    }
-
-    public override string emit()
-    {
-        return to!(string)(data);
     }
 }
 
@@ -253,9 +196,9 @@ public final class StringLiteral : Value
 */
 public class BinOpInstr : Value
 {
-    private Instruction lhs;
-    private Instruction rhs;
-    private SymbolType operator;
+    public const Instruction lhs;
+    public const Instruction rhs;
+    public const SymbolType operator;
 
     this(Instruction lhs, Instruction rhs, SymbolType operator)
     {
@@ -264,11 +207,6 @@ public class BinOpInstr : Value
         this.operator = operator;
 
         addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
-    }
-
-    public override string emit()
-    {
-        return lhs.emit()~to!(string)(getCharacter(operator))~rhs.emit();
     }
 }
 
