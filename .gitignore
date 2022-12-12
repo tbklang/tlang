@@ -1,24 +1,18 @@
-.dub
-docs.json
-__dummy.html
-docs/
-/tlang
-tlang.so
-tlang.dylib
-tlang.dll
-tlang.a
-tlang.lib
-tlang-test-*
-*.exe
-*.o
-*.obj
-*.lst
+# TLP artefacts
+tlangout.c
+tlang.out
+
+# Build files
+tlang
+tlang-test-library
+
+# Package management
+.dub/
 dub.selections.json
-test
-.gitignore
-tets
-l
-lerr
-tlang.sync-conflict-20220729-104645-JYUKVO3
-test.d
-test.d
+
+# Coverage files
+*.lst
+
+# Documentation )generated)
+docs/
+docs.json
