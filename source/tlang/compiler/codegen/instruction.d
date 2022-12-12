@@ -156,7 +156,7 @@ public final class LiteralValue : Value
 
     public override string emit()
     {
-        return "<TODO: LiteralValue>";
+        return to!(string)(data);
     }
 }
 
@@ -246,7 +246,8 @@ public class BinOpInstr : Value
 
     public override string emit()
     {
-        return "<TODO: BinOpInstr (Op: "~to!(string)(operator)~", Lhs: "~lhs.emit()~", Rhs: "~rhs.emit()~")>";
+        //TODO: Map SymbolType to maths operator (add support in the check.d module)
+        return lhs.emit()~to!(string)(operator)~rhs.emit();
     }
 }
 
