@@ -16,12 +16,21 @@ import compiler.typecheck.dependency.core : Context;
 import compiler.codegen.mapper : SymbolMapper;
 import compiler.symbols.data : SymbolType;
 import compiler.symbols.check : getCharacter;
+import misc.utils : Stack;
 
 public final class DCodeEmitter : CodeEmitter
 {
+    private Stack!(Instruction) varAssStack;
+    
+
+
+
+
     this(TypeChecker typeChecker, File file)
     {
         super(typeChecker, file);
+
+        varAssStack = new Stack!(Instruction)();
     }
 
     public override string transform(const Instruction instruction)
@@ -61,6 +70,10 @@ public final class DCodeEmitter : CodeEmitter
             // NOTE: Best would be identity-mapping Entity's to a name
             import compiler.codegen.mapper : SymbolMapper;
             string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), varDecInstr.varName);
+
+            /* TODO: We might need to do a hold and emit */
+
+
 
             return varDecInstr.varType~" "~renamedSymbol~";";
         }
