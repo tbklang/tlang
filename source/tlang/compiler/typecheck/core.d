@@ -395,8 +395,14 @@ public final class TypeChecker
                 * Codegen
                 *
                 * FIXME: Add type info, length
+                *
+                * 1. Generate the instruction
+                * 2. Set the Context of it to where the VariableExpression occurred
                 */
                 FetchValueVar fVV = new FetchValueVar(variableName, 4);
+                fVV.context = g.getContext();
+
+
                 addInstr(fVV);
             }
             // else if(cast()) !!!! Continue here 
