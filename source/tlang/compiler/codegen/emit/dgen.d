@@ -117,7 +117,8 @@ public final class DCodeEmitter : CodeEmitter
 
             return transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
         }
-        return "<TODO: Base emit>";
+
+        return "<TODO: Base emit: "~to!(string)(instruction.class)~">";
     }
 
 
