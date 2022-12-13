@@ -110,6 +110,11 @@ public final class DCodeEmitter : CodeEmitter
 
             return to!(string)(literalValueInstr.data);
         }
+        /* FetchValueVar */
+        else if(cast(FetchValueVar)instruction)
+        {
+
+        }
         /* BinOpInstr */
         else if(cast(BinOpInstr)instruction)
         {
@@ -118,7 +123,7 @@ public final class DCodeEmitter : CodeEmitter
             return transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
         }
 
-        return "<TODO: Base emit: "~to!(string)(instruction.class)~">";
+        return "<TODO: Base emit: "~to!(string)(instruction)~">";
     }
 
 
