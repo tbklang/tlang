@@ -41,7 +41,7 @@ public final class Parser
         /* TODO: Crash program if not */
         if (!isFine)
         {
-            throw new SyntaxError(this, symbol, actualType);
+            throw new SyntaxError(this, symbol, token);
             // expect("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
                     // string)(actualType) ~ " with " ~ token.toString());
         }
@@ -421,6 +421,30 @@ public final class Parser
         return generatedStruct;
     }
 
+    private ReturnStmt parseReturn()
+    {
+        ReturnStmt returnStatement;
+
+        /* Move from `return` onto start of expression */
+        nextToken();
+
+        /* Parse the expression till termination */
+        Expression returnExpression = parseExpression();
+
+        /* Expect a semi-colon as the terminator */
+        gprintln(getCurrentToken());
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+        
+
+        /* Move off of the terminator */
+        nextToken();
+
+        /* Create the ReturnStmt */
+        returnStatement = new ReturnStmt(returnExpression);
+
+        return returnStatement;
+    }
+
     private Statement[] parseBody()
     {
         gprintln("parseBody(): Enter", DebugType.WARNING);
@@ -500,6 +524,13 @@ public final class Parser
             {
                 /* Parse the struct and add it to the statements */
                 statements ~= parseStruct();
+            }
+            /* If it is the return keyword */
+            //TODO: We should add a flag to prevent return being used in generla bodies? or wait we have a non parseBiody already
+            else if(symbol == SymbolType.RETURN)
+            {
+                /* Parse the return statement */
+                statements ~= parseReturn();
             }
             /* Error out */
             else

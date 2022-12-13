@@ -6,14 +6,15 @@ import misc.exceptions;
 import compiler.symbols.check;
 import compiler.symbols.data;
 import compiler.lexer : Token;
+import std.conv : to;
 
 public class ParserException : TError
 {
     private Parser parser;
 
-    this(Parser parser)
+    this(Parser parser, string message)
     {
-        super("");
+        super(message);
         this.parser = parser;
     }
 
@@ -24,11 +25,14 @@ public final class SyntaxError : ParserException
 {
     private SymbolType expected;
     private SymbolType provided;
+    private Token providedToken;
 
-    this(Parser parser, SymbolType expected, SymbolType provided)
+    this(Parser parser, SymbolType expected, Token providedToken)
     {
-        super(parser);
         this.expected = expected;
-        this.provided = provided;
+        provided = getSymbolType(providedToken);
+        this.providedToken = providedToken;
+
+        super(parser, "Syntax error: Expected "~to!(string)(expected)~" but got "~to!(string)(provided)~", see "~providedToken.toString());
     }
 }

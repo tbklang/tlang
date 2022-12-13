@@ -497,3 +497,19 @@ public final class FunctionCall : Call
         return arguments;
     }
 }
+
+public final class ReturnStmt : Statement
+{
+    // The Expression being returned
+    private Expression returnExpression;
+
+    this(Expression returnExpression)
+    {
+        this.returnExpression = returnExpression;
+    }
+    
+    public Expression getReturnExpression()
+    {
+        return returnExpression;
+    }
+}
