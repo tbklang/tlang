@@ -113,7 +113,15 @@ public final class DCodeEmitter : CodeEmitter
         /* FetchValueVar */
         else if(cast(FetchValueVar)instruction)
         {
+            FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
+            Context context = fetchValueVarInstr.getContext();
 
+            Variable typedEntityVariable = cast(Variable)context.tc.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName); //TODO: Remove `auto`
+            string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
+
+            string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), typedEntityVariableName);
+
+            return renamedSymbol;
         }
         /* BinOpInstr */
         else if(cast(BinOpInstr)instruction)
