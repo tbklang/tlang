@@ -84,21 +84,11 @@ public final class DCodeEmitter : CodeEmitter
             // NOTE: Best would be identity-mapping Entity's to a name
             string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), varDecInstr.varName);
 
-            /* TODO: We might need to do a hold and emit */
-            /* TODO: We would need a way to then manioulate and remove the next upcoming instruction */
-            /* TODO: A loop of sorts (rather than an iterator) may be needed */
 
-            /* TODO: I like the hold technique */
-
-            /* TODO: Add check for variable assigmen tto here */
+            // Check to see if this declaration has an assignment attached
             if(typedEntityVariable.getAssignment())
             {
-                //TODO: Set a field here that gets checked for VariableDeclaration instruction
-                //to return only RHS (and not assignment with variable)
-                //It will then reset said bit
-                //TODO: We will also then need a peak (cursor rather than an iterator I think)
-                //and in such case the VariableDeclaration branch (under that bit set - once again)
-                //must then progress the cursor (such that we skip it next time)
+                // Set flag to expect different transform generation for VariableAssignment
                 varDecWantsConsumeVarAss = true;
 
                 // Fetch the variable assignment instruction
@@ -106,13 +96,7 @@ public final class DCodeEmitter : CodeEmitter
                 Instruction varAssInstr = getCurrentCodeInstruction();
                 
                 // Generate the code to emit
-                string emit = varDecInstr.varType~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
-
-
-                
-
-
-                return emit;
+                return varDecInstr.varType~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
             }
 
 
