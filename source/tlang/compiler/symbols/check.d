@@ -470,6 +470,18 @@ public string getCharacter(SymbolType symbolIn)
     {
         return "+";
     }
+    else if(symbolIn == SymbolType.STAR)
+    {
+        return "*";
+    }
+    else if(symbolIn == SymbolType.SUB)
+    {
+        return "-";
+    }
+    else if(symbolIn == SymbolType.DIVIDE)
+    {
+        return "/";
+    }
     else
     {
         gprintln("getCharacter: No back-mapping for "~to!(string)(symbolIn), DebugType.ERROR);
