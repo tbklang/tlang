@@ -48,8 +48,6 @@ public final class DCodeEmitter : CodeEmitter
             auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
             string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
-
-            import compiler.codegen.mapper : SymbolMapper;
             string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), typedEntityVariableName);
 
             
@@ -84,7 +82,6 @@ public final class DCodeEmitter : CodeEmitter
             //NOTE: We may need to create a symbol table actually and add to that and use that as these names
             //could get out of hand (too long)
             // NOTE: Best would be identity-mapping Entity's to a name
-            import compiler.codegen.mapper : SymbolMapper;
             string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), varDecInstr.varName);
 
             /* TODO: We might need to do a hold and emit */

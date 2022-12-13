@@ -1275,10 +1275,13 @@ public class DNodeGenerator
             {
                 VariableAssignmentStdAlone vAsStdAl = cast(VariableAssignmentStdAlone)entity;
 
+                /* Set the Context */
+                vAsStdAl.setContext(context);
+
                 /* TODO: CHeck avriable name even */
-                gprintln("VAGINA");
+                gprintln("YEAST ENJOYER");
                 assert(tc.getResolver().resolveWithin(c, vAsStdAl.getVariableName()));
-                gprintln("VAGINA");
+                gprintln("YEAST ENJOYER");
                 Variable variable = cast(Variable)tc.getResolver().resolveWithin(c, vAsStdAl.getVariableName());
                 assert(variable);
                 /* Pool the variable */
