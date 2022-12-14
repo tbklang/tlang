@@ -86,43 +86,144 @@ public final class TypeChecker
         gprintln(tree);
 
 
-
-        /* Grab functionData ??? */
-        FunctionData[string] functions = grabFunctionDefs();
-        gprintln("Defined functions: "~to!(string)(functions));
-        /* TODO: Disable, this is just to peep */
-        // foreach(FunctionData funcData; functions.values)
-        // {
-            // DNode funcNode = funcData.generate();
-            // DNode[] actionListFunc = funcNode.poes;
-            // doTypeCheck(actionListFunc);
-            // printTypeQueue();
-            // gprintln(funcNode.print());
-        // }
-
-        /* TODO: Work in progress (NEW!!!) */
         /* Get the action-list (linearised bottom up graph) */
         DNode[] actionList = rootNode.poes;
         doTypeCheck(actionList);        
         printTypeQueue();
 
-
         /**
-        * TODO: What's next?
-        *
-        * 1. Fetch the tree from the DNodeGenerator
-        */
+         * After processing globals executions the instructions will
+         * be placed into `codeQueue`, therefore copy them from the temporary
+         * scratchpad queue into `globalCodeQueue`.
+         *
+         * Then clean the codeQueue for next use
+         */
+        foreach(Instruction curGlobInstr; codeQueue)
+        {
+            globalCodeQueue~=curGlobInstr;
+        }
+        codeQueue.clear();
+        assert(codeQueue.empty() == true);
+
+        //FIXME: Look at this, ffs why is it static
+        //Clear tree/linearized version (todo comment)
+        DNode.poes=[];
+
+        /* Grab functionData ??? */
+        FunctionData[string] functionDefinitions = grabFunctionDefs();
+        gprintln("Defined functions: "~to!(string)(functionDefinitions));
+
+        foreach(FunctionData funcData; functionDefinitions.values)
+        {
+            assert(codeQueue.empty() == true);
+
+
+            DNode funcNode = funcData.generate();
+            //NOTE: We need to call this, it generates tree but also does the linearization
+            //NOTE: Rename that
+            funcNode.print();
+            DNode[] actionListFunc = funcNode.poes;
+
+            //TODO: Would this not mess with our queues?
+            doTypeCheck(actionListFunc);
+            printTypeQueue();
+            gprintln(funcNode.print());
+
+            // The current code queue would be the function's body instructions
+            // a.k.a. the `codeQueue`
+            // functionBodies[funcData.name] = codeQueue;
+
+
+            // The call to `doTypeCheck()` above adds to this queue
+            // so we should clean it out before the next run
+            //
+            // NOTE: Static allocations in? Well, we don't clean init queue
+            // so is it fine then? We now have seperate dependency trees,
+            // we should make checking methods that check the `initQueue`
+            // whenever we come past a `ClassStaticNode` for example
+            // codeQueue.clear();
+
+            /**
+             * Copy over the function code queue into
+             * the function code queue respective key.
+             *
+             * Then clear the scratchpad code queue
+             */
+            functionBodyCodeQueues[funcData.name]=[];
+            foreach(Instruction curFuncInstr; codeQueue)
+            {
+                //TODO: Think about class funcs? Nah
+                functionBodyCodeQueues[funcData.name]~=curFuncInstr;
+                gprintln("FuncDef ("~funcData.name~"): Adding body instruction: "~to!(string)(curFuncInstr));
+            }
+            codeQueue.clear();
+
+            // Clear the linearization for the next round
+            DNode.poes=[];
+
+            gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
+        }
+
+        
     }
 
-    /* Main code queue */
-    private SList!(Instruction) codeQueue;
+
+    /** 
+     * Function definitions
+     *
+     * Holds their action lists which are to be used for the
+     * (later) emitting of their X-lang emit code
+     */
+     //FUnctionDeifnition should couple `linearizedList` but `functionEntity`
+    // private FunctionDefinition[string] functionDefinitions2; //TODO: Use this
+
+
+
+    /** 
+     * Concrete queues
+     *
+     * These queues below are finalized and not used as a scratchpad.
+     *
+     * 1. Global code queue
+     *     - This accounts for the globals needing to be executed
+     * 2. Function body code queues
+     *     - This accounts for (every) function definition's code queue
+     */
+    private Instruction[] globalCodeQueue;
+    private Instruction[][string] functionBodyCodeQueues;
+
+    public Instruction[] getGlobalCodeQueue()
+    {
+        return globalCodeQueue;
+    }
+
+    public Instruction[][string] getFunctionBodyCodeQueues()
+    {
+        return functionBodyCodeQueues;
+    }
+
+
+    
+
+
+    /* Main code queue (used for temporary passes) */
+    private SList!(Instruction) codeQueue; //TODO: Rename to `currentCodeQueue`
 
     /* Initialization queue */
     private SList!(Instruction) initQueue;
 
-    public SList!(Instruction) getInitQueue()
+
+    //TODO: CHange to oneshot in the function
+    public Instruction[] getInitQueue()
     {
-        return initQueue;
+        Instruction[] initQueueConcrete;
+
+        foreach(Instruction currentInstruction; initQueue)
+        {
+            initQueueConcrete~=currentInstruction;
+        }
+
+        return initQueueConcrete;
     }
 
     /* Adds an initialization instruction to the initialization queue (at the back) */
@@ -176,10 +277,17 @@ public final class TypeChecker
         return codeQueue.empty;
     }
     
-    public SList!(Instruction) getCodeQueue()
-    {
-        return codeQueue;
-    }
+    // public Instruction[] getCodeQueue()
+    // {
+    //     Instruction[] codeQueueConcrete;
+
+    //     foreach(Instruction currentInstruction; codeQueue)
+    //     {
+    //         codeQueueConcrete~=currentInstruction;
+    //     }
+
+    //     return codeQueueConcrete;
+    // }
 
     /*
     * Prints the current contents of the code-queue
@@ -702,7 +810,8 @@ public final class TypeChecker
             /* TODO: Get the STatement */
             Statement statement = dnode.getEntity();
 
-            gprintln("Generic DNode typecheck(): Begin");
+            gprintln("Generic DNode typecheck(): Begin (examine: "~to!(string)(dnode)~" )");
+
 
             /* VariableAssignmentStdAlone */
             if(cast(VariableAssignmentStdAlone)statement)

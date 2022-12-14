@@ -17,8 +17,6 @@ public class ParserException : TError
         super(message);
         this.parser = parser;
     }
-
-    
 }
 
 public final class SyntaxError : ParserException
@@ -30,7 +28,7 @@ public final class SyntaxError : ParserException
     this(Parser parser, SymbolType expected, Token providedToken)
     {
         this.expected = expected;
-        provided = getSymbolType(providedToken);
+        this.provided = getSymbolType(providedToken);
         this.providedToken = providedToken;
 
         super(parser, "Syntax error: Expected "~to!(string)(expected)~" but got "~to!(string)(provided)~", see "~providedToken.toString());

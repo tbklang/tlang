@@ -3,16 +3,16 @@ tlang
 
 Official Tristan Language project compiler
 
-## Docs
+## Documentation
 
-Docs are available [here](http://deavmi.assigned.network/secret/tlang).
+Docs are available [here](http://deavmi.assigned.network/projects/tlang/).
 
 ## Building
 
 To build you will need `dmd` and `dub` installed. You can then run the following:
 
 ```
-dub test
+dub test --coverage
 dub build
 ```
 

@@ -163,7 +163,8 @@ public class DNode
     private DNode[] dependencies;
 
 
-
+    //TODO: Commen this
+    //NOTE: This is the linearized version
     public static DNode[] poes;
 
     this(DNodeGenerator dnodegen, Statement entity)
@@ -1280,6 +1281,11 @@ public class DNodeGenerator
 
                 /* TODO: CHeck avriable name even */
                 gprintln("YEAST ENJOYER");
+
+
+                // FIXME: The below assert fails for function definitions trying to refer to global values
+                // as a reoslveBest (up) is needed. We should firstly check if within fails, if so,
+                // resolveBest, if that fails, then it is an error (see #46)
                 assert(tc.getResolver().resolveWithin(c, vAsStdAl.getVariableName()));
                 gprintln("YEAST ENJOYER");
                 Variable variable = cast(Variable)tc.getResolver().resolveWithin(c, vAsStdAl.getVariableName());

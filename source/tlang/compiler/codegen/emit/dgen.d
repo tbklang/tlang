@@ -12,17 +12,14 @@ import gogga;
 import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
-import compiler.typecheck.dependency.core : Context;
+import compiler.typecheck.dependency.core : Context, FunctionData, DNode;
 import compiler.codegen.mapper : SymbolMapper;
-import compiler.symbols.data : SymbolType, Variable;
+import compiler.symbols.data : SymbolType, Variable, Function;
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 
 public final class DCodeEmitter : CodeEmitter
-{
-    private Stack!(Instruction) varAssStack;
-    
-
+{    
     // Set to true when processing a variable declaration
     // which expects an assignment. Set to false when
     // said variable assignment has been processed
@@ -32,12 +29,12 @@ public final class DCodeEmitter : CodeEmitter
     this(TypeChecker typeChecker, File file)
     {
         super(typeChecker, file);
-
-        varAssStack = new Stack!(Instruction)();
     }
 
     public override string transform(const Instruction instruction)
     {
+        gprintln("transform(): "~to!(string)(instruction));
+
         /* VariableAssignmentInstr */
         if(cast(VariableAssignmentInstr)instruction)
         {
@@ -92,8 +89,8 @@ public final class DCodeEmitter : CodeEmitter
                 varDecWantsConsumeVarAss = true;
 
                 // Fetch the variable assignment instruction
-                nextCodeInstruction();
-                Instruction varAssInstr = getCurrentCodeInstruction();
+                nextInstruction();
+                Instruction varAssInstr = getCurrentInstruction();
                 
                 // Generate the code to emit
                 return varDecInstr.varType~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
@@ -140,11 +137,16 @@ public final class DCodeEmitter : CodeEmitter
         // Emit header comment (NOTE: Change this to a useful piece of text)
         emitHeaderComment("Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
 
-        gprintln("Static allocations needed: "~to!(string)(getInitQueueLen()));
         emitStaticAllocations();
 
-        gprintln("Code emittings needed: "~to!(string)(getCodeQueueLen()));
+        gprintln("Function definitions needed: "~to!(string)(1)); //TODO: fix counter here
+        emitFunctionDefinitions();
+
+        gprintln("\n\n\n");
+
         emitCodeQueue();
+
+        gprintln("\n\n\n");
 
         //TODO: Emit function definitions
 
@@ -190,17 +192,109 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitStaticAllocations()
     {
+        selectQueue(QueueType.ALLOC_QUEUE);
+        gprintln("Static allocations needed: "~to!(string)(getQueueLength()));
+    }
 
+    /** 
+     * TOOD: We should have an nextInstruction() esque thing for this
+     */
+    private void emitFunctionDefinitions()
+    {
+        Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues();
+
+        string[] functionNames = getFunctionDefinitionNames();
+
+        gprintln("WOAH: "~to!(string)(functionNames));
+
+        foreach(string currentFunctioName; functionNames)
+        {
+            emitFunctionDefinition(currentFunctioName);
+        }
+
+        
+    }
+
+    private string generateSignature(Function func)
+    {
+        string signature;
+
+        // <type> <functionName> (
+        signature = func.getType()~" "~func.getName()~"(";
+
+        // Generate parameter list
+        if(func.hasParams())
+        {
+            Variable[] parameters = func.getParams();
+            string parameterString;
+            
+            for(ulong parIdx = 0; parIdx < parameters.length; parIdx++)
+            {
+                Variable currentParameter = parameters[parIdx];
+                parameterString~=currentParameter.getType()~" "~currentParameter.getName();
+
+                if(parIdx != (parameters.length-1))
+                {
+                    parameterString~=", ";
+                }
+            }
+
+            signature~=parameterString;
+        }
+
+        // )
+        signature~=")";
+
+        return signature;
+
+    }
+
+    private void emitFunctionDefinition(string functionName)
+    {
+        // // Reset the cursor
+        // resetCFDCQCursor();
+
+        // // Set the function we want to examine in CodeEmitter
+        // setCurrentFunctionDefinition(functionName);
+        selectQueue(QueueType.FUNCTION_DEF_QUEUE, functionName);
+    
+        //TODO: Look at nested definitions or nah? (Context!!)
+        //TODO: And what about methods defined in classes? Those should technically be here too
+        Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(typeChecker.getModule(), functionName); //TODO: Remove `auto`
+        
+        // Emit the function signature
+        file.writeln(generateSignature(functionEntity));
+
+        // Emit opening curly brace
+        file.writeln(getCharacter(SymbolType.OCURLY));
+
+        // Emit body
+        while(hasInstructions())
+        {
+            Instruction curFuncBodyInstr = getCurrentInstruction();
+
+            string emit = transform(curFuncBodyInstr);
+            gprintln("emitFunctionDefinition("~functionName~"): Emit: "~emit);
+            file.writeln("\t"~emit);
+            
+            nextInstruction();
+        }
+
+        // Emit closing curly brace
+        file.writeln(getCharacter(SymbolType.CCURLY));
     }
 
     private void emitCodeQueue()
     {
-        while(hasCodeInstructions())
+        selectQueue(QueueType.GLOBALS_QUEUE);
+        gprintln("Code emittings needed: "~to!(string)(getQueueLength()));
+
+        while(hasInstructions())
         {
-            Instruction currentInstruction = getCurrentCodeInstruction();
+            Instruction currentInstruction = getCurrentInstruction();
             file.writeln(transform(currentInstruction));
 
-            nextCodeInstruction();
+            nextInstruction();
         }
     }
 

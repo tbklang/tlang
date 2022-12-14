@@ -482,6 +482,14 @@ public string getCharacter(SymbolType symbolIn)
     {
         return "/";
     }
+    else if(symbolIn == SymbolType.OCURLY)
+    {
+        return "{";
+    }
+    else if(symbolIn == SymbolType.CCURLY)
+    {
+        return "}";
+    }
     else
     {
         gprintln("getCharacter: No back-mapping for "~to!(string)(symbolIn), DebugType.ERROR);

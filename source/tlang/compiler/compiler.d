@@ -13,6 +13,12 @@ import core.stdc.stdlib;
 import compiler.codegen.emit.core;
 import compiler.codegen.emit.dgen;
 
+/** 
+ * Performs compilation of the provided module(s)
+ *
+ * Params:
+ *   sourceFiles = The module(s) to perform compilation with
+ */
 void beginCompilation(string[] sourceFiles)
 {
     /* TODO: Begin compilation process, take in data here */

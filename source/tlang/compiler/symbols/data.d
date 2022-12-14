@@ -253,6 +253,11 @@ public class Function : TypedEntity, Container
         return params;
     }
 
+    public bool hasParams()
+    {
+        return params.length != 0;
+    }
+
     public void addStatement(Statement statement)
     {
         this.bodyStatements~=statement;
