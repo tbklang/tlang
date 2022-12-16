@@ -33,15 +33,20 @@ public final class DCodeEmitter : CodeEmitter
 
     public override string transform(const Instruction instruction)
     {
+        import std.stdio;
+        writeln("\n");
         gprintln("transform(): "~to!(string)(instruction));
 
         /* VariableAssignmentInstr */
         if(cast(VariableAssignmentInstr)instruction)
         {
+            gprintln("type: VariableAssignmentInstr");
+
             VariableAssignmentInstr varAs = cast(VariableAssignmentInstr)instruction;
             Context context = varAs.getContext();
 
             gprintln("Is ContextNull?: "~to!(string)(context is null));
+            gprintln("Wazza contect: "~to!(string)(context.container));
             auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
             string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
@@ -66,6 +71,8 @@ public final class DCodeEmitter : CodeEmitter
         /* VariableDeclaration */
         else if(cast(VariableDeclaration)instruction)
         {
+            gprintln("type: VariableDeclaration");
+
             VariableDeclaration varDecInstr = cast(VariableDeclaration)instruction;
             Context context = varDecInstr.getContext();
 
@@ -89,6 +96,7 @@ public final class DCodeEmitter : CodeEmitter
                 varDecWantsConsumeVarAss = true;
 
                 // Fetch the variable assignment instruction
+                gprintln("Before crash: "~to!(string)(getCurrentInstruction()));
                 nextInstruction();
                 Instruction varAssInstr = getCurrentInstruction();
                 
@@ -103,6 +111,8 @@ public final class DCodeEmitter : CodeEmitter
         /* LiteralValue */
         else if(cast(LiteralValue)instruction)
         {
+            gprintln("type: LiteralValue");
+
             LiteralValue literalValueInstr = cast(LiteralValue)instruction;
 
             return to!(string)(literalValueInstr.data);
@@ -110,6 +120,8 @@ public final class DCodeEmitter : CodeEmitter
         /* FetchValueVar */
         else if(cast(FetchValueVar)instruction)
         {
+            gprintln("type: FetchValueVar");
+
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
 
@@ -123,9 +135,55 @@ public final class DCodeEmitter : CodeEmitter
         /* BinOpInstr */
         else if(cast(BinOpInstr)instruction)
         {
+            gprintln("type: BinOpInstr");
+
             BinOpInstr binOpInstr = cast(BinOpInstr)instruction;
 
             return transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
+        }
+        /* FuncCallInstr */
+        else if(cast(FuncCallInstr)instruction)
+        {
+            gprintln("type: FuncCallInstr");
+
+            FuncCallInstr funcCallInstr = cast(FuncCallInstr)instruction;
+            Context context = funcCallInstr.getContext();
+            assert(context);
+
+            Function functionToCall = cast(Function)context.tc.getResolver().resolveBest(context.getContainer(), funcCallInstr.functionName); //TODO: Remove `auto`
+
+            // TODO: SymbolLookup?
+
+            string emit = functionToCall.getName()~"(";
+
+            //TODO: Insert argument passimng code here
+            //NOTE: Typechecker must have checked for passing arguments to a function that doesn't take any, for example
+
+            //NOTE (Behaviour): We may want to actually have an preinliner for these arguments
+            //such to enforce a certain ordering. I believe this should be done in the emitter stage,
+            //so it is best placed here
+            if(functionToCall.hasParams())
+            {
+                Value[] argumentInstructions = funcCallInstr.getEvaluationInstructions();
+                string argumentString;
+                
+                for(ulong argIdx = 0; argIdx < argumentInstructions.length; argIdx++)
+                {
+                    Value currentArgumentInstr = argumentInstructions[argIdx];
+                    argumentString~=transform(currentArgumentInstr);
+
+                    if(argIdx != (argumentInstructions.length-1))
+                    {
+                        argumentString~=", ";
+                    }
+                }
+
+                emit~=argumentString;
+            }
+
+            emit ~= ")";
+
+            return emit;
         }
 
         return "<TODO: Base emit: "~to!(string)(instruction)~">";
@@ -139,12 +197,13 @@ public final class DCodeEmitter : CodeEmitter
 
         emitStaticAllocations();
 
-        gprintln("Function definitions needed: "~to!(string)(1)); //TODO: fix counter here
+        emitCodeQueue();
+
         emitFunctionDefinitions();
 
         gprintln("\n\n\n");
 
-        emitCodeQueue();
+        // emitCodeQueue();
 
         gprintln("\n\n\n");
 
@@ -194,6 +253,8 @@ public final class DCodeEmitter : CodeEmitter
     {
         selectQueue(QueueType.ALLOC_QUEUE);
         gprintln("Static allocations needed: "~to!(string)(getQueueLength()));
+
+        file.writeln();
     }
 
     /** 
@@ -201,6 +262,8 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitFunctionDefinitions()
     {
+        gprintln("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount()));
+
         Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues();
 
         string[] functionNames = getFunctionDefinitionNames();
@@ -210,9 +273,8 @@ public final class DCodeEmitter : CodeEmitter
         foreach(string currentFunctioName; functionNames)
         {
             emitFunctionDefinition(currentFunctioName);
-        }
-
-        
+            file.writeln();
+        }   
     }
 
     private string generateSignature(Function func)
@@ -251,12 +313,9 @@ public final class DCodeEmitter : CodeEmitter
 
     private void emitFunctionDefinition(string functionName)
     {
-        // // Reset the cursor
-        // resetCFDCQCursor();
-
-        // // Set the function we want to examine in CodeEmitter
-        // setCurrentFunctionDefinition(functionName);
         selectQueue(QueueType.FUNCTION_DEF_QUEUE, functionName);
+
+        gprintln("emotFunctionDefinition(): Function: "~functionName~", with "~to!(string)(getSelectedQueueLength())~" many instructions");
     
         //TODO: Look at nested definitions or nah? (Context!!)
         //TODO: And what about methods defined in classes? Those should technically be here too
@@ -296,15 +355,23 @@ public final class DCodeEmitter : CodeEmitter
 
             nextInstruction();
         }
+
+        file.writeln();
     }
 
     private void emitEntryPoint()
     {
         //TODO: Implement me
 
+        // NOTE: Remove this printf
         file.writeln(`
+// NOTE: The below is testing code and should be removed
+#include<stdio.h>
 int main()
 {
+    printf("k: %u\n", t_0c9714cea1ccdfdd0345347c86885620);
+    banana(1);
+    printf("k: %u\n", t_0c9714cea1ccdfdd0345347c86885620);
     return 0;
 }`);
     }
@@ -326,21 +393,18 @@ int main()
             //NOTE: Change to system compiler (maybe, we need to choose a good C compiler)
             Pid ccPID = spawnProcess(["clang", "-o", "tlang.out", file.name()]);
 
-            //NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?
             int code = wait(ccPID);
-            gprintln(code);
 
             if(code)
             {
                 //NOTE: Make this a TLang exception
-                throw new Exception("The CC exited with a non-zero exit code");
+                throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
             }
         }
         catch(ProcessException e)
         {
             gprintln("NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?", DebugType.ERROR);
             assert(false);
-
         }
     }
 }

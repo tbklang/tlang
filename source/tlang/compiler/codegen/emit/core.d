@@ -20,6 +20,7 @@ import std.conv : to;
 public abstract class CodeEmitter
 {
     protected TypeChecker typeChecker;
+    protected File file;
     
     /** 
      * The selected queue is the queue to be used
@@ -88,7 +89,21 @@ public abstract class CodeEmitter
         return selectedQueue[queueCursor];
     }
 
+    public final ulong getCursor()
+    {
+        return queueCursor;
+    }
 
+    public final ulong getSelectedQueueLength()
+    {
+        return selectedQueue.length;
+    }
+    
+    public final ulong getQueueLength()
+    {
+        return selectedQueue.length;
+    }
+    
     /**
     * Required queues
     */
@@ -100,66 +115,15 @@ public abstract class CodeEmitter
     */
     private Instruction[][string] functionBodyInstrs;
 
-
-    protected File file;
-
-    public final ulong getQueueLength()
+    public final ulong getFunctionDefinitionsCount()
     {
-        return selectedQueue.length;
+        return functionBodyInstrs.keys().length;
     }
-
-
-
-    
-
-
 
     public final string[] getFunctionDefinitionNames()
     {
         return functionBodyInstrs.keys();
     }
-
-    /** 
-     * TODO: Make some sort of like cursor object here that lets you move for function
-     * or actually just have a function cuirsor
-     */
-    private ulong globalCurrentFunctionDefintionCodeQueueIdx = 0;
-    private string currentFunctionDefinitionName;
-
-    /** 
-     * Moves thr cursor (for the CFDCQ) back to the starting
-     * position (zero)
-     */
-    public final void resetCFDCQCursor()
-    {
-        globalCurrentFunctionDefintionCodeQueueIdx = 0;
-    }
-
-    public final bool hasFunctionDefinitionInstructions()
-    {
-        return globalCurrentFunctionDefintionCodeQueueIdx < functionBodyInstrs[currentFunctionDefinitionName].length;
-    }
-
-    public final void nextFunctionDefinitionCode()
-    {
-        globalCurrentFunctionDefintionCodeQueueIdx++;
-    }
-
-    public final void previousFunctionDefinitionCode()
-    {
-        globalCurrentFunctionDefintionCodeQueueIdx--;
-    }
-
-    public final Instruction getCurrentFunctionDefinitionInstruction()
-    {
-        return functionBodyInstrs[currentFunctionDefinitionName][globalCurrentFunctionDefintionCodeQueueIdx];
-    }
-
-    public final void setCurrentFunctionDefinition(string functionDefinitionName)
-    {
-        currentFunctionDefinitionName = functionDefinitionName;
-    }
-    
 
     this(TypeChecker typeChecker, File file)
     {

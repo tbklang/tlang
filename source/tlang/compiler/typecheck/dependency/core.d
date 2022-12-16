@@ -410,7 +410,7 @@ public class DNodeGenerator
     *
     * This holds unique pool entries
     */
-    private DNode[] nodePool;
+    private static DNode[] nodePool;
 
     this(TypeChecker tc)
     {
@@ -582,12 +582,21 @@ public class DNodeGenerator
             FunctionCall funcCall = cast(FunctionCall)exp;
             gprintln("FuncCall: "~funcCall.getName());
 
-
             /* TODO: We need to fetch the cached function definition here and call it */
-            Entity funcEntity = resolver.resolveWithin(context.container, funcCall.getName());
-            DNode funcDefDNode = retrieveFunctionDefinitionNode(tc.getResolver().generateName(tc.getModule(), funcEntity));
-            gprintln("FuncCall (FuncDefNode): "~to!(string)(funcDefDNode));
-            dnode.needs(funcDefDNode); /* NOTE: New code as of 4th October 2022 */
+            Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
+            assert(funcEntity);
+            
+            // FIXME: The below is failing (we probably need a forward look ahead?)
+            // OR use the addFuncDef list?
+            //WAIT! We don't need a funcDefNode actually. No, we lierally do not.
+            //Remmeber, they are done in a seperate pass, what we need is just our FUncCall DNode
+            // WHICH we have below as `dnode`!!!!
+            // DNode funcDefDNode = retrieveFunctionDefinitionNode(tc.getResolver().generateName(tc.getModule(), funcEntity));
+            // gprintln("FuncCall (FuncDefNode): "~to!(string)(funcDefDNode));
+            // dnode.needs(funcDefDNode); /* NOTE: New code as of 4th October 2022 */
+
+            //NOTE: Check if we need to set a context here to that of the context we occuring in
+            funcCall.context = context;
 
 
             /**
@@ -1276,9 +1285,6 @@ public class DNodeGenerator
             {
                 VariableAssignmentStdAlone vAsStdAl = cast(VariableAssignmentStdAlone)entity;
 
-                /* Set the Context */
-                vAsStdAl.setContext(context);
-
                 /* TODO: CHeck avriable name even */
                 gprintln("YEAST ENJOYER");
 
@@ -1286,10 +1292,14 @@ public class DNodeGenerator
                 // FIXME: The below assert fails for function definitions trying to refer to global values
                 // as a reoslveBest (up) is needed. We should firstly check if within fails, if so,
                 // resolveBest, if that fails, then it is an error (see #46)
-                assert(tc.getResolver().resolveWithin(c, vAsStdAl.getVariableName()));
+                assert(tc.getResolver().resolveBest(c, vAsStdAl.getVariableName()));
                 gprintln("YEAST ENJOYER");
-                Variable variable = cast(Variable)tc.getResolver().resolveWithin(c, vAsStdAl.getVariableName());
+                Variable variable = cast(Variable)tc.getResolver().resolveBest(c, vAsStdAl.getVariableName());
                 assert(variable);
+
+                /* Set the context of the assignment to the Context of the Variable being assigned to */
+                vAsStdAl.setContext(variable.getContext());
+
                 /* Pool the variable */
                 DNode varDecDNode = pool(variable);
 
@@ -1394,14 +1404,14 @@ public class DNodeGenerator
                 /* TODO: New code from 1st October */
                 /* Recurse downwards */
                 /* FIXME: The context container must be fixed, see passClazz, we pass the euiavlent of `func` in there */
-                Context funcContext = new Context(tc.getModule(), InitScope.STATIC);
-                DNode funcDefDNode = generalPass(func, funcContext);
+                // Context funcContext = new Context(tc.getModule(), InitScope.STATIC);
+                // DNode funcDefDNode = generalPass(func, funcContext);
 
 
                 /**
                 * Save the function dnode for lookup later
                 */
-                saveFunctionDefinitionNode(funcDefDNode);
+                // saveFunctionDefinitionNode(funcDefDNode);
             }
 
         }

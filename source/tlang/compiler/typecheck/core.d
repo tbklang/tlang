@@ -713,12 +713,14 @@ public final class TypeChecker
                 /**
                 * TODO:
                 *
-                * 1. Create FUncCallInstr
+                * 1. Create FuncCallInstr
                 * 2. Evaluate args and process them?! wait done elsewhere yeah!!!
                 * 3. Pop arts into here
                 * 4. AddInstr(combining those args)
                 * 5. DOne
                 */
+                funcCallInstr.context = funcCall.getContext();
+
                 addInstr(funcCallInstr);
                 addType(getType(func.parentOf(), func.getType()));
             }
