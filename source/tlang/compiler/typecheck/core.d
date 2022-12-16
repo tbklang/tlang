@@ -632,7 +632,7 @@ public final class TypeChecker
                 /* TODO: Look up func def to know when popping stops (types-based delimiting) */
                 Function func = cast(Function)resolver.resolveBest(modulle, funcCall.getName());
                 assert(func);
-                Variable[] paremeters = func.getParams();
+                VariableParameter[] paremeters = func.getParams();
 
 
                 /* TODO: Pass in FUnction, so we get function's body for calling too */

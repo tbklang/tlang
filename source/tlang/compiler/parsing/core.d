@@ -718,7 +718,7 @@ public final class Parser
     private struct funcDefPair
     {
         Statement[] bodyStatements;
-        Variable[] args;
+        VariableParameter[] params;
     }
 
     private funcDefPair parseFuncDef()
@@ -726,7 +726,7 @@ public final class Parser
         gprintln("parseFuncDef(): Enter", DebugType.WARNING);
 
         Statement[] statements;
-        Variable[] argumentList;
+        VariableParameter[] parameterList;
         funcDefPair bruh;
         
 
@@ -760,7 +760,7 @@ public final class Parser
 
 
                 /* Add the local variable (parameter variable) */
-                argumentList ~= new Variable(type, identifier);
+                parameterList ~= new VariableParameter(type, identifier);
 
                 moreArgs = false;
 
@@ -807,7 +807,7 @@ public final class Parser
         gprintln("parseFuncDef(): Leave", DebugType.WARNING);
 
         bruh.bodyStatements = statements;
-        bruh.args = argumentList;
+        bruh.params = parameterList;
 
         return bruh;
     }
@@ -1146,12 +1146,15 @@ public final class Parser
         {
             funcDefPair pair = parseFuncDef();
 
-            generated = new Function(identifier, type, pair.bodyStatements, pair.args);
+            generated = new Function(identifier, type, pair.bodyStatements, pair.params);
             
             import std.stdio;
             writeln(to!(string)((cast(Function)generated).getVariables()));
 
+            // Parent the parameters of the function to the Function
+            parentToContainer(cast(Container)generated, cast(Statement[])pair.params);
 
+            // Parent the statements that make up the function to the Function
             parentToContainer(cast(Container)generated, pair.bodyStatements);
         }
         /* Check for semi-colon (var dec) */

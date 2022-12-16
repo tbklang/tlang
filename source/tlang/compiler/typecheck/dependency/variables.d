@@ -9,6 +9,8 @@ import compiler.symbols.data;
 * and struct-level
 */
 
+//TODO: See how needed these REALLY are (see issue #55)
+
 public class VariableNode : DNode
 {
     private Variable variable;

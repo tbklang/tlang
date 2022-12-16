@@ -14,7 +14,7 @@ import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import compiler.typecheck.dependency.core : Context, FunctionData, DNode;
 import compiler.codegen.mapper : SymbolMapper;
-import compiler.symbols.data : SymbolType, Variable, Function;
+import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 
@@ -287,13 +287,21 @@ public final class DCodeEmitter : CodeEmitter
         // Generate parameter list
         if(func.hasParams())
         {
-            Variable[] parameters = func.getParams();
+            VariableParameter[] parameters = func.getParams();
             string parameterString;
             
             for(ulong parIdx = 0; parIdx < parameters.length; parIdx++)
             {
                 Variable currentParameter = parameters[parIdx];
-                parameterString~=currentParameter.getType()~" "~currentParameter.getName();
+
+                // Generate the symbol-mapped names for the parameters
+                Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(func, currentParameter.getName()); //TODO: Remove `auto`
+                string typedEntityVariableName = typeChecker.getResolver().generateName(func, typedEntityVariable);
+                string renamedSymbol = SymbolMapper.symbolLookup(func, typedEntityVariableName);
+
+
+                // Generate <type> <parameter-name (symbol mapped)>
+                parameterString~=currentParameter.getType()~" "~renamedSymbol;
 
                 if(parIdx != (parameters.length-1))
                 {
