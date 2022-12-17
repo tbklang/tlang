@@ -169,6 +169,8 @@ public final class Lexer
                     // Skip over the current `=` and the next `=`
                     position+=2;
 
+                    column+=2;
+
                     continue;
                 }
 
