@@ -1334,99 +1334,36 @@ public class DNodeGenerator
                 }
             }
             /**
-            * Function declarations
-            * Status: Not done (TODO)
+            * Function definitions
             */
             else if(cast(Function)entity)
             {
                 // /* Grab the function */
                 Function func = cast(Function)entity;
 
-                // /* Set the context to be STATIC and relative to this Module */
-                // Context d = new Context( cast(Container)modulle, InitScope.STATIC);
-                // func.setContext(d);
-
-                // /* Pass the function declaration */
-                // DNode funcDep = FunctionPass(func);
-
-                // /* TODO: Surely we only require the module, it doesn't need us? */
-                // /* TODO: Perhaps, no, it needs us to make it into the tree */
-                // /* TODO: But NOT it's subcompnents */
-                // funcDep.needs(moduleDNode);
-                // moduleDNode.needs(funcDep); /* TODO: Nah fam looks weird */
-
-                /**
-                * TODO:
-                *
-                * Perhaps all function calls should look up this node
-                * via pooling it and then they should depend on it
-                * which depends on module init
-                *
-                * Then whatever depends on function call will have module dependent
-                * on it, which does this but morr round about but seems to make more
-                * sense, idk
-                */
-
-                /**
-                * SOLUTION
-                *
-                * DOn;'t process declarations
-                * Process function calls, then look up the Function (declaration)
-                * and go through it pooling and seeing it's needs
-                */
-
-                /**
-                * Other SOLUTION
-                * 
-                * We go through and process the declaration and get
-                * what each variable depends on, we then return this
-                * And we have a function that does that for us
-                * but WE DON'T IMPLEMENT THAT HERE IN modulePass()
-                *
-                * Rather each call will do it, and because we pool
-                * we will add DNOdes that then flatten out
-                */
-
-                /**
-                * EVEN BETTER (+PREVIOUS SOLUTION)
-                *
-                * We process it here yet we do not
-                * add thre entity themselves as dnodes
-                * only their dependents and return that
-                * Accounting ONLY for external dependencies
-                * WE STORE THIS INA  FUNCTIONMAP
-                *
-                * We DO call this here
-                *
-                * On a FUNCTION **CALL** do a normal pass on
-                * the FUNCTIONMAP entity, in a way that doesn't
-                * add to our tree for Modulle. Effectively
-                * giving us a uniue dependecny tree per call
-                * which is fine for checking things and also
-                * for (what is to come - code generation) AS
-                * THEN we want duplication. Calling something
-                * twice means two sets of instructions, not one
-                * (as a result from pooled dependencies or USING
-                * the same pool)
-                */
-
                 /* Add funtion definition */
                 gprintln("Hello");
                 addFunctionDef(tc, func);
+            }
+            /**
+            * Return statement
+            */
+            else if(cast(ReturnStmt)entity)
+            {
+                ReturnStmt returnStatement = cast(ReturnStmt)entity;
+                returnStatement.setContext(context);
 
-                /* TODO: Hoist stuff from pre-processing */
+                DNode returnStatementDNode = pool(returnStatement);
 
-                /* TODO: New code from 1st October */
-                /* Recurse downwards */
-                /* FIXME: The context container must be fixed, see passClazz, we pass the euiavlent of `func` in there */
-                // Context funcContext = new Context(tc.getModule(), InitScope.STATIC);
-                // DNode funcDefDNode = generalPass(func, funcContext);
+                /* Process the return expression */
+                Expression returnExpression = returnStatement.getReturnExpression();
+                DNode returnExpressionDNode = expressionPass(returnExpression, context);
 
+                /* Make return depend on the return expression */
+                returnStatementDNode.needs(returnExpressionDNode);
 
-                /**
-                * Save the function dnode for lookup later
-                */
-                // saveFunctionDefinitionNode(funcDefDNode);
+                /* Make this container depend on this return statement */
+                node.needs(returnStatementDNode);
             }
 
         }

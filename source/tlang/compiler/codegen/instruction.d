@@ -273,3 +273,19 @@ public class FuncCallInstr : CallInstr
         return evaluationInstructions;
     }
 }
+
+
+public final class ReturnInstruction : Instruction
+{
+    private Value returnExprInstr;
+
+    this(Value returnExprInstr)
+    {
+        this.returnExprInstr = returnExprInstr;
+    }
+
+    public Value getReturnExpInstr()
+    {
+        return returnExprInstr;
+    }
+}

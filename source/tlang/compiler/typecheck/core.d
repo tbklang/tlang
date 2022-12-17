@@ -836,6 +836,28 @@ public final class TypeChecker
 
                 addInstrB(vAInstr);
             }
+            /**
+            * Return statement (ReturnStmt)
+            */
+            else if(cast(ReturnStmt)statement)
+            {
+                ReturnStmt returnStatement = cast(ReturnStmt)statement;
+
+                /**
+                * Codegen
+                *
+                * 1. Pop the expression on the stack
+                * 2. Create a new ReturnInstruction with the expression instruction
+                * embedded in it
+                * 3. Set the Context of the instruction
+                * 4. Add this instruction back
+                */
+                Value returnExpressionInstr = cast(Value)popInstr();
+                assert(returnExpressionInstr);
+                ReturnInstruction returnInstr = new ReturnInstruction(returnExpressionInstr);
+                returnInstr.context = returnStatement.getContext();
+                addInstrB(returnInstr);
+            }
             /* Case of no matches */
             else
             {

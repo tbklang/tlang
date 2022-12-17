@@ -11,6 +11,8 @@ int apple(int arg1, int arg2)
 
     k=arg1+arg2;
     simple_functions.k=arg1+arg2;
+
+    return arg1;
 }
 
 int banana(int arg1)

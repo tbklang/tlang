@@ -541,6 +541,9 @@ public final class ReturnStmt : Statement
     this(Expression returnExpression)
     {
         this.returnExpression = returnExpression;
+
+        /* Statement level weighting is 2 */
+        weight = 2;
     }
     
     public Expression getReturnExpression()

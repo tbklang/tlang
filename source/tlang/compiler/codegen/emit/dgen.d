@@ -185,6 +185,20 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        /* ReturnInstruction */
+        else if(cast(ReturnInstruction)instruction)
+        {
+            gprintln("type: ReturnInstruction");
+
+            ReturnInstruction returnInstruction = cast(ReturnInstruction)instruction;
+            Context context = returnInstruction.getContext();
+            assert(context);
+
+            /* Get the return expression instruction */
+            Value returnExpressionInstr = returnInstruction.getReturnExpInstr();
+
+            return "return "~transform(returnExpressionInstr)~";";
+        }
 
         return "<TODO: Base emit: "~to!(string)(instruction)~">";
     }
