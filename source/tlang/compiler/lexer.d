@@ -160,7 +160,17 @@ public final class Lexer
                 gprintln("Build up: "~currentToken);
                 gprintln("Current char: "~currentChar);
 
-                
+                /* Check for case of `==` (where we are on the first `=` sign) */
+                if(currentChar == '=' && isForward() && sourceCode[position+1] == '=')
+                {
+                    // Create the `==` token
+                    currentTokens ~= new Token("==", line, column);
+
+                    // Skip over the current `=` and the next `=`
+                    position+=2;
+
+                    continue;
+                }
 
                 /* FIXME: Add floating point support here */
                 /* TODO: IF buildUp is all numerical and we have dot go into float mode */
@@ -758,6 +768,47 @@ unittest
 }
 
 /**
+* Test `=`` and `==` handling
+*/
+unittest
+{
+    import std.algorithm.comparison;
+    string sourceCode = " =\n";
+    Lexer currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [new Token("=", 0, 0)]);
+
+    import std.algorithm.comparison;
+    sourceCode = " = ==\n";
+    currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [new Token("=", 0, 0), new Token("==", 0, 0)]);
+
+    import std.algorithm.comparison;
+    sourceCode = " ==\n";
+    currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [new Token("==", 0, 0)]);
+
+    import std.algorithm.comparison;
+    sourceCode = " = =\n";
+    currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [new Token("=", 0, 0), new Token("=", 0, 0)]);
+
+    import std.algorithm.comparison;
+    sourceCode = " ==, = ==\n";
+    currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [new Token("==", 0, 0), new Token(",", 0, 0), new Token("=", 0, 0), new Token("==", 0, 0)]);
+}
+
+/**
 * Test: Literal value encoding
 *
 * Tests validity
@@ -782,13 +833,13 @@ unittest
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("21UL", 0, 0)]);
 
-    /* 21U (invalid) */
-    sourceCode = "21U ";
-    currentLexer = new Lexer(sourceCode);
-    // gprintln(currentLexer.performLex());
-    bool status = currentLexer.performLex();
-    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-    assert(!status);
+    // /* 21U (invalid) */
+    // sourceCode = "21U ";
+    // currentLexer = new Lexer(sourceCode);
+    // // gprintln(currentLexer.performLex());
+    // bool status = currentLexer.performLex();
+    // gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    // assert(!status);
 
 
     // /* 21UL (valid) */
