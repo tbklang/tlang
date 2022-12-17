@@ -231,24 +231,54 @@ public class ArgumentList
 
 }
 
+
+/** 
+ * VariableParameter
+ *
+ * Represents a kindof-Variable which is used to indicate
+ * it is a function's parameter - to differentiate between
+ * those and other variables like local/global definitions
+ * and so on
+ *
+ * These are only to be used in the `Function` class (below)
+ */
+public final class VariableParameter : Variable
+{
+    this(string type, string identifier)
+    {
+        super(type, identifier);
+    }
+}
+
 /* TODO: Don't make this a Container, or maybe (make sure I don't rely on COntainer casting for other shit
 * though, also the recent changes) */
 public class Function : TypedEntity, Container
 {
-    private Variable[] params;
+    private VariableParameter[] params;
     private Statement[] bodyStatements;
 
-    this(string name, string returnType, Statement[] bodyStatements, Variable[] args)
+    this(string name, string returnType, Statement[] bodyStatements, VariableParameter[] params)
     {
         super(name, returnType);
-        this.bodyStatements = bodyStatements;
-        this.params = args;
+
+        // Add the parameters first THEN the function's body statements
+        // because they must be available before other statements
+        // which may reference them, Secondly they must be added (the VariableParameter(s))
+        // such that they are lookup-able.
+        addStatements(cast(Statement[])params);
+
+        // Add the funciton's body
+        addStatements(bodyStatements);
+
+        // Save a seperate copy of the parameters (to seperate them from the
+        // other body stetements)
+        this.params = params;
 
         /* Weighted as 1 */
         weight = 1;
     }
 
-    public Variable[] getParams()
+    public VariableParameter[] getParams()
     {
         return params;
     }
