@@ -195,19 +195,14 @@ public final class DCodeEmitter : CodeEmitter
         // Emit header comment (NOTE: Change this to a useful piece of text)
         emitHeaderComment("Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
 
+        // Emit static allocation code
         emitStaticAllocations();
 
+        // Emit globals
         emitCodeQueue();
 
+        // Emit function definitions
         emitFunctionDefinitions();
-
-        gprintln("\n\n\n");
-
-        // emitCodeQueue();
-
-        gprintln("\n\n\n");
-
-        //TODO: Emit function definitions
 
         //TODO: Emit main (entry point)
         emitEntryPoint();
@@ -376,9 +371,9 @@ public final class DCodeEmitter : CodeEmitter
 #include<stdio.h>
 int main()
 {
-    printf("k: %u\n", t_0c9714cea1ccdfdd0345347c86885620);
+    printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
     banana(1);
-    printf("k: %u\n", t_0c9714cea1ccdfdd0345347c86885620);
+    printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
     return 0;
 }`);
     }
