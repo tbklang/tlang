@@ -48,9 +48,8 @@ public final class DCodeEmitter : CodeEmitter
             gprintln("Is ContextNull?: "~to!(string)(context is null));
             gprintln("Wazza contect: "~to!(string)(context.container));
             auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
-            string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
-            string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), typedEntityVariableName);
+            string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
 
             
             // If we are needed as part of a VariabvleDeclaration-with-assignment
@@ -77,7 +76,6 @@ public final class DCodeEmitter : CodeEmitter
             Context context = varDecInstr.getContext();
 
             Variable typedEntityVariable = cast(Variable)context.tc.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
-            string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
             //NOTE: We should remove all dots from generated symbol names as it won't be valid C (I don't want to say C because
             // a custom CodeEmitter should be allowed, so let's call it a general rule)
@@ -86,7 +84,7 @@ public final class DCodeEmitter : CodeEmitter
             //NOTE: We may need to create a symbol table actually and add to that and use that as these names
             //could get out of hand (too long)
             // NOTE: Best would be identity-mapping Entity's to a name
-            string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), varDecInstr.varName);
+            string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
 
 
             // Check to see if this declaration has an assignment attached
@@ -126,9 +124,11 @@ public final class DCodeEmitter : CodeEmitter
             Context context = fetchValueVarInstr.getContext();
 
             Variable typedEntityVariable = cast(Variable)context.tc.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName); //TODO: Remove `auto`
-            string typedEntityVariableName = context.tc.getResolver().generateName(context.getContainer(), typedEntityVariable);
 
-            string renamedSymbol = SymbolMapper.symbolLookup(context.getContainer(), typedEntityVariableName);
+            //TODO: THis is giving me kak (see issue #54), it's generating name but trying to do it for the given container, relative to it
+            //TODO: We might need a version of generateName that is like generatenamebest (currently it acts like generatename, within)
+
+            string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
 
             return renamedSymbol;
         }

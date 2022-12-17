@@ -24,13 +24,20 @@ public final class SymbolMapper
     //     this.tc = tc;
     // }
 
-    public static string symbolLookup(Container container, string entityNameIn)
+    /** 
+     * Given an Entity this will generate a unique (but consistent)
+     * symbol name for it by taking the md5 hash of the full absolute
+     * path to the Entity and finally prefixing it with <code>t_</code>.
+     *
+     * Params:
+     *   entityIn = The Entity to generate a hash for
+     *
+     * Returns: The symbol hash
+     */
+    public static string symbolLookup(Entity entityIn)
     {
-        // Firstly translate the entity name to the full absolute path
-        auto entity = tc.getResolver().resolveBest(container, entityNameIn); //TODO: Remove `auto`
-        string entityNameAbsolute = tc.getResolver().generateName(tc.getModule(), entity);
-
-        gprintln("symbolLookup(): "~to!(string)(container));
+        // Generate the absolute full path of the Entity
+        string absoluteFullPath = tc.getResolver().generateNameBest(entityIn);
 
         // Hash the absolute path name
         // FIXME: Ensure these hashes are unique (use the smbyol table!)
@@ -38,11 +45,9 @@ public final class SymbolMapper
         import std.digest.md : md5Of;
 
         // Generate the name as `_<hexOfAbsPath>`
-        string symbolName = toHexString!(LetterCase.lower)(md5Of(entityNameAbsolute));
+        string symbolName = toHexString!(LetterCase.lower)(md5Of(absoluteFullPath));
         symbolName="t_"~symbolName;
 
         return symbolName;
     }
-
-
 }

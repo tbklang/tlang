@@ -16,9 +16,48 @@ public final class Resolver
         this.typeChecker = typeChecker;
     }
 
+    /** 
+     * Generate the absolute full path of the given Entity
+     *
+     * Params:
+     *   entity = The Entity to generate the full absolute path for
+     *
+     * Returns: The absolute full path
+     */
+    public string generateNameBest(Entity entity)
+    {
+        string absoluteFullPath;
+        
+        assert(entity);
+
+        /** 
+         * Search till we get to the top-most Container
+         * then generate a name relative to that with `generateName(topMostContainer, entity)`
+         */
+        Entity parentingEntity = entity;
+
+        while(true)
+        {
+            parentingEntity = cast(Entity)parentingEntity.parentOf();
+
+            if(parentingEntity.parentOf() is null)
+            {
+                break;
+            }
+        }
+
+        absoluteFullPath = generateName(cast(Container)parentingEntity, entity);
+
+
+        return absoluteFullPath;
+    }
+
+
     /**
     * Given an Entity generate it's full path relative to a given
-    * container
+    * container, this is akin to `generateNameWithin()` in the
+    * sense that it will fail if the entity prvided is not
+    * contained by `relativeTo` - returning null
     */
     public string generateName(Container relativeTo, Entity entity)
     {
@@ -89,6 +128,7 @@ public final class Resolver
         /* If not */
         else
         {
+            //TODO: technically an assert should be here and the one in isDescdant removed
             return null;
         }
     }
@@ -115,6 +155,10 @@ public final class Resolver
 
             do
             {
+                gprintln("c isdecsenat: "~to!(string)(c));
+                gprintln("currentEntity: "~to!(string)(currentEntity));
+                gprintln("currentEntity(parent): "~to!(string)(currentEntity.parentOf()));
+
                 /**
                 * TODO: Make sure this condition holds
                 *

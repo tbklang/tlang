@@ -723,7 +723,7 @@ public class DNodeGenerator
                 nearestName = path;
 
                 /* Resolve the Entity */
-                Entity namedEntity = tc.getResolver().resolveWithin(context.getContainer(), nearestName);
+                Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
 
 
 
@@ -1284,6 +1284,7 @@ public class DNodeGenerator
             else if(cast(VariableAssignmentStdAlone)entity)
             {
                 VariableAssignmentStdAlone vAsStdAl = cast(VariableAssignmentStdAlone)entity;
+                vAsStdAl.setContext(context);
 
                 /* TODO: CHeck avriable name even */
                 gprintln("YEAST ENJOYER");
@@ -1297,8 +1298,6 @@ public class DNodeGenerator
                 Variable variable = cast(Variable)tc.getResolver().resolveBest(c, vAsStdAl.getVariableName());
                 assert(variable);
 
-                /* Set the context of the assignment to the Context of the Variable being assigned to */
-                vAsStdAl.setContext(variable.getContext());
 
                 /* Pool the variable */
                 DNode varDecDNode = pool(variable);
