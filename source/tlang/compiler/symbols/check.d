@@ -53,6 +53,7 @@ public enum SymbolType
     DIVIDE,
     STAR,
     AMPERSAND,
+    EQUALS,
     GREATER_THAN,
     SMALLER_THAN,
     GREATER_THAN_OR_EQUALS,
@@ -340,6 +341,11 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.SEMICOLON;
     }
+    /* Equality `==` check */
+    else if(cmp(token, "==") == 0)
+    {
+        return SymbolType.EQUALS;
+    }
     /* Assign `=` check */
     else if (token[0] == '=')
     {
@@ -451,7 +457,8 @@ public bool isBinaryOp(Token token)
             tokenStr[0] == '|' || cmp("||", tokenStr) == 0 ||
             tokenStr[0] == '^' || tokenStr[0] == '~'       ||
             tokenStr[0] == '<' || tokenStr[0] == '>'       ||
-            cmp(">=", tokenStr) == 0 || cmp("<=", tokenStr) == 0;
+            cmp(">=", tokenStr) == 0 || cmp("<=", tokenStr) == 0 ||
+            cmp("==", tokenStr) == 0;
 }
 
 /** 
