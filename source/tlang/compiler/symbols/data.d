@@ -551,3 +551,118 @@ public final class ReturnStmt : Statement
         return returnExpression;
     }
 }
+
+/** 
+ * IfStatement
+ */
+public final class IfStatement : Entity, Container
+{
+    private Branch[] branches;
+
+    private static ulong ifStmtContainerRollingNameCounter = 0;
+
+    this(Branch[] branches)
+    {
+        ifStmtContainerRollingNameCounter++;
+        super("ifStmt_"~to!(string)(ifStmtContainerRollingNameCounter));
+
+        this.branches = branches;
+
+        weight = 2;
+    }
+
+    public Branch[] getBranches()
+    {
+        return branches;
+    }
+
+    public override void addStatement(Statement statement)
+    {
+        branches ~= cast(Branch)statement;
+    }
+
+    public override void addStatements(Statement[] statements)
+    {
+        branches ~= cast(Branch[])statements;
+    }
+
+    public override Statement[] getStatements()
+    {
+        return cast(Statement[])branches;
+    }
+
+    public override string toString()
+    {
+        return "IfStmt";
+    }
+}
+
+/** 
+ * Branch
+ *
+ * Represents a condition and code attached to
+ * run on said condition
+ *
+ * NOTE: I feel as though this should be a container
+ * with a `generalPass` applied to it in `dependency/core.d`
+ */
+public final class Branch : Entity, Container
+{
+    private Expression branchCondition;
+    private Statement[] branchBody;
+
+    private static ulong branchContainerRollingNameCounter = 0;
+
+    this(Expression condition, Statement[] branch)
+    {
+        branchContainerRollingNameCounter++;
+        super("branch_"~to!(string)(branchContainerRollingNameCounter));
+
+        this.branchCondition = condition;
+        this.branchBody = branch;
+        
+    }
+
+    /** 
+     * Effectively checks if this branch is an 'else' branch
+     *
+     * Returns: <code>true</code> if so, <code>false</code>
+     * otherwise
+     */
+    public bool hasCondition()
+    {
+        return !(branchCondition is null);
+    }
+
+    public Expression getCondition()
+    {
+        return branchCondition;
+    }
+
+    public Statement[] getBody()
+    {
+        return branchBody;
+    }
+
+
+
+    public override void addStatement(Statement statement)
+    {
+        branchBody ~= statement;
+    }
+
+    public override void addStatements(Statement[] statements)
+    {
+        branchBody ~= statements;
+    }
+
+    public override Statement[] getStatements()
+    {
+        return branchBody;
+    }
+
+    public override string toString()
+    {
+        return "Branch";
+    }
+}

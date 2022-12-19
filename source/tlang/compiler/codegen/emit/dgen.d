@@ -31,11 +31,29 @@ public final class DCodeEmitter : CodeEmitter
         super(typeChecker, file);
     }
 
+    private ulong transformDepth = 0;
+
+    private string genTabs(ulong count)
+    {
+        string tabStr;
+        for(ulong i = 0; i < count; i++)
+        {
+            tabStr~="\t";
+        }
+        return tabStr;
+    }
+
     public override string transform(const Instruction instruction)
     {
-        import std.stdio;
         writeln("\n");
         gprintln("transform(): "~to!(string)(instruction));
+        transformDepth++;
+
+        // At any return decrement the depth
+        scope(exit)
+        {
+            transformDepth--;
+        }
 
         /* VariableAssignmentInstr */
         if(cast(VariableAssignmentInstr)instruction)
@@ -94,10 +112,12 @@ public final class DCodeEmitter : CodeEmitter
                 varDecWantsConsumeVarAss = true;
 
                 // Fetch the variable assignment instruction
-                gprintln("Before crash: "~to!(string)(getCurrentInstruction()));
-                nextInstruction();
-                Instruction varAssInstr = getCurrentInstruction();
+                // gprintln("Before crash: "~to!(string)(getCurrentInstruction()));
+                // nextInstruction();
+                // Instruction varAssInstr = getCurrentInstruction();
                 
+                VariableAssignmentInstr varAssInstr = varDecInstr.getAssignmentInstr();
+
                 // Generate the code to emit
                 return varDecInstr.varType~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
             }
@@ -138,6 +158,8 @@ public final class DCodeEmitter : CodeEmitter
             gprintln("type: BinOpInstr");
 
             BinOpInstr binOpInstr = cast(BinOpInstr)instruction;
+
+            // TODO: I like having `lhs == rhs` for `==` or comparators but not spaces for `lhs+rhs`
 
             return transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
         }
@@ -198,6 +220,56 @@ public final class DCodeEmitter : CodeEmitter
             Value returnExpressionInstr = returnInstruction.getReturnExpInstr();
 
             return "return "~transform(returnExpressionInstr)~";";
+        }
+        /**
+        * If statements (IfStatementInstruction)
+        */
+        else if(cast(IfStatementInstruction)instruction)
+        {
+            IfStatementInstruction ifStatementInstruction = cast(IfStatementInstruction)instruction;
+
+            BranchInstruction[] branchInstructions = ifStatementInstruction.getBranchInstructions();
+            gprintln("Holla"~to!(string)(branchInstructions));
+
+            string emit;
+
+            for(ulong i = 0; i < branchInstructions.length; i++)
+            {
+                BranchInstruction curBranchInstr = branchInstructions[i];
+
+                if(curBranchInstr.hasConditionInstr())
+                {
+                    Value conditionInstr = cast(Value)curBranchInstr.getConditionInstr();
+
+                    string hStr = (i == 0) ? "if" : genTabs(transformDepth)~"else if";
+
+                    emit~=hStr~"("~transform(conditionInstr)~")\n";
+
+                    emit~=genTabs(transformDepth)~"{\n";
+
+                    foreach(Instruction branchBodyInstr; curBranchInstr.getBodyInstructions())
+                    {
+                        emit~=genTabs(transformDepth)~"\t"~transform(branchBodyInstr)~"\n";
+                    }
+
+                    emit~=genTabs(transformDepth)~"}\n";
+                }
+                else
+                {
+                    emit~=genTabs(transformDepth)~"else\n";
+
+                    emit~=genTabs(transformDepth)~"{\n";
+
+                    foreach(Instruction branchBodyInstr; curBranchInstr.getBodyInstructions())
+                    {
+                        emit~=genTabs(transformDepth)~"\t"~transform(branchBodyInstr)~"\n";
+                    }
+
+                    emit~=genTabs(transformDepth)~"}\n";
+                }
+            }
+
+            return emit;
         }
 
         return "<TODO: Base emit: "~to!(string)(instruction)~">";
@@ -379,6 +451,8 @@ public final class DCodeEmitter : CodeEmitter
     {
         //TODO: Implement me
 
+        if(cmp(typeChecker.getModule().getName(), "simple_functions") == 0)
+        {
         // NOTE: Remove this printf
         file.writeln(`
 // NOTE: The below is testing code and should be removed
@@ -390,6 +464,16 @@ int main()
     printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
     return 0;
 }`);
+        }
+        else
+        {
+            file.writeln(`
+int main()
+{
+    return 0;
+}
+`);
+        }
     }
 
 

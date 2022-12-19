@@ -80,15 +80,26 @@ public final class VariableDeclaration : StorageDeclaration
     /* Type of the variable being declared */
     public const string varType;
 
+    /* VariableAssignmentInstr-instruction to be assigned */
+    private VariableAssignmentInstr varAssInstr;
+
     //TODO: This must take in type information
-    this(string varName, byte len, string varType)
+    this(string varName, byte len, string varType, VariableAssignmentInstr varAssInstr)
     {
         this.varName = varName;
         this.length = len;
         this.varType = varType;
 
+        this.varAssInstr = varAssInstr;
+
         addInfo = "varName: "~varName;
     }
+
+    public VariableAssignmentInstr getAssignmentInstr()
+    {
+        return varAssInstr;
+    }
+
 }
 
 public final class FetchValueVar : Value
@@ -287,5 +298,51 @@ public final class ReturnInstruction : Instruction
     public Value getReturnExpInstr()
     {
         return returnExprInstr;
+    }
+}
+
+public final class IfStatementInstruction : Instruction
+{
+    private BranchInstruction[] branchInstructions;
+
+    this(BranchInstruction[] branchInstructions)
+    {
+        this.branchInstructions = branchInstructions;
+
+        addInfo = "Branches: "~to!(string)(branchInstructions);
+    }
+
+    public BranchInstruction[] getBranchInstructions()
+    {
+        return branchInstructions;
+    }
+}
+
+public final class BranchInstruction : Instruction
+{
+    private Value branchConditionInstr;
+    private Instruction[] bodyInstructions;
+
+    this(Value conditionInstr, Instruction[] bodyInstructions)
+    {
+        this.branchConditionInstr = conditionInstr;
+        this.bodyInstructions = bodyInstructions;
+
+        addInfo = "CondInstr: "~to!(string)(branchConditionInstr)~", BBodyInstrs: "~to!(string)(bodyInstructions);
+    }
+
+    public bool hasConditionInstr()
+    {
+        return !(branchConditionInstr is null);
+    }
+
+    public Value getConditionInstr()
+    {
+        return branchConditionInstr;
+    }
+
+    public Instruction[] getBodyInstructions()
+    {
+        return bodyInstructions;
     }
 }

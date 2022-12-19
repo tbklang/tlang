@@ -299,6 +299,11 @@ public class DNode
 
         return true;
     }
+
+    public override string toString()
+    {
+        return "[DNode: "~to!(string)(entity)~"]";
+    }
 }
 
 
@@ -697,9 +702,12 @@ public class DNodeGenerator
             /* What we need to do is set the variable itself me thinks */
             /* NOTE: But the above seems to also be needed */
 
+            /* FIXME: Remove the context sets below */
+
             /* NOTE: Fix is below I think (it doesn't crash then) */
             /* Set context for expression and the variable itself */
             varExp.setContext(context);
+            gprintln("Context (after): "~to!(string)(varExp.getContext().getContainer()));
             Entity bruh = tc.getResolver().resolveBest(context.getContainer(), path);
             bruh.setContext(context);
           
@@ -1171,12 +1179,15 @@ public class DNodeGenerator
             gprintln("generalPass(): Processing entity: "~entity.toString());
 
             Entity ent = cast(Entity)entity;
-            if(ent && ent.getModifierType() != InitScope.STATIC && ignoreInitScope)
-            {
-                writeln("Did we just skip someone?");
-                writeln(ent);
-                continue;
-            }
+            // NOTE: COme back to and re-enable when this makes sense (IF it even needs to be here)
+            // if(ent && ent.getModifierType() != InitScope.STATIC && ignoreInitScope)
+            // {
+            //     writeln("Did we just skip someone?");
+            //     writeln("InitScope: "~to!(string)(ent.getModifierType()));
+            //     writeln(ent);
+            //     //TODO: Come back to this and check it!!!!! Maybe this can be removed!
+            //     continue;
+            // }
 
             /**
             * Variable paremeters (for functions)
@@ -1243,24 +1254,8 @@ public class DNodeGenerator
                 }
 
 
-                /* Set this variable as a dependency of this module */
-                // node.needs(variableDNode);
-
                 /* Set as visited */
                 variableDNode.markVisited();
-
-
-                /**
-                * FIXME
-                *
-                * I propose a major restructuring of variable and assignments
-                * along with typecheck and the way it does things. It doesn't
-                * make sense that varNode -> (depends on) varAss. No, varAss
-                * depends on varNode. Doing so would also then give us
-                * the correct ordering and NO swapping would be required.
-                *
-                */
-
 
                 /* If there is an assignment attached to this */
                 if(variable.getAssignment())
@@ -1278,21 +1273,12 @@ public class DNodeGenerator
                     VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
                     varAssignNode.needs(expressionNode);
 
-                    /* This assignment is now dependent on the variable declaration */
-                    varAssignNode.needs(variableDNode);
-
-                    /* The current container is dependent on this running */
-                    node.needs(varAssignNode);
-                    continue;
-                }
-                /* If there is no assignment */
-                else
-                {
-                    /* The current container is dependent on this variable declaration */
-                    node.needs(variableDNode);
+                    /* The variable declaration is dependant on the assignment */
+                    variableDNode.needs(varAssignNode);
                 }
 
-                
+                /* The current container is dependent on this variable declaration */
+                node.needs(variableDNode);
             }
             /**
             * Variable asignments
@@ -1365,7 +1351,56 @@ public class DNodeGenerator
                 /* Make this container depend on this return statement */
                 node.needs(returnStatementDNode);
             }
+            /**
+            * If statements
+            */
+            else if(cast(IfStatement)entity)
+            {
+                IfStatement ifStatement = cast(IfStatement)entity;
+                ifStatement.setContext(context);
+                DNode ifStatementDNode = pool(ifStatement);
 
+                /* Add each branch as a dependency */
+                foreach(Branch branch; ifStatement.getBranches())
+                {
+                    DNode branchDNode = pool(branch);
+                    // Set context of branch (it is parented by the IfStmt)
+                    // NOTE: This is dead code as the above is done by Parser and
+                    // we need not set context here, only matters at the generalPass
+                    // call later (context being passed in) as a starting point
+                    branch.setContext(new Context(ifStatement, context.initScope));
+
+                    // Extract the potential branch condition
+                    Expression branchCondition = branch.getCondition();
+
+                    // Check if this branch has a condition
+                    if(!(branchCondition is null))
+                    {
+                        // We use container of IfStmt and nt IfStmt otself as nothing can really be
+                        // contained in it that the condition expression would be able to lookup
+                        DNode branchConditionDNode = expressionPass(branchCondition, context);
+                        branchDNode.needs(branchConditionDNode);
+                    }
+
+                    gprintln("branch parentOf(): "~to!(string)(branch.parentOf()));
+                    assert(branch.parentOf());
+                    gprintln("branch generalPass(context="~to!(string)(context.getContainer())~")");
+
+                    // When generalPass()'ing a branch's body we don't want to pass in `context`
+                    // as that is containing the branch container and hence we skip anything IN the
+                    // branch container
+                    // NOTE: Check initScope
+                    Context branchContext = new Context(branch, context.initScope);
+                    DNode branchStatementsDNode = generalPass(branch, branchContext);
+                    branchDNode.needs(branchStatementsDNode);
+
+                    /* Make the if statement depend on this branch */
+                    ifStatementDNode.needs(branchDNode);
+                }
+
+                /* Make this container depend on this if statement */
+                node.needs(ifStatementDNode);
+            }
         }
 
         return node;

@@ -13,6 +13,7 @@ import compiler.symbols.typing.core;
 import compiler.typecheck.dependency.core;
 import compiler.codegen.instruction;
 import std.container.slist;
+import std.algorithm : reverse;
 
 /**
 * The Parser only makes sure syntax
@@ -269,6 +270,23 @@ public final class TypeChecker
             codeQueue.removeFront();
         }
         
+        return poppedInstr;
+    }
+
+    /* Pops from the tail of the code queue and returns it */
+    public Instruction tailPopInstr()
+    {
+        Instruction poppedInstr;
+
+        if(!codeQueue.empty)
+        {
+            // Perhaps there is a nicer way to tail popping
+            codeQueue.reverse();
+            poppedInstr = codeQueue.front();
+            codeQueue.removeFront();
+            codeQueue.reverse();
+        }
+
         return poppedInstr;
     }
 
@@ -761,7 +779,7 @@ public final class TypeChecker
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
             varAssInstr.context = variableAssignmentContext;
             
-            addInstrB(varAssInstr);
+            addInstr(varAssInstr);
         }
         /* TODO: Add support */
         /**
@@ -782,7 +800,21 @@ public final class TypeChecker
             Variable variablePNode = cast(Variable)dnode.getEntity();
             gprintln("HELLO FELLA");
             string variableName = resolver.generateName(modulle, variablePNode);
-            VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variablePNode.getType());
+            gprintln("HELLO FELLA (name): "~variableName);
+            
+
+
+            // CHeck if this variable declaration has an assignment attached
+            VariableAssignmentInstr assignmentInstr;
+            if(variablePNode.getAssignment())
+            {
+                Instruction poppedInstr = popInstr();
+                assignmentInstr = cast(VariableAssignmentInstr)poppedInstr;
+                assert(assignmentInstr);
+            }
+
+
+            VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variablePNode.getType(), assignmentInstr);
 
             /* NEW CODE (9th November 2021) Set the context */
             varDecInstr.context = variablePNode.context;
@@ -791,7 +823,7 @@ public final class TypeChecker
             addInstrB(varDecInstr);
 
             
-
+            
             
         }
         /* TODO: Add class init, see #8 */
@@ -835,6 +867,8 @@ public final class TypeChecker
                 vAInstr.context = vasa.getContext();
 
                 addInstrB(vAInstr);
+
+                gprintln("VariableAssignmentStdAlone", DebugType.ERROR);
             }
             /**
             * Return statement (ReturnStmt)
@@ -857,6 +891,92 @@ public final class TypeChecker
                 ReturnInstruction returnInstr = new ReturnInstruction(returnExpressionInstr);
                 returnInstr.context = returnStatement.getContext();
                 addInstrB(returnInstr);
+            }
+            /**
+            * If statement (IfStatement)
+            */
+            else if(cast(IfStatement)statement)
+            {
+                IfStatement ifStatement = cast(IfStatement)statement;
+                BranchInstruction[] branchInstructions;
+
+                /* Get the if statement's branches */
+                Branch[] branches = ifStatement.getBranches();
+                assert(branches.length > 0);
+
+                /**
+                * 1. These would be added stack wise, so we need to pop them like backwards
+                * 2. Then a reversal at the end (generated instructions list)
+                *
+                * FIXME: EIther used siggned or the hack below lmao, out of boounds
+                */
+                for(ulong branchIdx = branches.length-1; true; branchIdx--)
+                {
+                    Branch branch = branches[branchIdx];
+
+                    // Pop off an expression instruction (if it exists)
+                    Value branchConditionInstr;
+                    if(branch.hasCondition())
+                    {
+                        Instruction instr = popInstr();
+                        gprintln("BranchIdx: "~to!(string)(branchIdx));
+                        gprintln("Instr is: "~to!(string)(instr));
+                        branchConditionInstr = cast(Value)instr;
+                        assert(branchConditionInstr);
+                    }
+
+                    // Get the number of body instructions to pop
+                    ulong bodyCount = branch.getBody().length;
+                    ulong i = 0;
+                    Instruction[] bodyInstructions;
+
+                    
+                    while(i < bodyCount)
+                    {
+                        Instruction bodyInstr = tailPopInstr();
+                        bodyInstructions~=bodyInstr;
+
+                        gprintln("tailPopp'd("~to!(string)(i)~"/"~to!(string)(bodyCount-1)~"): "~to!(string)(bodyInstr));
+
+                        i++;
+                    }
+
+                    // Reverse the body instructions (correct ordering)
+                    bodyInstructions=reverse(bodyInstructions);
+
+                    // Create the branch instruction (coupling the condition instruction and body instructions)
+                    branchInstructions~=new BranchInstruction(branchConditionInstr, bodyInstructions);
+
+                    
+
+                    if(branchIdx == 0)
+                    {
+                        break;
+                    }
+                }
+
+                // TODO: Reverse the list to be in the correct order (it was computed backwards)
+                branchInstructions=reverse(branchInstructions);
+
+                /**
+                * Code gen
+                *
+                * 1. Create the IfStatementInstruction containing the BranchInstruction[](s)
+                * 2. Set the context
+                * 3. Add the instruction
+                */
+                IfStatementInstruction ifStatementInstruction = new IfStatementInstruction(branchInstructions);
+                ifStatementInstruction.context = ifStatement.getContext();
+                addInstrB(ifStatementInstruction);
+
+                gprintln("If!");
+            }
+            /* Branch */
+            else if(cast(Branch)statement)
+            {
+                Branch branch = cast(Branch)statement;
+
+                gprintln("Look at that y'all, cause this is it: "~to!(string)(branch));
             }
             /* Case of no matches */
             else

@@ -163,6 +163,13 @@ public final class Lexer
                 /* Check for case of `==` (where we are on the first `=` sign) */
                 if(currentChar == '=' && isForward() && sourceCode[position+1] == '=')
                 {
+                    /* Flush any current token (if exists) */
+                    if(currentToken.length)
+                    {
+                        currentTokens ~= new Token(currentToken, line, column);
+                        currentToken = "";
+                    }
+
                     // Create the `==` token
                     currentTokens ~= new Token("==", line, column);
 
@@ -808,6 +815,14 @@ unittest
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("==", 0, 0), new Token(",", 0, 0), new Token("=", 0, 0), new Token("==", 0, 0)]);
+
+    // Test flushing of previous token
+    import std.algorithm.comparison;
+    sourceCode = "i==i=\n";
+    currentLexer = new Lexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [new Token("i", 0, 0), new Token("==", 0, 0), new Token("i", 0, 0), new Token("=", 0, 0)]);
 }
 
 /**

@@ -107,13 +107,20 @@ public final class Parser
     * Parses if statements
     *
     * TODO: Check kanban
+    * TOOD: THis should return something
     */
-    private void parseIf()
+    private IfStatement parseIf()
     {
         gprintln("parseIf(): Enter", DebugType.WARNING);
 
+        IfStatement ifStmt;
+        Branch[] branches;
+
         while (hasTokens())
-        {        
+        {
+            Expression currentBranchCondition;
+            Statement[] currentBranchBody;
+
             /* This will only be called once (it is what caused a call to parseIf()) */
             if (getSymbolType(getCurrentToken()) == SymbolType.IF)
             {
@@ -125,7 +132,7 @@ public final class Parser
                 nextToken();
 
                 /* Parse an expression (for the condition) */
-                parseExpression();
+                currentBranchCondition = parseExpression();
                 expect(SymbolType.RBRACE, getCurrentToken());
 
                 /* Opening { */
@@ -133,9 +140,14 @@ public final class Parser
                 expect(SymbolType.OCURLY, getCurrentToken());
 
                 /* Parse the if' statement's body AND expect a closing curly */
-                parseBody();
+                currentBranchBody = parseBody();
                 expect(SymbolType.CCURLY, getCurrentToken());
                 nextToken();
+
+                /* Create a branch node */
+                Branch branch = new Branch(currentBranchCondition, currentBranchBody);
+                parentToContainer(branch, currentBranchBody);
+                branches ~= branch;
             }
             /* If we get an else as the next symbol */
             else if (getSymbolType(getCurrentToken()) == SymbolType.ELSE)
@@ -154,7 +166,7 @@ public final class Parser
                     nextToken();
 
                     /* Parse an expression (for the condition) */
-                    parseExpression();
+                    currentBranchCondition = parseExpression();
                     expect(SymbolType.RBRACE, getCurrentToken());
 
                     /* Opening { */
@@ -162,17 +174,27 @@ public final class Parser
                     expect(SymbolType.OCURLY, getCurrentToken());
 
                     /* Parse the if' statement's body AND expect a closing curly */
-                    parseBody();
+                    currentBranchBody = parseBody();
                     expect(SymbolType.CCURLY, getCurrentToken());
                     nextToken();
+
+                    /* Create a branch node */
+                    Branch branch = new Branch(currentBranchCondition, currentBranchBody);
+                    parentToContainer(branch, currentBranchBody);
+                    branches ~= branch;
                 }
                 /* Check for opening curly (just an "else" statement) */
                 else if (getSymbolType(getCurrentToken()) == SymbolType.OCURLY)
                 {
                     /* Parse the if' statement's body (starting with `{` AND expect a closing curly */
-                    parseBody();
+                    currentBranchBody = parseBody();
                     expect(SymbolType.CCURLY, getCurrentToken());
                     nextToken();
+
+                    /* Create a branch node */
+                    Branch branch = new Branch(null, currentBranchBody);
+                    parentToContainer(branch, currentBranchBody);
+                    branches ~= branch;
 
                     /* Exit, this is the end of the if statement as an else is reached */
                     break;
@@ -191,6 +213,13 @@ public final class Parser
         }
 
         gprintln("parseIf(): Leave", DebugType.WARNING);
+
+        /* Create the if statement with the branches */
+        ifStmt = new IfStatement(branches);
+
+        parentToContainer(ifStmt, cast(Statement[])branches);
+
+        return ifStmt;
     }
 
     private void parseWhile()
@@ -490,7 +519,7 @@ public final class Parser
             /* If it is a branch */
             else if (symbol == SymbolType.IF)
             {
-                parseIf();
+                statements ~= parseIf();
             }
             /* If it is a while loop */
             else if (symbol == SymbolType.WHILE)
