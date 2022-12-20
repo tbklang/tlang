@@ -3,7 +3,6 @@ module oopTest;
 Person p1 = new Person();
 Person p2;
 
-p1();
 discard 1+1;
 discard p1;
 discard p1();
