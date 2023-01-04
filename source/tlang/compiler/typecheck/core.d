@@ -955,7 +955,7 @@ public final class TypeChecker
                     }
                 }
 
-                // TODO: Reverse the list to be in the correct order (it was computed backwards)
+                // Reverse the list to be in the correct order (it was computed backwards)
                 branchInstructions=reverse(branchInstructions);
 
                 /**
@@ -970,6 +970,50 @@ public final class TypeChecker
                 addInstrB(ifStatementInstruction);
 
                 gprintln("If!");
+            }
+            /**
+            * While loop (WhileLoop)
+            */
+            else if(cast(WhileLoop)statement)
+            {
+                WhileLoop whileLoop = cast(WhileLoop)statement;
+
+                Branch branch = whileLoop.getBranch();
+
+                /* The condition `Value` instruction should be on the stack */
+                Value valueInstrCondition = cast(Value)popInstr();
+                assert(valueInstrCondition);
+
+                /* Process the body of the while-loop with tail-popping followed by a reverse */
+                Instruction[] bodyInstructions;
+                ulong bodyLen = branch.getBody().length;
+                ulong bodyIdx = 0;
+            
+                while(bodyIdx < bodyLen)
+                {
+                    Instruction bodyInstr = tailPopInstr();
+                    bodyInstructions~=bodyInstr;
+                    bodyIdx++;
+                }
+
+                // Reverse the list to be in the correct order (it was computed backwards)
+                bodyInstructions=reverse(bodyInstructions);
+
+
+                // Create a branch instruction coupling the condition instruction + body instructions (in corrected order)
+                BranchInstruction branchInstr = new BranchInstruction(valueInstrCondition, bodyInstructions);
+
+
+                /**
+                * Code gen
+                *
+                * 1. Create the WhileLoopInstruction containing the BranchInstruction
+                * 2. Set the context
+                * 3. Add the instruction
+                */
+                WhileLoopInstruction whileLoopInstruction = new WhileLoopInstruction(branchInstr);
+                whileLoopInstruction.context = whileLoop.getContext();
+                addInstrB(whileLoopInstruction);
             }
             /* Branch */
             else if(cast(Branch)statement)

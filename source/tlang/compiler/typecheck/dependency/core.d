@@ -1401,6 +1401,55 @@ public class DNodeGenerator
                 /* Make this container depend on this if statement */
                 node.needs(ifStatementDNode);
             }
+            /**
+            * While loops
+            */
+            else if(cast(WhileLoop)entity)
+            {
+                WhileLoop whileLoopStmt = cast(WhileLoop)entity;
+                whileLoopStmt.setContext(context);
+                DNode whileLoopDNode = pool(whileLoopStmt);
+
+                // Extract the branch (body Statement[] + condition)
+                Branch whileBranch = whileLoopStmt.getBranch();
+                DNode branchDNode = pool(whileBranch);
+                gprintln("Branch: "~to!(string)(whileBranch));
+
+                // If this is a while-loop
+                if(!whileLoopStmt.isDoWhile)
+                {
+                    gprintln("Logan", DebugType.ERROR);
+
+                    // Extract the condition
+                    Expression branchCondition = whileBranch.getCondition();
+
+                    // Pass the expression
+                    DNode branchConditionDNode = expressionPass(branchCondition, context);
+
+                    // Make the branch dependent on this expression's evaluation
+                    branchDNode.needs(branchConditionDNode);
+
+                    
+                    // Now pass over the statements in the branch's body
+                    Context branchContext = new Context(whileBranch, InitScope.STATIC);
+                    DNode branchBodyDNode = generalPass(whileBranch, branchContext);
+
+                    // Finally make the branchDNode depend on the body dnode (above)
+                    branchDNode.needs(branchBodyDNode);
+                }
+                // If this is a do-while loop
+                else
+                {
+                    gprintln("Implement do-while loops please", DebugType.ERROR);
+                    assert(false);
+                }
+
+                /* Make the while-loop/do-while loop depend on the branchDNode */
+                whileLoopDNode.needs(branchDNode);
+
+                /* Make the node of this generalPass we are in depend on the whileLoop's DNode */
+                node.needs(whileLoopDNode);
+            }
         }
 
         return node;

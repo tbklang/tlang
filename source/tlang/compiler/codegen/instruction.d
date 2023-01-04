@@ -318,6 +318,23 @@ public final class IfStatementInstruction : Instruction
     }
 }
 
+public final class WhileLoopInstruction : Instruction
+{
+    private BranchInstruction branchInstruction;
+
+    this(BranchInstruction branchInstruction)
+    {
+        this.branchInstruction = branchInstruction;
+
+        addInfo = "Branch: "~to!(string)(branchInstruction);
+    }
+
+    public BranchInstruction getBranchInstruction()
+    {
+        return branchInstruction;
+    }
+}
+
 public final class BranchInstruction : Instruction
 {
     private Value branchConditionInstr;

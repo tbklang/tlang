@@ -217,14 +217,18 @@ public final class Parser
         /* Create the if statement with the branches */
         ifStmt = new IfStatement(branches);
 
+        /* Parent the branches to the IfStatement */
         parentToContainer(ifStmt, cast(Statement[])branches);
 
         return ifStmt;
     }
 
-    private void parseWhile()
+    private WhileLoop parseWhile()
     {
         gprintln("parseWhile(): Enter", DebugType.WARNING);
+
+        Expression branchCondition;
+        Statement[] branchBody;
 
         /* Pop off the `while` */
         nextToken();
@@ -234,7 +238,7 @@ public final class Parser
         nextToken();
 
         /* Parse an expression (for the condition) */
-        parseExpression();
+        branchCondition = parseExpression();
         expect(SymbolType.RBRACE, getCurrentToken());
 
         /* Openening { */
@@ -242,11 +246,26 @@ public final class Parser
         expect(SymbolType.OCURLY, getCurrentToken());
 
         /* Parse the while' statement's body AND expect a closing curly */
-        parseBody();
+        branchBody = parseBody();
         expect(SymbolType.CCURLY, getCurrentToken());
         nextToken();
 
+
+        /* Create a Branch node coupling the condition and body statements */
+        Branch branch = new Branch(branchCondition, branchBody);
+
+        /* Parent the branchBody to the branch */
+        parentToContainer(branch, branchBody);
+
+        /* Create the while loop with the single branch */
+        WhileLoop whileLoop = new WhileLoop(branch);
+
+        /* Parent the branch to the WhileLoop */
+        parentToContainer(whileLoop, [branch]);
+
         gprintln("parseWhile(): Leave", DebugType.WARNING);
+
+        return whileLoop;
     }
 
     public VariableAssignmentStdAlone parseAssignment()
@@ -524,7 +543,7 @@ public final class Parser
             /* If it is a while loop */
             else if (symbol == SymbolType.WHILE)
             {
-                parseWhile();
+                statements ~= parseWhile();
             }
             /* If it is a function call (further inspection needed) */
             else if (symbol == SymbolType.IDENT_TYPE)

@@ -271,6 +271,34 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        /**
+        * While loops (WhileLoopInstruction)
+        */
+        else if(cast(WhileLoopInstruction)instruction)
+        {
+            WhileLoopInstruction whileLoopInstr = cast(WhileLoopInstruction)instruction;
+
+            BranchInstruction branchInstr = whileLoopInstr.getBranchInstruction();
+            Value conditionInstr = branchInstr.getConditionInstr();
+            Instruction[] bodyInstructions = branchInstr.getBodyInstructions();
+
+            string emit;
+
+            /* Generate the `while(<expr>)` and opening curly brace */
+            emit = "while("~transform(conditionInstr)~")\n";
+            emit~=genTabs(transformDepth)~"{\n"; 
+
+            /* Transform each body statement */
+            foreach(Instruction curBodyInstr; bodyInstructions)
+            {
+                emit~=genTabs(transformDepth)~"\t"~transform(curBodyInstr)~"\n";
+            }
+
+            /* Closing curly brace */
+            emit~=genTabs(transformDepth)~"}";
+
+            return emit;
+        }
 
         return "<TODO: Base emit: "~to!(string)(instruction)~">";
     }
@@ -451,17 +479,35 @@ public final class DCodeEmitter : CodeEmitter
     {
         //TODO: Implement me
 
+        // Test for `simple_functions.t` (function call testing)
         if(cmp(typeChecker.getModule().getName(), "simple_functions") == 0)
         {
-        // NOTE: Remove this printf
-        file.writeln(`
-// NOTE: The below is testing code and should be removed
+            file.writeln(`
 #include<stdio.h>
+#include<assert.h>
 int main()
 {
+    assert(t_7b6d477c5859059f16bc9da72fc8cc3b == 22);
     printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
+    
     banana(1);
+    assert(t_7b6d477c5859059f16bc9da72fc8cc3b == 72);
     printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "simple_while") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = function(3);
+    printf("result: %d\n", result);
+    assert(result == 3);
+
     return 0;
 }`);
         }
