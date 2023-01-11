@@ -505,6 +505,18 @@ public string getCharacter(SymbolType symbolIn)
     {
         return "<";
     }
+    else if(symbolIn == SymbolType.SMALLER_THAN_OR_EQUALS)
+    {
+        return "<=";
+    }
+    else if(symbolIn == SymbolType.GREATER_THAN)
+    {
+        return ">";
+    }
+    else if(symbolIn == SymbolType.GREATER_THAN_OR_EQUALS)
+    {
+        return ">=";
+    }
     else
     {
         gprintln("getCharacter: No back-mapping for "~to!(string)(symbolIn), DebugType.ERROR);
