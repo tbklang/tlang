@@ -645,7 +645,6 @@ public final class Parser
             {
                 /* Parse the class and add its statements */
                 statements ~= parseClass();
-                gprintln("Ablo: "~getCurrentToken().toString());
             }
             /* If it is a struct definition */
             else if(symbol == SymbolType.STRUCT)
