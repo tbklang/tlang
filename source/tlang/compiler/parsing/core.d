@@ -241,7 +241,7 @@ public final class Parser
         branchCondition = parseExpression();
         expect(SymbolType.RBRACE, getCurrentToken());
 
-        /* Openening { */
+        /* Opening { */
         nextToken();
         expect(SymbolType.OCURLY, getCurrentToken());
 
@@ -268,7 +268,124 @@ public final class Parser
         return whileLoop;
     }
 
-    public VariableAssignmentStdAlone parseAssignment()
+    private WhileLoop parseDoWhile()
+    {
+        gprintln("parseDoWhile(): Enter", DebugType.WARNING);
+
+        Expression branchCondition;
+        Statement[] branchBody;
+
+        /* Pop off the `do` */
+        nextToken();
+
+        /* Expect an opening curly `{` */
+        expect(SymbolType.OCURLY, getCurrentToken());
+
+        /* Parse the do-while statement's body AND expect a closing curly */
+        branchBody = parseBody();
+        expect(SymbolType.CCURLY, getCurrentToken());
+        nextToken();
+
+        /* Expect a `while` */
+        expect(SymbolType.WHILE, getCurrentToken());
+        nextToken();
+
+        /* Expect an opening brace `(` */
+        expect(SymbolType.LBRACE, getCurrentToken());
+        nextToken();
+
+        /* Parse the condition */
+        branchCondition = parseExpression();
+        expect(SymbolType.RBRACE, getCurrentToken());
+        nextToken();
+
+        /* Expect a semicolon */
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+        nextToken();
+
+        /* Create a Branch node coupling the condition and body statements */
+        Branch branch = new Branch(branchCondition, branchBody);
+
+        /* Parent the branchBody to the branch */
+        parentToContainer(branch, branchBody);
+
+        /* Create the while loop with the single branch and marked as a do-while loop */
+        WhileLoop whileLoop = new WhileLoop(branch, true);
+
+        /* Parent the branch to the WhileLoop */
+        parentToContainer(whileLoop, [branch]);
+
+        gprintln("parseDoWhile(): Leave", DebugType.WARNING);
+
+        return whileLoop;
+    }
+
+    // TODO: Finish implementing this
+    // TODO: We need to properly parent and build stuff
+    // TODO: We ASSUME there is always pre-run, condition and post-iteration
+    public ForLoop parseFor()
+    {
+        gprintln("parseFor(): Enter", DebugType.WARNING);
+
+        Expression branchCondition;
+        Statement[] branchBody;
+
+        /* Pop of the token `for` */
+        nextToken();
+
+        /* Expect an opening smooth brace `(` */
+        expect(SymbolType.LBRACE, getCurrentToken());
+        nextToken();
+
+        /* Expect a single Statement */
+        // TODO: Make optional, add parser lookahead check
+        Statement preRunStatement = parseStatement();
+        
+        /* Expect an expression */
+        // TODO: Make optional, add parser lookahead check
+        branchCondition = parseExpression();
+
+        /* Expect a semi-colon, then move on */
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+        nextToken();
+
+        /* Expect a post-iteration statement with `)` as terminator */
+        // TODO: Make optional, add parser lookahead check
+        Statement postIterationStatement = parseStatement(SymbolType.RBRACE);
+        
+        /* Expect an opening curly `{` and parse the body */
+        expect(SymbolType.OCURLY, getCurrentToken());
+        branchBody = parseBody();
+
+        /* Expect a closing curly and move on */
+        expect(SymbolType.CCURLY, getCurrentToken());
+        nextToken();
+
+        gprintln("Yo: "~getCurrentToken().toString());
+
+        /* Create the Branch coupling the body statements (+post iteration statement) and condition */
+        Branch forBranch = new Branch(branchCondition, branchBody~postIterationStatement);
+
+        /* Create the for loop */
+        ForLoop forLoop = new ForLoop(forBranch, preRunStatement);
+
+        // TODO: Set `forLoop.hasPostIterate`
+
+        /* Parent the pre-run statement to its for loop */
+        parentToContainer(forLoop, [preRunStatement]);
+
+        /* Parent the body of the branch (body statements + post iteration statement) */
+        parentToContainer(forBranch, branchBody~postIterationStatement);
+
+        /* Parent the Branch to its for loop */
+        parentToContainer(forLoop, [forBranch]);
+
+        gprintln("parseFor(): Leave", DebugType.WARNING);
+
+        return forLoop;
+    }
+
+    public VariableAssignmentStdAlone parseAssignment(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
     {
         /* Generated Assignment statement */
         VariableAssignmentStdAlone assignment;
@@ -286,15 +403,18 @@ public final class Parser
         assignment = new VariableAssignmentStdAlone(identifier, assignmentExpression);
 
         /* TODO: Support for (a=1)? */
-        /* Expect a semicolon */
-        expect(SymbolType.SEMICOLON, getCurrentToken());
+        /* Expect a the terminating symbol */
+        // expect(SymbolType.SEMICOLON, getCurrentToken());
+        expect(terminatingSymbol, getCurrentToken());
+
+        /* Move off terminating symbol */
         nextToken();
         
 
         return assignment;
     }
 
-    public Statement parseName()
+    public Statement parseName(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
     {
         Statement ret;
 
@@ -328,7 +448,7 @@ public final class Parser
         else if(type == SymbolType.ASSIGN)
         {
             previousToken();
-            ret = parseAssignment();
+            ret = parseAssignment(terminatingSymbol);
         }
         /* Any other case */
         else
@@ -511,6 +631,12 @@ public final class Parser
         */
         bool closedBeforeExit;
 
+        // TODO: Once issue #75 is closed, remove this
+        bool useParseStatement = true;
+
+        // NOTE: See issue #75 - could we make a general `parseStatement()`
+        // and then call that in a loop here rather? This would make certain things
+        // a little easier like where we need to parse only a single statement
         while (hasTokens())
         {
             /* Get the token */
@@ -519,14 +645,47 @@ public final class Parser
 
             gprintln("parseBody(): SymbolType=" ~ to!(string)(symbol));
 
+            // TODO: Once issue #75 is closed, remove this
+            if(useParseStatement)
+            {
+                /* If it is a class definition */
+                if(symbol == SymbolType.CLASS)
+                {
+                    /* Parse the class and add its statements */
+                    statements ~= parseClass();
+                }
+                /* If it is a struct definition */
+                else if(symbol == SymbolType.STRUCT)
+                {
+                    /* Parse the struct and add it to the statements */
+                    statements ~= parseStruct();
+                }
+                /* If it is closing the body `}` */
+                else if(symbol == SymbolType.CCURLY)
+                {
+                    gprintln("parseBody(): Exiting body by }", DebugType.WARNING);
+
+                    closedBeforeExit = true;
+                    break;
+                }
+                else
+                {
+                    statements ~= parseStatement();
+                    continue;
+                }
+            }
+
+            // TODO: Once issue #75 is closed, remove the below checks
+            // NOTE: Below coce may become out-dated as we try implement the above
+
             /* If it is a type */
-            if (symbol == SymbolType.IDENT_TYPE)
+            if(symbol == SymbolType.IDENT_TYPE)
             {
                 /* Might be a function, might be a variable, or assignment */
                 statements ~= parseName();
             }
             /* If it is an accessor */
-            else if (isAccessor(tok))
+            else if(isAccessor(tok))
             {
                 statements ~= parseAccessor();
             }
@@ -536,33 +695,36 @@ public final class Parser
                 statements ~= parseInitScope();
             }
             /* If it is a branch */
-            else if (symbol == SymbolType.IF)
+            else if(symbol == SymbolType.IF)
             {
                 statements ~= parseIf();
             }
             /* If it is a while loop */
-            else if (symbol == SymbolType.WHILE)
+            else if(symbol == SymbolType.WHILE)
             {
                 statements ~= parseWhile();
             }
+            /* If it is a do-while loop */
+            else if(symbol == SymbolType.DO)
+            {
+                statements ~= parseDoWhile();
+            }
             /* If it is a function call (further inspection needed) */
-            else if (symbol == SymbolType.IDENT_TYPE)
+            else if(symbol == SymbolType.IDENT_TYPE)
             {
                 /* Function calls can have dotted identifiers */
                 parseFuncCall();
             }
             /* If it is closing the body `}` */
-            else if (symbol == SymbolType.CCURLY)
+            else if(symbol == SymbolType.CCURLY)
             {
-                // gprintln("Error");
-                // nextToken();
                 gprintln("parseBody(): Exiting body by }", DebugType.WARNING);
 
                 closedBeforeExit = true;
                 break;
             }
             /* If it is a class definition */
-            else if (symbol == SymbolType.CLASS)
+            else if(symbol == SymbolType.CLASS)
             {
                 /* Parse the class and add its statements */
                 statements ~= parseClass();
@@ -1442,21 +1604,77 @@ public final class Parser
         }
     }
 
-    private void parseStatement()
+    // TODO: This ic currently dead code and ought to be used/implemented
+    private Statement parseStatement(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
     {
         gprintln("parseStatement(): Enter", DebugType.WARNING);
 
-        /* TODO: Implement parse statement */
+        /* Get the token */
+        Token tok = getCurrentToken();
+        SymbolType symbol = getSymbolType(tok);
 
-        /**
-        * TODO: We should remove the `;` from parseFuncCall
-        * And rather do the following here:
-        *
-        * 1. parseFuncCall()
-        * 2. expect(;)
-        */
+        gprintln("parseStatement(): SymbolType=" ~ to!(string)(symbol));
+
+        Statement statement;
+
+        /* If it is a type */
+        if(symbol == SymbolType.IDENT_TYPE)
+        {
+            /* Might be a function, might be a variable, or assignment */
+            statement = parseName(terminatingSymbol);
+        }
+        /* If it is an accessor */
+        else if(isAccessor(tok))
+        {
+            statement = parseAccessor();
+        }
+        /* If it is a modifier */
+        else if(isModifier(tok))
+        {
+            statement = parseInitScope();
+        }
+        /* If it is a branch */
+        else if(symbol == SymbolType.IF)
+        {
+            statement = parseIf();
+        }
+        /* If it is a while loop */
+        else if(symbol == SymbolType.WHILE)
+        {
+            statement = parseWhile();
+        }
+        /* If it is a do-while loop */
+        else if(symbol == SymbolType.DO)
+        {
+            statement = parseDoWhile();
+        }
+        /* If it is a for loop */
+        else if(symbol == SymbolType.FOR)
+        {
+            statement = parseFor();
+        }
+        /* If it is a function call (further inspection needed) */
+        else if(symbol == SymbolType.IDENT_TYPE)
+        {
+            /* Function calls can have dotted identifiers */
+            parseFuncCall();
+        }
+        /* If it is the return keyword */
+        //TODO: We should add a flag to prevent return being used in generla bodies? or wait we have a non parseBiody already
+        else if(symbol == SymbolType.RETURN)
+        {
+            /* Parse the return statement */
+            statement = parseReturn();
+        }
+        /* Error out */
+        else
+        {
+            expect("parseStatement(): Unknown symbol: " ~ getCurrentToken().getToken());
+        }
 
         gprintln("parseStatement(): Leave", DebugType.WARNING);
+
+        return statement;
     }
 
     private FunctionCall parseFuncCall()
@@ -1633,75 +1851,9 @@ public final class Parser
     }
 }
 
-// unittest
-// {
-//     /* TODO: Add some unit tests */
-//     import std.file;
-//     import std.stdio;
-//     import compiler.lexer;
-
-//     isUnitTest = true;
-
-//     string sourceFile = "source/tlang/testing/basic1.t";
-    
-//         File sourceFileFile;
-//         sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-//         ulong fileSize = sourceFileFile.size();
-//         byte[] fileBytes;
-//         fileBytes.length = fileSize;
-//         fileBytes = sourceFileFile.rawRead(fileBytes);
-//         sourceFileFile.close();
-
-    
-
-//         /* TODO: Open source file */
-//         string sourceCode = cast(string)fileBytes;
-//         // string sourceCode = "hello \"world\"|| ";
-//         //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
-//         // string sourceCode = "hello;";
-//         Lexer currentLexer = new Lexer(sourceCode);
-//         assert(currentLexer.performLex());
-        
-      
-//         Parser parser = new Parser(currentLexer.getTokens());
-//         parser.parse();
-// }
-
-
-unittest
-{
-    /* TODO: Add some unit tests */
-    import std.file;
-    import std.stdio;
-    import compiler.lexer;
-
-    isUnitTest = true;
-
-    // string sourceFile = "source/tlang/testing/basic1.t";
-    
-    //     File sourceFileFile;
-    //     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-    //     ulong fileSize = sourceFileFile.size();
-    //     byte[] fileBytes;
-    //     fileBytes.length = fileSize;
-    //     fileBytes = sourceFileFile.rawRead(fileBytes);
-    //     sourceFileFile.close();
-
-    
-
-    //     /* TODO: Open source file */
-    //     string sourceCode = cast(string)fileBytes;
-    //     // string sourceCode = "hello \"world\"|| ";
-    //     //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
-    //     // string sourceCode = "hello;";
-    //     Lexer currentLexer = new Lexer(sourceCode);
-    //     assert(currentLexer.performLex());
-        
-      
-    //     Parser parser = new Parser(currentLexer.getTokens());
-    //     parser.parse();
-}
-
+/**
+ * Basic Module test case
+ */
 unittest
 {
 
@@ -1709,23 +1861,10 @@ unittest
     import std.stdio;
     import compiler.lexer;
 
-    string sourceFile = "source/tlang/testing/simple1_module_positive.t";
-    
-    File sourceFileFile;
-    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-    ulong fileSize = sourceFileFile.size();
-    byte[] fileBytes;
-    fileBytes.length = fileSize;
-    fileBytes = sourceFileFile.rawRead(fileBytes);
-    sourceFileFile.close();
+    string sourceCode = `
+module myModule;
+`;
 
-
-
-    /* TODO: Open source file */
-    string sourceCode = cast(string)fileBytes;
-    // string sourceCode = "hello \"world\"|| ";
-    //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
-    // string sourceCode = "hello;";
     Lexer currentLexer = new Lexer(sourceCode);
     assert(currentLexer.performLex());
     
@@ -1754,20 +1893,28 @@ unittest
     import compiler.lexer;
     import compiler.typecheck.core;
 
-    string sourceFile = "source/tlang/testing/simple2_name_recognition.t";
-    
-    File sourceFileFile;
-    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
-    ulong fileSize = sourceFileFile.size();
-    byte[] fileBytes;
-    fileBytes.length = fileSize;
-    fileBytes = sourceFileFile.rawRead(fileBytes);
-    sourceFileFile.close();
+    string sourceCode = `
+module myModule;
 
+class myClass1
+{
+    class myClass1_1
+    {
+        int entity;
+    }
 
+    class myClass2
+    {
+        int inner;
+    }
+}
 
-    /* TODO: Open source file */
-    string sourceCode = cast(string)fileBytes;
+class myClass2
+{
+    int outer;
+} 
+`;
+
     Lexer currentLexer = new Lexer(sourceCode);
     assert(currentLexer.performLex());
     
@@ -1891,6 +2038,419 @@ unittest
         assert(cast(Variable)variableEntity);
     }
     catch(TError)
+    {
+        assert(false);
+    }
+}
+
+/**
+ * Function definition test case
+ */
+unittest
+{
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.typecheck.core;
+
+
+    string sourceCode = `
+module parser_function_def;
+
+int myFunction(int i, int j)
+{
+    int k = i + j;
+
+    return k+1;
+}
+`;
+
+
+    Lexer currentLexer = new Lexer(sourceCode);
+    assert(currentLexer.performLex());
+    
+    
+    Parser parser = new Parser(currentLexer.getTokens());
+    
+    try
+    {
+        Module modulle = parser.parse();
+
+        /* Module name must be parser_while */
+        assert(cmp(modulle.getName(), "parser_function_def")==0);
+        TypeChecker tc = new TypeChecker(modulle);
+
+        
+        /* Find the function named `myFunction` */
+        Entity func = tc.getResolver().resolveBest(modulle, "myFunction");
+        assert(func);
+        assert(cast(Function)func); // Ensure it is a Funciton
+
+        /* Get the function's body */
+        Container funcContainer = cast(Container)func;
+        assert(funcContainer);
+        Statement[] functionStatements = funcContainer.getStatements();
+
+        // Two parameters, 1 local and a return
+        assert(functionStatements.length == 4);
+
+        /* First statement should be a variable (param) */
+        VariableParameter varPar1 = cast(VariableParameter)functionStatements[0];
+        assert(varPar1);
+        assert(cmp(varPar1.getName(), "i") == 0);
+
+        /* Second statement should be a variable (param) */
+        VariableParameter varPar2 = cast(VariableParameter)functionStatements[1];
+        assert(varPar2);
+        assert(cmp(varPar2.getName(), "j") == 0);
+
+        /* ThirdFirst statement should be a variable (local) */
+        Variable varLocal = cast(Variable)functionStatements[2];
+        assert(varLocal);
+        assert(cmp(varLocal.getName(), "k") == 0);
+
+        /* Last statement should be a return */
+        assert(cast(ReturnStmt)functionStatements[3]);
+    }
+    catch(TError e)
+    {
+        assert(false);
+    }
+}
+
+/**
+ * While loop test case (nested)
+ */
+unittest
+{
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.typecheck.core;
+
+
+    string sourceCode = `
+module parser_while;
+
+void function()
+{
+    int i = 0;
+    while(i)
+    {
+        int p = i;
+
+        while(i)
+        {
+            int f;
+        }
+    }
+}
+`;
+
+
+    Lexer currentLexer = new Lexer(sourceCode);
+    assert(currentLexer.performLex());
+    
+    
+    Parser parser = new Parser(currentLexer.getTokens());
+    
+    try
+    {
+        Module modulle = parser.parse();
+
+        /* Module name must be parser_while */
+        assert(cmp(modulle.getName(), "parser_while")==0);
+        TypeChecker tc = new TypeChecker(modulle);
+
+        
+        /* Find the function named `function` */
+        Entity func = tc.getResolver().resolveBest(modulle, "function");
+        assert(func);
+        assert(cast(Function)func); // Ensure it is a Funciton
+
+        /* Get the function's body */
+        Container funcContainer = cast(Container)func;
+        assert(funcContainer);
+        Statement[] functionStatements = funcContainer.getStatements();
+        assert(functionStatements.length == 2);
+
+        /* Find the while loop within the function's body */
+        WhileLoop potentialWhileLoop;
+        foreach(Statement curStatement; functionStatements)
+        {
+            potentialWhileLoop = cast(WhileLoop)curStatement;
+
+            if(potentialWhileLoop)
+            {
+                break;
+            }
+        }
+
+        /* This must pass if we found the while loop */
+        assert(potentialWhileLoop);
+
+        /* Grab the branch of the while loop */
+        Branch whileBranch = potentialWhileLoop.getBranch();
+        assert(whileBranch);
+
+        /* Ensure that we have one statement in this branch's body and that it is a Variable and next is a while loop */
+        Statement[] whileBranchStatements = whileBranch.getStatements();
+        assert(whileBranchStatements.length == 2);
+        assert(cast(Variable)whileBranchStatements[0]);
+        assert(cast(WhileLoop)whileBranchStatements[1]);
+
+        /* The inner while loop also has a similiar structure, only one variable */
+        WhileLoop innerLoop = cast(WhileLoop)whileBranchStatements[1];
+        Branch innerWhileBranch = innerLoop.getBranch();
+        assert(innerWhileBranch);
+        Statement[] innerWhileBranchStatements = innerWhileBranch.getStatements();
+        assert(innerWhileBranchStatements.length == 1);
+        assert(cast(Variable)innerWhileBranchStatements[0]);
+    }
+    catch(TError e)
+    {
+        assert(false);
+    }
+}
+
+/**
+ * Do-while loop tests (TODO: Add this)
+ */
+
+/**
+ * For loop tests (TODO: Add this)
+ */
+/**
+ * While loop test case (nested)
+ */
+unittest
+{
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.typecheck.core;
+
+
+    string sourceCode = `
+module parser_for;
+
+void function()
+{
+    int i = 0;
+    for(int idx = i; idx < i; idx=idx+1)
+    {
+        i = i + 1;
+
+        for(int idxInner = idx; idxInner < idx; idxInner = idxInner +1)
+        {
+
+        }
+    }
+}
+`;
+
+
+    Lexer currentLexer = new Lexer(sourceCode);
+    assert(currentLexer.performLex());
+    
+    
+    Parser parser = new Parser(currentLexer.getTokens());
+    
+    try
+    {
+        Module modulle = parser.parse();
+
+        /* Module name must be parser_while */
+        assert(cmp(modulle.getName(), "parser_for")==0);
+        TypeChecker tc = new TypeChecker(modulle);
+
+        
+        /* Find the function named `function` */
+        Entity func = tc.getResolver().resolveBest(modulle, "function");
+        assert(func);
+        assert(cast(Function)func); // Ensure it is a Funciton
+
+        /* Get the function's body */
+        Container funcContainer = cast(Container)func;
+        assert(funcContainer);
+        Statement[] functionStatements = funcContainer.getStatements();
+        assert(functionStatements.length == 2);
+
+        /* First statement should be a variable declaration */
+        assert(cast(Variable)functionStatements[0]);
+
+        /* Next statement should be a for loop */
+        ForLoop outerLoop = cast(ForLoop)functionStatements[1];
+        assert(outerLoop);
+
+        /* Get the body of the for-loop which should be [preRun, Branch] */
+        Statement[] outerLoopBody = outerLoop.getStatements();
+        assert(outerLoopBody.length == 2);
+
+        /* We should have a preRun Statement */
+        assert(outerLoop.hasPreRunStatement());
+
+        /* The first should be the [preRun, ] which should be a Variable (declaration) */
+        Variable preRunVarDec = cast(Variable)(outerLoopBody[0]);
+        assert(preRunVarDec);
+
+        /* Next up is the branch */
+        Branch outerLoopBranch = cast(Branch)outerLoopBody[1];
+        assert(outerLoopBranch);
+
+        /* The branch should have a condition */
+        Expression outerLoopBranchCondition = outerLoopBranch.getCondition();
+        assert(outerLoopBranchCondition);
+
+        /* The branch should have a body made up of [varAssStdAlone, forLoop, postIteration] */
+        Statement[] outerLoopBranchBody = outerLoopBranch.getStatements();
+        assert(outerLoopBranchBody.length == 3);
+
+        /* Check for [varAssStdAlone, ] */
+        VariableAssignmentStdAlone outerLoopBranchBodyStmt1 = cast(VariableAssignmentStdAlone)outerLoopBranchBody[0];
+        assert(outerLoopBranchBodyStmt1);
+
+        /* Check for [, forLoop, ] */
+        ForLoop innerLoop = cast(ForLoop)outerLoopBranchBody[1];
+        assert(innerLoop);
+
+        /* Check for [, postIteration] */
+        VariableAssignmentStdAlone outerLoopBranchBodyStmt3 = cast(VariableAssignmentStdAlone)outerLoopBranchBody[2];
+        assert(outerLoopBranchBodyStmt3);
+
+
+        // /* The outer loop should have a Variable as pre-run Statement */
+        // Statement preRunStatement = outerLoop.getPreLoopStatement();
+        // assert(preRunStatement);
+        // assert(cast(Variable)preRunStatement);
+
+        // /* The outer loop should have a variable assignment as the post-iteration statement */
+        // Statement postIrerationStatement = outerLoop.getPreIterationStatement();
+        // assert(postIrerationStatement);
+        // assert(cast(VariableAssignmentStdAlone)postIrerationStatement);
+
+        // /* Extract the statements of the body of the outer loop */
+        // Branch outerLoopBranch = outerLoop.getBranch();
+        // assert(outerLoopBranch);
+        // Statement[] outerLoopBody = outerLoopBranch.getStatements();
+        // assert(outerLoopBody.length == 2);
+
+        // /* First statement is a VarAssStdAlone */
+        // assert(cast(VariableAssignmentStdAlone)outerLoopBody[0]);
+
+        // /* Second statement is a for loop */
+        // ForLoop innerLoop = cast(ForLoop)outerLoopBody[1];
+        // assert(innerLoop);
+
+        // /* The inner loop should have a Variable as pre-run Statement */
+        // Statement innerPreRunStatement = innerLoop.getPreLoopStatement();
+        // assert(innerPreRunStatement);
+        // assert(cast(Variable)innerPreRunStatement);
+
+        // /* The inner loop should have a variable assignment as the post-iteration statement */
+        // Statement innerPostIrerationStatement = outerLoop.getPreIterationStatement();
+        // assert(innerPostIrerationStatement);
+        // assert(cast(VariableAssignmentStdAlone)innerPostIrerationStatement);
+
+        // /* Extract the statements of the body of the inner loop */
+        // Branch innerLoopBranch = innerLoop.getBranch();
+        // assert(innerLoopBranch);
+        // Statement[] innerLoopBody = innerLoopBranch.getStatements();
+        // assert(innerLoopBody.length == 0);
+    }
+    catch(TError e)
+    {
+        assert(false);
+    }
+}
+
+/**
+ * If statement tests
+ */
+unittest
+{
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.typecheck.core;
+
+
+    string sourceCode = `
+module parser_if;
+
+void function()
+{
+    int i = 0;
+    if(i)
+    {
+        int p = -i;
+    }
+    else if(i)
+    {
+        int p = 3+(i*9);
+    }
+    else if(i)
+    {
+
+    }
+    else
+    {
+
+    }
+}
+`;
+
+
+    Lexer currentLexer = new Lexer(sourceCode);
+    assert(currentLexer.performLex());
+    
+    
+    Parser parser = new Parser(currentLexer.getTokens());
+    
+    try
+    {
+        Module modulle = parser.parse();
+
+        /* Module name must be parser_while */
+        assert(cmp(modulle.getName(), "parser_if")==0);
+        TypeChecker tc = new TypeChecker(modulle);
+
+        /* Find the function named `function` */
+        Entity func = tc.getResolver().resolveBest(modulle, "function");
+        assert(func);
+        assert(cast(Function)func); // Ensure it is a Funciton
+
+        /* Get the function's body */
+        Container funcContainer = cast(Container)func;
+        assert(funcContainer);
+        Statement[] functionStatements = funcContainer.getStatements();
+        assert(functionStatements.length == 2);
+
+        /* Second statement is an if statemnet */
+        IfStatement ifStatement = cast(IfStatement)functionStatements[1];
+        assert(ifStatement);
+        
+        /* Extract the branches (should be 4) */
+        Branch[] ifStatementBranches = ifStatement.getBranches();
+        assert(ifStatementBranches.length == 4);
+
+        /* First branch should have one statement which is a variable declaration */
+        Statement[] firstBranchBody = ifStatementBranches[0].getStatements();
+        assert(firstBranchBody.length == 1);
+        assert(cast(Variable)firstBranchBody[0]);
+
+        /* Second branch should have one statement which is a variable declaration */
+        Statement[] secondBranchBody = ifStatementBranches[1].getStatements();
+        assert(secondBranchBody.length == 1);
+        assert(cast(Variable)secondBranchBody[0]);
+
+        /* Third branch should have no statements */
+        Statement[] thirdBranchBody = ifStatementBranches[2].getStatements();
+        assert(thirdBranchBody.length == 0);
+
+        /* Forth branch should have no statements */
+        Statement[] fourthBranchBody = ifStatementBranches[3].getStatements();
+        assert(fourthBranchBody.length == 0);
+
+        // TODO: @Tristan Add this
+    }
+    catch(TError e)
     {
         assert(false);
     }

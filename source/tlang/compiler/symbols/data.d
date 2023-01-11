@@ -668,6 +668,93 @@ public final class WhileLoop : Entity, Container
     }
 }
 
+public final class ForLoop : Entity, Container
+{
+    private Statement preLoopStatement;
+    private Branch branch;    
+    private bool hasPostIterate;
+    private static ulong forStmtContainerRollingNameCounter = 0;
+
+    /** 
+     * Creates a new For Loop parser node
+     *
+     * Params:
+     *   
+     *   preLoopStatement = The <code>Statement</code> to run before
+     *            beginning the first iteration
+     *   branch = The <code>Branch</code> that makes up this for
+     *            loop
+     */
+    this(Branch branch, Statement preLoopStatement = null, bool hasPostIterate = false)
+    {
+        forStmtContainerRollingNameCounter++;
+        super("forStmt_"~to!(string)(forStmtContainerRollingNameCounter));
+
+        this.preLoopStatement = preLoopStatement;
+        this.branch = branch;
+        this.hasPostIterate = hasPostIterate;
+
+        weight = 2;
+    }
+
+    public bool hasPostIterateStatement()
+    {
+        return hasPostIterate;
+    }
+
+    public bool hasPreRunStatement()
+    {
+        return !(preLoopStatement is null);
+    }
+
+    public Branch getBranch()
+    {
+        return branch;
+    }
+
+    public Statement getPreRunStatement()
+    {
+        return preLoopStatement;
+    }
+
+    public override void addStatement(Statement statement)
+    {
+        // You should only be adding one branch to a for loop
+        assert(branch is null);
+        branch = cast(Branch)statement;
+    }
+
+    public override void addStatements(Statement[] statements)
+    {
+        // Only one Branch in the given input list
+        assert(statements.length == 1);
+        
+        // You should only be adding one branch to a for loop
+        assert(branch is null);
+
+        branch = (cast(Branch[])statements)[0];
+    }
+
+    public override Statement[] getStatements()
+    {
+        // If there is a pre-run statement then prepend it
+        if(hasPreRunStatement())
+        {
+            return cast(Statement[])[preLoopStatement, branch];
+        }
+        // If not, then just the Branch container
+        else
+        {
+            return cast(Statement[])[branch];
+        }
+    }
+
+    public override string toString()
+    {
+        return "ForLoop";
+    }
+}
+
 /** 
  * Branch
  *

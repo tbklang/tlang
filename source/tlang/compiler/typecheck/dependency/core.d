@@ -1134,6 +1134,362 @@ public class DNodeGenerator
         return newDNode;
     }
 
+    // TODO: Work in progress
+    private DNode generalStatement(Container c, Context context, Statement entity)
+    {
+        // /* Pool the container as `node` */
+        // Entity namedContainer = cast(Entity)c;
+        // assert(namedContainer);
+        // DNode node = pool(namedContainer);
+
+
+
+
+
+
+        /**
+        * Variable paremeters (for functions)
+        */
+        if(cast(VariableParameter)entity)
+        {
+            VariableParameter varParamDec = cast(VariableParameter)entity;
+
+            // Set context
+            entity.setContext(context);
+
+            // Pool and mark as visited
+            // NOTE: I guess for now use VariableDNode as that is what is used in expressionPass
+            // with the poolT! constrcutor, doing otherwise causes a cast failure and hence
+            // null: /git/tlang/tlang/issues/52#issuecomment-325
+            DNode dnode = poolT!(VariableNode, Variable)(varParamDec);
+            dnode.markVisited();
+
+            return null;
+        }
+        /**
+        * Variable declarations
+        */
+        else if(cast(Variable)entity)
+        {
+            /* Get the Variable and information */
+            Variable variable = cast(Variable)entity;
+
+                /* TODO: 25Oct new */
+            // Context d = new Context( cast(Container)modulle, InitScope.STATIC);
+            entity.setContext(context);
+            /* TODO: Above 25oct new */
+
+            Type variableType = tc.getType(c, variable.getType());
+            assert(variableType); /* TODO: Handle invalid variable type */
+            DNode variableDNode = poolT!(StaticVariableDeclaration, Variable)(variable);
+            writeln("Hello");
+            writeln("VarType: "~to!(string)(variableType));
+
+            /* Basic type */
+            if(cast(Primitive)variableType)
+            {
+                /* Do nothing */
+            }
+            /* Class-type */
+            else if(cast(Clazz)variableType)
+            {
+                writeln("Literally hello");
+                
+                /* Get the static class dependency */
+                ClassStaticNode classDependency = classPassStatic(cast(Clazz)variableType);
+
+                /* Make this variable declaration depend on static initalization of the class */
+                variableDNode.needs(classDependency);
+            }
+            /* Struct-type */
+            else if(cast(Struct)variableType)
+            {
+
+            }
+            /* Anything else */
+            else
+            {
+                /* This should never happen */
+                assert(false);
+            }
+
+
+            /* Set as visited */
+            variableDNode.markVisited();
+
+            /* If there is an assignment attached to this */
+            if(variable.getAssignment())
+            {
+                /* Extract the assignment */
+                VariableAssignment varAssign = variable.getAssignment();
+
+                /* Set the Context of the assignment to the current context */
+                varAssign.setContext(context);
+
+                /* Pool the assignment to get a DNode */
+                DNode expressionNode = expressionPass(varAssign.getExpression(), context);
+
+                /* This assignment depends on an expression being evaluated */
+                VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
+                varAssignNode.needs(expressionNode);
+
+                /* The variable declaration is dependant on the assignment */
+                variableDNode.needs(varAssignNode);
+            }
+
+            /* The current container is dependent on this variable declaration */
+            // node.needs(variableDNode);
+            return variableDNode;
+        }
+        /**
+        * Variable asignments
+        */
+        else if(cast(VariableAssignmentStdAlone)entity)
+        {
+            VariableAssignmentStdAlone vAsStdAl = cast(VariableAssignmentStdAlone)entity;
+            vAsStdAl.setContext(context);
+
+            /* TODO: CHeck avriable name even */
+            gprintln("YEAST ENJOYER");
+
+
+            // FIXME: The below assert fails for function definitions trying to refer to global values
+            // as a reoslveBest (up) is needed. We should firstly check if within fails, if so,
+            // resolveBest, if that fails, then it is an error (see #46)
+            assert(tc.getResolver().resolveBest(c, vAsStdAl.getVariableName()));
+            gprintln("YEAST ENJOYER");
+            Variable variable = cast(Variable)tc.getResolver().resolveBest(c, vAsStdAl.getVariableName());
+            assert(variable);
+
+
+            /* Pool the variable */
+            DNode varDecDNode = pool(variable);
+
+            /* TODO: Make sure a DNode exists (implying it's been declared already) */
+            if(varDecDNode.isVisisted())
+            {
+                /* Pool varass stdalone */
+                DNode vStdAlDNode = pool(vAsStdAl);
+                // node.needs(vStdAlDNode);
+
+                DNode expression = expressionPass(vAsStdAl.getExpression(), context);
+                vStdAlDNode.needs(expression);
+
+                return vStdAlDNode;
+            }
+            else
+            {
+                Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
+                return null;
+            }            
+        }
+        /**
+        * Function definitions
+        */
+        else if(cast(Function)entity)
+        {
+            // /* Grab the function */
+            Function func = cast(Function)entity;
+
+            /* Add funtion definition */
+            gprintln("Hello");
+            addFunctionDef(tc, func);
+
+            return null;
+        }
+        /**
+        * Return statement
+        */
+        else if(cast(ReturnStmt)entity)
+        {
+            ReturnStmt returnStatement = cast(ReturnStmt)entity;
+            returnStatement.setContext(context);
+
+            DNode returnStatementDNode = pool(returnStatement);
+
+            /* Process the return expression */
+            Expression returnExpression = returnStatement.getReturnExpression();
+            DNode returnExpressionDNode = expressionPass(returnExpression, context);
+
+            /* Make return depend on the return expression */
+            returnStatementDNode.needs(returnExpressionDNode);
+
+            /* Make this container depend on this return statement */
+            // node.needs(returnStatementDNode);
+            return returnStatementDNode;
+        }
+        /**
+        * If statements
+        */
+        else if(cast(IfStatement)entity)
+        {
+            IfStatement ifStatement = cast(IfStatement)entity;
+            ifStatement.setContext(context);
+            DNode ifStatementDNode = pool(ifStatement);
+
+            /* Add each branch as a dependency */
+            foreach(Branch branch; ifStatement.getBranches())
+            {
+                DNode branchDNode = pool(branch);
+                // Set context of branch (it is parented by the IfStmt)
+                // NOTE: This is dead code as the above is done by Parser and
+                // we need not set context here, only matters at the generalPass
+                // call later (context being passed in) as a starting point
+                branch.setContext(new Context(ifStatement, context.initScope));
+
+                // Extract the potential branch condition
+                Expression branchCondition = branch.getCondition();
+
+                // Check if this branch has a condition
+                if(!(branchCondition is null))
+                {
+                    // We use container of IfStmt and nt IfStmt otself as nothing can really be
+                    // contained in it that the condition expression would be able to lookup
+                    DNode branchConditionDNode = expressionPass(branchCondition, context);
+                    branchDNode.needs(branchConditionDNode);
+                }
+
+                gprintln("branch parentOf(): "~to!(string)(branch.parentOf()));
+                assert(branch.parentOf());
+                gprintln("branch generalPass(context="~to!(string)(context.getContainer())~")");
+
+                // When generalPass()'ing a branch's body we don't want to pass in `context`
+                // as that is containing the branch container and hence we skip anything IN the
+                // branch container
+                // NOTE: Check initScope
+                Context branchContext = new Context(branch, context.initScope);
+                DNode branchStatementsDNode = generalPass(branch, branchContext);
+                branchDNode.needs(branchStatementsDNode);
+
+                /* Make the if statement depend on this branch */
+                ifStatementDNode.needs(branchDNode);
+            }
+
+            /* Make this container depend on this if statement */
+            // node.needs(ifStatementDNode);
+            return ifStatementDNode;
+        }
+        /**
+        * While loops
+        */
+        else if(cast(WhileLoop)entity)
+        {
+            WhileLoop whileLoopStmt = cast(WhileLoop)entity;
+            whileLoopStmt.setContext(context);
+            DNode whileLoopDNode = pool(whileLoopStmt);
+
+            // Extract the branch (body Statement[] + condition)
+            Branch whileBranch = whileLoopStmt.getBranch();
+            DNode branchDNode = pool(whileBranch);
+            gprintln("Branch: "~to!(string)(whileBranch));
+
+            // If this is a while-loop
+            if(!whileLoopStmt.isDoWhile)
+            {
+                // Extract the condition
+                Expression branchCondition = whileBranch.getCondition();
+
+                // Pass the expression
+                DNode branchConditionDNode = expressionPass(branchCondition, context);
+
+                // Make the branch dependent on this expression's evaluation
+                branchDNode.needs(branchConditionDNode);
+
+                
+                // Now pass over the statements in the branch's body
+                Context branchContext = new Context(whileBranch, InitScope.STATIC);
+                DNode branchBodyDNode = generalPass(whileBranch, branchContext);
+
+                // Finally make the branchDNode depend on the body dnode (above)
+                branchDNode.needs(branchBodyDNode);
+            }
+            // If this is a do-while loop
+            // TODO: I don't think we really need to reverse this?
+            // Logically we should, but the typechecker will add this things in the correct order anyways?
+            // We need to look into this!
+            // Our nodes at the back will always be placed at the back, and the expression will end ip upfront
+            // i think it is a problem oif maybe other expressions are left on the stack but is that ever a problem
+            //now with the statement <-> instruction mapping (like will that ever even occur?)
+            else
+            {
+                // Pass over the statements in the branch's body
+                Context branchContext = new Context(whileBranch, InitScope.STATIC);
+                DNode branchBodyDNode = generalPass(whileBranch, branchContext);
+
+                // Make the branchDNode depend on the body dnode (above)
+                branchDNode.needs(branchBodyDNode);
+
+
+                // Extract the condition
+                Expression branchCondition = whileBranch.getCondition();
+
+                // Pass the expression
+                DNode branchConditionDNode = expressionPass(branchCondition, context);
+
+                // Make the branch dependent on this expression's evaluation
+                branchDNode.needs(branchConditionDNode);
+            }
+
+            /* Make the while-loop/do-while loop depend on the branchDNode */
+            whileLoopDNode.needs(branchDNode);
+
+            /* Make the node of this generalPass we are in depend on the whileLoop's DNode */
+            // node.needs(whileLoopDNode);
+            return whileLoopDNode;
+        }
+        /**
+        * For loops
+        */
+        else if(cast(ForLoop)entity)
+        {
+            ForLoop forLoop = cast(ForLoop)entity;
+            forLoop.setContext(context);
+            DNode forLoopDNode = pool(forLoop);
+
+
+            // Check for a pre-run statement
+            if(forLoop.hasPreRunStatement())
+            {
+                Statement preRunStatement = forLoop.getPreRunStatement();
+                DNode preRunStatementDNode = generalStatement(c, context, preRunStatement);
+                forLoopDNode.needs(preRunStatementDNode);
+            }
+
+            // Get the branch
+            Branch forLoopBranch = forLoop.getBranch();
+            Expression forLoopCondition = forLoopBranch.getCondition();
+
+            // TODO: The below context won't work until we make the `preLoopStatement` (and maybe `postIterationStatement`??)
+            // a part of the body of the for-loop (see issue #78)
+            // Pass over the condition expression
+            DNode forLoopConditionDNode = expressionPass(forLoopCondition, new Context(forLoop, InitScope.STATIC));
+            forLoopDNode.needs(forLoopConditionDNode);
+
+
+            // TODO: What we need here now is effectively the equivalent of the Parser's `parseStatement()`
+            // (i.e. for a single statement), so this body of code should be `generalStatement(Container, Context, Statement)`
+            // and should be called within this loop
+
+            // We want to generalPass the Branch Container and the context if within the Branch container
+            DNode branchDNode = generalPass(forLoopBranch, new Context(forLoopBranch, InitScope.STATIC));
+            forLoopDNode.needs(branchDNode);
+
+            return forLoopDNode;
+        }
+
+        return null;
+    }
+
+    /** 
+     * Performs a general pass over the Statement(s) in the given container
+     * and with the given Context
+     *
+     * Params:
+     *   c = the Container on which to pass through all of its elements
+     *   context = the Context to use for the pass
+     *
+     * Returns: a DNode for the Container c
+     */
     private DNode generalPass(Container c, Context context)
     {
         Entity namedContainer = cast(Entity)c;
@@ -1189,267 +1545,16 @@ public class DNodeGenerator
             //     continue;
             // }
 
-            /**
-            * Variable paremeters (for functions)
-            */
-            if(cast(VariableParameter)entity)
+            DNode statementDNode = generalStatement(c, context, entity);
+            if(statementDNode is null)
             {
-                VariableParameter varParamDec = cast(VariableParameter)entity;
-
-                // Set context
-                entity.setContext(context);
-
-                // Pool and mark as visited
-                // NOTE: I guess for now use VariableDNode as that is what is used in expressionPass
-                // with the poolT! constrcutor, doing otherwise causes a cast failure and hence
-                // null: /git/tlang/tlang/issues/52#issuecomment-325
-                DNode dnode = poolT!(VariableNode, Variable)(varParamDec);
-                dnode.markVisited();
+                gprintln("Not adding dependency '"~to!(string)(statementDNode)~"' as it is null");
             }
-            /**
-            * Variable declarations
-            */
-            else if(cast(Variable)entity)
+            else
             {
-                /* Get the Variable and information */
-                Variable variable = cast(Variable)entity;
-
-                 /* TODO: 25Oct new */
-                // Context d = new Context( cast(Container)modulle, InitScope.STATIC);
-                entity.setContext(context);
-                /* TODO: Above 25oct new */
-
-                Type variableType = tc.getType(c, variable.getType());
-                assert(variableType); /* TODO: Handle invalid variable type */
-                DNode variableDNode = poolT!(StaticVariableDeclaration, Variable)(variable);
-                writeln("Hello");
-                writeln("VarType: "~to!(string)(variableType));
-
-                /* Basic type */
-                if(cast(Primitive)variableType)
-                {
-                    /* Do nothing */
-                }
-                /* Class-type */
-                else if(cast(Clazz)variableType)
-                {
-                    writeln("Literally hello");
-                    
-                    /* Get the static class dependency */
-                    ClassStaticNode classDependency = classPassStatic(cast(Clazz)variableType);
-
-                    /* Make this variable declaration depend on static initalization of the class */
-                    variableDNode.needs(classDependency);
-                }
-                /* Struct-type */
-                else if(cast(Struct)variableType)
-                {
-
-                }
-                /* Anything else */
-                else
-                {
-                    /* This should never happen */
-                    assert(false);
-                }
-
-
-                /* Set as visited */
-                variableDNode.markVisited();
-
-                /* If there is an assignment attached to this */
-                if(variable.getAssignment())
-                {
-                    /* Extract the assignment */
-                    VariableAssignment varAssign = variable.getAssignment();
-
-                    /* Set the Context of the assignment to the current context */
-                    varAssign.setContext(context);
-
-                    /* Pool the assignment to get a DNode */
-                    DNode expressionNode = expressionPass(varAssign.getExpression(), context);
-
-                    /* This assignment depends on an expression being evaluated */
-                    VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
-                    varAssignNode.needs(expressionNode);
-
-                    /* The variable declaration is dependant on the assignment */
-                    variableDNode.needs(varAssignNode);
-                }
-
-                /* The current container is dependent on this variable declaration */
-                node.needs(variableDNode);
+                node.needs(statementDNode);
             }
-            /**
-            * Variable asignments
-            */
-            else if(cast(VariableAssignmentStdAlone)entity)
-            {
-                VariableAssignmentStdAlone vAsStdAl = cast(VariableAssignmentStdAlone)entity;
-                vAsStdAl.setContext(context);
-
-                /* TODO: CHeck avriable name even */
-                gprintln("YEAST ENJOYER");
-
-
-                // FIXME: The below assert fails for function definitions trying to refer to global values
-                // as a reoslveBest (up) is needed. We should firstly check if within fails, if so,
-                // resolveBest, if that fails, then it is an error (see #46)
-                assert(tc.getResolver().resolveBest(c, vAsStdAl.getVariableName()));
-                gprintln("YEAST ENJOYER");
-                Variable variable = cast(Variable)tc.getResolver().resolveBest(c, vAsStdAl.getVariableName());
-                assert(variable);
-
-
-                /* Pool the variable */
-                DNode varDecDNode = pool(variable);
-
-                /* TODO: Make sure a DNode exists (implying it's been declared already) */
-                if(varDecDNode.isVisisted())
-                {
-                    /* Pool varass stdalone */
-                    DNode vStdAlDNode = pool(vAsStdAl);
-                    node.needs(vStdAlDNode);
-
-                    DNode expression = expressionPass(vAsStdAl.getExpression(), context);
-                    vStdAlDNode.needs(expression);            
-                }
-                else
-                {
-                    Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
-                }
-            }
-            /**
-            * Function definitions
-            */
-            else if(cast(Function)entity)
-            {
-                // /* Grab the function */
-                Function func = cast(Function)entity;
-
-                /* Add funtion definition */
-                gprintln("Hello");
-                addFunctionDef(tc, func);
-            }
-            /**
-            * Return statement
-            */
-            else if(cast(ReturnStmt)entity)
-            {
-                ReturnStmt returnStatement = cast(ReturnStmt)entity;
-                returnStatement.setContext(context);
-
-                DNode returnStatementDNode = pool(returnStatement);
-
-                /* Process the return expression */
-                Expression returnExpression = returnStatement.getReturnExpression();
-                DNode returnExpressionDNode = expressionPass(returnExpression, context);
-
-                /* Make return depend on the return expression */
-                returnStatementDNode.needs(returnExpressionDNode);
-
-                /* Make this container depend on this return statement */
-                node.needs(returnStatementDNode);
-            }
-            /**
-            * If statements
-            */
-            else if(cast(IfStatement)entity)
-            {
-                IfStatement ifStatement = cast(IfStatement)entity;
-                ifStatement.setContext(context);
-                DNode ifStatementDNode = pool(ifStatement);
-
-                /* Add each branch as a dependency */
-                foreach(Branch branch; ifStatement.getBranches())
-                {
-                    DNode branchDNode = pool(branch);
-                    // Set context of branch (it is parented by the IfStmt)
-                    // NOTE: This is dead code as the above is done by Parser and
-                    // we need not set context here, only matters at the generalPass
-                    // call later (context being passed in) as a starting point
-                    branch.setContext(new Context(ifStatement, context.initScope));
-
-                    // Extract the potential branch condition
-                    Expression branchCondition = branch.getCondition();
-
-                    // Check if this branch has a condition
-                    if(!(branchCondition is null))
-                    {
-                        // We use container of IfStmt and nt IfStmt otself as nothing can really be
-                        // contained in it that the condition expression would be able to lookup
-                        DNode branchConditionDNode = expressionPass(branchCondition, context);
-                        branchDNode.needs(branchConditionDNode);
-                    }
-
-                    gprintln("branch parentOf(): "~to!(string)(branch.parentOf()));
-                    assert(branch.parentOf());
-                    gprintln("branch generalPass(context="~to!(string)(context.getContainer())~")");
-
-                    // When generalPass()'ing a branch's body we don't want to pass in `context`
-                    // as that is containing the branch container and hence we skip anything IN the
-                    // branch container
-                    // NOTE: Check initScope
-                    Context branchContext = new Context(branch, context.initScope);
-                    DNode branchStatementsDNode = generalPass(branch, branchContext);
-                    branchDNode.needs(branchStatementsDNode);
-
-                    /* Make the if statement depend on this branch */
-                    ifStatementDNode.needs(branchDNode);
-                }
-
-                /* Make this container depend on this if statement */
-                node.needs(ifStatementDNode);
-            }
-            /**
-            * While loops
-            */
-            else if(cast(WhileLoop)entity)
-            {
-                WhileLoop whileLoopStmt = cast(WhileLoop)entity;
-                whileLoopStmt.setContext(context);
-                DNode whileLoopDNode = pool(whileLoopStmt);
-
-                // Extract the branch (body Statement[] + condition)
-                Branch whileBranch = whileLoopStmt.getBranch();
-                DNode branchDNode = pool(whileBranch);
-                gprintln("Branch: "~to!(string)(whileBranch));
-
-                // If this is a while-loop
-                if(!whileLoopStmt.isDoWhile)
-                {
-                    gprintln("Logan", DebugType.ERROR);
-
-                    // Extract the condition
-                    Expression branchCondition = whileBranch.getCondition();
-
-                    // Pass the expression
-                    DNode branchConditionDNode = expressionPass(branchCondition, context);
-
-                    // Make the branch dependent on this expression's evaluation
-                    branchDNode.needs(branchConditionDNode);
-
-                    
-                    // Now pass over the statements in the branch's body
-                    Context branchContext = new Context(whileBranch, InitScope.STATIC);
-                    DNode branchBodyDNode = generalPass(whileBranch, branchContext);
-
-                    // Finally make the branchDNode depend on the body dnode (above)
-                    branchDNode.needs(branchBodyDNode);
-                }
-                // If this is a do-while loop
-                else
-                {
-                    gprintln("Implement do-while loops please", DebugType.ERROR);
-                    assert(false);
-                }
-
-                /* Make the while-loop/do-while loop depend on the branchDNode */
-                whileLoopDNode.needs(branchDNode);
-
-                /* Make the node of this generalPass we are in depend on the whileLoop's DNode */
-                node.needs(whileLoopDNode);
-            }
+            
         }
 
         return node;
