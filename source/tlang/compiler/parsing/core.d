@@ -631,12 +631,6 @@ public final class Parser
         */
         bool closedBeforeExit;
 
-        // TODO: Once issue #75 is closed, remove this
-        bool useParseStatement = true;
-
-        // NOTE: See issue #75 - could we make a general `parseStatement()`
-        // and then call that in a loop here rather? This would make certain things
-        // a little easier like where we need to parse only a single statement
         while (hasTokens())
         {
             /* Get the token */
@@ -645,75 +639,19 @@ public final class Parser
 
             gprintln("parseBody(): SymbolType=" ~ to!(string)(symbol));
 
-            // TODO: Once issue #75 is closed, remove this
-            if(useParseStatement)
+    
+            /* If it is a class definition */
+            if(symbol == SymbolType.CLASS)
             {
-                /* If it is a class definition */
-                if(symbol == SymbolType.CLASS)
-                {
-                    /* Parse the class and add its statements */
-                    statements ~= parseClass();
-                }
-                /* If it is a struct definition */
-                else if(symbol == SymbolType.STRUCT)
-                {
-                    /* Parse the struct and add it to the statements */
-                    statements ~= parseStruct();
-                }
-                /* If it is closing the body `}` */
-                else if(symbol == SymbolType.CCURLY)
-                {
-                    gprintln("parseBody(): Exiting body by }", DebugType.WARNING);
-
-                    closedBeforeExit = true;
-                    break;
-                }
-                else
-                {
-                    statements ~= parseStatement();
-                    continue;
-                }
+                /* Parse the class and add its statements */
+                statements ~= parseClass();
+                gprintln("Ablo: "~getCurrentToken().toString());
             }
-
-            // TODO: Once issue #75 is closed, remove the below checks
-            // NOTE: Below coce may become out-dated as we try implement the above
-
-            /* If it is a type */
-            if(symbol == SymbolType.IDENT_TYPE)
+            /* If it is a struct definition */
+            else if(symbol == SymbolType.STRUCT)
             {
-                /* Might be a function, might be a variable, or assignment */
-                statements ~= parseName();
-            }
-            /* If it is an accessor */
-            else if(isAccessor(tok))
-            {
-                statements ~= parseAccessor();
-            }
-            /* If it is a modifier */
-            else if(isModifier(tok))
-            {
-                statements ~= parseInitScope();
-            }
-            /* If it is a branch */
-            else if(symbol == SymbolType.IF)
-            {
-                statements ~= parseIf();
-            }
-            /* If it is a while loop */
-            else if(symbol == SymbolType.WHILE)
-            {
-                statements ~= parseWhile();
-            }
-            /* If it is a do-while loop */
-            else if(symbol == SymbolType.DO)
-            {
-                statements ~= parseDoWhile();
-            }
-            /* If it is a function call (further inspection needed) */
-            else if(symbol == SymbolType.IDENT_TYPE)
-            {
-                /* Function calls can have dotted identifiers */
-                parseFuncCall();
+                /* Parse the struct and add it to the statements */
+                statements ~= parseStruct();
             }
             /* If it is closing the body `}` */
             else if(symbol == SymbolType.CCURLY)
@@ -723,30 +661,9 @@ public final class Parser
                 closedBeforeExit = true;
                 break;
             }
-            /* If it is a class definition */
-            else if(symbol == SymbolType.CLASS)
-            {
-                /* Parse the class and add its statements */
-                statements ~= parseClass();
-            }
-            /* If it is a struct definition */
-            else if(symbol == SymbolType.STRUCT)
-            {
-                /* Parse the struct and add it to the statements */
-                statements ~= parseStruct();
-            }
-            /* If it is the return keyword */
-            //TODO: We should add a flag to prevent return being used in generla bodies? or wait we have a non parseBiody already
-            else if(symbol == SymbolType.RETURN)
-            {
-                /* Parse the return statement */
-                statements ~= parseReturn();
-            }
-            /* Error out */
             else
             {
-                expect("parseBody(): Unknown symbol: " ~ getCurrentToken()
-                        .getToken());
+                statements ~= parseStatement();
             }
         }
 
@@ -1912,7 +1829,7 @@ class myClass1
 class myClass2
 {
     int outer;
-} 
+}
 `;
 
     Lexer currentLexer = new Lexer(sourceCode);
