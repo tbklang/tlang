@@ -955,7 +955,7 @@ public final class TypeChecker
                     }
                 }
 
-                // TODO: Reverse the list to be in the correct order (it was computed backwards)
+                // Reverse the list to be in the correct order (it was computed backwards)
                 branchInstructions=reverse(branchInstructions);
 
                 /**
@@ -970,6 +970,103 @@ public final class TypeChecker
                 addInstrB(ifStatementInstruction);
 
                 gprintln("If!");
+            }
+            /**
+            * While loop (WhileLoop)
+            */
+            else if(cast(WhileLoop)statement)
+            {
+                WhileLoop whileLoop = cast(WhileLoop)statement;
+
+                // FIXME: Do-while loops are still being considered in terms of dependency construction
+                if(whileLoop.isDoWhile)
+                {
+                    gprintln("Still looking at dependency construction in this thing (do while loops )");
+                    assert(false);
+                }
+
+                Branch branch = whileLoop.getBranch();
+
+                /* The condition `Value` instruction should be on the stack */
+                Value valueInstrCondition = cast(Value)popInstr();
+                assert(valueInstrCondition);
+
+                /* Process the body of the while-loop with tail-popping followed by a reverse */
+                Instruction[] bodyInstructions;
+                ulong bodyLen = branch.getBody().length;
+                ulong bodyIdx = 0;
+            
+                while(bodyIdx < bodyLen)
+                {
+                    Instruction bodyInstr = tailPopInstr();
+                    bodyInstructions~=bodyInstr;
+                    bodyIdx++;
+                }
+
+                // Reverse the list to be in the correct order (it was computed backwards)
+                bodyInstructions=reverse(bodyInstructions);
+
+
+                // Create a branch instruction coupling the condition instruction + body instructions (in corrected order)
+                BranchInstruction branchInstr = new BranchInstruction(valueInstrCondition, bodyInstructions);
+
+
+                /**
+                * Code gen
+                *
+                * 1. Create the WhileLoopInstruction containing the BranchInstruction
+                * 2. Set the context
+                * 3. Add the instruction
+                */
+                WhileLoopInstruction whileLoopInstruction = new WhileLoopInstruction(branchInstr);
+                whileLoopInstruction.context = whileLoop.getContext();
+                addInstrB(whileLoopInstruction);
+            }
+            /**
+            * For loop (ForLoop)
+            */
+            else if(cast(ForLoop)statement)
+            {
+                ForLoop forLoop = cast(ForLoop)statement;
+
+                /* Pop-off the Value-instruction for the condition */
+                Value valueInstrCondition = cast(Value)popInstr();
+                assert(valueInstrCondition);
+
+                /* Calculate the number of instructions representing the body to tailPopInstr() */
+                ulong bodyTailPopNumber = forLoop.getBranch().getStatements().length;
+                gprintln("bodyTailPopNumber: "~to!(string)(bodyTailPopNumber));
+
+                /* Pop off the body instructions, then reverse final list */
+                Instruction[] bodyInstructions;
+                for(ulong idx = 0; idx < bodyTailPopNumber; idx++)
+                {
+                    bodyInstructions ~= tailPopInstr();
+                }
+                bodyInstructions = reverse(bodyInstructions);
+
+                // Create a branch instruction coupling the condition instruction + body instructions (in corrected order)
+                BranchInstruction branchInstr = new BranchInstruction(valueInstrCondition, bodyInstructions);
+
+
+                /* If there is a pre-run instruction */
+                Instruction preRunInstruction;
+                if(forLoop.hasPreRunStatement())
+                {
+                    preRunInstruction = tailPopInstr();
+                }
+
+                /**
+                * Code gen
+                *
+                * 1. Create the ForLoopInstruction containing the BranchInstruction and
+                * preRunInstruction
+                * 2. Set the context
+                * 3. Add the instruction
+                */
+                ForLoopInstruction forLoopInstruction = new ForLoopInstruction(branchInstr, preRunInstruction);
+                forLoopInstruction.context = forLoop.context;
+                addInstrB(forLoopInstruction);
             }
             /* Branch */
             else if(cast(Branch)statement)

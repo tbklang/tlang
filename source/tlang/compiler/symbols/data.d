@@ -153,10 +153,14 @@ public class Assignment : Statement
     }
 }
 
-/* Declared variables, defined classes and fucntions */
+/** 
+ * Entity
+ *
+ * Declared variables, defined classes and functions
+ */
 public class Entity : Statement
 {
-    /* Accesor type */
+    /* Accessor type */
     private AccessorType accessorType = AccessorType.PUBLIC;
 
     /* Function/Modifier type */
@@ -193,16 +197,6 @@ public class Entity : Statement
     public string getName()
     {
         return name;
-    }
-
-    private Entity[] deps;
-    public Entity[] getDeps()
-    {
-        return deps;
-    }
-    public void addDep(Entity entity)
-    {
-        deps ~= entity;
     }
 }
 
@@ -533,6 +527,12 @@ public final class FunctionCall : Call
     }
 }
 
+/** 
+ * ReturnStmt
+ *
+ * Represents a return statement with an expression
+ * to be returned
+ */
 public final class ReturnStmt : Statement
 {
     // The Expression being returned
@@ -554,6 +554,9 @@ public final class ReturnStmt : Statement
 
 /** 
  * IfStatement
+ *
+ * Represents an if statement with branches of code
+ * and conditions per each
  */
 public final class IfStatement : Entity, Container
 {
@@ -598,6 +601,161 @@ public final class IfStatement : Entity, Container
 }
 
 /** 
+ * WhileLoop
+ *
+ * Represents a while loop with conditional code
+ */
+public final class WhileLoop : Entity, Container
+{
+    private Branch branch;
+    private static ulong whileStmtContainerRollingNameCounter = 0;
+    public const bool isDoWhile;
+
+    /** 
+     * Creates a new While Loop parser node, optionally specifying
+     * if this is to be interpreted (in-post) as a while-loop
+     * or do-while loop
+     *
+     * Params:
+     *   branch = The <code>Branch</code> that makes up this while
+     *            loop
+     *   isDoWhile = If <code>true</code> then interpret this as a 
+     *               do-while loop, however if <code>false</code>
+     *               then a while-loop (default optional value)
+     */
+    this(Branch branch, bool isDoWhile = false)
+    {
+        whileStmtContainerRollingNameCounter++;
+        super("whileStmt_"~to!(string)(whileStmtContainerRollingNameCounter));
+
+        this.branch = branch;
+        this.isDoWhile = isDoWhile;
+
+        weight = 2;
+    }
+
+    public Branch getBranch()
+    {
+        return branch;
+    }
+
+    public override void addStatement(Statement statement)
+    {
+        // You should only be adding one branch to a while loop
+        assert(branch is null);
+        branch = cast(Branch)statement;
+    }
+
+    public override void addStatements(Statement[] statements)
+    {
+        // Only one Branch in the given input list
+        assert(statements.length == 1);
+        
+        // You should only be adding one branch to a while loop
+        assert(branch is null);
+
+        branch = (cast(Branch[])statements)[0];
+    }
+
+    public override Statement[] getStatements()
+    {
+        return cast(Statement[])[branch];
+    }
+
+    public override string toString()
+    {
+        return "WhileLoop";
+    }
+}
+
+public final class ForLoop : Entity, Container
+{
+    private Statement preLoopStatement;
+    private Branch branch;    
+    private bool hasPostIterate;
+    private static ulong forStmtContainerRollingNameCounter = 0;
+
+    /** 
+     * Creates a new For Loop parser node
+     *
+     * Params:
+     *   
+     *   preLoopStatement = The <code>Statement</code> to run before
+     *            beginning the first iteration
+     *   branch = The <code>Branch</code> that makes up this for
+     *            loop
+     */
+    this(Branch branch, Statement preLoopStatement = null, bool hasPostIterate = false)
+    {
+        forStmtContainerRollingNameCounter++;
+        super("forStmt_"~to!(string)(forStmtContainerRollingNameCounter));
+
+        this.preLoopStatement = preLoopStatement;
+        this.branch = branch;
+        this.hasPostIterate = hasPostIterate;
+
+        weight = 2;
+    }
+
+    public bool hasPostIterateStatement()
+    {
+        return hasPostIterate;
+    }
+
+    public bool hasPreRunStatement()
+    {
+        return !(preLoopStatement is null);
+    }
+
+    public Branch getBranch()
+    {
+        return branch;
+    }
+
+    public Statement getPreRunStatement()
+    {
+        return preLoopStatement;
+    }
+
+    public override void addStatement(Statement statement)
+    {
+        // You should only be adding one branch to a for loop
+        assert(branch is null);
+        branch = cast(Branch)statement;
+    }
+
+    public override void addStatements(Statement[] statements)
+    {
+        // Only one Branch in the given input list
+        assert(statements.length == 1);
+        
+        // You should only be adding one branch to a for loop
+        assert(branch is null);
+
+        branch = (cast(Branch[])statements)[0];
+    }
+
+    public override Statement[] getStatements()
+    {
+        // If there is a pre-run statement then prepend it
+        if(hasPreRunStatement())
+        {
+            return cast(Statement[])[preLoopStatement, branch];
+        }
+        // If not, then just the Branch container
+        else
+        {
+            return cast(Statement[])[branch];
+        }
+    }
+
+    public override string toString()
+    {
+        return "ForLoop";
+    }
+}
+
+/** 
  * Branch
  *
  * Represents a condition and code attached to
@@ -613,6 +771,15 @@ public final class Branch : Entity, Container
 
     private static ulong branchContainerRollingNameCounter = 0;
 
+    /** 
+     * Creates a new Branch which will couple a condition
+     * as an instance of <code>Expression</code> and a body
+     * of <code>Statement</code>(s) apart of it
+     *
+     * Params:
+     *   condition = The condition as an <code>Expression</code> 
+     *   branch = The body of <code>Statement</code>(s) making up the branch
+     */
     this(Expression condition, Statement[] branch)
     {
         branchContainerRollingNameCounter++;
@@ -620,7 +787,6 @@ public final class Branch : Entity, Container
 
         this.branchCondition = condition;
         this.branchBody = branch;
-        
     }
 
     /** 
@@ -634,17 +800,21 @@ public final class Branch : Entity, Container
         return !(branchCondition is null);
     }
 
+    /** 
+     * Returns the condition of the branch
+     *
+     * Returns: The condition as an instance of <code>Expression</code>
+     */
     public Expression getCondition()
     {
         return branchCondition;
     }
 
+
     public Statement[] getBody()
     {
         return branchBody;
     }
-
-
 
     public override void addStatement(Statement statement)
     {

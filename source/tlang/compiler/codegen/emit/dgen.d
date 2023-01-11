@@ -271,6 +271,74 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        /**
+        * While loops (WhileLoopInstruction)
+        *
+        * TODO: Add do-while check
+        */
+        else if(cast(WhileLoopInstruction)instruction)
+        {
+            WhileLoopInstruction whileLoopInstr = cast(WhileLoopInstruction)instruction;
+
+            BranchInstruction branchInstr = whileLoopInstr.getBranchInstruction();
+            Value conditionInstr = branchInstr.getConditionInstr();
+            Instruction[] bodyInstructions = branchInstr.getBodyInstructions();
+
+            string emit;
+
+            /* Generate the `while(<expr>)` and opening curly brace */
+            emit = "while("~transform(conditionInstr)~")\n";
+            emit~=genTabs(transformDepth)~"{\n"; 
+
+            /* Transform each body statement */
+            foreach(Instruction curBodyInstr; bodyInstructions)
+            {
+                emit~=genTabs(transformDepth)~"\t"~transform(curBodyInstr)~"\n";
+            }
+
+            /* Closing curly brace */
+            emit~=genTabs(transformDepth)~"}";
+
+            return emit;
+        }
+        /**
+        * For loops (ForLoopInstruction)
+        */
+        else if(cast(ForLoopInstruction)instruction)
+        {
+            ForLoopInstruction forLoopInstr = cast(ForLoopInstruction)instruction;
+
+            BranchInstruction branchInstruction = forLoopInstr.getBranchInstruction();
+            Value conditionInstr = branchInstruction.getConditionInstr();
+            Instruction[] bodyInstructions = branchInstruction.getBodyInstructions();
+
+            string emit = "for(";
+
+            // Emit potential pre-run instruction
+            emit ~= forLoopInstr.hasPreRunInstruction() ? transform(forLoopInstr.getPreRunInstruction()) : ";";
+
+            // Condition
+            emit ~= transform(conditionInstr)~";";
+
+            // NOTE: We are leaving the post-iteration blank due to us including it in the body
+            // TODO: We can hoist bodyInstructions[$] maybe if we want to generate it as C-for-loops
+            // if(forLoopInstr.hasPostIterationInstruction())
+            emit ~= ")\n";
+
+            // Open curly (begin body)
+            emit~=genTabs(transformDepth)~"{\n"; 
+
+            /* Transform each body statement */
+            foreach(Instruction curBodyInstr; bodyInstructions)
+            {
+                emit~=genTabs(transformDepth)~"\t"~transform(curBodyInstr)~"\n";
+            }
+
+            // Close curly (body end)
+            emit~=genTabs(transformDepth)~"}"; 
+
+            return emit;
+        }
 
         return "<TODO: Base emit: "~to!(string)(instruction)~">";
     }
@@ -451,17 +519,49 @@ public final class DCodeEmitter : CodeEmitter
     {
         //TODO: Implement me
 
+        // Test for `simple_functions.t` (function call testing)
         if(cmp(typeChecker.getModule().getName(), "simple_functions") == 0)
         {
-        // NOTE: Remove this printf
-        file.writeln(`
-// NOTE: The below is testing code and should be removed
+            file.writeln(`
 #include<stdio.h>
+#include<assert.h>
 int main()
 {
+    assert(t_7b6d477c5859059f16bc9da72fc8cc3b == 22);
     printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
+    
     banana(1);
+    assert(t_7b6d477c5859059f16bc9da72fc8cc3b == 72);
     printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "simple_while") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = function(3);
+    printf("result: %d\n", result);
+    assert(result == 3);
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "simple_for_loops") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = function(3);
+    printf("result: %d\n", result);
+    assert(result == 3);
+
     return 0;
 }`);
         }

@@ -318,6 +318,60 @@ public final class IfStatementInstruction : Instruction
     }
 }
 
+public final class WhileLoopInstruction : Instruction
+{
+    private BranchInstruction branchInstruction;
+
+    this(BranchInstruction branchInstruction)
+    {
+        this.branchInstruction = branchInstruction;
+
+        addInfo = "Branch: "~to!(string)(branchInstruction);
+    }
+
+    public BranchInstruction getBranchInstruction()
+    {
+        return branchInstruction;
+    }
+}
+
+public final class ForLoopInstruction : Instruction
+{
+    private Instruction preRunInstruction;
+    private BranchInstruction branchInstruction;
+    private bool hasPostIterate;
+
+    this(BranchInstruction branchInstruction, Instruction preRunInstruction = null, bool hasPostIterate = false)
+    {
+        this.branchInstruction = branchInstruction;
+        this.preRunInstruction = preRunInstruction;
+
+        addInfo = (hasPreRunInstruction() ? "PreRun: "~to!(string)(preRunInstruction)~", " : "")~"Branch: "~to!(string)(branchInstruction);
+
+        this.hasPostIterate = hasPostIterate;
+    }
+
+    public bool hasPostIterationInstruction()
+    {
+        return hasPostIterate;
+    }
+
+    public Instruction getPreRunInstruction()
+    {
+        return preRunInstruction;
+    }
+
+    public bool hasPreRunInstruction()
+    {
+        return !(preRunInstruction is null);
+    }
+
+    public BranchInstruction getBranchInstruction()
+    {
+        return branchInstruction;
+    }
+}
+
 public final class BranchInstruction : Instruction
 {
     private Value branchConditionInstr;

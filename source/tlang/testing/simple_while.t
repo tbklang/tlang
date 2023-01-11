@@ -1,11 +1,20 @@
 module simple_while;
 
-int main()
+int function(int i)
 {
-    int j = 0;
-    j=2;
-    while(j < 10)
+    int test = 0;
+
+    while(i)
     {
-        j = j + 1;
+        int p = 1;
+        int f = 2;
+        f = p+f;
+
+        i = i - 1;
+        test = i + test;
     }
+
+    int j = 2;
+
+    return test;
 }

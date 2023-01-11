@@ -501,6 +501,10 @@ public string getCharacter(SymbolType symbolIn)
     {
         return "==";
     }
+    else if(symbolIn == SymbolType.SMALLER_THAN)
+    {
+        return "<";
+    }
     else
     {
         gprintln("getCharacter: No back-mapping for "~to!(string)(symbolIn), DebugType.ERROR);
