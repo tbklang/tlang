@@ -2,7 +2,7 @@
 	"authors": [
 		"Tristan B. Velloza Kildaire"
 	],
-	"copyright": "Copyright © 2021, Tristan B. Kildaire",
+	"copyright": "Copyright © 2021-2023, Tristan B. Kildaire",
 	"dependencies": {
 		"gogga": "~>0.1.0",
 		"jcli": "~>0.24.0"
