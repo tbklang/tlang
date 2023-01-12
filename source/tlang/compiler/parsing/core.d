@@ -10,13 +10,6 @@ import core.stdc.stdlib;
 import misc.exceptions : TError;
 import compiler.parsing.exceptions;
 
-// public final class ParserError : TError
-// {
-
-// }
-
-
-
 bool isUnitTest;
 
 public final class Parser
