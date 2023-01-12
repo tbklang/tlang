@@ -603,27 +603,12 @@ public final class TypeChecker
                 /* If pointer create `&` */
                 else if(unaryOperator == SymbolType.AMPERSAND)
                 {
-                    /* TODO: Should we make a PointerFetchInstruction maybe? */
-                    /* Answer: Nah, waste of Dtype, we have needed information */
-
                     /**
-                    * NOTE:
-                    *
-                    * We are going to end up here with `unaryOpExp` being a `FetchVarInstr`
-                    * which I guess I'd like to, not rework but pull data out of and put
-                    * some pointer fetch, infact surely the whole instruction we return
-                    * can be a subset of UnaryOpInstruction just for the pointer case
-                    *
-                    * I think it is important we obtain Context, Name, Type of variable
-                    * (so that we can construct the Type* (the pointer type))
+                    * If the type popped from the stack was `<type>` then push
+                    * a new type onto the stack which is `<type>*`
                     */
-                    gprintln("ExpType: "~expType.toString());
-
                     Type ptrType = new Pointer(expType);
                     addType(ptrType);
-
-                    gprintln("Ampersand operator not yet implemented", DebugType.ERROR);
-                    // assert(false);
                 }
                 /* This should never occur */
                 else
@@ -640,6 +625,10 @@ public final class TypeChecker
                 *
                 */
                 Instruction expInstr = popInstr();
+
+                // TODO: For type checking and semantics we should be checking WHAT is being ampersanded
+                // ... as in we should only be allowing Ident's to be ampersanded, not, for example, literals
+                // ... such a check can be accomplished via runtime type information of the instruction above
                 
                 
                 UnaryOpInstr addInst = new UnaryOpInstr(expInstr, unaryOperator);
@@ -1100,7 +1089,7 @@ public final class TypeChecker
                 * Code gen
                 *
                 * 1. Create the PointerDereferenceAssignmentInstruction containing the `lhsPtrExprInstr`
-                * and `rhsExprInstr`
+                * and `rhsExprInstr`. Also set the pointer depth.
                 * 2. Set the context
                 * 3. Add the instruction
                 */
