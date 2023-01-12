@@ -1476,6 +1476,27 @@ public class DNodeGenerator
 
             return forLoopDNode;
         }
+        /**
+        * Pointer dereference assigmnets (PointerDereferenceAssignment)
+        */
+        else if(cast(PointerDereferenceAssignment)entity)
+        {
+            PointerDereferenceAssignment ptrAssDeref = cast(PointerDereferenceAssignment)entity;
+            ptrAssDeref.setContext(context);
+            DNode ptrAssDerefDNode = pool(ptrAssDeref);
+
+            /* Pass the expression being assigned */
+            Expression assignmentExpression = ptrAssDeref.getExpression();
+            DNode assignmentExpressionDNode = expressionPass(assignmentExpression, context);
+            ptrAssDerefDNode.needs(assignmentExpressionDNode);
+
+            /* Pass the pointer expression */
+            Expression pointerExpression = ptrAssDeref.getPointerExpression();
+            DNode pointerExpressionDNode = expressionPass(pointerExpression, context);
+            ptrAssDerefDNode.needs(pointerExpressionDNode);
+
+            return ptrAssDerefDNode;
+        }
 
         return null;
     }

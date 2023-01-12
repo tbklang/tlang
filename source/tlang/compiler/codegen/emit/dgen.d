@@ -339,6 +339,55 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        /**
+        * Unary operators (UnaryOpInstr)
+        */
+        else if(cast(UnaryOpInstr)instruction)
+        {
+            UnaryOpInstr unaryOpInstr = cast(UnaryOpInstr)instruction;
+            Value operandInstruction = cast(Value)unaryOpInstr.getOperand();
+            assert(operandInstruction);
+
+            string emit;
+            
+            /* The operator's symbol */
+            emit ~= getCharacter(unaryOpInstr.getOperator());
+
+            /* Transform the operand */
+            emit ~= transform(operandInstruction);
+
+            return emit;
+        }
+        /**
+        * Pointer dereference assignment (PointerDereferenceAssignmentInstruction)
+        */
+        else if(cast(PointerDereferenceAssignmentInstruction)instruction)
+        {
+            PointerDereferenceAssignmentInstruction pointerDereferenceAssignmentInstruction = cast(PointerDereferenceAssignmentInstruction)instruction;
+            Value lhsPtrAddrExprInstr = pointerDereferenceAssignmentInstruction.getPointerEvalInstr();
+            assert(lhsPtrAddrExprInstr);
+            Value rhsAssExprInstr = pointerDereferenceAssignmentInstruction.getAssExprInstr();
+            assert(rhsAssExprInstr);
+
+            string emit;
+
+            /* Star followed by transformation of the pointer address expression */
+            string starsOfLiberty;
+            for(ulong i = 0; i < pointerDereferenceAssignmentInstruction.getDerefCount(); i++)
+            {
+                starsOfLiberty ~= "*";
+            }
+            emit ~= starsOfLiberty~transform(lhsPtrAddrExprInstr);
+
+            /* Assignment operator follows */
+            emit ~= " = ";
+
+            /* Expression to be assigned on the right hand side */
+            emit ~= transform(rhsAssExprInstr)~";";
+
+
+            return emit;
+        }
 
         return "<TODO: Base emit: "~to!(string)(instruction)~">";
     }
@@ -561,6 +610,19 @@ int main()
     int result = function(3);
     printf("result: %d\n", result);
     assert(result == 3);
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "simple_pointer") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    thing();
+    assert(t_87bc875d0b65f741b69fb100a0edebc7 == 4);
 
     return 0;
 }`);

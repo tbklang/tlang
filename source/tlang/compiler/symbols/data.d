@@ -445,6 +445,43 @@ public class VariableAssignmentStdAlone : Statement
 }
 
 
+public class PointerDereferenceAssignment : Statement
+{
+    private Expression assignmentExpression;
+    private Expression pointerExpression;
+    private ulong derefCount;
+
+    this(Expression pointerExpression, Expression assignmentExpression, ulong derefCount = 1)
+    {
+        this.pointerExpression = pointerExpression;
+        this.assignmentExpression = assignmentExpression;
+        this.derefCount = derefCount;
+
+        /* Weighted as 2 */
+        weight = 2;
+    }
+
+    public Expression getExpression()
+    {
+        return assignmentExpression;
+    }
+
+    public Expression getPointerExpression()
+    {
+        return pointerExpression;
+    }
+
+    public ulong getDerefCount()
+    {
+        return derefCount;
+    }
+
+    public override string toString()
+    {
+        return "[pointerDeref: From: "~pointerExpression.toString()~"]";
+    }
+}
+
 
 public class IdentExpression : Expression
 {

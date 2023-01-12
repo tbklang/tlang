@@ -618,6 +618,12 @@ public final class TypeChecker
                     * (so that we can construct the Type* (the pointer type))
                     */
                     gprintln("ExpType: "~expType.toString());
+
+                    Type ptrType = new Pointer(expType);
+                    addType(ptrType);
+
+                    gprintln("Ampersand operator not yet implemented", DebugType.ERROR);
+                    // assert(false);
                 }
                 /* This should never occur */
                 else
@@ -1074,6 +1080,33 @@ public final class TypeChecker
                 Branch branch = cast(Branch)statement;
 
                 gprintln("Look at that y'all, cause this is it: "~to!(string)(branch));
+            }
+            /**
+            * Dereferencing pointer assignment statement (PointerDereferenceAssignment)
+            */
+            else if(cast(PointerDereferenceAssignment)statement)
+            {
+                PointerDereferenceAssignment ptrDerefAss = cast(PointerDereferenceAssignment)statement;
+                
+                /* Pop off the pointer dereference expression instruction (LHS) */
+                Value lhsPtrExprInstr = cast(Value)popInstr();
+                assert(lhsPtrExprInstr);
+
+                /* Pop off the assignment instruction (RHS expression) */
+                Value rhsExprInstr = cast(Value)popInstr();
+                assert(rhsExprInstr);
+
+                /**
+                * Code gen
+                *
+                * 1. Create the PointerDereferenceAssignmentInstruction containing the `lhsPtrExprInstr`
+                * and `rhsExprInstr`
+                * 2. Set the context
+                * 3. Add the instruction
+                */
+                PointerDereferenceAssignmentInstruction pointerDereferenceAssignmentInstruction = new PointerDereferenceAssignmentInstruction(lhsPtrExprInstr, rhsExprInstr, ptrDerefAss.getDerefCount());
+                pointerDereferenceAssignmentInstruction.context = ptrDerefAss.context;
+                addInstrB(pointerDereferenceAssignmentInstruction);
             }
             /* Case of no matches */
             else

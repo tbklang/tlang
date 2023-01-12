@@ -420,6 +420,7 @@ public final class Parser
 
         /* Save the name or type */
         string nameTYpe = getCurrentToken().getToken();
+        gprintln("parseName(): Current token: "~getCurrentToken().toString());
 
         /* TODO: The problem here is I don't want to progress the token */
 
@@ -438,8 +439,14 @@ public final class Parser
             expect(SymbolType.SEMICOLON, getCurrentToken());
             nextToken();
         }
+        /**
+        * Either we have:
+        *
+        * 1. `int ptr` (and we looked ahead to `ptr`)
+        * 2. `int* ptr` (and we looked ahead to `*`)
+        */
         /* If we have an identifier/type then declaration */
-        else if(type == SymbolType.IDENT_TYPE)
+        else if(type == SymbolType.IDENT_TYPE || type == SymbolType.STAR)
         {
             previousToken();
             ret = parseTypedDeclaration();
@@ -875,6 +882,14 @@ public final class Parser
                 string type = getCurrentToken().getToken();
                 nextToken();
 
+                /* If it is a star `*` */
+                if(getSymbolType(getCurrentToken()) == SymbolType.STAR)
+                {
+                    // Make type a pointer
+                    type = type~"*";
+                    nextToken();
+                }
+
                 /* Get the identifier (This CAN NOT be dotted) */
                 expect(SymbolType.IDENT_TYPE, getCurrentToken());
                 if(!isIdentifier_NoDot(getCurrentToken()))
@@ -1152,7 +1167,7 @@ public final class Parser
                 addRetExp(toAdd);
             }
             /* Detect if this expression is coming to an end, then return */
-            else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE || symbol == SymbolType.COMMA)
+            else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE || symbol == SymbolType.COMMA || symbol == SymbolType.ASSIGN)
             {
                 break;
             }
@@ -1253,8 +1268,20 @@ public final class Parser
         string type = getCurrentToken().getToken();
         string identifier;
 
-        /* Expect an identifier (CAN NOT be dotted) */
+
+        // TODO: Insert pointer `*`-handling code here
         nextToken();
+        ulong derefCount = 0;
+
+        /* If we have a star */
+        while(getSymbolType(getCurrentToken()) == SymbolType.STAR)
+        {
+            derefCount+=1;
+            type=type~"*";
+            nextToken();
+        }
+        
+        /* Expect an identifier (CAN NOT be dotted) */
         expect(SymbolType.IDENT_TYPE, getCurrentToken());
         if(!isIdentifier_NoDot(getCurrentToken()))
         {
@@ -1520,6 +1547,45 @@ public final class Parser
         }
     }
 
+    private Statement parseDerefAssignment()
+    {
+        gprintln("parseDerefAssignment(): Enter", DebugType.WARNING);
+
+        Statement statement;
+
+        /* Consume the star `*` */
+        nextToken();
+        ulong derefCnt = 1;
+
+        /* Check if there is another star */
+        while(getSymbolType(getCurrentToken()) == SymbolType.STAR)
+        {
+            derefCnt+=1;
+            nextToken();
+        }
+
+        /* Expect an expression */
+        Expression pointerExpression = parseExpression();
+
+        /* Expect an assignment operator */
+        expect(SymbolType.ASSIGN, getCurrentToken());
+        nextToken();
+
+        /* Expect an expression */
+        Expression assigmentExpression = parseExpression();
+
+        /* Expect a semicolon */
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+        nextToken();
+
+        // FIXME: We should make a LHSPiinterAssignmentThing
+        statement = new PointerDereferenceAssignment(pointerExpression, assigmentExpression, derefCnt);
+
+        gprintln("parseDerefAssignment(): Leave", DebugType.WARNING);
+
+        return statement;
+    }
+
     // TODO: This ic currently dead code and ought to be used/implemented
     private Statement parseStatement(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
     {
@@ -1581,6 +1647,11 @@ public final class Parser
         {
             /* Parse the return statement */
             statement = parseReturn();
+        }
+        /* If it is a dereference assigment (a `*`) */
+        else if(symbol == SymbolType.STAR)
+        {
+            statement = parseDerefAssignment();
         }
         /* Error out */
         else
@@ -2128,14 +2199,89 @@ void function()
 }
 
 /**
+ *
+ */
+unittest
+{
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.typecheck.core;
+
+    string sourceCode = `
+module simple_pointer;
+
+int j;
+
+int function(int* ptr)
+{
+    *ptr = 2+2;
+
+    return 0;
+}
+
+int thing()
+{
+    int discardExpr = function(&j);
+    int** l;
+}
+`;
+    Lexer currentLexer = new Lexer(sourceCode);
+    assert(currentLexer.performLex());
+    
+    
+    Parser parser = new Parser(currentLexer.getTokens());
+    
+    try
+    {
+        Module modulle = parser.parse();
+
+        /* Module name must be parser_while */
+        assert(cmp(modulle.getName(), "simple_pointer")==0);
+        TypeChecker tc = new TypeChecker(modulle);
+
+        /* Find the function named `function` */
+        Entity funcFunction = tc.getResolver().resolveBest(modulle, "function");
+        assert(funcFunction);
+        assert(cast(Function)funcFunction); // Ensure it is a Function
+
+        /* Find the function named `thing` */
+        Entity funcThing = tc.getResolver().resolveBest(modulle, "thing");
+        assert(funcThing);
+        assert(cast(Function)funcThing); // Ensure it is a Function
+
+        /* Find the variable named `j` */
+        Entity variableJ = tc.getResolver().resolveBest(modulle, "j");
+        assert(variableJ);
+        assert(cast(Variable)variableJ);
+
+
+        /* Get the `function`'s body */
+        Container funcFunctionContainer = cast(Container)funcFunction;
+        assert(funcFunctionContainer);
+        Statement[] funcFunctionStatements = funcFunctionContainer.getStatements();
+        assert(funcFunctionStatements.length == 3); // Remember this includes the parameters
+
+        /* Get the `thing`'s body */
+        Container funcThingContainer = cast(Container)funcThing;
+        assert(funcThingContainer);
+        Statement[] funcThingStatements = funcThingContainer.getStatements();
+        assert(funcThingStatements.length == 2);
+
+        // TODO: Finish this
+        // TODO: Add a check for the Statement types in the bodies, the arguments and the parameters
+    }
+    catch(TError e)
+    {
+        assert(false);
+    }
+}
+
+/**
  * Do-while loop tests (TODO: Add this)
  */
 
 /**
- * For loop tests (TODO: Add this)
- */
-/**
- * While loop test case (nested)
+ * For loop tests (TODO: FInish this)
  */
 unittest
 {
@@ -2231,45 +2377,17 @@ void function()
         VariableAssignmentStdAlone outerLoopBranchBodyStmt3 = cast(VariableAssignmentStdAlone)outerLoopBranchBody[2];
         assert(outerLoopBranchBodyStmt3);
 
+        /* Start examining the inner for-loop */
+        Branch innerLoopBranch = innerLoop.getBranch();
+        assert(innerLoopBranch);
 
-        // /* The outer loop should have a Variable as pre-run Statement */
-        // Statement preRunStatement = outerLoop.getPreLoopStatement();
-        // assert(preRunStatement);
-        // assert(cast(Variable)preRunStatement);
+        /* The branch should have a condition */
+        Expression innerLoopBranchCondition = innerLoopBranch.getCondition();
+        assert(innerLoopBranchCondition);
 
-        // /* The outer loop should have a variable assignment as the post-iteration statement */
-        // Statement postIrerationStatement = outerLoop.getPreIterationStatement();
-        // assert(postIrerationStatement);
-        // assert(cast(VariableAssignmentStdAlone)postIrerationStatement);
-
-        // /* Extract the statements of the body of the outer loop */
-        // Branch outerLoopBranch = outerLoop.getBranch();
-        // assert(outerLoopBranch);
-        // Statement[] outerLoopBody = outerLoopBranch.getStatements();
-        // assert(outerLoopBody.length == 2);
-
-        // /* First statement is a VarAssStdAlone */
-        // assert(cast(VariableAssignmentStdAlone)outerLoopBody[0]);
-
-        // /* Second statement is a for loop */
-        // ForLoop innerLoop = cast(ForLoop)outerLoopBody[1];
-        // assert(innerLoop);
-
-        // /* The inner loop should have a Variable as pre-run Statement */
-        // Statement innerPreRunStatement = innerLoop.getPreLoopStatement();
-        // assert(innerPreRunStatement);
-        // assert(cast(Variable)innerPreRunStatement);
-
-        // /* The inner loop should have a variable assignment as the post-iteration statement */
-        // Statement innerPostIrerationStatement = outerLoop.getPreIterationStatement();
-        // assert(innerPostIrerationStatement);
-        // assert(cast(VariableAssignmentStdAlone)innerPostIrerationStatement);
-
-        // /* Extract the statements of the body of the inner loop */
-        // Branch innerLoopBranch = innerLoop.getBranch();
-        // assert(innerLoopBranch);
-        // Statement[] innerLoopBody = innerLoopBranch.getStatements();
-        // assert(innerLoopBody.length == 0);
+        /* The branch should have a body made up of [postIteration] */
+        Statement[] innerLoopBranchBody = innerLoopBranch.getStatements();
+        assert(innerLoopBranchBody.length == 1);
     }
     catch(TError e)
     {

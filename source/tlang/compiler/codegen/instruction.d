@@ -237,6 +237,16 @@ public class UnaryOpInstr : Value
 
         addInfo = "UnaryOpType: "~to!(string)(operator)~", Instr: "~exp.toString();
     }
+
+    public SymbolType getOperator()
+    {
+        return operator;
+    }
+
+    public Instruction getOperand()
+    {
+        return exp;
+    }
 }
 
 /**
@@ -398,5 +408,35 @@ public final class BranchInstruction : Instruction
     public Instruction[] getBodyInstructions()
     {
         return bodyInstructions;
+    }
+}
+
+
+public final class PointerDereferenceAssignmentInstruction : Instruction
+{
+    private Value pointerEvalInstr;
+    private Value assigmnetExprInstr;
+    private ulong derefCount;
+
+    this(Value pointerEvalInstr, Value assigmnetExprInstr, ulong derefCount)
+    {
+        this.pointerEvalInstr = pointerEvalInstr;
+        this.assigmnetExprInstr = assigmnetExprInstr;
+        this.derefCount = derefCount;
+    }
+
+    public Value getPointerEvalInstr()
+    {
+        return pointerEvalInstr;
+    }
+
+    public Value getAssExprInstr()
+    {
+        return assigmnetExprInstr;
+    }
+
+    public ulong getDerefCount()
+    {
+        return derefCount;
     }
 }
