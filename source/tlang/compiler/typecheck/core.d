@@ -24,6 +24,8 @@ import std.algorithm : reverse;
 */
 public final class TypeChecker
 {
+    private Parser parser;
+
     private Module modulle;
 
     /* The name resolver */
@@ -39,6 +41,22 @@ public final class TypeChecker
         this.modulle = modulle;
         resolver = new Resolver(this);
         /* TODO: Module check?!?!? */
+    }
+
+    /** 
+     * Constructs a new Typechecker with the given parser
+     *
+     * Params:
+     *   parser = The instance of the parser to use for performing
+     *   the typechecking process
+     */
+    this(Parser parser)
+    {
+        this.parser = parser;
+
+        /* Loop through each `importedModule` and parent them? */
+
+        // TODO: Setup resolver
     }
 
     /**

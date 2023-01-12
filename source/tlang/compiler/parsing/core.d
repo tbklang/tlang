@@ -1725,6 +1725,11 @@ public final class Parser
     /* Module caching facility */
     private static Module[string] cachedModules;
 
+    public static Module[string] getCachedModules()
+    {
+        return cachedModules;
+    }
+
     private Module parseModuleImport()
     {
         Module importedModule;
@@ -1959,7 +1964,7 @@ public final class Parser
                 // ... however we may need a static cache to prevent loops and
                 // ... also to return something already imported (else unique depenedencies
                 // ... will be made and duplication will occur)
-                modulle.addStatement(importedModule);
+                // modulle.addStatement(importedModule);
                 
             }
             else
