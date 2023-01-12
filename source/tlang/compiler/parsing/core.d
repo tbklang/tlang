@@ -444,9 +444,10 @@ public final class Parser
         *
         * 1. `int ptr` (and we looked ahead to `ptr`)
         * 2. `int* ptr` (and we looked ahead to `*`)
+        * 3. `int[] thing` (and we looked ahead to `[`)
         */
         /* If we have an identifier/type then declaration */
-        else if(type == SymbolType.IDENT_TYPE || type == SymbolType.STAR)
+        else if(type == SymbolType.IDENT_TYPE || type == SymbolType.STAR || type == SymbolType.OBRACKET)
         {
             previousToken();
             ret = parseTypedDeclaration();
@@ -1267,17 +1268,24 @@ public final class Parser
         /* TODO: Save type */
         string type = getCurrentToken().getToken();
         string identifier;
-
-
-        // TODO: Insert pointer `*`-handling code here
         nextToken();
-        ulong derefCount = 0;
 
-        /* If we have a star */
-        while(getSymbolType(getCurrentToken()) == SymbolType.STAR)
+        /* Handling of pointer and array types */
+        while(getSymbolType(getCurrentToken()) == SymbolType.STAR || getSymbolType(getCurrentToken()) == SymbolType.OBRACKET)
         {
-            derefCount+=1;
-            type=type~"*";
+            /* If we have `[` then expect a `]` */
+            if(getSymbolType(getCurrentToken()) == SymbolType.OBRACKET)
+            {
+                nextToken();
+                expect(SymbolType.CBRACKET, getCurrentToken());
+                type=type~"[]";
+            }
+            /* If we have `*` */
+            else
+            {
+                type=type~"*";
+            }
+            
             nextToken();
         }
         
