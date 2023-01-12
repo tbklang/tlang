@@ -1729,6 +1729,9 @@ public final class Parser
         return new FunctionCall(functionName, arguments);
     }
 
+    /* Module caching facility */
+    private static Module[string] cachedModules;
+
     private Module parseModuleImport()
     {
         Module importedModule;
@@ -1810,6 +1813,21 @@ public final class Parser
         fileBytes = sourceFileFile.rawRead(fileBytes);
         sourceFileFile.close();
 
+        /* Check if we have already imported this module */
+        import std.digest.md : md5Of;
+        import std.digest : toHexString;
+        string moduleHashum = toHexString(md5Of(fileBytes));
+        foreach(string moduleKey; cachedModules.keys())
+        {
+            // If we find the module then return it immediately
+            if(cmp(moduleKey, moduleHashum) == 0)
+            {
+                gprintln("Cache hit for module '"~moduleName~"'");
+                return cachedModules[moduleKey];
+            }
+        }
+        gprintln("Cache MISS for module '"~moduleName~"'");
+
         Lexer currentLexer = new Lexer(cast(string)fileBytes);
         assert(currentLexer.performLex());
         
@@ -1827,6 +1845,9 @@ public final class Parser
             throw new ParserException(this, "Error importing module '"~moduleName~"'");
         }
 
+
+        /* Cache the module */
+        cachedModules[moduleHashum] = importedModule;
 
         return importedModule;
     }
