@@ -883,7 +883,7 @@ public final class Parser
                 nextToken();
 
                 /* If it is a star `*` */
-                if(getSymbolType(getCurrentToken()) == SymbolType.STAR)
+                while(getSymbolType(getCurrentToken()) == SymbolType.STAR)
                 {
                     // Make type a pointer
                     type = type~"*";
@@ -2211,6 +2211,16 @@ unittest
 module simple_pointer;
 
 int j;
+
+void myFunc(int* ptr, int** ptrPtr, int*** ptrPtrPtr)
+{
+
+}
+
+int** funcPtr()
+{
+    return 1;
+}
 
 int function(int* ptr)
 {
