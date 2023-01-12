@@ -1170,15 +1170,12 @@ public final class TypeChecker
         return foundType;
     }
 
-    /* TODO: TYpeEntity check sepeare */
-    /* TODO: Parsing within function etc. */
-
+    // TODO: What actually is the point of this? It literally generates a `Class[]`
+    // ... and then tosses it after returning. (See issue "Dead code tracking" #83)
     private void checkDefinitionTypes(Container c)
     {
         /* Check variables and functions (TypedEntities) declarations */
         // checkTypedEntitiesTypeNames(c);
-
-       
 
         /* Check class inheritance types */
         Clazz[] classes;
