@@ -38,6 +38,48 @@ public interface Container
     public Statement[] getStatements();
 }
 
+// TODO: Start here for module support - this ought to be the top-level container
+// TODO: Resolver must handle this with care, it's #NoNameBrand
+public class Program : Entity, Container
+{
+    private Module[] importedModules;
+
+    this()
+    {
+        super("program");
+    }
+
+    public void addStatement(Statement statement)
+    {
+        Module moduleToAdd = cast(Module)statement;
+        assert(moduleToAdd);
+
+        this.importedModules ~= moduleToAdd;
+    }
+
+    public void addStatements(Statement[] statements)
+    {
+        foreach(Statement statement; statements)
+        {
+            Module moduleToAdd = cast(Module)statement;
+            assert(moduleToAdd);
+
+            this.importedModules ~= moduleToAdd;
+        }
+    }
+
+    public Statement[] getStatements()
+    {
+        // TODO: This really isn't needed surely as all modules would have the same weight
+        return weightReorder(cast(Statement[])importedModules);
+    }
+
+    public override string toString()
+    {
+        return "Module (Name: "~name~")";
+    }
+}
+
 public class Module : Entity, Container
 {
     this(string moduleName)
@@ -61,6 +103,11 @@ public class Module : Entity, Container
     public Statement[] getStatements()
     {
         return weightReorder(statements);
+    }
+
+    public override string toString()
+    {
+        return "Module (Name: "~name~")";
     }
 }
 
