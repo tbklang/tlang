@@ -58,6 +58,7 @@ public enum SymbolType
     SMALLER_THAN,
     GREATER_THAN_OR_EQUALS,
     SMALLER_THAN_OR_EQUALS,
+    IMPORT,
     UNKNOWN
 }
 
@@ -320,6 +321,11 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "module") == 0)
     {
         return SymbolType.MODULE;
+    }
+    /* import keyword */
+    else if(cmp(token, "import") == 0)
+    {
+        return SymbolType.IMPORT;
     }
     /* new keyword */
     else if(cmp(token, "new") == 0)

@@ -28,6 +28,9 @@ public final class Parser
     private Token currentToken;
     private ulong tokenPtr;
 
+    /* The source file being parsed */
+    private string sourceFilePath;
+
     /**
     * Crashes the program if the given token is not a symbol
     * the same as the givne expected one
@@ -69,11 +72,15 @@ public final class Parser
 
     /**
     * Costructs a new parser with the given set of Tokens
+    *
+    * TODO: Later enforce the `sourceFilePath`
     */
-    this(Token[] tokens)
+    this(Token[] tokens, string sourceFilePath = "")
     {
         this.tokens = tokens;
         currentToken = tokens[0];
+
+        this.sourceFilePath = sourceFilePath;
     }
 
     /**
@@ -1722,6 +1729,108 @@ public final class Parser
         return new FunctionCall(functionName, arguments);
     }
 
+    private Module parseModuleImport()
+    {
+        Module importedModule;
+
+        /* Consume the `import` keyword */
+        nextToken();
+
+        /* Expect an identifier */
+        expect(SymbolType.IDENT_TYPE, getCurrentToken());
+        string moduleName = getCurrentToken().getToken();
+        nextToken();
+
+        /* Expect a semicolon */
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+        nextToken();
+
+        /* If we are module named `tristan.x` then `x.t` must be in `../tristan/` */
+        import std.file;
+        import std.array;
+        string currentPackage;
+
+        try
+        {
+            currentPackage = split(sourceFilePath, "/")[$-2];
+        }
+        catch(FileException e)
+        {
+            gprintln("There was an error whilst determining the current package", DebugType.ERROR);
+            throw new ParserException(this, "There was an error whilst determining the current package");
+        }
+
+        gprintln("CurrentPackage: "~currentPackage);
+
+        string fullPackagePath = join(split(sourceFilePath, "/")[0..$-1], "/");
+
+        string sourceFile;
+
+        /* If there are no dots in the name, then locally resolve the package */
+        import std.algorithm : canFind;
+        if(!canFind(moduleName, "."))
+        {
+            sourceFile = fullPackagePath~"/"~moduleName~".t";
+
+            try
+            {
+                gprintln(fullPackagePath);
+                gprintln(sourceFile);
+                gprintln(sourceFilePath);
+                isFile(sourceFile);
+                // Good
+            }
+            catch(FileException e)
+            {
+                throw new ParserException(this, "Could not find module named '"~moduleName~"' in local package");
+            }
+        }
+
+
+
+        // TODO: Check for valid source name
+
+        
+        
+
+        
+
+
+        // TODO: Begin parsing on a new Parser instance
+        // TODO: After call to `.parse()` is done, check that module's name matches the import we provided etc
+
+        import compiler.lexer;
+        
+        import std.stdio;
+        File sourceFileFile;
+        sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+        ulong fileSize = sourceFileFile.size();
+        byte[] fileBytes;
+        fileBytes.length = fileSize;
+        fileBytes = sourceFileFile.rawRead(fileBytes);
+        sourceFileFile.close();
+
+        Lexer currentLexer = new Lexer(cast(string)fileBytes);
+        assert(currentLexer.performLex());
+        
+        
+        Parser parser = new Parser(currentLexer.getTokens());
+        
+        try
+        {
+            importedModule = parser.parse();
+
+            // assert(cmp(importedModule.getName(), "myModule")==0);
+        }
+        catch(TError)
+        {
+            throw new ParserException(this, "Error importing module '"~moduleName~"'");
+        }
+
+
+        return importedModule;
+    }
+
     /* Almost like parseBody but has more */
     /**
     * TODO: For certain things like `parseClass` we should
@@ -1822,6 +1931,18 @@ public final class Parser
                 Expression expression = parseDiscard();
 
                 modulle.addStatement(expression);
+            }
+            /* If it is a `import` statement */
+            else if(symbol == SymbolType.IMPORT)
+            {
+                Module importedModule = parseModuleImport();
+
+                // TODO: How would we go about importing a module?
+                // ... perhaps we need an instance of modules imported
+                // ... in the Parser instance (`this`)
+
+                modulle.addStatement(importedModule);
+                
             }
             else
             {

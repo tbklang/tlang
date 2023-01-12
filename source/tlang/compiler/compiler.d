@@ -53,7 +53,7 @@ void beginCompilation(string[] sourceFiles)
         gprintln("Collected "~to!(string)(currentLexer.getTokens()));
 
         gprintln("Parsing tokens...");
-        Parser parser = new Parser(currentLexer.getTokens());
+        Parser parser = new Parser(currentLexer.getTokens(), sourceFile);
         Module modulle;
         
         import misc.exceptions;
