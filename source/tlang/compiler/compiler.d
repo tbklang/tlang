@@ -55,6 +55,7 @@ void beginCompilation(string[] sourceFiles)
         gprintln("Parsing tokens...");
         Parser parser = new Parser(currentLexer.getTokens(), sourceFile);
         Module modulle;
+        Program program;
         
         import misc.exceptions;
 
