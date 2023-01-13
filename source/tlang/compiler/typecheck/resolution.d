@@ -303,7 +303,7 @@ public final class Resolver
                 return entityWithin;
             }
             /* If `name` was NOT found within container `c` or above it */
-        else
+            else
             {
                 return null;
             }
@@ -323,7 +323,7 @@ public final class Resolver
                     return entityNext;
                 }
                 /* Go deeper */
-            else
+                else
                 {
                     string newPath = name[indexOf(name, '.') + 1 .. name.length];
                     Entity entityNext = resolveWithin(c, path[1]);
@@ -352,7 +352,7 @@ public final class Resolver
                 }
             }
             /* We need to search higher */
-        else
+            else
             {
                 /* TODO: Bug is we will never find top container */
                 /* Check if the name of root is that of Module */
