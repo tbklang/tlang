@@ -1115,6 +1115,29 @@ public final class TypeChecker
                 pointerDereferenceAssignmentInstruction.context = ptrDerefAss.context;
                 addInstrB(pointerDereferenceAssignmentInstruction);
             }
+            /**
+            * Discard statement (DiscardStatement)
+            */
+            else if(cast(DiscardStatement)statement)
+            {
+                DiscardStatement discardStatement = cast(DiscardStatement)statement;
+
+                /* Pop off a Value instruction */
+                Value exprInstr = cast(Value)popInstr();
+                assert(exprInstr);
+
+                /**
+                * Code gen
+                *
+                * 1. Create the DiscardInstruction containing the Value instruction
+                * `exprInstr`
+                * 2. Set the context
+                * 3. Add the instruction
+                */
+                DiscardInstruction discardInstruction = new DiscardInstruction(exprInstr);
+                discardInstruction.context = discardStatement.context;
+                addInstrB(discardInstruction);
+            }
             /* Case of no matches */
             else
             {

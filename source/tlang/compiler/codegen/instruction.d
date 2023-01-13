@@ -440,3 +440,18 @@ public final class PointerDereferenceAssignmentInstruction : Instruction
         return derefCount;
     }
 }
+
+public final class DiscardInstruction : Instruction
+{
+    private Value exprInstr;
+
+    this(Value exprInstr)
+    {
+        this.exprInstr = exprInstr;
+    }
+
+    public Value getExpressionInstruction()
+    {
+        return exprInstr;
+    }
+}
