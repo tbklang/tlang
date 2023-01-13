@@ -420,6 +420,7 @@ public final class DCodeEmitter : CodeEmitter
         emitCodeQueue();
 
         // Emit function definitions
+        emitFunctionPrototypes();
         emitFunctionDefinitions();
 
         //TODO: Emit main (entry point)
@@ -471,7 +472,27 @@ public final class DCodeEmitter : CodeEmitter
     }
 
     /** 
-     * TOOD: We should have an nextInstruction() esque thing for this
+     * Emits the function prototypes
+     */
+    private void emitFunctionPrototypes()
+    {
+        gprintln("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount()));
+
+        Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues();
+
+        string[] functionNames = getFunctionDefinitionNames();
+
+        gprintln("WOAH: "~to!(string)(functionNames));
+
+        foreach(string currentFunctioName; functionNames)
+        {
+            emitFunctionPrototype(currentFunctioName);
+            file.writeln();
+        }
+    }
+
+    /** 
+     * Emits the function definitions
      */
     private void emitFunctionDefinitions()
     {
@@ -487,7 +508,7 @@ public final class DCodeEmitter : CodeEmitter
         {
             emitFunctionDefinition(currentFunctioName);
             file.writeln();
-        }   
+        }
     }
 
     private string generateSignature(Function func)
@@ -529,6 +550,20 @@ public final class DCodeEmitter : CodeEmitter
 
         return signature;
 
+    }
+
+    private void emitFunctionPrototype(string functionName)
+    {
+        selectQueue(QueueType.FUNCTION_DEF_QUEUE, functionName);
+
+        gprintln("emotFunctionDefinition(): Function: "~functionName~", with "~to!(string)(getSelectedQueueLength())~" many instructions");
+    
+        //TODO: Look at nested definitions or nah? (Context!!)
+        //TODO: And what about methods defined in classes? Those should technically be here too
+        Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(typeChecker.getModule(), functionName); //TODO: Remove `auto`
+        
+        // Emit the function signature
+        file.writeln(generateSignature(functionEntity)~";");
     }
 
     private void emitFunctionDefinition(string functionName)
