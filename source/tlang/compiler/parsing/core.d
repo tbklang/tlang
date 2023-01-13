@@ -1823,14 +1823,6 @@ public final class Parser
                 /* Add the struct definition to the program */
                 modulle.addStatement(ztruct);
             }
-            /* If it is a `discard` statement */
-            else if(symbol == SymbolType.DISCARD)
-            {
-                /* Parse the3 discard statement */
-                Statement statement = parseDiscard();
-
-                modulle.addStatement(statement);
-            }
             else
             {
                 expect("parse(): Unknown '" ~ tok.getToken() ~ "'");
