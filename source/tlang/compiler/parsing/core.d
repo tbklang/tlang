@@ -963,7 +963,7 @@ public final class Parser
     *
     * TODO: Remove discard and implement the needed mirrors
     */
-    private Expression parseDiscard()
+    private DiscardStatement parseDiscard()
     {
         /* Consume the `discard` */
         nextToken();
@@ -975,7 +975,10 @@ public final class Parser
         expect(SymbolType.SEMICOLON, getCurrentToken());
         nextToken();
 
-        return expression;
+        /* Create a `discard` statement */
+        DiscardStatement discardStatement = new DiscardStatement(expression);
+
+        return discardStatement;
     }
 
     /**
@@ -1648,6 +1651,12 @@ public final class Parser
             /* Parse the return statement */
             statement = parseReturn();
         }
+        /* If it is a `discard` statement */
+        else if(symbol == SymbolType.DISCARD)
+        {
+            /* Parse the discard statement */
+            statement = parseDiscard();
+        }
         /* If it is a dereference assigment (a `*`) */
         else if(symbol == SymbolType.STAR)
         {
@@ -1735,8 +1744,6 @@ public final class Parser
 
         Module modulle;
 
-        /* TODO: Do parsing here */
-
         /* Expect `module` and module name and consume them (and `;`) */
         expect(SymbolType.MODULE, getCurrentToken());
         nextToken();
@@ -1819,9 +1826,10 @@ public final class Parser
             /* If it is a `discard` statement */
             else if(symbol == SymbolType.DISCARD)
             {
-                Expression expression = parseDiscard();
+                /* Parse the3 discard statement */
+                Statement statement = parseDiscard();
 
-                modulle.addStatement(expression);
+                modulle.addStatement(statement);
             }
             else
             {
@@ -2031,6 +2039,66 @@ class myClass2
 }
 
 /**
+ * Discard statement test case
+ */
+unittest
+{
+    import std.stdio;
+    import compiler.lexer;
+    import compiler.typecheck.core;
+
+
+    string sourceCode = `
+module parser_discard;
+
+void function()
+{
+    discard function();
+}
+`;
+
+
+    Lexer currentLexer = new Lexer(sourceCode);
+    assert(currentLexer.performLex());
+    
+    
+    Parser parser = new Parser(currentLexer.getTokens());
+    
+    try
+    {
+        Module modulle = parser.parse();
+
+        /* Module name must be parser_discard */
+        assert(cmp(modulle.getName(), "parser_discard")==0);
+        TypeChecker tc = new TypeChecker(modulle);
+
+        
+        /* Find the function named `function` */
+        Entity func = tc.getResolver().resolveBest(modulle, "function");
+        assert(func);
+        assert(cast(Function)func); // Ensure it is a Funciton
+
+        /* Get the function's body */
+        Container funcContainer = cast(Container)func;
+        assert(funcContainer);
+        Statement[] functionStatements = funcContainer.getStatements();
+        assert(functionStatements.length == 1);
+
+        /* First statement should be a discard */
+        DiscardStatement discard = cast(DiscardStatement)functionStatements[0];
+        assert(discard);
+        
+        /* The statement being discarded should be a function call */
+        FunctionCall functionCall = cast(FunctionCall)discard.getExpression();
+        assert(functionCall);
+    }
+    catch(TError e)
+    {
+        assert(false);
+    }
+}
+
+/**
  * Function definition test case
  */
 unittest
@@ -2062,7 +2130,7 @@ int myFunction(int i, int j)
     {
         Module modulle = parser.parse();
 
-        /* Module name must be parser_while */
+        /* Module name must be parser_function_def */
         assert(cmp(modulle.getName(), "parser_function_def")==0);
         TypeChecker tc = new TypeChecker(modulle);
 
@@ -2245,7 +2313,7 @@ int thing()
     {
         Module modulle = parser.parse();
 
-        /* Module name must be parser_while */
+        /* Module name must be simple_pointer */
         assert(cmp(modulle.getName(), "simple_pointer")==0);
         TypeChecker tc = new TypeChecker(modulle);
 
@@ -2329,7 +2397,7 @@ void function()
     {
         Module modulle = parser.parse();
 
-        /* Module name must be parser_while */
+        /* Module name must be parser_for */
         assert(cmp(modulle.getName(), "parser_for")==0);
         TypeChecker tc = new TypeChecker(modulle);
 
@@ -2451,7 +2519,7 @@ void function()
     {
         Module modulle = parser.parse();
 
-        /* Module name must be parser_while */
+        /* Module name must be parser_if */
         assert(cmp(modulle.getName(), "parser_if")==0);
         TypeChecker tc = new TypeChecker(modulle);
 
