@@ -388,6 +388,21 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        /**
+        * Discard instruction (DiscardInstruction)
+        */
+        else if(cast(DiscardInstruction)instruction)
+        {
+            DiscardInstruction discardInstruction = cast(DiscardInstruction)instruction;
+            Value valueInstruction = discardInstruction.getExpressionInstruction();
+
+            string emit;
+
+            /* Transform the expression */
+            emit ~= transform(valueInstruction)~";";
+
+            return emit;
+        }
 
         return "<TODO: Base emit: "~to!(string)(instruction)~">";
     }

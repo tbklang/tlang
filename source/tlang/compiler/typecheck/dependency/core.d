@@ -1497,6 +1497,25 @@ public class DNodeGenerator
 
             return ptrAssDerefDNode;
         }
+        /**
+        * Discard statement (DiscardStatement)
+        */
+        else if(cast(DiscardStatement)entity)
+        {
+            DiscardStatement discardStatement = cast(DiscardStatement)entity;
+            discardStatement.setContext(context);
+            DNode discardStatementDNode = pool(discardStatement);
+
+            gprintln("Implement discard statement!", DebugType.ERROR);
+            
+            /* Pass the expression */
+            Expression discardExpression = discardStatement.getExpression();
+            DNode discardExpresionDNode = expressionPass(discardExpression, context);
+            discardStatementDNode.needs(discardExpresionDNode);
+
+
+            return discardStatementDNode;
+        }
 
         return null;
     }

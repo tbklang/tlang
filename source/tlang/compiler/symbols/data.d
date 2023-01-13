@@ -873,3 +873,26 @@ public final class Branch : Entity, Container
         return "Branch";
     }
 }
+
+public final class DiscardStatement : Statement
+{
+    private Expression expression;
+
+    this(Expression expression)
+    {
+        this.expression = expression;
+
+        /* Weighted as 2 */
+        weight = 2;
+    }
+
+    public Expression getExpression()
+    {
+        return expression;
+    }
+
+    public override string toString()
+    {
+        return "[DiscardStatement: (Exp: "~expression.toString()~")]";
+    }
+}
