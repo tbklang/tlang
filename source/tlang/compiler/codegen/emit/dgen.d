@@ -671,8 +671,9 @@ int main()
 #include<assert.h>
 int main()
 {
-    thing();
+    int retValue = thing();
     assert(t_87bc875d0b65f741b69fb100a0edebc7 == 4);
+    assert(retValue == 6);
 
     return 0;
 }`);

@@ -598,7 +598,26 @@ public final class TypeChecker
                 /* If pointer dereference */
                 else if(unaryOperator == SymbolType.STAR)
                 {
-                    /* TODO: Add support */
+                    gprintln("Type popped: "~to!(string)(expType));
+
+                    // Okay, so yes, we would pop `ptr`'s type as `int*` which is correct
+                    // but now, we must a.) ensure that IS the case and b.)
+                    // push the type of `<type>` with one star less on as we are derefrencing `ptr`
+                    Type derefPointerType;
+                    if(cast(Pointer)expType)
+                    {
+                        Pointer pointerType = cast(Pointer)expType;
+                        
+                        // Get the type being referred to
+                        Type referredType = pointerType.getReferredType();
+
+                        addType(referredType);
+                    }
+                    else
+                    {
+                        gprintln("You cannot dereference a type that is not a pointer type!", DebugType.ERROR);
+                        assert(false);
+                    }
                 }
                 /* If pointer create `&` */
                 else if(unaryOperator == SymbolType.AMPERSAND)
@@ -632,6 +651,7 @@ public final class TypeChecker
                 
                 
                 UnaryOpInstr addInst = new UnaryOpInstr(expInstr, unaryOperator);
+                gprintln("Made unaryop instr: "~to!(string)(addInst));
                 addInstr(addInst);
             }
             /* Function calls */
