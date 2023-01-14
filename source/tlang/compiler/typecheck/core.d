@@ -737,6 +737,40 @@ public final class TypeChecker
                 addInstr(funcCallInstr);
                 addType(getType(func.parentOf(), func.getType()));
             }
+            /* Type cast operator */
+            else if(cast(CastedExpression)statement)
+            {
+                CastedExpression castedExpression = cast(CastedExpression)statement;
+                gprintln("Context: "~to!(string)(castedExpression.context));
+                gprintln("ParentOf: "~to!(string)(castedExpression.parentOf()));
+                Type castToType = getType(castedExpression.context.container, castedExpression.getToType());
+
+                /* Pop the type associated with the embedded expression */
+                Type typeBeingCasted = popType(); // TODO: Is there anything we would want to do with this?
+                gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
+
+                /* Push the type to cast to onto the stack such that we typify the associated instruction */
+                addType(castToType);
+
+                /**
+                * Codegen
+                *
+                * 1. Pop off the current value instruction corresponding to the embedding
+                * 2. Create a new CastedValueInstruction instruction
+                * 3. Set the context
+                * 4. Add to front of code queue
+                */
+                Value uncastedInstruction = cast(Value)popInstr();
+                assert(uncastedInstruction);
+
+                printCodeQueue();
+                printTypeQueue();
+
+                CastedValueInstruction castedValueInstruction = new CastedValueInstruction(uncastedInstruction, castToType);
+                castedValueInstruction.context = castedExpression.context;
+
+                addInstr(castedValueInstruction);
+            }
         }
         /* VariableAssigbmentDNode */
         else if(cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode)

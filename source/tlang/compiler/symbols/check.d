@@ -58,6 +58,7 @@ public enum SymbolType
     SMALLER_THAN,
     GREATER_THAN_OR_EQUALS,
     SMALLER_THAN_OR_EQUALS,
+    CAST,
     UNKNOWN
 }
 
@@ -325,6 +326,11 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "new") == 0)
     {
         return SymbolType.NEW;
+    }
+    /* cast keyword */
+    else if(cmp(token, "cast") == 0)
+    {
+        return SymbolType.CAST;
     }
     /* discard keyword */
     else if(cmp(token, "discard") == 0)

@@ -17,6 +17,7 @@ import compiler.codegen.mapper : SymbolMapper;
 import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
+import compiler.symbols.typing.core : Type, Primitive;
 
 public final class DCodeEmitter : CodeEmitter
 {    
@@ -400,6 +401,42 @@ public final class DCodeEmitter : CodeEmitter
 
             /* Transform the expression */
             emit ~= transform(valueInstruction)~";";
+
+            return emit;
+        }
+        /**
+        * Type casting instruction (CastedValueInstruction)
+        */
+        else if(cast(CastedValueInstruction)instruction)
+        {
+            CastedValueInstruction castedValueInstruction = cast(CastedValueInstruction)instruction;
+            Type castingTo = castedValueInstruction.getCastToType();
+
+            // TODO: Dependent on type being casted one must handle different types, well differently (as is case for atleast OOP)
+
+            Value uncastedInstruction = castedValueInstruction.getEmbeddedInstruction();
+
+
+            string emit;
+
+            /* Handling of primitive types */
+            if(cast(Primitive)castingTo)
+            {
+                /* Add the actual cast */
+                emit ~= "("~to!(string)(castingTo)~")";
+
+                /* The expression being casted */
+                emit ~= transform(uncastedInstruction);
+            }
+            else
+            {
+                // TODO: Implement this
+                gprintln("Non-primitive type casting not yet implemented", DebugType.ERROR);
+                assert(false);
+            }
+
+            
+
 
             return emit;
         }

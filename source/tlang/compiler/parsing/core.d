@@ -986,6 +986,36 @@ public final class Parser
     */
 
 
+    private CastedExpression parseCast()
+    {
+        CastedExpression castedExpression;
+
+        /* Consume the `cast` */
+        nextToken();
+
+        /* Expect an `(` open brace */
+        expect(SymbolType.LBRACE, getCurrentToken());
+        nextToken();
+
+        /* Expect a type */
+        expect(SymbolType.IDENT_TYPE, getCurrentToken());
+        string toType = getCurrentToken().getToken();
+        nextToken();
+
+        /* Expect a `)` closing brace */
+        expect(SymbolType.RBRACE, getCurrentToken());
+        nextToken();
+
+        /* Get the expression to cast */
+        Expression uncastedExpression = parseExpression();
+
+        
+        castedExpression = new CastedExpression(toType, uncastedExpression);
+
+        return castedExpression;
+    }
+
+
     /**
     * Parses an expression
     *
@@ -1064,6 +1094,12 @@ public final class Parser
 
                 /* Get the next token */
                 nextToken();
+            }
+            /* If it is a cast operator */
+            else if(symbol == SymbolType.CAST)
+            {
+                CastedExpression castedExpression = parseCast();
+                addRetExp(castedExpression);
             }
             /* If it is a maths operator */
             /* TODO: Handle all operators here (well most), just include bit operators */

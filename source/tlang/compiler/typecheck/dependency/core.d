@@ -1095,6 +1095,22 @@ public class DNodeGenerator
             /* TODO: Add specific DNode type dependent on the type of operator */
             dnode.needs(expressionNode);
         }
+        /**
+        * Type cast operator (CastedExpression)
+        */
+        else if(cast(CastedExpression)exp)
+        {
+            CastedExpression castedExpression = cast(CastedExpression)exp;
+
+            // Set the context as we need to grab it later in the typechecker
+            castedExpression.context = context;
+
+            /* Extract the embedded expression and pass it */
+            Expression uncastedExpression = castedExpression.getEmbeddedExpression();
+            DNode uncastedExpressionDNode = expressionPass(uncastedExpression, context);
+
+            dnode.needs(uncastedExpressionDNode);
+        }
         else
         {
             // dnode = new DNode(this, exp);

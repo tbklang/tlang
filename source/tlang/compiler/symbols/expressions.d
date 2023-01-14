@@ -139,3 +139,25 @@ public final class NewExpression : Expression
         return funcCall;
     }
 }
+
+public final class CastedExpression : Expression
+{
+    private Expression uncastedExpression;
+    private string toType;
+
+    this(string toType, Expression uncastedExpression)
+    {
+        this.toType = toType;
+        this.uncastedExpression = uncastedExpression;
+    }
+
+    public string getToType()
+    {
+        return toType;
+    }
+
+    public Expression getEmbeddedExpression()
+    {
+        return uncastedExpression;
+    }
+}
