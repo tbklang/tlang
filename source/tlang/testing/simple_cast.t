@@ -4,5 +4,6 @@ int myInt;
 
 void function()
 {
-    byte myByte = cast(byte)myInt;
+    byte bruh;
+    byte myByte = (cast(byte)myInt)+bruh;
 }
