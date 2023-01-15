@@ -1273,6 +1273,9 @@ public final class TypeChecker
     */
     public void beginCheck()
     {
+        /* Process all pseudo entities of the given module */
+        processPseudoEntities(modulle);
+
         /**
         * Make sure there are no name collisions anywhere
         * in the Module with an order of precedence of
@@ -1284,6 +1287,39 @@ public final class TypeChecker
         /* TODO: Now that everything is defined, no collision */
         /* TODO: Do actual type checking and declarations */
         dependencyCheck();
+    }
+
+    private void processPseudoEntities(Container c)
+    {
+        /* Collect all `extern` declarations */
+        ExternStmt[] externDeclarations;
+        foreach(Statement curStatement; c.getStatements())
+        {
+            if(cast(ExternStmt)curStatement)
+            {
+                externDeclarations ~= cast(ExternStmt)curStatement;
+            }
+        }
+
+        // TODO: We could remove them from the container too, means less loops in dependency/core.d
+
+        /* Add each Entity to the container */
+        foreach(ExternStmt curExternStmt; externDeclarations)
+        {
+            SymbolType externType = curExternStmt.getExternType();
+            string externalSymbolName = curExternStmt.getExternalName();
+            Entity pseudoEntity = curExternStmt.getPseudoEntity();
+
+            /* Set the embedded pseudo entity's parent to that of the container */
+            pseudoEntity.parentTo(c);
+
+            c.addStatements([pseudoEntity]);
+
+            assert(this.getResolver().resolveBest(c, externalSymbolName));
+        }
+
+
+        
     }
 
     private void checkClassInherit(Container c)
@@ -1425,6 +1461,8 @@ public final class TypeChecker
 
         foreach (Entity entity; entities)
         {
+            
+            gprintln("checkEntty: "~to!(string)(entity is null));
             /**
             * Absolute root Container (in other words, the Module)
             * can not be used
@@ -1468,6 +1506,7 @@ public final class TypeChecker
                 Container possibleContainerEntity = cast(Container) entity;
                 if (possibleContainerEntity)
                 {
+                    gprintln("checkContainer(c): Recursing on: "~to!(string)(possibleContainerEntity));
                     checkContainerCollision(possibleContainerEntity);
                 }
             }
@@ -1503,6 +1542,7 @@ public final class TypeChecker
         /* Get all classes */
         foreach (Statement statement; c.getStatements())
         {
+            gprintln("getContainerMember: "~to!(string)(statement));
             if (statement !is null && cast(Entity) statement)
             {
                 entities ~= cast(Entity) statement;

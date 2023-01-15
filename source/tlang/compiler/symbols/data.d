@@ -169,9 +169,23 @@ public class Entity : Statement
     /* Name of the entity (class's name, function's name, variable's name) */
     protected string name;
 
-    this(string name)
+    /* If this entity is extern'd */
+    private bool isExternalEntity;
+
+    this(string name, bool isExternalEntity = false)
     {
         this.name = name;
+        this.isExternalEntity = isExternalEntity;
+    }
+
+    public bool isExternal()
+    {
+        return isExternalEntity;
+    }
+
+    public void makeExternal()
+    {
+        isExternalEntity = true;
     }
 
     public void setAccessorType(AccessorType accessorType)
@@ -894,5 +908,42 @@ public final class DiscardStatement : Statement
     public override string toString()
     {
         return "[DiscardStatement: (Exp: "~expression.toString()~")]";
+    }
+}
+
+public final class ExternStmt : Statement
+{
+    // Pseudo entity created
+    private Entity pseudoEntity;
+
+    private SymbolType externType;
+
+    this(Entity pseudoEntity, SymbolType externType)
+    {
+        // External symbols are either external functions or external variables
+        assert(externType == SymbolType.EXTERN_EFUNC || externType == SymbolType.EXTERN_EVAR);
+
+        this.pseudoEntity = pseudoEntity;
+        this.externType = externType;
+    }
+
+    public string getExternalName()
+    {
+        return pseudoEntity.getName();
+    }
+
+    public SymbolType getExternType()
+    {
+        return externType;
+    }
+
+    public Entity getPseudoEntity()
+    {
+        return pseudoEntity;
+    }
+
+    public override string toString()
+    {
+        return "[ExternStatement: (Symbol name: "~getExternalName()~")]";
     }
 }

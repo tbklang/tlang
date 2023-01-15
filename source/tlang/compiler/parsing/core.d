@@ -854,7 +854,7 @@ public final class Parser
         VariableParameter[] params;
     }
 
-    private funcDefPair parseFuncDef()
+    private funcDefPair parseFuncDef(bool wantsBody = true)
     {
         gprintln("parseFuncDef(): Enter", DebugType.WARNING);
 
@@ -938,11 +938,21 @@ public final class Parser
             }
         }
 
-        expect(SymbolType.OCURLY, getCurrentToken());
+        /* If a body is required then allow it */
+        if(wantsBody)
+        {
+            expect(SymbolType.OCURLY, getCurrentToken());
 
-        /* Parse the body (and it leaves ONLY when it gets the correct symbol, no expect needed) */
-        statements = parseBody();
-        nextToken();
+            /* Parse the body (and it leaves ONLY when it gets the correct symbol, no expect needed) */
+            statements = parseBody();
+
+            nextToken();
+        }
+        /* If no body is requested */
+        else
+        {
+            expect(SymbolType.SEMICOLON, getCurrentToken());
+        }
 
         gprintln("ParseFuncDef: Parameter count: " ~ to!(string)(parameterCount));
         gprintln("parseFuncDef(): Leave", DebugType.WARNING);
@@ -1294,7 +1304,7 @@ public final class Parser
         return retExpression[0];
     }
 
-    private TypedEntity parseTypedDeclaration()
+    private TypedEntity parseTypedDeclaration(bool wantsBody = true)
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
 
@@ -1336,7 +1346,7 @@ public final class Parser
         gprintln("ParseTypedDec: SymbolType=" ~ to!(string)(symbolType));
         if (symbolType == SymbolType.LBRACE)
         {
-            funcDefPair pair = parseFuncDef();
+            funcDefPair pair = parseFuncDef(wantsBody);
 
             generated = new Function(identifier, type, pair.bodyStatements, pair.params);
             
@@ -1767,6 +1777,53 @@ public final class Parser
         return new FunctionCall(functionName, arguments);
     }
 
+    private ExternStmt parseExtern()
+    {
+        ExternStmt externStmt;
+
+        /* Consume the `extern` token */
+        nextToken();
+
+        /* Expect the next token to be either `efunc` or `evariable` */
+        SymbolType externType = getSymbolType(getCurrentToken());
+        nextToken();
+
+        /* Pseudo-entity */
+        Entity pseudoEntity;
+
+        /* External function symbol */
+        if(externType == SymbolType.EXTERN_EFUNC)
+        {
+            // TODO: (For one below)(we should also disallow somehow assignment) - evar
+
+            // We now parse function definition but with wantsBody false 
+            pseudoEntity = parseTypedDeclaration(false);
+        }
+        /* External variable symbol */
+        else if(externType == SymbolType.EXTERN_EVAR)
+        {
+            // TODO: Implement me
+            assert(false);
+        }
+        /* Anything else is invalid */
+        else
+        {
+            expect("Expected either extern function (efunc) or extern variable (evar)");
+        }
+
+        /* Expect a semicolon to end it all and then consume it */
+        expect(SymbolType.SEMICOLON, getCurrentToken());
+        nextToken();
+
+        externStmt = new ExternStmt(pseudoEntity, externType);
+
+        /* Mark the Entity as external */
+        pseudoEntity.makeExternal();
+
+        return externStmt;
+    }
+
+
     /* Almost like parseBody but has more */
     /**
     * TODO: For certain things like `parseClass` we should
@@ -1858,6 +1915,13 @@ public final class Parser
 
                 /* Add the struct definition to the program */
                 modulle.addStatement(ztruct);
+            }
+            /* If it is an extern */
+            else if(symbol == SymbolType.EXTERN)
+            {
+                ExternStmt externStatement = parseExtern();
+
+                modulle.addStatement(externStatement);
             }
             else
             {

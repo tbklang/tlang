@@ -492,6 +492,8 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        // TODO: MAAAAN we don't even have this yet
+        // else if(cast(StringExpression))
 
         return "<TODO: Base emit: "~to!(string)(instruction)~">";
     }
@@ -646,6 +648,12 @@ public final class DCodeEmitter : CodeEmitter
         // )
         signature~=")";
 
+        // If the function is marked as external then place `extern` infront
+        if(func.isExternal())
+        {
+            signature = "extern "~signature;
+        }
+
         return signature;
 
     }
@@ -674,26 +682,35 @@ public final class DCodeEmitter : CodeEmitter
         //TODO: And what about methods defined in classes? Those should technically be here too
         Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(typeChecker.getModule(), functionName); //TODO: Remove `auto`
         
-        // Emit the function signature
-        file.writeln(generateSignature(functionEntity));
-
-        // Emit opening curly brace
-        file.writeln(getCharacter(SymbolType.OCURLY));
-
-        // Emit body
-        while(hasInstructions())
+        // If the Entity is NOT external then emit the signature+body
+        if(!functionEntity.isExternal())
         {
-            Instruction curFuncBodyInstr = getCurrentInstruction();
+            // Emit the function signature
+            file.writeln(generateSignature(functionEntity));
 
-            string emit = transform(curFuncBodyInstr);
-            gprintln("emitFunctionDefinition("~functionName~"): Emit: "~emit);
-            file.writeln("\t"~emit);
-            
-            nextInstruction();
+            // Emit opening curly brace
+            file.writeln(getCharacter(SymbolType.OCURLY));
+
+            // Emit body
+            while(hasInstructions())
+            {
+                Instruction curFuncBodyInstr = getCurrentInstruction();
+
+                string emit = transform(curFuncBodyInstr);
+                gprintln("emitFunctionDefinition("~functionName~"): Emit: "~emit);
+                file.writeln("\t"~emit);
+                
+                nextInstruction();
+            }
+
+            // Emit closing curly brace
+            file.writeln(getCharacter(SymbolType.CCURLY));
         }
-
-        // Emit closing curly brace
-        file.writeln(getCharacter(SymbolType.CCURLY));
+        // If the Entity IS external then don't emit anything as the signature would have been emitted via a prorotype earlier with `emitPrototypes()`
+        else
+        {
+            // Do nothing
+        }
     }
 
     private void emitCodeQueue()
@@ -777,6 +794,20 @@ int main()
     int retValue = thing();
     assert(t_87bc875d0b65f741b69fb100a0edebc7 == 4);
     assert(retValue == 6);
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "simple_extern") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    test();
+   
+    
 
     return 0;
 }`);
