@@ -17,7 +17,7 @@ import compiler.codegen.mapper : SymbolMapper;
 import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
-import compiler.symbols.typing.core : Type, Primitive, Integer, Void;
+import compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
 
 public final class DCodeEmitter : CodeEmitter
 {    
@@ -58,8 +58,18 @@ public final class DCodeEmitter : CodeEmitter
 
         // TODO: Some types will ident transform
 
+        /* Pointer types */
+        if(cast(Pointer)typeIn)
+        {
+            /* Extract type being pointed to */
+            Pointer pointerType = cast(Pointer)typeIn;       
+            Type referType = pointerType.getReferType();
+
+            /* The type is then `transform(<refertype>)*` */
+            return typeTransform(referType)~"*";
+        }
         /* Integral types transformation */
-        if(cast(Integer)typeIn)
+        else if(cast(Integer)typeIn)
         {
             Integer integralType = cast(Integer)typeIn;
 
