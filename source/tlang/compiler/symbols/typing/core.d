@@ -105,6 +105,11 @@ public class Pointer : Integer
         super(name, 8);
         this.dataType = dataType;
     }
+
+    public Type getReferredType()
+    {
+        return dataType;
+    }
 }
 
 /**

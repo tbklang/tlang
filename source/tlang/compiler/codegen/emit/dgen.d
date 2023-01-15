@@ -17,6 +17,7 @@ import compiler.codegen.mapper : SymbolMapper;
 import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
+import compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
 
 public final class DCodeEmitter : CodeEmitter
 {    
@@ -42,6 +43,58 @@ public final class DCodeEmitter : CodeEmitter
         }
         return tabStr;
     }
+
+    /** 
+     * Given an instance of a Type this will transform it to a string
+     *
+     * Params:
+     *   typeIn = The Type to transform
+     *
+     * Returns:  The string representation of the transformed type
+     */
+    public string typeTransform(Type typeIn)
+    {
+        string stringRepr;
+
+        // TODO: Some types will ident transform
+
+        /* Pointer types */
+        if(cast(Pointer)typeIn)
+        {
+            /* Extract type being pointed to */
+            Pointer pointerType = cast(Pointer)typeIn;       
+            Type referType = pointerType.getReferredType();
+
+            /* The type is then `transform(<refertype>)*` */
+            return typeTransform(referType)~"*";
+        }
+        /* Integral types transformation */
+        else if(cast(Integer)typeIn)
+        {
+            Integer integralType = cast(Integer)typeIn;
+
+            /* u<>_t or <>_t (Determine signedness) */
+            string typeString = integralType.isSigned() ? "int" : "uint";
+
+            /* Width of integer */
+            typeString ~= to!(string)(integralType.getSize()*8);
+
+            /* Trailing `_t` */
+            typeString ~= "_t";
+
+            return typeString;
+        }
+        /* Void type */
+        else if(cast(Void)typeIn)
+        {
+            return "void";
+        }
+
+        gprintln("Type transform unimplemented");
+        assert(false);
+        // return stringRepr;
+    }
+
 
     public override string transform(const Instruction instruction)
     {
@@ -119,12 +172,12 @@ public final class DCodeEmitter : CodeEmitter
                 VariableAssignmentInstr varAssInstr = varDecInstr.getAssignmentInstr();
 
                 // Generate the code to emit
-                return varDecInstr.varType~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
+                return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
             }
 
 
 
-            return varDecInstr.varType~" "~renamedSymbol~";";
+            return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~";";
         }
         /* LiteralValue */
         else if(cast(LiteralValue)instruction)
@@ -403,6 +456,42 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        /**
+        * Type casting instruction (CastedValueInstruction)
+        */
+        else if(cast(CastedValueInstruction)instruction)
+        {
+            CastedValueInstruction castedValueInstruction = cast(CastedValueInstruction)instruction;
+            Type castingTo = castedValueInstruction.getCastToType();
+
+            // TODO: Dependent on type being casted one must handle different types, well differently (as is case for atleast OOP)
+
+            Value uncastedInstruction = castedValueInstruction.getEmbeddedInstruction();
+
+
+            string emit;
+
+            /* Handling of primitive types */
+            if(cast(Primitive)castingTo)
+            {
+                /* Add the actual cast */
+                emit ~= "("~typeTransform(castingTo)~")";
+
+                /* The expression being casted */
+                emit ~= transform(uncastedInstruction);
+            }
+            else
+            {
+                // TODO: Implement this
+                gprintln("Non-primitive type casting not yet implemented", DebugType.ERROR);
+                assert(false);
+            }
+
+            
+
+
+            return emit;
+        }
 
         return "<TODO: Base emit: "~to!(string)(instruction)~">";
     }
@@ -412,6 +501,9 @@ public final class DCodeEmitter : CodeEmitter
     {
         // Emit header comment (NOTE: Change this to a useful piece of text)
         emitHeaderComment("Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
+
+        // Emit standard integer header import
+        emitStdint();
 
         // Emit static allocation code
         emitStaticAllocations();
@@ -515,8 +607,11 @@ public final class DCodeEmitter : CodeEmitter
     {
         string signature;
 
+        // Extract the Function's return Type
+        Type returnType = typeChecker.getType(func.context.container, func.getType());
+
         // <type> <functionName> (
-        signature = func.getType()~" "~func.getName()~"(";
+        signature = typeTransform(returnType)~" "~func.getName()~"(";
 
         // Generate parameter list
         if(func.hasParams())
@@ -528,13 +623,16 @@ public final class DCodeEmitter : CodeEmitter
             {
                 Variable currentParameter = parameters[parIdx];
 
+                // Extract the variable's type
+                Type parameterType = typeChecker.getType(currentParameter.context.container, currentParameter.getType());
+
                 // Generate the symbol-mapped names for the parameters
                 Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(func, currentParameter.getName()); //TODO: Remove `auto`
                 string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
 
 
                 // Generate <type> <parameter-name (symbol mapped)>
-                parameterString~=currentParameter.getType()~" "~renamedSymbol;
+                parameterString~=typeTransform(parameterType)~" "~renamedSymbol;
 
                 if(parIdx != (parameters.length-1))
                 {
@@ -614,6 +712,11 @@ public final class DCodeEmitter : CodeEmitter
         file.writeln();
     }
 
+    private void emitStdint()
+    {
+        file.writeln("#include<stdint.h>");
+    }
+
     private void emitEntryPoint()
     {
         //TODO: Implement me
@@ -671,8 +774,9 @@ int main()
 #include<assert.h>
 int main()
 {
-    thing();
+    int retValue = thing();
     assert(t_87bc875d0b65f741b69fb100a0edebc7 == 4);
+    assert(retValue == 6);
 
     return 0;
 }`);

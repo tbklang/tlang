@@ -6,6 +6,7 @@ import std.string : cmp;
 import compiler.symbols.data : SymbolType;
 import compiler.symbols.check : getCharacter;
 import gogga;
+import compiler.symbols.typing.core : Type;
 
 public class Instruction
 {
@@ -78,13 +79,13 @@ public final class VariableDeclaration : StorageDeclaration
     public const byte length;
 
     /* Type of the variable being declared */
-    public const string varType;
+    public const Type varType;
 
     /* VariableAssignmentInstr-instruction to be assigned */
     private VariableAssignmentInstr varAssInstr;
 
     //TODO: This must take in type information
-    this(string varName, byte len, string varType, VariableAssignmentInstr varAssInstr)
+    this(string varName, byte len, Type varType, VariableAssignmentInstr varAssInstr)
     {
         this.varName = varName;
         this.length = len;
@@ -453,5 +454,29 @@ public final class DiscardInstruction : Instruction
     public Value getExpressionInstruction()
     {
         return exprInstr;
+    }
+}
+
+public final class CastedValueInstruction : Value
+{
+    /* The uncasted original instruction that must be executed-then-trimmed (casted) */
+    private Value uncastedValue;
+
+    private Type castToType;
+
+    this(Value uncastedValue, Type castToType)
+    {
+        this.uncastedValue = uncastedValue;
+        this.castToType = castToType;
+    }
+
+    public Value getEmbeddedInstruction()
+    {
+        return uncastedValue;
+    }
+
+    public Type getCastToType()
+    {
+        return castToType;
     }
 }
