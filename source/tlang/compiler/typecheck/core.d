@@ -1461,8 +1461,6 @@ public final class TypeChecker
 
         foreach (Entity entity; entities)
         {
-            
-            gprintln("checkEntty: "~to!(string)(entity is null));
             /**
             * Absolute root Container (in other words, the Module)
             * can not be used
@@ -1506,7 +1504,6 @@ public final class TypeChecker
                 Container possibleContainerEntity = cast(Container) entity;
                 if (possibleContainerEntity)
                 {
-                    gprintln("checkContainer(c): Recursing on: "~to!(string)(possibleContainerEntity));
                     checkContainerCollision(possibleContainerEntity);
                 }
             }
@@ -1542,7 +1539,6 @@ public final class TypeChecker
         /* Get all classes */
         foreach (Statement statement; c.getStatements())
         {
-            gprintln("getContainerMember: "~to!(string)(statement));
             if (statement !is null && cast(Entity) statement)
             {
                 entities ~= cast(Entity) statement;
