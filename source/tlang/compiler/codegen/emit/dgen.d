@@ -597,6 +597,7 @@ public final class DCodeEmitter : CodeEmitter
     {
         string signature;
 
+        // Extract the Function's return Type
         Type returnType = typeChecker.getType(func.context.container, func.getType());
 
         // <type> <functionName> (
@@ -612,13 +613,16 @@ public final class DCodeEmitter : CodeEmitter
             {
                 Variable currentParameter = parameters[parIdx];
 
+                // Extract the variable's type
+                Type parameterType = typeChecker.getType(currentParameter.context.container, currentParameter.getType());
+
                 // Generate the symbol-mapped names for the parameters
                 Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(func, currentParameter.getName()); //TODO: Remove `auto`
                 string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
 
 
                 // Generate <type> <parameter-name (symbol mapped)>
-                parameterString~=currentParameter.getType()~" "~renamedSymbol;
+                parameterString~=typeTransform(parameterType)~" "~renamedSymbol;
 
                 if(parIdx != (parameters.length-1))
                 {
