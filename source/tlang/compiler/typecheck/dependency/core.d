@@ -1304,8 +1304,11 @@ public class DNodeGenerator
         */
         else if(cast(Function)entity)
         {
-            // /* Grab the function */
+            /* Grab the function */
             Function func = cast(Function)entity;
+
+            /* Don't forget to set its context */
+            func.context = context;
 
             /* Add funtion definition */
             gprintln("Hello");

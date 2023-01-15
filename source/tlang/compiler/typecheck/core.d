@@ -843,7 +843,9 @@ public final class TypeChecker
             }
 
 
-            VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variablePNode.getType(), assignmentInstr);
+            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
+
+            VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variableDeclarationType, assignmentInstr);
 
             /* NEW CODE (9th November 2021) Set the context */
             varDecInstr.context = variablePNode.context;

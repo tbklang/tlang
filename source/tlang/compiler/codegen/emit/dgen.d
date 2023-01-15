@@ -17,7 +17,7 @@ import compiler.codegen.mapper : SymbolMapper;
 import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
-import compiler.symbols.typing.core : Type, Primitive;
+import compiler.symbols.typing.core : Type, Primitive, Integer, Void;
 
 public final class DCodeEmitter : CodeEmitter
 {    
@@ -43,6 +43,48 @@ public final class DCodeEmitter : CodeEmitter
         }
         return tabStr;
     }
+
+    /** 
+     * Given an instance of a Type this will transform it to a string
+     *
+     * Params:
+     *   typeIn = The Type to transform
+     *
+     * Returns:  The string representation of the transformed type
+     */
+    public string typeTransform(Type typeIn)
+    {
+        string stringRepr;
+
+        // TODO: Some types will ident transform
+
+        /* Integral types transformation */
+        if(cast(Integer)typeIn)
+        {
+            Integer integralType = cast(Integer)typeIn;
+
+            /* u<>_t or <>_t (Determine signedness) */
+            string typeString = integralType.isSigned() ? "int" : "uint";
+
+            /* Width of integer */
+            typeString ~= to!(string)(integralType.getSize()*8);
+
+            /* Trailing `_t` */
+            typeString ~= "_t";
+
+            return typeString;
+        }
+        /* Void type */
+        else if(cast(Void)typeIn)
+        {
+            return "void";
+        }
+
+        gprintln("Type transform unimplemented");
+        assert(false);
+        // return stringRepr;
+    }
+
 
     public override string transform(const Instruction instruction)
     {
@@ -120,12 +162,12 @@ public final class DCodeEmitter : CodeEmitter
                 VariableAssignmentInstr varAssInstr = varDecInstr.getAssignmentInstr();
 
                 // Generate the code to emit
-                return varDecInstr.varType~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
+                return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
             }
 
 
 
-            return varDecInstr.varType~" "~renamedSymbol~";";
+            return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~";";
         }
         /* LiteralValue */
         else if(cast(LiteralValue)instruction)
@@ -423,7 +465,7 @@ public final class DCodeEmitter : CodeEmitter
             if(cast(Primitive)castingTo)
             {
                 /* Add the actual cast */
-                emit ~= "("~to!(string)(castingTo)~")";
+                emit ~= "("~typeTransform(castingTo)~")";
 
                 /* The expression being casted */
                 emit ~= transform(uncastedInstruction);
@@ -449,6 +491,9 @@ public final class DCodeEmitter : CodeEmitter
     {
         // Emit header comment (NOTE: Change this to a useful piece of text)
         emitHeaderComment("Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
+
+        // Emit standard integer header import
+        emitStdint();
 
         // Emit static allocation code
         emitStaticAllocations();
@@ -552,8 +597,10 @@ public final class DCodeEmitter : CodeEmitter
     {
         string signature;
 
+        Type returnType = typeChecker.getType(func.context.container, func.getType());
+
         // <type> <functionName> (
-        signature = func.getType()~" "~func.getName()~"(";
+        signature = typeTransform(returnType)~" "~func.getName()~"(";
 
         // Generate parameter list
         if(func.hasParams())
@@ -649,6 +696,11 @@ public final class DCodeEmitter : CodeEmitter
         }
 
         file.writeln();
+    }
+
+    private void emitStdint()
+    {
+        file.writeln("#include<stdint.h>");
     }
 
     private void emitEntryPoint()
