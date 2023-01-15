@@ -63,7 +63,7 @@ public final class DCodeEmitter : CodeEmitter
         {
             /* Extract type being pointed to */
             Pointer pointerType = cast(Pointer)typeIn;       
-            Type referType = pointerType.getReferType();
+            Type referType = pointerType.getReferredType();
 
             /* The type is then `transform(<refertype>)*` */
             return typeTransform(referType)~"*";
@@ -774,8 +774,9 @@ int main()
 #include<assert.h>
 int main()
 {
-    thing();
+    int retValue = thing();
     assert(t_87bc875d0b65f741b69fb100a0edebc7 == 4);
+    assert(retValue == 6);
 
     return 0;
 }`);

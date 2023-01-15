@@ -106,7 +106,7 @@ public class Pointer : Integer
         this.dataType = dataType;
     }
 
-    public Type getReferType()
+    public Type getReferredType()
     {
         return dataType;
     }
