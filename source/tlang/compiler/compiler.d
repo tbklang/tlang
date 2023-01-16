@@ -13,6 +13,73 @@ import core.stdc.stdlib;
 import compiler.codegen.emit.core;
 import compiler.codegen.emit.dgen;
 
+
+public class Compiler
+{
+    /* The input source code */
+    private string inputSource;
+
+    /* The lexer */
+    private Lexer lexer;
+
+    /* The parser */
+    private Parser parser;
+
+    /* The typechecker/code generator */
+    private TypeChecker typeChecker;
+
+    /* The chosen code emitter to use */
+    private CodeEmitter emitter;
+
+    /** 
+     * Create a new compiler instance to compile the given
+     * source code
+     * Params:
+     *   sourceCode = the source code to compile
+     */
+    this(string sourceCode)
+    {
+        this.inputSource = sourceCode;
+    }
+
+    public void compile()
+    {
+        // TODO: Add each step of the pipeline here
+
+        /* Setup the lexer and begin lexing */
+        this.lexer = new Lexer(inputSource);
+        if(lexer.performLex())
+        {
+            /* Extract the tokens */
+            Token[] tokens = lexer.getTokens();
+            gprintln("Collected "~to!(string)(tokens));
+
+            /* Spawn a new parser with the provided tokens */
+            this.parser = new Parser(tokens);
+
+            /* The parsed Module */
+            Module modulle = parser.parse();
+
+            /* Spawn a new typechecker/codegenerator on the module */
+            this.typeChecker = new TypeChecker(modulle);
+
+
+            /* Perform code emitting */
+            File outFile;
+            outFile.open("tlangout.c", "w");
+            this.emitter = new DCodeEmitter(typeChecker, outFile);
+            emitter.emit();
+            outFile.close();
+            // Cause the generation to happen
+            emitter.finalize();
+        }
+        else
+        {
+            // TODO: Throw a lexing error  here or rather `performLex()` should be doing that
+        }
+    }
+}
+
 /** 
  * Performs compilation of the provided module(s)
  *
