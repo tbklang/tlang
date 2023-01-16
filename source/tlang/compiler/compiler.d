@@ -30,6 +30,7 @@ public class Compiler
 
     /* The chosen code emitter to use */
     private CodeEmitter emitter;
+    private File emitOutFile;
 
     /** 
      * Create a new compiler instance to compile the given
@@ -37,9 +38,10 @@ public class Compiler
      * Params:
      *   sourceCode = the source code to compile
      */
-    this(string sourceCode)
+    this(string sourceCode, File emitOutFile)
     {
         this.inputSource = sourceCode;
+        this.emitOutFile = emitOutFile;
     }
 
     public void compile()
@@ -63,15 +65,11 @@ public class Compiler
             /* Spawn a new typechecker/codegenerator on the module */
             this.typeChecker = new TypeChecker(modulle);
 
-
             /* Perform code emitting */
-            File outFile;
-            outFile.open("tlangout.c", "w");
-            this.emitter = new DCodeEmitter(typeChecker, outFile);
-            emitter.emit();
-            outFile.close();
-            // Cause the generation to happen
-            emitter.finalize();
+            this.emitter = new DCodeEmitter(typeChecker, emitOutFile);
+            emitter.emit(); // Emit the code
+            emitOutFile.close(); // Flush (perform the write() syscall)
+            emitter.finalize(); // Call CC on the file containing generated C code
         }
         else
         {
