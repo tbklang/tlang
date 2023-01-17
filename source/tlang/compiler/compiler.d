@@ -32,6 +32,34 @@ public class Compiler
     private CodeEmitter emitter;
     private File emitOutFile;
 
+    private string[string] config;
+
+    /* TODO: Make the default config */
+    private void defaultConfig()
+    {
+        /* Enable Behaviour-C fixes */
+        setConfig("behavec:preinline_args", "true");
+    }
+
+    public void setConfig(string key, string value)
+    {
+        config[key] = value;
+    }
+
+    public string getConfig(string key)
+    {
+        import std.algorithm : canFind;
+        if(canFind(config.keys(), key))
+        {
+            return config[key];
+        }
+        else
+        {
+            // TODO: Change to a TError
+            throw new Exception("Key not found");
+        }
+    }
+
     /** 
      * Create a new compiler instance to compile the given
      * source code
@@ -42,6 +70,9 @@ public class Compiler
     {
         this.inputSource = sourceCode;
         this.emitOutFile = emitOutFile;
+
+        /* Enable the default config */
+        defaultConfig();
     }
 
     public void compile()
