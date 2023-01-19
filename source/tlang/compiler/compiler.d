@@ -96,6 +96,9 @@ public class Compiler
             /* Spawn a new typechecker/codegenerator on the module */
             this.typeChecker = new TypeChecker(modulle);
 
+            /* Perform typechecking/codegen */
+            this.typeChecker.beginCheck();
+
             /* Perform code emitting */
             this.emitter = new DCodeEmitter(typeChecker, emitOutFile);
             emitter.emit(); // Emit the code
@@ -105,6 +108,7 @@ public class Compiler
         else
         {
             // TODO: Throw a lexing error  here or rather `performLex()` should be doing that
+            gprintln("Error when lexing (make this an exception throw)", DebugType.ERROR);
         }
     }
 }
@@ -123,6 +127,7 @@ void beginCompilation(string[] sourceFiles)
     Lexer[] lexers;
     foreach(string sourceFile; sourceFiles)
     {
+        /* Read in the source code */
         gprintln("Reading source file '"~sourceFile~"' ...");
         File sourceFileFile;
         sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
@@ -132,76 +137,14 @@ void beginCompilation(string[] sourceFiles)
         fileBytes = sourceFileFile.rawRead(fileBytes);
         sourceFileFile.close();
 
-        gprintln("Performing tokenization on '"~sourceFile~"' ...");
+        /* The file to output to */
+        File outFile;
+        outFile.open("tlangout.c", "w");
 
-        /* TODO: Open source file */
-        string sourceCode = cast(string)fileBytes;
-        // string sourceCode = "hello \"world\"|| ";
-        //string sourceCode = "hello \"world\"||"; /* TODO: Implement this one */
-        // string sourceCode = "hello;";
-        Lexer currentLexer = new Lexer(sourceCode);
-        bool status = currentLexer.performLex();
-        if(!status)
-        {
-            return;
-        }
-        
-        gprintln("Collected "~to!(string)(currentLexer.getTokens()));
-
-        gprintln("Parsing tokens...");
-        Parser parser = new Parser(currentLexer.getTokens());
-        Module modulle;
-        
-        import misc.exceptions;
-
-        try
-        {
-            modulle = parser.parse();
-        }
-        catch(TError e)
-        {
-            gprintln(e.msg, DebugType.ERROR);
-            exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
-        }
-        
-        
-
-        gprintln("Type checking and symbol resolution...");
-        try
-        {
-            TypeChecker typeChecker = new TypeChecker(modulle);
-            typeChecker.beginCheck();
-
-
-            File outFile;
-            outFile.open("tlangout.c", "w");
-            CodeEmitter emitter = new DCodeEmitter(typeChecker, outFile);
-
-            
-            
-            emitter.emit();
-            outFile.close();
-
-            // Cause the generation to happen
-            emitter.finalize();
-        }
-        // catch(CollidingNameException e)
-        // {
-        //     gprintln(e.msg, DebugType.ERROR);
-        //     //gprintln("Stack trace:\n"~to!(string)(e.info));
-        // }
-        catch(TypeCheckerException e)
-        {
-            gprintln(e.msg, DebugType.ERROR);
-            exit(0);
-        }
-
-        
-
-        // import compiler.codegen.core;
-        // CodeGenerator codegen = new DCodeGenerator(modulle);
-        // codegen.build();
-        
-        // typeChecker.check();
+        /* Create a new compiler */
+        Compiler compiler = new Compiler(cast(string)fileBytes, outFile);
+    
+        /* Perform the compilation */
+        compiler.compile();
     }
 }
