@@ -450,6 +450,24 @@ public final class Parser
         {
             previousToken();
             ret = parseTypedDeclaration();
+
+            /* If it is a function definition, then do nothing */
+            if(cast(Function)ret)
+            {
+                // The ending `}` would have already been consumed
+            }
+            /* If it is a variable declaration then */
+            else if(cast(Variable)ret)
+            {
+                /* Expect a semicolon and consume it */
+                expect(SymbolType.SEMICOLON, getCurrentToken());
+                nextToken();
+            }
+            /* This should never happen */
+            else
+            {
+                assert(false);
+            }
         }
         /* Assignment */
         else if(type == SymbolType.ASSIGN)
@@ -462,7 +480,6 @@ public final class Parser
         {
             gprintln(getCurrentToken);
             expect("Error expected ( for var/func def");
-
         }
        
 
@@ -1374,7 +1391,6 @@ public final class Parser
             if(allowVarDec)
             {
                 gprintln("Semi: "~to!(string)(getCurrentToken()));
-                nextToken();
                 gprintln("Semi: "~to!(string)(getCurrentToken()));
                 gprintln("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")",
                         DebugType.WARNING);
@@ -1395,20 +1411,13 @@ public final class Parser
                 // Only continue if assignments are allowed
                 if(wantsBody)
                 {
+                    /* Consume the `=` token */
                     nextToken();
 
                     /* Now parse an expression */
                     Expression expression = parseExpression();
 
                     VariableAssignment varAssign = new VariableAssignment(expression);
-
-                    /**
-                    * The symbol that returned us from `parseExpression` must
-                    * be a semi-colon
-                    */
-                    expect(SymbolType.SEMICOLON, getCurrentToken());
-
-                    nextToken();
 
                     gprintln("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
                             ~ type ~ ", Identifier: " ~ identifier ~ ")", DebugType.WARNING);
@@ -1435,8 +1444,6 @@ public final class Parser
             expect("Expected one of the following: (, ; or =");
         }
 
-        /* TODO: If we outta tokens we should not call this */
-        // gprintln(getCurrentToken());
         gprintln("parseTypedDeclaration(): Leave", DebugType.WARNING);
 
         return generated;
