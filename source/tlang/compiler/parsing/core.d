@@ -1366,6 +1366,7 @@ public final class Parser
             // Only continue is function definitions are allowed
             if(allowFuncDef)
             {
+                /* Will consume the `}` (or `;` if wantsBody-false) */
                 funcDefPair pair = parseFuncDef(wantsBody);
 
                 generated = new Function(identifier, type, pair.bodyStatements, pair.params);
@@ -1854,11 +1855,6 @@ public final class Parser
             expect("Expected either extern function (efunc) or extern variable (evar)");
         }
 
-        // TODO: If we are doing all this semi-colon stuff in `parseTypedDecaration()` then we ought
-        // ... to put the below code in there. Compare body ending `}` and nextToken()'ing it
-        // ... to a vardec finishing on `;` and then returning to `parseName()` which does nothing
-        // ... we could seem how we go about this, perhaps body is the exception case, and we should
-        // ... be nextToken()'ing and before that exoecting in `parseName()` and here, `parseExtern()'
         /* Expect a semicolon to end it all and then consume it */
         expect(SymbolType.SEMICOLON, getCurrentToken());
         nextToken();
