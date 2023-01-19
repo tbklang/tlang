@@ -1304,7 +1304,7 @@ public final class Parser
         return retExpression[0];
     }
 
-    private TypedEntity parseTypedDeclaration(bool wantsBody = true)
+    private TypedEntity parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true)
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
 
@@ -1346,55 +1346,89 @@ public final class Parser
         gprintln("ParseTypedDec: SymbolType=" ~ to!(string)(symbolType));
         if (symbolType == SymbolType.LBRACE)
         {
-            funcDefPair pair = parseFuncDef(wantsBody);
+            // Only continue is function definitions are allowed
+            if(allowFuncDef)
+            {
+                funcDefPair pair = parseFuncDef(wantsBody);
 
-            generated = new Function(identifier, type, pair.bodyStatements, pair.params);
-            
-            import std.stdio;
-            writeln(to!(string)((cast(Function)generated).getVariables()));
+                generated = new Function(identifier, type, pair.bodyStatements, pair.params);
+                
+                import std.stdio;
+                writeln(to!(string)((cast(Function)generated).getVariables()));
 
-            // Parent the parameters of the function to the Function
-            parentToContainer(cast(Container)generated, cast(Statement[])pair.params);
+                // Parent the parameters of the function to the Function
+                parentToContainer(cast(Container)generated, cast(Statement[])pair.params);
 
-            // Parent the statements that make up the function to the Function
-            parentToContainer(cast(Container)generated, pair.bodyStatements);
+                // Parent the statements that make up the function to the Function
+                parentToContainer(cast(Container)generated, pair.bodyStatements);
+            }
+            else
+            {
+                expect("Function definitions not allowed");
+            }
         }
         /* Check for semi-colon (var dec) */
         else if (symbolType == SymbolType.SEMICOLON)
         {
-            nextToken();
-            gprintln("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")",
-                    DebugType.WARNING);
+            // Only continue if variable declarations are allowed
+            if(allowVarDec)
+            {
+                gprintln("Semi: "~to!(string)(getCurrentToken()));
+                nextToken();
+                gprintln("Semi: "~to!(string)(getCurrentToken()));
+                gprintln("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")",
+                        DebugType.WARNING);
 
-            generated = new Variable(type, identifier);
+                generated = new Variable(type, identifier);
+            }
+            else
+            {
+                expect("Variables declarations are not allowed.");
+            }
         }
         /* Check for `=` (var dec) */
         else if (symbolType == SymbolType.ASSIGN)
         {
-            nextToken();
+            // Only continue if variable declarations are allowed
+            if(allowVarDec)
+            {
+                // Only continue if assignments are allowed
+                if(wantsBody)
+                {
+                    nextToken();
 
-            /* Now parse an expression */
-            Expression expression = parseExpression();
+                    /* Now parse an expression */
+                    Expression expression = parseExpression();
 
-            VariableAssignment varAssign = new VariableAssignment(expression);
+                    VariableAssignment varAssign = new VariableAssignment(expression);
 
-            /**
-            * The symbol that returned us from `parseExpression` must
-            * be a semi-colon
-            */
-            expect(SymbolType.SEMICOLON, getCurrentToken());
+                    /**
+                    * The symbol that returned us from `parseExpression` must
+                    * be a semi-colon
+                    */
+                    expect(SymbolType.SEMICOLON, getCurrentToken());
 
-            nextToken();
+                    nextToken();
 
-            gprintln("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
-                    ~ type ~ ", Identifier: " ~ identifier ~ ")", DebugType.WARNING);
-            
-            Variable variable = new Variable(type, identifier);
-            variable.addAssignment(varAssign);
+                    gprintln("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
+                            ~ type ~ ", Identifier: " ~ identifier ~ ")", DebugType.WARNING);
+                    
+                    Variable variable = new Variable(type, identifier);
+                    variable.addAssignment(varAssign);
 
-            varAssign.setVariable(variable);
+                    varAssign.setVariable(variable);
 
-            generated = variable;
+                    generated = variable;
+                }
+                else
+                {
+                    expect("Variable assignments+declarations are not allowed.");
+                }
+            }
+            else
+            {
+                expect("Variables declarations are not allowed.");
+            }
         }
         else
         {
@@ -1796,14 +1830,16 @@ public final class Parser
         {
             // TODO: (For one below)(we should also disallow somehow assignment) - evar
 
-            // We now parse function definition but with wantsBody false 
-            pseudoEntity = parseTypedDeclaration(false);
+            // We now parse function definition but with `wantsBody` set to false
+            // indicating no body should be allowed.
+            pseudoEntity = parseTypedDeclaration(false, false, true);
         }
         /* External variable symbol */
         else if(externType == SymbolType.EXTERN_EVAR)
         {
-            // TODO: Implement me
-            assert(false);
+            // We now parse a variable declaration but with the `wantsBody` set to false
+            // indicating no assignment should be allowed.
+            pseudoEntity = parseTypedDeclaration(false, true, false);
         }
         /* Anything else is invalid */
         else
@@ -1811,6 +1847,11 @@ public final class Parser
             expect("Expected either extern function (efunc) or extern variable (evar)");
         }
 
+        // TODO: If we are doing all this semi-colon stuff in `parseTypedDecaration()` then we ought
+        // ... to put the below code in there. Compare body ending `}` and nextToken()'ing it
+        // ... to a vardec finishing on `;` and then returning to `parseName()` which does nothing
+        // ... we could seem how we go about this, perhaps body is the exception case, and we should
+        // ... be nextToken()'ing and before that exoecting in `parseName()` and here, `parseExtern()'
         /* Expect a semicolon to end it all and then consume it */
         expect(SymbolType.SEMICOLON, getCurrentToken());
         nextToken();
