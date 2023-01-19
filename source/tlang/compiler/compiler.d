@@ -13,6 +13,30 @@ import core.stdc.stdlib;
 import compiler.codegen.emit.core;
 import compiler.codegen.emit.dgen;
 
+public class CompilerConfiguration
+{
+    private string[string] config;
+
+    public void setConfig(VType)(string key, VType value)
+    {
+        config[key] = to!(string)(value);
+    }
+
+    public VType getConfig(VType)(string key)
+    {
+        import std.algorithm : canFind;
+        if(canFind(config.keys(), key))
+        {
+            return to!(VType)(config[key]);
+        }
+        else
+        {
+            // TODO: Change to a TError
+            // throw new Exception("Key not found");
+            return false;
+        }
+    }
+}
 
 public class Compiler
 {
@@ -32,33 +56,23 @@ public class Compiler
     private CodeEmitter emitter;
     private File emitOutFile;
 
-    private string[string] config;
+    /* The configuration */
+    private CompilerConfiguration config;
 
     /* TODO: Make the default config */
     private void defaultConfig()
     {
         /* Enable Behaviour-C fixes */
-        setConfig("behavec:preinline_args", "true");
+        config.setConfig("behavec:preinline_args", true);
+
+        /* Enable pretty code generation for DGen */
+        config.setConfig("dgen:pretty_code", true);
+
+        /* Enable entry point test generation for DGen */
+        config.setConfig("dgen_emit_entrypoint_test", true);
     }
 
-    public void setConfig(string key, string value)
-    {
-        config[key] = value;
-    }
-
-    public string getConfig(string key)
-    {
-        import std.algorithm : canFind;
-        if(canFind(config.keys(), key))
-        {
-            return config[key];
-        }
-        else
-        {
-            // TODO: Change to a TError
-            throw new Exception("Key not found");
-        }
-    }
+    
 
     /** 
      * Create a new compiler instance to compile the given
@@ -70,6 +84,8 @@ public class Compiler
     {
         this.inputSource = sourceCode;
         this.emitOutFile = emitOutFile;
+
+        this.config = new CompilerConfiguration();
 
         /* Enable the default config */
         defaultConfig();
@@ -100,7 +116,7 @@ public class Compiler
             this.typeChecker.beginCheck();
 
             /* Perform code emitting */
-            this.emitter = new DCodeEmitter(typeChecker, emitOutFile);
+            this.emitter = new DCodeEmitter(typeChecker, emitOutFile, config);
             emitter.emit(); // Emit the code
             emitOutFile.close(); // Flush (perform the write() syscall)
             emitter.finalize(); // Call CC on the file containing generated C code
@@ -147,4 +163,24 @@ void beginCompilation(string[] sourceFiles)
         /* Perform the compilation */
         compiler.compile();
     }
+}
+
+unittest
+{
+    // TODO: Add tests here for our `simple_<x>.t` tests or put them in DGen, I think here is better
+    // FIXME: Crashes and I think because too fast or actually bad state? Maybe something is not being
+    // cleared, I believe this may be what is happening
+    // ... see issue #88
+    // string[] testFiles = ["source/tlang/testing/simple_functions.t",
+    //                     "source/tlang/testing/simple_while.t",
+    //                     "source/tlang/testing/simple_for_loops.t",
+    //                     "source/tlang/testing/simple_cast.t",
+    //                     "source/tlang/testing/simple_conditionals.t",
+    //                     "source/tlang/testing/nested_conditionals.t",
+    //                     "source/tlang/testing/simple_discard.t"
+    //                     ];
+    // foreach(string testFile; testFiles)
+    // {
+    //     beginCompilation([testFile]);
+    // }
 }

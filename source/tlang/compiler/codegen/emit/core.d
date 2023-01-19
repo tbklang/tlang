@@ -10,6 +10,7 @@ import compiler.codegen.instruction : Instruction;
 import std.range : walkLength;
 import gogga;
 import std.conv : to;
+import compiler.compiler : CompilerConfiguration;
 
 /**
 * TODO: Perhaps have an interface that can emit(Context/Parent, Statement)
@@ -21,6 +22,7 @@ public abstract class CodeEmitter
 {
     protected TypeChecker typeChecker;
     protected File file;
+    protected CompilerConfiguration config;
     
     /** 
      * The selected queue is the queue to be used
@@ -125,7 +127,7 @@ public abstract class CodeEmitter
         return functionBodyInstrs.keys();
     }
 
-    this(TypeChecker typeChecker, File file)
+    this(TypeChecker typeChecker, File file, CompilerConfiguration config)
     {
         this.typeChecker = typeChecker;
 
@@ -138,6 +140,7 @@ public abstract class CodeEmitter
         gprintln("CodeEmitter: Got number of function defs: "~to!(string)(functionBodyInstrs));
         
         this.file = file;
+        this.config = config;
     }
 
     /** 

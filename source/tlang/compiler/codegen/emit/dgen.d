@@ -18,6 +18,7 @@ import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 import compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
+import compiler.compiler : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
 {    
@@ -27,9 +28,9 @@ public final class DCodeEmitter : CodeEmitter
     private bool varDecWantsConsumeVarAss = false;
 
 
-    this(TypeChecker typeChecker, File file)
+    this(TypeChecker typeChecker, File file, CompilerConfiguration config)
     {
-        super(typeChecker, file);
+        super(typeChecker, file, config);
     }
 
     private ulong transformDepth = 0;
@@ -37,10 +38,16 @@ public final class DCodeEmitter : CodeEmitter
     private string genTabs(ulong count)
     {
         string tabStr;
-        for(ulong i = 0; i < count; i++)
+
+        /* Only generate tabs if enabled in compiler config */
+        if(config.getConfig!(bool)("dgen:pretty_code"))
         {
-            tabStr~="\t";
+            for(ulong i = 0; i < count; i++)
+            {
+                tabStr~="\t";
+            }
         }
+        
         return tabStr;
     }
 
@@ -515,8 +522,13 @@ public final class DCodeEmitter : CodeEmitter
         emitFunctionPrototypes();
         emitFunctionDefinitions();
 
-        //TODO: Emit main (entry point)
-        emitEntryPoint();
+        
+        // If enabled (default: yes) then emit entry point (TODO: change later)
+        if(config.getConfig!(bool)("dgen_emit_entrypoint_test"))
+        {
+            //TODO: Emit main (entry point)
+            emitEntryPoint();
+        }
     }
 
     /** 
