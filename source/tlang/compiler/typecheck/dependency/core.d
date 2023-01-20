@@ -239,20 +239,71 @@ public class DNode
         name = "bruh";
     }
 
-    public string print()
+    // NOTE: Below may be useful just sfor sub-tree dependecy, idk why one would want that but we may as well make the API work everywhere
+    // ... and in more cases :) for uniformity-sake (not urgent this case though as we don't plan on using it like that)
+    // TODO: Add support later for relinearization even though not really a much needed feature
+    // NOTE: We could also get rid of `markCompleted()` and then wipe visited and use that rather for tree generation/linearization
+    private bool hasLinearized = false;
+    private DNode[] linearizedNodes;
+    private string dependencyTreeRepresentation;
+
+    public void performLinearization()
+    {
+        if(hasLinearized)
+        {
+            // TODO: make this a DependencyException type
+            throw new Exception("Cannot re-perform linearization");
+        }
+        else
+        {
+            // Perform the linearization on this DNode's `linearizedNodes` array
+            dependencyTreeRepresentation = print(linearizedNodes);
+
+            // Mark as done
+            hasLinearized = true;
+        }
+    }
+
+    public DNode[] getLinearizedNodes()
+    {
+        if(hasLinearized)
+        {
+            return linearizedNodes;
+        }
+        else
+        {
+            // TODO: make this a DependencyException type
+            throw new Exception("Cannot call getLinearizedNodes() unless you have called `performLinearization()`");
+        }
+    }
+
+    public string getTree()
+    {
+        if(hasLinearized)
+        {
+            return dependencyTreeRepresentation;
+        }
+        else
+        {
+            // TODO: make this a DependencyException type
+            throw new Exception("Cannot call getTree() unless you have called `performLinearization()`");
+        }
+    }
+
+    /** 
+     * Performs the linearization and generates a tree whilst doing so.
+     * The user provides the array to write into (a pointer to it).
+     *
+     * Params:
+     *   destinationLinearList = the DNode[] to write the linearization into
+     * Returns: a string representation of the dependency tree
+     */
+    private string print(ref DNode[] destinationLinearList)
     {
         string spaces = "                                                ";
         /* The tree */ /*TODO: Make genral to statement */
         string tree = "   ";
 
-        // if(cast(Entity)entity || cast(VariableAssignment)entity)
-        // {
-        //     tree ~= name;
-        // }
-        // else
-        // {
-        //     tree ~= entity.toString();
-        // }
 
         tree ~= name;
 
@@ -266,7 +317,7 @@ public class DNode
 
                
 
-                tree ~= spaces[0..(c)*3]~dependancy.print();
+                tree ~= spaces[0..(c)*3]~dependancy.print(destinationLinearList);
             }
             
         }
@@ -276,15 +327,17 @@ public class DNode
          /* TODO: I think using `isDone` we can linearise */
         gprintln("Done/Not-done?: "~to!(string)(isDone));
 
+        // TODO: What is this for and do we even need it? See issue #41
         if(isDone)
         {
-            poes ~= this;
+            destinationLinearList ~= this;
         }
 
         c--;
         return tree;
     }
 
+    // TODO: What is this for and do we even need it? See issue #41
     private bool isDone()
     {
         bool done = false;
