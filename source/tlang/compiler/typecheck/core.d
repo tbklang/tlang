@@ -80,15 +80,19 @@ public final class TypeChecker
         
 
         DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
+
+        /* Generate the dependency tree */
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
 
+        /* Perform the linearization to the dependency tree */
+        rootNode.performLinearization();
+
         /* Print the tree */
-        string tree = rootNode.print();
+        string tree = rootNode.getTree();
         gprintln(tree);
 
-
         /* Get the action-list (linearised bottom up graph) */
-        DNode[] actionList = rootNode.poes;
+        DNode[] actionList = rootNode.getLinearizedNodes();
         doTypeCheck(actionList);        
         printTypeQueue();
 
@@ -106,10 +110,6 @@ public final class TypeChecker
         codeQueue.clear();
         assert(codeQueue.empty() == true);
 
-        //FIXME: Look at this, ffs why is it static
-        //Clear tree/linearized version (todo comment)
-        DNode.poes=[];
-
         /* Grab functionData ??? */
         FunctionData[string] functionDefinitions = grabFunctionDefs();
         gprintln("Defined functions: "~to!(string)(functionDefinitions));
@@ -118,17 +118,19 @@ public final class TypeChecker
         {
             assert(codeQueue.empty() == true);
 
-
+            /* Generate the dependency tree */
             DNode funcNode = funcData.generate();
-            //NOTE: We need to call this, it generates tree but also does the linearization
-            //NOTE: Rename that
-            funcNode.print();
-            DNode[] actionListFunc = funcNode.poes;
+            
+            /* Perform the linearization to the dependency tree */
+            funcNode.performLinearization();
+
+            /* Get the action-list (linearised bottom up graph) */
+            DNode[] actionListFunc = funcNode.getLinearizedNodes();
 
             //TODO: Would this not mess with our queues?
             doTypeCheck(actionListFunc);
             printTypeQueue();
-            gprintln(funcNode.print());
+            gprintln(funcNode.getTree());
 
             // The current code queue would be the function's body instructions
             // a.k.a. the `codeQueue`
@@ -158,9 +160,6 @@ public final class TypeChecker
                 gprintln("FuncDef ("~funcData.name~"): Adding body instruction: "~to!(string)(curFuncInstr));
             }
             codeQueue.clear();
-
-            // Clear the linearization for the next round
-            DNode.poes=[];
 
             gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
         }
