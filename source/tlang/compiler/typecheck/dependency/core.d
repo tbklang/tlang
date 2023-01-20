@@ -12,7 +12,7 @@ import compiler.typecheck.exceptions;
 import compiler.typecheck.core;
 import compiler.symbols.typing.core;
 import compiler.symbols.typing.builtins;
-
+import compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
 
 
 /**
@@ -246,8 +246,7 @@ public class DNode
     {
         if(hasLinearized)
         {
-            // TODO: make this a DependencyException type
-            throw new Exception("Cannot re-perform linearization");
+            throw new DependencyException(DependencyError.ALREADY_LINEARIZED);
         }
         else
         {
@@ -267,8 +266,7 @@ public class DNode
         }
         else
         {
-            // TODO: make this a DependencyException type
-            throw new Exception("Cannot call getLinearizedNodes() unless you have called `performLinearization()`");
+            throw new DependencyException(DependencyError.NOT_YET_LINEARIZED);
         }
     }
 
@@ -280,8 +278,7 @@ public class DNode
         }
         else
         {
-            // TODO: make this a DependencyException type
-            throw new Exception("Cannot call getTree() unless you have called `performLinearization()`");
+            throw new DependencyException(DependencyError.NOT_YET_LINEARIZED);
         }
     }
 
