@@ -1535,6 +1535,15 @@ public class DNodeGenerator
 
             return discardStatementDNode;
         }
+        /**
+        * Extern statement (ExternStmt)
+        */
+        else if(cast(ExternStmt)entity)
+        {
+            /* We don't do anything, this is to be handled in typechecker pre-run */    
+            /* NOTE: If anything we ought to remove these ExternSTmt nodes during such a process */
+            return null;
+        }
 
         return null;
     }
