@@ -110,10 +110,6 @@ public final class TypeChecker
         codeQueue.clear();
         assert(codeQueue.empty() == true);
 
-        //FIXME: Look at this, ffs why is it static
-        //Clear tree/linearized version (todo comment)
-        DNode.poes=[];
-
         /* Grab functionData ??? */
         FunctionData[string] functionDefinitions = grabFunctionDefs();
         gprintln("Defined functions: "~to!(string)(functionDefinitions));
@@ -164,9 +160,6 @@ public final class TypeChecker
                 gprintln("FuncDef ("~funcData.name~"): Adding body instruction: "~to!(string)(curFuncInstr));
             }
             codeQueue.clear();
-
-            // Clear the linearization for the next round
-            DNode.poes=[];
 
             gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
         }

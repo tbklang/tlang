@@ -162,11 +162,6 @@ public class DNode
     private bool complete;
     private DNode[] dependencies;
 
-
-    //TODO: Commen this
-    //NOTE: This is the linearized version
-    public static DNode[] poes;
-
     this(DNodeGenerator dnodegen, Statement entity)
     {
         this.entity = entity;
@@ -327,7 +322,7 @@ public class DNode
          /* TODO: I think using `isDone` we can linearise */
         gprintln("Done/Not-done?: "~to!(string)(isDone));
 
-        // TODO: What is this for and do we even need it? See issue #41
+        // TODO: What is this for and do we even need it? See issue #41 Problem 5
         if(isDone)
         {
             destinationLinearList ~= this;
@@ -337,7 +332,7 @@ public class DNode
         return tree;
     }
 
-    // TODO: What is this for and do we even need it? See issue #41
+    // TODO: What is this for and do we even need it? See issue #41 Problem 5
     private bool isDone()
     {
         bool done = false;
