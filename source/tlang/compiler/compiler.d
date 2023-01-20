@@ -173,6 +173,14 @@ unittest
     // ... UPDATE: It seems to be any unit test..... mhhhh.
     string[] testFiles = ["source/tlang/testing/simple_while.t"
                         ];
+
+                        // "source/tlang/testing/simple_functions.t",
+                        // "source/tlang/testing/simple_while.t",
+                        // "source/tlang/testing/simple_for_loops.t",
+                        // "source/tlang/testing/simple_cast.t",
+                        // "source/tlang/testing/simple_conditionals.t",
+                        // "source/tlang/testing/nested_conditionals.t",
+                        // "source/tlang/testing/simple_discard.t"
     foreach(string testFile; testFiles)
     {
         beginCompilation([testFile]);
