@@ -171,16 +171,16 @@ unittest
     // FIXME: Crashes and I think because too fast or actually bad state? Maybe something is not being
     // cleared, I believe this may be what is happening
     // ... see issue #88
-    // string[] testFiles = ["source/tlang/testing/simple_functions.t",
-    //                     "source/tlang/testing/simple_while.t",
-    //                     "source/tlang/testing/simple_for_loops.t",
-    //                     "source/tlang/testing/simple_cast.t",
-    //                     "source/tlang/testing/simple_conditionals.t",
-    //                     "source/tlang/testing/nested_conditionals.t",
-    //                     "source/tlang/testing/simple_discard.t"
-    //                     ];
-    // foreach(string testFile; testFiles)
-    // {
-    //     beginCompilation([testFile]);
-    // }
+    string[] testFiles = ["source/tlang/testing/simple_functions.t",
+                        "source/tlang/testing/simple_while.t",
+                        "source/tlang/testing/simple_for_loops.t",
+                        "source/tlang/testing/simple_cast.t",
+                        "source/tlang/testing/simple_conditionals.t",
+                        "source/tlang/testing/nested_conditionals.t",
+                        "source/tlang/testing/simple_discard.t"
+                        ];
+    foreach(string testFile; testFiles)
+    {
+        beginCompilation([testFile]);
+    }
 }
