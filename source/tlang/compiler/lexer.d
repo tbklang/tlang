@@ -5,6 +5,26 @@ import gogga;
 import std.conv : to;
 import std.string : cmp;
 import std.ascii : isDigit;
+import misc.exceptions : TError;
+
+public enum LexerError
+{
+    EXHAUSTED_CHARACTERS,
+    OTHER
+}
+
+public final class LexerException : TError
+{
+    public const Lexer offendingInstance;
+    public const LexerError errType;
+
+    this(Lexer offendingInstance, LexerError errType = LexerError.OTHER, string msg = "")
+    {
+        super(to!(string)(errType)~(msg.length ? ": "~msg : ""));
+        this.offendingInstance = offendingInstance;
+        this.errType = errType;
+    }
+}
 
 /* TODO: Add Token type (which matches column and position too) */
 public final class Token
