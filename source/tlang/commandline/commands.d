@@ -34,7 +34,14 @@ struct compileCommand
     void onExecute()
     {
         writeln("Compiling source file: "~sourceFile);
-        beginCompilation([sourceFile]);
+        try
+        {
+            beginCompilation([sourceFile]);
+        }
+        catch(TError t)
+        {
+            gprintln(t.msg, DebugType.ERROR);
+        }
     }
 }
 
