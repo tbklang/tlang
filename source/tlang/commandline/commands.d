@@ -27,10 +27,6 @@ struct compileCommand
     @ArgPositional("source file", "The source file to compile")
     string sourceFile;
 
-    // @CommandRawListArg
-    // string[] d;
-    // TODO: Get array
-
     void onExecute()
     {
         writeln("Compiling source file: "~sourceFile);
@@ -98,8 +94,6 @@ struct parseCommand
     /* TODO: Add missing implementation for this */
     void onExecute()
     {
-        // TODO: Add call to typechecker here
-
         try
         {
             /* Read the source file's data */
@@ -143,10 +137,8 @@ struct typecheckCommand
     @ArgPositional("source file", "The source file to typecheck")
     string sourceFile;
 
-    /* TODO: Add missing implementation for this */
     void onExecute()
     {
-        // TODO: Add call to typechecker here
         try
         {
             /* Read the source file's data */
