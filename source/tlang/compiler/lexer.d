@@ -20,7 +20,8 @@ public final class LexerException : TError
 
     this(Lexer offendingInstance, LexerError errType = LexerError.OTHER, string msg = "")
     {
-        super(to!(string)(errType)~(msg.length ? ": "~msg : ""));
+        string positionString = "("~to!(string)(offendingInstance.line)~", "~to!(string)(offendingInstance.column)~")";
+        super("LexerException("~to!(string)(errType)~")"~(msg.length ? ": "~msg : "")~" at "~positionString);
         this.offendingInstance = offendingInstance;
         this.errType = errType;
     }
