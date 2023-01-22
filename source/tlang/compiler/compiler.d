@@ -97,35 +97,29 @@ public class Compiler
 
         /* Setup the lexer and begin lexing */
         this.lexer = new Lexer(inputSource);
-        if(lexer.performLex())
-        {
-            /* Extract the tokens */
-            Token[] tokens = lexer.getTokens();
-            gprintln("Collected "~to!(string)(tokens));
+        this.lexer.performLex();
+    
+        /* Extract the tokens */
+        Token[] tokens = lexer.getTokens();
+        gprintln("Collected "~to!(string)(tokens));
 
-            /* Spawn a new parser with the provided tokens */
-            this.parser = new Parser(tokens);
+        /* Spawn a new parser with the provided tokens */
+        this.parser = new Parser(tokens);
 
-            /* The parsed Module */
-            Module modulle = parser.parse();
+        /* The parsed Module */
+        Module modulle = parser.parse();
 
-            /* Spawn a new typechecker/codegenerator on the module */
-            this.typeChecker = new TypeChecker(modulle);
+        /* Spawn a new typechecker/codegenerator on the module */
+        this.typeChecker = new TypeChecker(modulle);
 
-            /* Perform typechecking/codegen */
-            this.typeChecker.beginCheck();
+        /* Perform typechecking/codegen */
+        this.typeChecker.beginCheck();
 
-            /* Perform code emitting */
-            this.emitter = new DCodeEmitter(typeChecker, emitOutFile, config);
-            emitter.emit(); // Emit the code
-            emitOutFile.close(); // Flush (perform the write() syscall)
-            emitter.finalize(); // Call CC on the file containing generated C code
-        }
-        else
-        {
-            // TODO: Throw a lexing error  here or rather `performLex()` should be doing that
-            gprintln("Error when lexing (make this an exception throw)", DebugType.ERROR);
-        }
+        /* Perform code emitting */
+        this.emitter = new DCodeEmitter(typeChecker, emitOutFile, config);
+        emitter.emit(); // Emit the code
+        emitOutFile.close(); // Flush (perform the write() syscall)
+        emitter.finalize(); // Call CC on the file containing generated C code
     }
 }
 
@@ -171,18 +165,18 @@ unittest
     // cleared, I believe this may be what is happening
     // ... see issue #88
     // ... UPDATE: It seems to be any unit test..... mhhhh.
-    string[] testFiles = ["source/tlang/testing/simple_while.t"
-                        ];
+    // string[] testFiles = ["source/tlang/testing/simple_while.t"
+    //                     ];
 
-                        // "source/tlang/testing/simple_functions.t",
-                        // "source/tlang/testing/simple_while.t",
-                        // "source/tlang/testing/simple_for_loops.t",
-                        // "source/tlang/testing/simple_cast.t",
-                        // "source/tlang/testing/simple_conditionals.t",
-                        // "source/tlang/testing/nested_conditionals.t",
-                        // "source/tlang/testing/simple_discard.t"
-    foreach(string testFile; testFiles)
-    {
-        beginCompilation([testFile]);
-    }
+    //                     // "source/tlang/testing/simple_functions.t",
+    //                     // "source/tlang/testing/simple_while.t",
+    //                     // "source/tlang/testing/simple_for_loops.t",
+    //                     // "source/tlang/testing/simple_cast.t",
+    //                     // "source/tlang/testing/simple_conditionals.t",
+    //                     // "source/tlang/testing/nested_conditionals.t",
+    //                     // "source/tlang/testing/simple_discard.t"
+    // foreach(string testFile; testFiles)
+    // {
+    //     beginCompilation([testFile]);
+    // }
 }

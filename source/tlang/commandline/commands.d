@@ -9,10 +9,12 @@ module commandline.commands;
 import jcli;
 import std.stdio;
 import compiler.compiler : beginCompilation;
+import misc.exceptions : TError;
 import std.exception : ErrnoException;
 import compiler.lexer : Lexer, Token;
 import compiler.parsing.core : Parser;
 import compiler.typecheck.core : TypeChecker;
+import gogga;
 
 //TODO: Re-order the definitions below so that they appear with compile first, then lex, parse, ..., help
 
@@ -63,16 +65,14 @@ struct lexCommand
 
             /* Begin lexing process */
             Lexer lexer = new Lexer(sourceText);
-            if(lexer.performLex())
-            {
-                writeln("=== Tokens ===\n");
-                writeln(lexer.getTokens());
-            }
-            else
-            {
-                /* TODO: Is the lexer.performLex() return value used? */
-                writeln("There was an error whilst performing tokenization");
-            }
+            lexer.performLex();
+        
+            writeln("=== Tokens ===\n");
+            writeln(lexer.getTokens());
+        }
+        catch(TError t)
+        {
+            gprintln(t.msg, DebugType.ERROR);
         }
         catch(ErrnoException e)
         {
@@ -107,22 +107,20 @@ struct parseCommand
 
             /* Begin lexing process */
             Lexer lexer = new Lexer(sourceText);
-            if(lexer.performLex())
-            {
-                Token[] tokens = lexer.getTokens();
-                writeln("=== Tokens ===\n");
-                writeln(tokens);
+            lexer.performLex();
+            
+            Token[] tokens = lexer.getTokens();
+            writeln("=== Tokens ===\n");
+            writeln(tokens);
 
-                // TODO: Catch exception
-                Parser parser = new Parser(tokens);
-                // TODO: Do something with the returned module
-                auto modulel = parser.parse();
-            }
-            else
-            {
-                /* TODO: Is the lexer.performLex() return value used? */
-                writeln("There was an error whilst performing tokenization");
-            }
+            // TODO: Catch exception
+            Parser parser = new Parser(tokens);
+            // TODO: Do something with the returned module
+            auto modulel = parser.parse();
+        }
+        catch(TError t)
+        {
+            gprintln(t.msg, DebugType.ERROR);
         }
         catch(ErrnoException e)
         {
@@ -156,27 +154,25 @@ struct typecheckCommand
 
             /* Begin lexing process */
             Lexer lexer = new Lexer(sourceText);
-            if(lexer.performLex())
-            {
-                Token[] tokens = lexer.getTokens();
-                writeln("=== Tokens ===\n");
-                writeln(tokens);
+            lexer.performLex();
+            
+            Token[] tokens = lexer.getTokens();
+            writeln("=== Tokens ===\n");
+            writeln(tokens);
 
-                // TODO: Catch exception
-                Parser parser = new Parser(tokens);
-                // TODO: Do something with the returned module
-                auto modulel = parser.parse();
+            // TODO: Catch exception
+            Parser parser = new Parser(tokens);
+            // TODO: Do something with the returned module
+            auto modulel = parser.parse();
 
-                //TODO: collect results here
-                //TODO: catch exceptions
-                TypeChecker typeChecker = new TypeChecker(modulel);
-                typeChecker.beginCheck();
-            }
-            else
-            {
-                /* TODO: Is the lexer.performLex() return value used? */
-                writeln("There was an error whilst performing tokenization");
-            }
+            //TODO: collect results here
+            //TODO: catch exceptions
+            TypeChecker typeChecker = new TypeChecker(modulel);
+            typeChecker.beginCheck();
+        }
+        catch(TError t)
+        {
+            gprintln(t.msg, DebugType.ERROR);
         }
         catch(ErrnoException e)
         {

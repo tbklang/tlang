@@ -1997,7 +1997,15 @@ module myModule;
 `;
 
     Lexer currentLexer = new Lexer(sourceCode);
-    assert(currentLexer.performLex());
+    try
+    {
+        currentLexer.performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
     
     
     Parser parser = new Parser(currentLexer.getTokens());
@@ -2047,7 +2055,15 @@ class myClass2
 `;
 
     Lexer currentLexer = new Lexer(sourceCode);
-    assert(currentLexer.performLex());
+    try
+    {
+        currentLexer.performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
     
     
     Parser parser = new Parser(currentLexer.getTokens());
@@ -2195,7 +2211,15 @@ void function()
 
 
     Lexer currentLexer = new Lexer(sourceCode);
-    assert(currentLexer.performLex());
+    try
+    {
+        currentLexer.performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
     
     
     Parser parser = new Parser(currentLexer.getTokens());
@@ -2257,7 +2281,15 @@ int myFunction(int i, int j)
 
 
     Lexer currentLexer = new Lexer(sourceCode);
-    assert(currentLexer.performLex());
+    try
+    {
+        currentLexer.performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
     
     
     Parser parser = new Parser(currentLexer.getTokens());
@@ -2338,7 +2370,15 @@ void function()
 
 
     Lexer currentLexer = new Lexer(sourceCode);
-    assert(currentLexer.performLex());
+    try
+    {
+        currentLexer.performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
     
     
     Parser parser = new Parser(currentLexer.getTokens());
@@ -2440,7 +2480,15 @@ int thing()
 }
 `;
     Lexer currentLexer = new Lexer(sourceCode);
-    assert(currentLexer.performLex());
+    try
+    {
+        currentLexer.performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
     
     
     Parser parser = new Parser(currentLexer.getTokens());
@@ -2524,7 +2572,15 @@ void function()
 
 
     Lexer currentLexer = new Lexer(sourceCode);
-    assert(currentLexer.performLex());
+    try
+    {
+        currentLexer.performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
     
     
     Parser parser = new Parser(currentLexer.getTokens());
@@ -2646,7 +2702,15 @@ void function()
 
 
     Lexer currentLexer = new Lexer(sourceCode);
-    assert(currentLexer.performLex());
+    try
+    {
+        currentLexer.performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
     
     
     Parser parser = new Parser(currentLexer.getTokens());
