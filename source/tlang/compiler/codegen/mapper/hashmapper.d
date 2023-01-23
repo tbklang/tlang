@@ -1,28 +1,16 @@
-module compiler.codegen.mapper;
+module compiler.codegen.mapper.hashmapper;
 
+import compiler.codegen.mapper.core : SymbolMapper;
 import compiler.typecheck.core;
 import compiler.symbols.data;
-import std.conv : to;
-import gogga;
 
-/** 
- * SymbolMapper
- *
- * Maps Entity's to consistent but unique symbol
- * names (strings)
- */
-public final class SymbolMapper
+public final class HashMapper : SymbolMapper
 {
-    // Used to map names to entities
-    public static TypeChecker tc;
 
-    // Entity map
-    // private string[Entity] symbolMap;
-
-    // this(TypeChecker tc)
-    // {
-    //     this.tc = tc;
-    // }
+    this(TypeChecker tc)
+    {
+        super(tc);
+    }
 
     /** 
      * Given an Entity this will generate a unique (but consistent)
@@ -34,7 +22,7 @@ public final class SymbolMapper
      *
      * Returns: The symbol hash
      */
-    public static string symbolLookup(Entity entityIn)
+    public override string symbolLookup(Entity entityIn)
     {
         // Generate the absolute full path of the Entity
         string absoluteFullPath = tc.getResolver().generateNameBest(entityIn);

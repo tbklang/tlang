@@ -12,6 +12,32 @@ import compiler.typecheck.exceptions;
 import core.stdc.stdlib;
 import compiler.codegen.emit.core;
 import compiler.codegen.emit.dgen;
+import misc.exceptions : TError;
+import compiler.codegen.mapper.core : SymbolMapper;
+import compiler.codegen.mapper.hashmapper : HashMapper;
+import compiler.codegen.mapper.lebanese : LebaneseMapper;
+import std.string : cmp;
+
+public enum CompilerError
+{
+    LEX_NOT_PERFORMED,
+    NO_TOKENS,
+    PARSE_NOT_YET_PERFORMED,
+    TYPECHECK_NOT_YET_PERFORMED,
+    CONFIG_ERROR,
+    CONFIG_KEY_NOT_FOUND
+}
+
+public final class CompilerException : TError
+{
+    private CompilerError errType;
+
+    this(CompilerError errType, string msg = "")
+    {
+        super("CompilerError("~to!(string)(errType)~")"~(msg.length ? ": "~msg : ""));
+        this.errType = errType;
+    }
+}
 
 public class CompilerConfiguration
 {
@@ -31,10 +57,16 @@ public class CompilerConfiguration
         }
         else
         {
-            // TODO: Change to a TError
-            // throw new Exception("Key not found");
-            return false;
+            throw new CompilerException(CompilerError.CONFIG_KEY_NOT_FOUND);
         }
+    }
+
+    public bool hasConfig(string key)
+    {
+        string[] keys = config.keys();
+        import std.algorithm.searching : canFind;
+
+        return canFind(keys, key);
     }
 }
 
@@ -46,8 +78,12 @@ public class Compiler
     /* The lexer */
     private Lexer lexer;
 
+    /* The lexed tokens */
+    private Token[] tokens;
+
     /* The parser */
     private Parser parser;
+    private Module modulle;
 
     /* The typechecker/code generator */
     private TypeChecker typeChecker;
@@ -70,6 +106,9 @@ public class Compiler
 
         /* Enable entry point test generation for DGen */
         config.setConfig("dgen_emit_entrypoint_test", true);
+
+        /* Set the mapping to hashing of entity names (TODO: This should be changed before release) */
+        config.setConfig("emit:mapper", "hashmapper");
     }
 
     
@@ -91,35 +130,114 @@ public class Compiler
         defaultConfig();
     }
 
-    public void compile()
+    /* Setup the lexer and begin lexing */
+    public void doLex()
     {
-        // TODO: Add each step of the pipeline here
-
         /* Setup the lexer and begin lexing */
         this.lexer = new Lexer(inputSource);
         this.lexer.performLex();
-    
-        /* Extract the tokens */
-        Token[] tokens = lexer.getTokens();
-        gprintln("Collected "~to!(string)(tokens));
 
-        /* Spawn a new parser with the provided tokens */
-        this.parser = new Parser(tokens);
+        this.tokens = this.lexer.getTokens();
+    }
 
-        /* The parsed Module */
-        Module modulle = parser.parse();
+    public Token[] getTokens()
+    {
+        if(this.lexer is null)
+        {
+            throw new CompilerException(CompilerError.LEX_NOT_PERFORMED);
+        }
 
-        /* Spawn a new typechecker/codegenerator on the module */
+        return tokens;
+    }
+
+    /* Spawn a new parser with the provided tokens */
+    public void doParse()
+    {
+        Token[] lexedTokens = getTokens();
+
+        if(lexedTokens.length == 0)
+        {
+            throw new CompilerException(CompilerError.NO_TOKENS);
+        }
+        else
+        {
+            /* Spawn a new parser with the provided tokens */
+            this.parser = new Parser(lexedTokens);
+
+            modulle = parser.parse();
+        }
+    }
+
+    public Module getModule()
+    {
+        return modulle;
+    }
+
+    /** 
+     * Spawn a new typechecker/codegenerator on the module
+     * and perform type checking and code generation
+     */
+    public void doTypeCheck()
+    {
+        if(this.parser is null)
+        {
+            throw new CompilerException(CompilerError.PARSE_NOT_YET_PERFORMED);
+        }
+
         this.typeChecker = new TypeChecker(modulle);
 
         /* Perform typechecking/codegen */
         this.typeChecker.beginCheck();
+    }
 
-        /* Perform code emitting */
-        this.emitter = new DCodeEmitter(typeChecker, emitOutFile, config);
+    /* Perform code emitting */
+    public void doEmit()
+    {
+        if(typeChecker is null)
+        {
+            throw new CompilerException(CompilerError.TYPECHECK_NOT_YET_PERFORMED);
+        }
+
+        if(!config.hasConfig("emit:mapper"))
+        {
+            throw new CompilerException(CompilerError.CONFIG_ERROR, "Missing a symbol mapper");
+        }
+        
+        SymbolMapper mapper;
+        string mapperType = config.getConfig!(string)("emit:mapper");
+
+        if(cmp(mapperType, "hashmapper") == 0)
+        {
+            mapper = new HashMapper(typeChecker);
+        }
+        else if(cmp(mapperType, "lebanese") == 0)
+        {
+            mapper = new LebaneseMapper(typeChecker);
+        }
+        else
+        {
+            throw new CompilerException(CompilerError.CONFIG_ERROR, "Invalid mapper type '"~mapperType~"'");
+        }
+
+        this.emitter = new DCodeEmitter(typeChecker, emitOutFile, config, mapper);
         emitter.emit(); // Emit the code
         emitOutFile.close(); // Flush (perform the write() syscall)
         emitter.finalize(); // Call CC on the file containing generated C code
+    }
+
+    public void compile()
+    {
+        /* Setup the lexer, perform the tokenization and obtain the tokens */
+        doLex();
+
+        /* Setup the parser with the provided tokens and perform parsing */
+        doParse();
+
+        /* Spawn a new typechecker/codegenerator on the module and perform type checking */
+        doTypeCheck();
+
+        /* Perform code emitting */
+        doEmit();
     }
 }
 
@@ -137,6 +255,7 @@ void beginCompilation(string[] sourceFiles)
     foreach(string sourceFile; sourceFiles)
     {
         /* Read in the source code */
+        // TODO: THis below code is used so many times, for heavens-sake please make a helper function for it
         gprintln("Reading source file '"~sourceFile~"' ...");
         File sourceFileFile;
         sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */

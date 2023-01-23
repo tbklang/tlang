@@ -68,15 +68,6 @@ public final class TypeChecker
         * non-cyclic
         *
         */
-
-        // Allow Context class access to the type checker (used in Instruction where only Context is available)
-        Context.tc = this;
-
-        // Allow the SymbolMapper class to access the type checker
-        import compiler.codegen.mapper : SymbolMapper;
-        SymbolMapper.tc = this;
-
-        // DNodeGenerator.staticTC = this;
         
 
         DNodeGenerator dNodeGenerator = new DNodeGenerator(this);

@@ -27,7 +27,7 @@ import compiler.typecheck.dependency.exceptions : DependencyException, Dependenc
 public final class Context
 {
     // Required for cases where we need the functionality of the type checker
-    static TypeChecker tc;
+    // static TypeChecker tc;
 
     InitScope initScope;
     Container container;

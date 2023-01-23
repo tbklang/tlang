@@ -15,6 +15,7 @@ import compiler.lexer : Lexer, Token;
 import compiler.parsing.core : Parser;
 import compiler.typecheck.core : TypeChecker;
 import gogga;
+import compiler.compiler : Compiler;
 
 //TODO: Re-order the definitions below so that they appear with compile first, then lex, parse, ..., help
 
@@ -67,11 +68,10 @@ struct lexCommand
             file.close();
 
             /* Begin lexing process */
-            Lexer lexer = new Lexer(sourceText);
-            lexer.performLex();
-        
+            Compiler compiler = new Compiler(sourceText, File());
+            compiler.doLex();
             writeln("=== Tokens ===\n");
-            writeln(lexer.getTokens());
+            writeln(compiler.getTokens());
         }
         catch(TError t)
         {
@@ -107,17 +107,15 @@ struct parseCommand
             file.close();
 
             /* Begin lexing process */
-            Lexer lexer = new Lexer(sourceText);
-            lexer.performLex();
-            
-            Token[] tokens = lexer.getTokens();
+            Compiler compiler = new Compiler(sourceText, File());
+            compiler.doLex();
             writeln("=== Tokens ===\n");
-            writeln(tokens);
+            writeln(compiler.getTokens());
 
-            // TODO: Catch exception
-            Parser parser = new Parser(tokens);
+            /* Perform parsing */
+            compiler.doParse();
             // TODO: Do something with the returned module
-            auto modulel = parser.parse();
+            auto modulel = compiler.getModule();
         }
         catch(TError t)
         {
@@ -152,22 +150,18 @@ struct typecheckCommand
             file.close();
 
             /* Begin lexing process */
-            Lexer lexer = new Lexer(sourceText);
-            lexer.performLex();
-            
-            Token[] tokens = lexer.getTokens();
+            Compiler compiler = new Compiler(sourceText, File());
+            compiler.doLex();
             writeln("=== Tokens ===\n");
-            writeln(tokens);
+            writeln(compiler.getTokens());
 
-            // TODO: Catch exception
-            Parser parser = new Parser(tokens);
+            /* Perform parsing */
+            compiler.doParse();
             // TODO: Do something with the returned module
-            auto modulel = parser.parse();
+            auto modulel = compiler.getModule();
 
-            //TODO: collect results here
-            //TODO: catch exceptions
-            TypeChecker typeChecker = new TypeChecker(modulel);
-            typeChecker.beginCheck();
+            /* Perform typechecking/codegen */
+            compiler.doTypeCheck();
         }
         catch(TError t)
         {

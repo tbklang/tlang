@@ -13,7 +13,7 @@ import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import compiler.typecheck.dependency.core : Context, FunctionData, DNode;
-import compiler.codegen.mapper : SymbolMapper;
+import compiler.codegen.mapper.core : SymbolMapper;
 import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
@@ -28,9 +28,10 @@ public final class DCodeEmitter : CodeEmitter
     private bool varDecWantsConsumeVarAss = false;
 
 
-    this(TypeChecker typeChecker, File file, CompilerConfiguration config)
+    // NOTE: In future store the mapper in the config please
+    this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
-        super(typeChecker, file, config);
+        super(typeChecker, file, config, mapper);
     }
 
     private ulong transformDepth = 0;
@@ -125,13 +126,13 @@ public final class DCodeEmitter : CodeEmitter
 
             gprintln("Is ContextNull?: "~to!(string)(context is null));
             gprintln("Wazza contect: "~to!(string)(context.container));
-            auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
+            auto typedEntityVariable = typeChecker.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
 
 
             /* If it is not external */
             if(!typedEntityVariable.isExternal())
             {
-                string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
+                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
                 
                 // If we are needed as part of a VariabvleDeclaration-with-assignment
@@ -163,7 +164,7 @@ public final class DCodeEmitter : CodeEmitter
             VariableDeclaration varDecInstr = cast(VariableDeclaration)instruction;
             Context context = varDecInstr.getContext();
 
-            Variable typedEntityVariable = cast(Variable)context.tc.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
+            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
 
             /* If the variable is not external */
             if(!typedEntityVariable.isExternal())
@@ -175,7 +176,7 @@ public final class DCodeEmitter : CodeEmitter
                 //NOTE: We may need to create a symbol table actually and add to that and use that as these names
                 //could get out of hand (too long)
                 // NOTE: Best would be identity-mapping Entity's to a name
-                string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
+                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
 
                 // Check to see if this declaration has an assignment attached
@@ -221,7 +222,7 @@ public final class DCodeEmitter : CodeEmitter
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
 
-            Variable typedEntityVariable = cast(Variable)context.tc.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName); //TODO: Remove `auto`
+            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName); //TODO: Remove `auto`
 
             /* If it is not external */
             if(!typedEntityVariable.isExternal())
@@ -229,7 +230,7 @@ public final class DCodeEmitter : CodeEmitter
                 //TODO: THis is giving me kak (see issue #54), it's generating name but trying to do it for the given container, relative to it
                 //TODO: We might need a version of generateName that is like generatenamebest (currently it acts like generatename, within)
 
-                string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
+                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
                 return renamedSymbol;
             }
@@ -259,7 +260,7 @@ public final class DCodeEmitter : CodeEmitter
             Context context = funcCallInstr.getContext();
             assert(context);
 
-            Function functionToCall = cast(Function)context.tc.getResolver().resolveBest(context.getContainer(), funcCallInstr.functionName); //TODO: Remove `auto`
+            Function functionToCall = cast(Function)typeChecker.getResolver().resolveBest(context.getContainer(), funcCallInstr.functionName); //TODO: Remove `auto`
 
             // TODO: SymbolLookup?
 
@@ -669,7 +670,7 @@ public final class DCodeEmitter : CodeEmitter
 
                 // Generate the symbol-mapped names for the parameters
                 Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(func, currentParameter.getName()); //TODO: Remove `auto`
-                string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
+                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
 
                 // Generate <type> <parameter-name (symbol mapped)>
