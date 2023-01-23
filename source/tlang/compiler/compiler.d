@@ -51,7 +51,7 @@ public class CompilerConfiguration
     public VType getConfig(VType)(string key)
     {
         import std.algorithm : canFind;
-        if(canFind(config.keys(), key))
+        if(hasConfig(key))
         {
             return to!(VType)(config[key]);
         }
