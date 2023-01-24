@@ -554,7 +554,7 @@ public final class DCodeEmitter : CodeEmitter
 
         
         // If enabled (default: yes) then emit entry point (TODO: change later)
-        if(config.getConfig!(bool)("dgen_emit_entrypoint_test"))
+        if(config.getConfig!(bool)("dgen:emit_entrypoint_test"))
         {
             //TODO: Emit main (entry point)
             emitEntryPoint();
@@ -776,7 +776,7 @@ public final class DCodeEmitter : CodeEmitter
 
     private void emitEntryPoint()
     {
-        //TODO: Implement me
+        // TODO: Implement me
 
         // Test for `simple_functions.t` (function call testing)
         if(cmp(typeChecker.getModule().getName(), "simple_functions") == 0)

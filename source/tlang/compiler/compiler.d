@@ -39,6 +39,16 @@ public final class CompilerException : TError
     }
 }
 
+public class ConfigObject
+{
+
+}
+
+public class ConfigList : ConfigObject
+{
+    private ConfigObject[] list;
+}
+
 public class CompilerConfiguration
 {
     private string[string] config;
@@ -105,13 +115,16 @@ public class Compiler
         config.setConfig("dgen:pretty_code", true);
 
         /* Enable entry point test generation for DGen */
-        config.setConfig("dgen_emit_entrypoint_test", true);
+        config.setConfig("dgen:emit_entrypoint_test", true);
 
         /* Set the mapping to hashing of entity names (TODO: This should be changed before release) */
         config.setConfig("emit:mapper", "hashmapper");
     }
 
-    
+    public CompilerConfiguration getConfig()
+    {
+        return config;
+    }
 
     /** 
      * Create a new compiler instance to compile the given
