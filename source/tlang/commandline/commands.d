@@ -43,6 +43,7 @@ mixin template BaseCommand()
     string sourceFile;
 
     @ArgNamed("verbose|v", "Verbosity level")
+    @(ArgConfig.optional)
     VerbosityLevel debugLevel;
 
     void BaseCommandInit(Compiler compiler)
@@ -61,20 +62,26 @@ mixin template EmitBase()
     @ArgGroup("Emit", "Options pertaining to the code emitter")
     {
         @ArgNamed("symbol-mapper|sm", "The symbol mapping technique to use")
-        @(ArgExistence.optional)
+        @(ArgConfig.optional)
         SymbolMappingTechnique symbolTechnique;
 
         @ArgNamed("prettygen|pg", "Generate pretty-printed code")
-        @(ArgExistence.optional)
+        @(ArgConfig.optional)
         bool prettyPrintCodeGen;
         
         @ArgNamed("output|o", "Filename of generated object file")
-        @(ArgExistence.optional)
+        @(ArgConfig.optional)
         string outputFilename = "tlangout.c";
 
         @ArgNamed("entrypointTest|et", "Whether or not to emit entrypoint testing code")
-        @(ArgExistence.optional)
+        @(ArgConfig.optional)
         bool entrypointTestEmit = true; // TODO: Change this later to `false` of course
+
+        @ArgNamed("library-link|ll", "Paths to any object files to ,ink in during the linking phase")
+        @(ArgConfig.optional)
+        @(ArgConfig.aggregate)
+        
+        string[] bruh;
     }
 
     void EmitBaseInit(Compiler compiler)
@@ -88,6 +95,14 @@ mixin template EmitBase()
         // Set whether or not to enable the entry point testing code
         compiler.getConfig().setConfig("dgen:emit_entrypoint_test", entrypointTestEmit);
     }
+}
+
+/** 
+ * Base requirements for TypeChecker+
+ */
+mixin template TypeCheckerBase()
+{
+
 }
 
 /** 
