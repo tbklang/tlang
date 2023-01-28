@@ -121,17 +121,7 @@ public struct ConfigEntry
     
 }
 
-/** 
- * TODO: Add a union and then also a get funciton that
- * interprets per each for us (using templatescan be automated
- * maybe)
- * Implement this!
- */
-/** 
- * TODO: Implement a union below as the value
- * of tye key-value pair
- */
-public class CompilerConfiguration
+public final class CompilerConfiguration
 {
     private ConfigEntry[] entries;
 
