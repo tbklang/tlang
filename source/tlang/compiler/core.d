@@ -1,8 +1,8 @@
-module compiler.compiler;
+module compiler.core;
 
 import gogga;
 import std.conv : to;
-import compiler.lexer;
+import compiler.lexer.core;
 import std.stdio : File;
 import compiler.parsing.core;
 import compiler.symbols.check;
@@ -17,6 +17,9 @@ import compiler.codegen.mapper.core : SymbolMapper;
 import compiler.codegen.mapper.hashmapper : HashMapper;
 import compiler.codegen.mapper.lebanese : LebaneseMapper;
 import std.string : cmp;
+import compiler.configuration : CompilerConfiguration, ConfigEntry;
+
+// TODO: Add configentry unittests
 
 public enum CompilerError
 {
@@ -25,7 +28,9 @@ public enum CompilerError
     PARSE_NOT_YET_PERFORMED,
     TYPECHECK_NOT_YET_PERFORMED,
     CONFIG_ERROR,
-    CONFIG_KEY_NOT_FOUND
+    CONFIG_KEY_NOT_FOUND,
+    CONFIG_TYPE_ERROR,
+    CONFIG_DUPLICATE_ENTRY
 }
 
 public final class CompilerException : TError
@@ -36,47 +41,6 @@ public final class CompilerException : TError
     {
         super("CompilerError("~to!(string)(errType)~")"~(msg.length ? ": "~msg : ""));
         this.errType = errType;
-    }
-}
-
-public class ConfigObject
-{
-
-}
-
-public class ConfigList : ConfigObject
-{
-    private ConfigObject[] list;
-}
-
-public class CompilerConfiguration
-{
-    private string[string] config;
-
-    public void setConfig(VType)(string key, VType value)
-    {
-        config[key] = to!(string)(value);
-    }
-
-    public VType getConfig(VType)(string key)
-    {
-        import std.algorithm : canFind;
-        if(hasConfig(key))
-        {
-            return to!(VType)(config[key]);
-        }
-        else
-        {
-            throw new CompilerException(CompilerError.CONFIG_KEY_NOT_FOUND);
-        }
-    }
-
-    public bool hasConfig(string key)
-    {
-        string[] keys = config.keys();
-        import std.algorithm.searching : canFind;
-
-        return canFind(keys, key);
     }
 }
 
@@ -109,16 +73,16 @@ public class Compiler
     private void defaultConfig()
     {
         /* Enable Behaviour-C fixes */
-        config.setConfig("behavec:preinline_args", true);
+        config.addConfig(ConfigEntry("behavec:preinline_args", true));
 
         /* Enable pretty code generation for DGen */
-        config.setConfig("dgen:pretty_code", true);
+        config.addConfig(ConfigEntry("dgen:pretty_code", true));
 
         /* Enable entry point test generation for DGen */
-        config.setConfig("dgen:emit_entrypoint_test", true);
+        config.addConfig(ConfigEntry("dgen:emit_entrypoint_test", true));
 
         /* Set the mapping to hashing of entity names (TODO: This should be changed before release) */
-        config.setConfig("emit:mapper", "hashmapper");
+        config.addConfig(ConfigEntry("emit:mapper", "hashmapper"));
     }
 
     public CompilerConfiguration getConfig()
@@ -217,7 +181,7 @@ public class Compiler
         }
         
         SymbolMapper mapper;
-        string mapperType = config.getConfig!(string)("emit:mapper");
+        string mapperType = config.getConfig("emit:mapper").getText();
 
         if(cmp(mapperType, "hashmapper") == 0)
         {
@@ -312,3 +276,4 @@ unittest
     //     beginCompilation([testFile]);
     // }
 }
+

@@ -23,3 +23,9 @@ public class SymbolMapper
 
     public abstract string symbolLookup(Entity entityIn);
 }
+
+public enum SymbolMappingTechnique : string
+{
+    HASHMAPPER = "hashmapper",
+    LEBANESE = "lebanese"
+}

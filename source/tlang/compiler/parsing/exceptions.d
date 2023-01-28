@@ -1,11 +1,10 @@
 module compiler.parsing.exceptions;
 
 import compiler.parsing.core;
-import compiler.lexer;
 import misc.exceptions;
 import compiler.symbols.check;
 import compiler.symbols.data;
-import compiler.lexer : Token;
+import compiler.lexer.core : Token;
 import std.conv : to;
 
 public class ParserException : TError

@@ -10,7 +10,7 @@ import compiler.codegen.instruction : Instruction;
 import std.range : walkLength;
 import gogga;
 import std.conv : to;
-import compiler.compiler : CompilerConfiguration;
+import compiler.configuration : CompilerConfiguration;
 import compiler.codegen.mapper.core : SymbolMapper;
 
 /**

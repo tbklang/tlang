@@ -8,22 +8,18 @@ module commandline.commands;
 
 import jcli;
 import std.stdio;
-import compiler.compiler : beginCompilation;
 import misc.exceptions : TError;
 import std.exception : ErrnoException;
-import compiler.lexer : Lexer, Token;
+import compiler.lexer.core : Lexer, Token;
 import compiler.parsing.core : Parser;
 import compiler.typecheck.core : TypeChecker;
 import gogga;
-import compiler.compiler : Compiler;
+import compiler.core : Compiler, beginCompilation;
+import compiler.configuration : ConfigEntry;
 import std.conv : to;
-//TODO: Re-order the definitions below so that they appear with compile first, then lex, parse, ..., help
+import compiler.codegen.mapper.core : SymbolMappingTechnique;
 
-public enum SymbolMappingTechnique
-{
-    hashmapper,
-    lebanese
-}
+//TODO: Re-order the definitions below so that they appear with compile first, then lex, parse, ..., help
 
 public enum VerbosityLevel
 {
@@ -49,7 +45,7 @@ mixin template BaseCommand()
     void BaseCommandInit(Compiler compiler)
     {
         // Set the verbosity level
-        compiler.getConfig().setConfig("verbosity", debugLevel);
+        compiler.getConfig().addConfig(ConfigEntry("verbosity", debugLevel));
     }
 }
 
@@ -80,20 +76,22 @@ mixin template EmitBase()
         @ArgNamed("library-link|ll", "Paths to any object files to ,ink in during the linking phase")
         @(ArgConfig.optional)
         @(ArgConfig.aggregate)
-        
         string[] bruh;
     }
 
     void EmitBaseInit(Compiler compiler)
     {
         // Set the symbol mapper technique
-        compiler.getConfig().setConfig("emit:mapper", symbolTechnique);
+        compiler.getConfig().addConfig(ConfigEntry("emit:mapper", symbolTechnique));
 
         // Set whether pretty-printed code should be generated
-        compiler.getConfig().setConfig("dgen:pretty_code", prettyPrintCodeGen);
+        compiler.getConfig().addConfig(ConfigEntry("dgen:pretty_code", prettyPrintCodeGen));
 
         // Set whether or not to enable the entry point testing code
-        compiler.getConfig().setConfig("dgen:emit_entrypoint_test", entrypointTestEmit);
+        compiler.getConfig().addConfig(ConfigEntry("dgen:emit_entrypoint_test", entrypointTestEmit));
+
+        // Set the paths to the object files to link in
+        compiler.getConfig().addConfig(ConfigEntry("linker:link_files", bruh));
     }
 }
 

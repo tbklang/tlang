@@ -1,12 +1,12 @@
 module simple_extern;
 
-extern efunc uint write(uint fd, ubyte* buffer, uint count);
-extern evar int kak;
+extern efunc uint doWrite(uint fd, ubyte* buffer, uint count);
+extern evar int ctr;
 
 void test()
 {
-    ubyte* buff;
-    discard write(cast(uint)0, buff, cast(uint)1001);
+    ctr = ctr + 1;
 
-    kak = kak + 1;
+    ubyte* buff;
+    discard doWrite(cast(uint)0, buff, cast(uint)1001);
 }

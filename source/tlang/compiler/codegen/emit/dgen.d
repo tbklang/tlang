@@ -18,7 +18,7 @@ import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 import compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
-import compiler.compiler : CompilerConfiguration;
+import compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
 {    
@@ -41,7 +41,7 @@ public final class DCodeEmitter : CodeEmitter
         string tabStr;
 
         /* Only generate tabs if enabled in compiler config */
-        if(config.getConfig!(bool)("dgen:pretty_code"))
+        if(config.getConfig("dgen:pretty_code").getBoolean())
         {
             for(ulong i = 0; i < count; i++)
             {
@@ -554,7 +554,7 @@ public final class DCodeEmitter : CodeEmitter
 
         
         // If enabled (default: yes) then emit entry point (TODO: change later)
-        if(config.getConfig!(bool)("dgen:emit_entrypoint_test"))
+        if(config.getConfig("dgen:emit_entrypoint_test").getBoolean())
         {
             //TODO: Emit main (entry point)
             emitEntryPoint();
@@ -878,7 +878,21 @@ int main()
         try
         {
             //NOTE: Change to system compiler (maybe, we need to choose a good C compiler)
-            Pid ccPID = spawnProcess(["clang", "-o", "tlang.out", file.name()]);
+            string[] compileArgs = ["clang", "-o", "tlang.out", file.name()];
+
+            // Check for object files to be linked in
+            string[] objectFilesLink;
+            if(config.hasConfig("linker:link_files"))
+            {
+                objectFilesLink = config.getConfig("linker:link_files").getArray();
+                gprintln("Object files to be linked in: "~to!(string)(objectFilesLink));
+            }
+            else
+            {
+                gprintln("No files to link in");
+            }
+            
+            Pid ccPID = spawnProcess(compileArgs~objectFilesLink);
 
             int code = wait(ccPID);
 

@@ -5,7 +5,7 @@ import std.conv : to;
 import std.string : isNumeric, cmp;
 import compiler.symbols.check;
 import compiler.symbols.data;
-import compiler.lexer : Token;
+import compiler.lexer.core : Token;
 import core.stdc.stdlib;
 import misc.exceptions : TError;
 import compiler.parsing.exceptions;
@@ -1990,7 +1990,7 @@ unittest
 
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
 
     string sourceCode = `
 module myModule;
@@ -2029,7 +2029,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.typecheck.core;
 
     string sourceCode = `
@@ -2196,7 +2196,7 @@ class myClass2
 unittest
 {
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.typecheck.core;
 
 
@@ -2264,7 +2264,7 @@ void function()
 unittest
 {
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.typecheck.core;
 
 
@@ -2346,7 +2346,7 @@ int myFunction(int i, int j)
 unittest
 {
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.typecheck.core;
 
 
@@ -2448,7 +2448,7 @@ void function()
 unittest
 {
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.typecheck.core;
 
     string sourceCode = `
@@ -2548,7 +2548,7 @@ int thing()
 unittest
 {
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.typecheck.core;
 
 
@@ -2671,7 +2671,7 @@ void function()
 unittest
 {
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.typecheck.core;
 
 

@@ -1,4 +1,4 @@
-module compiler.lexer;
+module compiler.lexer.core;
 
 import std.container.slist;
 import gogga;

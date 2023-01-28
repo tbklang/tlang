@@ -1740,7 +1740,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_module1.t";
@@ -1787,7 +1787,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_module2.t";
@@ -1832,7 +1832,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_non_module.t";
@@ -1877,7 +1877,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_member.t";
@@ -1921,7 +1921,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/precedence_collision_test.t";
@@ -1967,7 +1967,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container.t";
@@ -2052,7 +2052,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/typecheck/simple_function_call.t";
