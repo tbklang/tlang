@@ -1991,6 +1991,8 @@ unittest
     import std.file;
     import std.stdio;
     import compiler.lexer.core;
+    import compiler.lexer.exceptions;
+    import compiler.lexer.tokens;
 
     string sourceCode = `
 module myModule;
@@ -2030,6 +2032,7 @@ unittest
     import std.file;
     import std.stdio;
     import compiler.lexer.core;
+    import compiler.lexer.exceptions;
     import compiler.typecheck.core;
 
     string sourceCode = `
@@ -2197,6 +2200,7 @@ unittest
 {
     import std.stdio;
     import compiler.lexer.core;
+    import compiler.lexer.exceptions;
     import compiler.typecheck.core;
 
 
@@ -2265,6 +2269,7 @@ unittest
 {
     import std.stdio;
     import compiler.lexer.core;
+    import compiler.lexer.exceptions;
     import compiler.typecheck.core;
 
 
@@ -2347,6 +2352,7 @@ unittest
 {
     import std.stdio;
     import compiler.lexer.core;
+    import compiler.lexer.exceptions;
     import compiler.typecheck.core;
 
 
@@ -2449,6 +2455,7 @@ unittest
 {
     import std.stdio;
     import compiler.lexer.core;
+    import compiler.lexer.exceptions;
     import compiler.typecheck.core;
 
     string sourceCode = `
@@ -2549,6 +2556,7 @@ unittest
 {
     import std.stdio;
     import compiler.lexer.core;
+    import compiler.lexer.exceptions;
     import compiler.typecheck.core;
 
 
@@ -2672,6 +2680,7 @@ unittest
 {
     import std.stdio;
     import compiler.lexer.core;
+    import compiler.lexer.exceptions;
     import compiler.typecheck.core;
 
 

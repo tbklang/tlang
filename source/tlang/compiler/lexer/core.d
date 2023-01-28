@@ -2,6 +2,7 @@ module compiler.lexer.core;
 
 import std.container.slist;
 import gogga;
+import std.conv : to;
 import std.ascii : isDigit;
 import compiler.lexer.exceptions;
 import compiler.lexer.tokens : Token;
