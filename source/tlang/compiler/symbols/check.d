@@ -1,6 +1,6 @@
 module compiler.symbols.check;
 
-import compiler.lexer : Token;
+import compiler.lexer.core : Token;
 import std.conv : to;
 import std.string : isNumeric, cmp;
 import misc.utils;
@@ -61,6 +61,9 @@ public enum SymbolType
     OBRACKET,
     CBRACKET,
     CAST,
+    EXTERN,
+    EXTERN_EFUNC,
+    EXTERN_EVAR,
     UNKNOWN
 }
 
@@ -319,6 +322,21 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.DELETE;
     }
+    /* efunc keyword */
+    else if(cmp(token, "efunc") == 0)
+    {
+        return SymbolType.EXTERN_EFUNC;
+    }
+    /* evar keyword */
+    else if(cmp(token, "evar") == 0)
+    {
+        return SymbolType.EXTERN_EVAR;
+    }
+    /* extern keyword */
+    else if(cmp(token, "extern") == 0)
+    {
+        return SymbolType.EXTERN;
+    }
     /* module keyword */
     else if(cmp(token, "module") == 0)
     {
@@ -538,6 +556,10 @@ public string getCharacter(SymbolType symbolIn)
     else if(symbolIn == SymbolType.AMPERSAND)
     {
         return "&";
+    }
+    else if(symbolIn == SymbolType.SEMICOLON)
+    {
+        return ";";
     }
     else
     {

@@ -13,11 +13,12 @@ import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import compiler.typecheck.dependency.core : Context, FunctionData, DNode;
-import compiler.codegen.mapper : SymbolMapper;
+import compiler.codegen.mapper.core : SymbolMapper;
 import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 import compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
+import compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
 {    
@@ -27,9 +28,10 @@ public final class DCodeEmitter : CodeEmitter
     private bool varDecWantsConsumeVarAss = false;
 
 
-    this(TypeChecker typeChecker, File file)
+    // NOTE: In future store the mapper in the config please
+    this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
-        super(typeChecker, file);
+        super(typeChecker, file, config, mapper);
     }
 
     private ulong transformDepth = 0;
@@ -37,10 +39,16 @@ public final class DCodeEmitter : CodeEmitter
     private string genTabs(ulong count)
     {
         string tabStr;
-        for(ulong i = 0; i < count; i++)
+
+        /* Only generate tabs if enabled in compiler config */
+        if(config.getConfig("dgen:pretty_code").getBoolean())
         {
-            tabStr~="\t";
+            for(ulong i = 0; i < count; i++)
+            {
+                tabStr~="\t";
+            }
         }
+        
         return tabStr;
     }
 
@@ -118,25 +126,35 @@ public final class DCodeEmitter : CodeEmitter
 
             gprintln("Is ContextNull?: "~to!(string)(context is null));
             gprintln("Wazza contect: "~to!(string)(context.container));
-            auto typedEntityVariable = context.tc.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
+            auto typedEntityVariable = typeChecker.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
 
-            string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
 
-            
-            // If we are needed as part of a VariabvleDeclaration-with-assignment
-            if(varDecWantsConsumeVarAss)
+            /* If it is not external */
+            if(!typedEntityVariable.isExternal())
             {
-                // Generate the code to emit (only the RHS of the = sign)
-                string emitCode = transform(varAs.data);
+                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
-                // Reset flag
-                varDecWantsConsumeVarAss = false;
+                
+                // If we are needed as part of a VariabvleDeclaration-with-assignment
+                if(varDecWantsConsumeVarAss)
+                {
+                    // Generate the code to emit (only the RHS of the = sign)
+                    string emitCode = transform(varAs.data);
 
-                return emitCode;
+                    // Reset flag
+                    varDecWantsConsumeVarAss = false;
+
+                    return emitCode;
+                }
+
+
+                return renamedSymbol~" = "~transform(varAs.data)~";";
             }
-
-
-            return renamedSymbol~" = "~transform(varAs.data)~";";
+            /* If it is external */
+            else
+            {
+                return typedEntityVariable.getName()~" = "~transform(varAs.data)~";";
+            }
         }
         /* VariableDeclaration */
         else if(cast(VariableDeclaration)instruction)
@@ -146,38 +164,46 @@ public final class DCodeEmitter : CodeEmitter
             VariableDeclaration varDecInstr = cast(VariableDeclaration)instruction;
             Context context = varDecInstr.getContext();
 
-            Variable typedEntityVariable = cast(Variable)context.tc.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
+            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
 
-            //NOTE: We should remove all dots from generated symbol names as it won't be valid C (I don't want to say C because
-            // a custom CodeEmitter should be allowed, so let's call it a general rule)
-            //
-            //simple_variables.x -> simple_variables_x
-            //NOTE: We may need to create a symbol table actually and add to that and use that as these names
-            //could get out of hand (too long)
-            // NOTE: Best would be identity-mapping Entity's to a name
-            string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
-
-
-            // Check to see if this declaration has an assignment attached
-            if(typedEntityVariable.getAssignment())
+            /* If the variable is not external */
+            if(!typedEntityVariable.isExternal())
             {
-                // Set flag to expect different transform generation for VariableAssignment
-                varDecWantsConsumeVarAss = true;
+                //NOTE: We should remove all dots from generated symbol names as it won't be valid C (I don't want to say C because
+                // a custom CodeEmitter should be allowed, so let's call it a general rule)
+                //
+                //simple_variables.x -> simple_variables_x
+                //NOTE: We may need to create a symbol table actually and add to that and use that as these names
+                //could get out of hand (too long)
+                // NOTE: Best would be identity-mapping Entity's to a name
+                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
-                // Fetch the variable assignment instruction
-                // gprintln("Before crash: "~to!(string)(getCurrentInstruction()));
-                // nextInstruction();
-                // Instruction varAssInstr = getCurrentInstruction();
-                
-                VariableAssignmentInstr varAssInstr = varDecInstr.getAssignmentInstr();
 
-                // Generate the code to emit
-                return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
+                // Check to see if this declaration has an assignment attached
+                if(typedEntityVariable.getAssignment())
+                {
+                    // Set flag to expect different transform generation for VariableAssignment
+                    varDecWantsConsumeVarAss = true;
+
+                    // Fetch the variable assignment instruction
+                    // gprintln("Before crash: "~to!(string)(getCurrentInstruction()));
+                    // nextInstruction();
+                    // Instruction varAssInstr = getCurrentInstruction();
+                    
+                    VariableAssignmentInstr varAssInstr = varDecInstr.getAssignmentInstr();
+
+                    // Generate the code to emit
+                    return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
+                }
+
+                return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~";";
+            }
+            /* If the variable is external */
+            else
+            {
+                return "extern "~typeTransform(cast(Type)varDecInstr.varType)~" "~typedEntityVariable.getName()~";";
             }
 
-
-
-            return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~";";
         }
         /* LiteralValue */
         else if(cast(LiteralValue)instruction)
@@ -196,14 +222,23 @@ public final class DCodeEmitter : CodeEmitter
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
 
-            Variable typedEntityVariable = cast(Variable)context.tc.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName); //TODO: Remove `auto`
+            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName); //TODO: Remove `auto`
 
-            //TODO: THis is giving me kak (see issue #54), it's generating name but trying to do it for the given container, relative to it
-            //TODO: We might need a version of generateName that is like generatenamebest (currently it acts like generatename, within)
+            /* If it is not external */
+            if(!typedEntityVariable.isExternal())
+            {
+                //TODO: THis is giving me kak (see issue #54), it's generating name but trying to do it for the given container, relative to it
+                //TODO: We might need a version of generateName that is like generatenamebest (currently it acts like generatename, within)
 
-            string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
+                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
-            return renamedSymbol;
+                return renamedSymbol;
+            }
+            /* If it is external */
+            else
+            {
+                return typedEntityVariable.getName();
+            }
         }
         /* BinOpInstr */
         else if(cast(BinOpInstr)instruction)
@@ -225,7 +260,7 @@ public final class DCodeEmitter : CodeEmitter
             Context context = funcCallInstr.getContext();
             assert(context);
 
-            Function functionToCall = cast(Function)context.tc.getResolver().resolveBest(context.getContainer(), funcCallInstr.functionName); //TODO: Remove `auto`
+            Function functionToCall = cast(Function)typeChecker.getResolver().resolveBest(context.getContainer(), funcCallInstr.functionName); //TODO: Remove `auto`
 
             // TODO: SymbolLookup?
 
@@ -492,6 +527,8 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        // TODO: MAAAAN we don't even have this yet
+        // else if(cast(StringExpression))
 
         return "<TODO: Base emit: "~to!(string)(instruction)~">";
     }
@@ -515,8 +552,13 @@ public final class DCodeEmitter : CodeEmitter
         emitFunctionPrototypes();
         emitFunctionDefinitions();
 
-        //TODO: Emit main (entry point)
-        emitEntryPoint();
+        
+        // If enabled (default: yes) then emit entry point (TODO: change later)
+        if(config.getConfig("dgen:emit_entrypoint_test").getBoolean())
+        {
+            //TODO: Emit main (entry point)
+            emitEntryPoint();
+        }
     }
 
     /** 
@@ -628,7 +670,7 @@ public final class DCodeEmitter : CodeEmitter
 
                 // Generate the symbol-mapped names for the parameters
                 Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(func, currentParameter.getName()); //TODO: Remove `auto`
-                string renamedSymbol = SymbolMapper.symbolLookup(typedEntityVariable);
+                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
 
                 // Generate <type> <parameter-name (symbol mapped)>
@@ -645,6 +687,12 @@ public final class DCodeEmitter : CodeEmitter
 
         // )
         signature~=")";
+
+        // If the function is marked as external then place `extern` infront
+        if(func.isExternal())
+        {
+            signature = "extern "~signature;
+        }
 
         return signature;
 
@@ -674,26 +722,35 @@ public final class DCodeEmitter : CodeEmitter
         //TODO: And what about methods defined in classes? Those should technically be here too
         Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(typeChecker.getModule(), functionName); //TODO: Remove `auto`
         
-        // Emit the function signature
-        file.writeln(generateSignature(functionEntity));
-
-        // Emit opening curly brace
-        file.writeln(getCharacter(SymbolType.OCURLY));
-
-        // Emit body
-        while(hasInstructions())
+        // If the Entity is NOT external then emit the signature+body
+        if(!functionEntity.isExternal())
         {
-            Instruction curFuncBodyInstr = getCurrentInstruction();
+            // Emit the function signature
+            file.writeln(generateSignature(functionEntity));
 
-            string emit = transform(curFuncBodyInstr);
-            gprintln("emitFunctionDefinition("~functionName~"): Emit: "~emit);
-            file.writeln("\t"~emit);
-            
-            nextInstruction();
+            // Emit opening curly brace
+            file.writeln(getCharacter(SymbolType.OCURLY));
+
+            // Emit body
+            while(hasInstructions())
+            {
+                Instruction curFuncBodyInstr = getCurrentInstruction();
+
+                string emit = transform(curFuncBodyInstr);
+                gprintln("emitFunctionDefinition("~functionName~"): Emit: "~emit);
+                file.writeln("\t"~emit);
+                
+                nextInstruction();
+            }
+
+            // Emit closing curly brace
+            file.writeln(getCharacter(SymbolType.CCURLY));
         }
-
-        // Emit closing curly brace
-        file.writeln(getCharacter(SymbolType.CCURLY));
+        // If the Entity IS external then don't emit anything as the signature would have been emitted via a prorotype earlier with `emitPrototypes()`
+        else
+        {
+            // Do nothing
+        }
     }
 
     private void emitCodeQueue()
@@ -719,7 +776,7 @@ public final class DCodeEmitter : CodeEmitter
 
     private void emitEntryPoint()
     {
-        //TODO: Implement me
+        // TODO: Implement me
 
         // Test for `simple_functions.t` (function call testing)
         if(cmp(typeChecker.getModule().getName(), "simple_functions") == 0)
@@ -781,6 +838,20 @@ int main()
     return 0;
 }`);
         }
+        else if(cmp(typeChecker.getModule().getName(), "simple_extern") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    test();
+   
+    
+
+    return 0;
+}`);
+        }
         else
         {
             file.writeln(`
@@ -807,7 +878,21 @@ int main()
         try
         {
             //NOTE: Change to system compiler (maybe, we need to choose a good C compiler)
-            Pid ccPID = spawnProcess(["clang", "-o", "tlang.out", file.name()]);
+            string[] compileArgs = ["clang", "-o", "tlang.out", file.name()];
+
+            // Check for object files to be linked in
+            string[] objectFilesLink;
+            if(config.hasConfig("linker:link_files"))
+            {
+                objectFilesLink = config.getConfig("linker:link_files").getArray();
+                gprintln("Object files to be linked in: "~to!(string)(objectFilesLink));
+            }
+            else
+            {
+                gprintln("No files to link in");
+            }
+            
+            Pid ccPID = spawnProcess(compileArgs~objectFilesLink);
 
             int code = wait(ccPID);
 

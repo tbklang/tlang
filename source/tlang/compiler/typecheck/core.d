@@ -68,27 +68,22 @@ public final class TypeChecker
         * non-cyclic
         *
         */
-
-        // Allow Context class access to the type checker (used in Instruction where only Context is available)
-        Context.tc = this;
-
-        // Allow the SymbolMapper class to access the type checker
-        import compiler.codegen.mapper : SymbolMapper;
-        SymbolMapper.tc = this;
-
-        // DNodeGenerator.staticTC = this;
         
 
         DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
+
+        /* Generate the dependency tree */
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
 
+        /* Perform the linearization to the dependency tree */
+        rootNode.performLinearization();
+
         /* Print the tree */
-        string tree = rootNode.print();
+        string tree = rootNode.getTree();
         gprintln(tree);
 
-
         /* Get the action-list (linearised bottom up graph) */
-        DNode[] actionList = rootNode.poes;
+        DNode[] actionList = rootNode.getLinearizedNodes();
         doTypeCheck(actionList);        
         printTypeQueue();
 
@@ -106,10 +101,6 @@ public final class TypeChecker
         codeQueue.clear();
         assert(codeQueue.empty() == true);
 
-        //FIXME: Look at this, ffs why is it static
-        //Clear tree/linearized version (todo comment)
-        DNode.poes=[];
-
         /* Grab functionData ??? */
         FunctionData[string] functionDefinitions = grabFunctionDefs();
         gprintln("Defined functions: "~to!(string)(functionDefinitions));
@@ -118,17 +109,19 @@ public final class TypeChecker
         {
             assert(codeQueue.empty() == true);
 
-
+            /* Generate the dependency tree */
             DNode funcNode = funcData.generate();
-            //NOTE: We need to call this, it generates tree but also does the linearization
-            //NOTE: Rename that
-            funcNode.print();
-            DNode[] actionListFunc = funcNode.poes;
+            
+            /* Perform the linearization to the dependency tree */
+            funcNode.performLinearization();
+
+            /* Get the action-list (linearised bottom up graph) */
+            DNode[] actionListFunc = funcNode.getLinearizedNodes();
 
             //TODO: Would this not mess with our queues?
             doTypeCheck(actionListFunc);
             printTypeQueue();
-            gprintln(funcNode.print());
+            gprintln(funcNode.getTree());
 
             // The current code queue would be the function's body instructions
             // a.k.a. the `codeQueue`
@@ -158,9 +151,6 @@ public final class TypeChecker
                 gprintln("FuncDef ("~funcData.name~"): Adding body instruction: "~to!(string)(curFuncInstr));
             }
             codeQueue.clear();
-
-            // Clear the linearization for the next round
-            DNode.poes=[];
 
             gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
         }
@@ -1273,6 +1263,9 @@ public final class TypeChecker
     */
     public void beginCheck()
     {
+        /* Process all pseudo entities of the given module */
+        processPseudoEntities(modulle);
+
         /**
         * Make sure there are no name collisions anywhere
         * in the Module with an order of precedence of
@@ -1284,6 +1277,39 @@ public final class TypeChecker
         /* TODO: Now that everything is defined, no collision */
         /* TODO: Do actual type checking and declarations */
         dependencyCheck();
+    }
+
+    private void processPseudoEntities(Container c)
+    {
+        /* Collect all `extern` declarations */
+        ExternStmt[] externDeclarations;
+        foreach(Statement curStatement; c.getStatements())
+        {
+            if(cast(ExternStmt)curStatement)
+            {
+                externDeclarations ~= cast(ExternStmt)curStatement;
+            }
+        }
+
+        // TODO: We could remove them from the container too, means less loops in dependency/core.d
+
+        /* Add each Entity to the container */
+        foreach(ExternStmt curExternStmt; externDeclarations)
+        {
+            SymbolType externType = curExternStmt.getExternType();
+            string externalSymbolName = curExternStmt.getExternalName();
+            Entity pseudoEntity = curExternStmt.getPseudoEntity();
+
+            /* Set the embedded pseudo entity's parent to that of the container */
+            pseudoEntity.parentTo(c);
+
+            c.addStatements([pseudoEntity]);
+
+            assert(this.getResolver().resolveBest(c, externalSymbolName));
+        }
+
+
+        
     }
 
     private void checkClassInherit(Container c)
@@ -1714,7 +1740,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_module1.t";
@@ -1761,7 +1787,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_module2.t";
@@ -1806,7 +1832,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_non_module.t";
@@ -1851,7 +1877,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_member.t";
@@ -1895,7 +1921,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/precedence_collision_test.t";
@@ -1941,7 +1967,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container.t";
@@ -2026,7 +2052,7 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer;
+    import compiler.lexer.core;
     import compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/typecheck/simple_function_call.t";

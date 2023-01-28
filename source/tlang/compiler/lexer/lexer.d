@@ -1,10 +1,36 @@
-module compiler.lexer;
+module compiler.lexer.core;
 
 import std.container.slist;
 import gogga;
 import std.conv : to;
 import std.string : cmp;
 import std.ascii : isDigit;
+import misc.exceptions : TError;
+
+public enum LexerError
+{
+    EXHAUSTED_CHARACTERS,
+    OTHER
+}
+
+public final class LexerException : TError
+{
+    public const Lexer offendingInstance;
+    public const LexerError errType;
+
+    this(Lexer offendingInstance, LexerError errType = LexerError.OTHER, string msg = "")
+    {
+        string positionString = "("~to!(string)(offendingInstance.line)~", "~to!(string)(offendingInstance.column)~")";
+        super("LexerException("~to!(string)(errType)~")"~(msg.length ? ": "~msg : "")~" at "~positionString);
+        this.offendingInstance = offendingInstance;
+        this.errType = errType;
+    }
+
+    this(Lexer offendingInstance, string msg)
+    {
+        this(offendingInstance, LexerError.OTHER, msg);
+    }
+}
 
 /* TODO: Add Token type (which matches column and position too) */
 public final class Token
@@ -99,7 +125,7 @@ public final class Lexer
 
     /* Perform the lexing process */
     /* TODO: Use return value */
-    public bool performLex()
+    public void performLex()
     {
 
         while(position < sourceCode.length)
@@ -135,8 +161,7 @@ public final class Lexer
                     }
                     else
                     {
-                        gprintln("Floating point '"~currentToken~"' cannot be followed by a '"~currentChar~"'", DebugType.ERROR);
-                        return false;
+                        throw new LexerException(this, "Floating point '"~currentToken~"' cannot be followed by a '"~currentChar~"'");
                     }
                 }
             }
@@ -224,8 +249,7 @@ public final class Lexer
                     }
                     else
                     {
-                        gprintln("Expected a letter to follow the .", DebugType.ERROR);
-                        return false;
+                        throw new LexerException(this, "Expected a letter to follow the .");
                     }
                     
                 }
@@ -316,14 +340,12 @@ public final class Lexer
                     /* If we don't have a next character then raise error */
                     else
                     {
-                        gprintln("Unfinished escape sequence", DebugType.ERROR);
-                        return false;
+                        throw new LexerException(this, "Unfinished escape sequence");
                     }
                 }
                 else
                 {
-                    gprintln("Escape sequences can only be used within strings", DebugType.ERROR);
-                    return false;
+                    throw new LexerException(this, "Escape sequences can only be used within strings");
                 }
             }
             /* Character literal support */
@@ -357,14 +379,12 @@ public final class Lexer
                     }
                     else
                     {
-                        gprintln("Was expecting closing ' when finishing character literal", DebugType.ERROR);
-                        return false;
+                        throw new LexerException(this, "Was expecting closing ' when finishing character literal");
                     }
                 }
                 else
                 {
-                    gprintln("EOSC reached when trying to get character literal", DebugType.ERROR);
-                    return false;
+                    throw new LexerException(this, LexerError.EXHAUSTED_CHARACTERS, "EOSC reached when trying to get character literal");
                 }
             }
             /**
@@ -401,8 +421,7 @@ public final class Lexer
                         }
                         else
                         {
-                            gprintln("You MUST specify a size encoder after a signagae encoder", DebugType.ERROR);
-                            return false;
+                            throw new LexerException(this, "You MUST specify a size encoder after a signagae encoder");
                         }
 
 
@@ -446,8 +465,7 @@ public final class Lexer
                     /* Anything else is invalid */
                     else
                     {
-                        gprintln("Not valid TODO", DebugType.ERROR);
-                        return false;
+                        throw new LexerException(this, "Not valid TODO");
                     }
                 }
                 /**
@@ -483,14 +501,12 @@ public final class Lexer
                         */
                         else
                         {
-                            gprintln("A size-encoder must follow a signage encoder", DebugType.ERROR);
-                            return false;
+                            throw new LexerException(this, "A size-encoder must follow a signage encoder");
                         }
                     }
                     else
                     {
-                        gprintln("Cannot have another encoder after a size encoder", DebugType.ERROR);
-                        return false;
+                        throw new LexerException(this, "Cannot have another encoder after a size encoder");
                     }
                 }
                 /* It is impossible to reach this as flushing means we cannot add more */
@@ -517,8 +533,6 @@ public final class Lexer
         }
 
         tokens = currentTokens;
-
-        return true;
     }
 
     private char[] numbericalEncoderSegmentFetch()

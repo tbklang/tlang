@@ -10,6 +10,8 @@ import compiler.codegen.instruction : Instruction;
 import std.range : walkLength;
 import gogga;
 import std.conv : to;
+import compiler.configuration : CompilerConfiguration;
+import compiler.codegen.mapper.core : SymbolMapper;
 
 /**
 * TODO: Perhaps have an interface that can emit(Context/Parent, Statement)
@@ -21,6 +23,8 @@ public abstract class CodeEmitter
 {
     protected TypeChecker typeChecker;
     protected File file;
+    protected CompilerConfiguration config;
+    protected SymbolMapper mapper;
     
     /** 
      * The selected queue is the queue to be used
@@ -125,7 +129,8 @@ public abstract class CodeEmitter
         return functionBodyInstrs.keys();
     }
 
-    this(TypeChecker typeChecker, File file)
+    // TODO: Add allow for custom symbol mapper, use an interface or rather base class mechanism for it
+    this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
         this.typeChecker = typeChecker;
 
@@ -138,6 +143,9 @@ public abstract class CodeEmitter
         gprintln("CodeEmitter: Got number of function defs: "~to!(string)(functionBodyInstrs));
         
         this.file = file;
+        this.config = config;
+
+        this.mapper = mapper;
     }
 
     /** 

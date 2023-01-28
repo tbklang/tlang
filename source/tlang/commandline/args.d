@@ -1,12 +1,9 @@
 module commandline.args;
 
-import jcli;
+import jcli.commandgraph.cli;
 
 void parseCommandLine(string[] arguments)
 {
-    /* Create an instance of the JCLI command-line parser */
-    CommandLineInterface!(commandline.commands) commandLineSystem = new CommandLineInterface!(commandline.commands)();
-
     /* Parse the command-line arguments */
-    commandLineSystem.parseAndExecute(arguments);
+    matchAndExecuteAcrossModules!(commandline.commands)(arguments[1..arguments.length]);
 }
