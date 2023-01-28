@@ -3,6 +3,7 @@ module compiler.core;
 import gogga;
 import std.conv : to;
 import compiler.lexer.core;
+import compiler.lexer.tokens : Token;
 import std.stdio : File;
 import compiler.parsing.core;
 import compiler.symbols.check;

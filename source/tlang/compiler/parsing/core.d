@@ -5,7 +5,7 @@ import std.conv : to;
 import std.string : isNumeric, cmp;
 import compiler.symbols.check;
 import compiler.symbols.data;
-import compiler.lexer.core : Token;
+import compiler.lexer.tokens : Token;
 import core.stdc.stdlib;
 import misc.exceptions : TError;
 import compiler.parsing.exceptions;

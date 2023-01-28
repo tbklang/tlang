@@ -1,6 +1,6 @@
 module compiler.symbols.check;
 
-import compiler.lexer.core : Token;
+import compiler.lexer.tokens : Token;
 import std.conv : to;
 import std.string : isNumeric, cmp;
 import misc.utils;
