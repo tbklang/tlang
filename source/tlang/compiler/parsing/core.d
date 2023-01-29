@@ -1114,7 +1114,6 @@ public final class Parser
             if (symbol == SymbolType.NUMBER_LITERAL)
             { 
                 /* TODO: Do number checking here to get correct NUmberLiteral */
-                // TODO: Insert code here for handling various different encodings
                 NumberLiteral numberLiteral = new NumberLiteral(getCurrentToken().getToken());
                 
                 /* Add expression to stack */
