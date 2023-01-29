@@ -85,9 +85,18 @@ public class BinaryOperatorExpression : OperatorExpression
     }
 }
 
+public enum NumberLiteralEncoding
+{
+    SIGNED_INTEGER,
+    UNSIGNED_INTEGER,
+    SIGNED_LONG,
+    UNSIGNED_LONG
+}
+
 public class NumberLiteral : Expression
 {
     private string numberLiteral;
+    private NumberLiteralEncoding encoding;
 
     /* TODO: Take in info like tyoe */
     this(string numberLiteral)
@@ -100,9 +109,14 @@ public class NumberLiteral : Expression
         return numberLiteral;
     }
 
+    public NumberLiteralEncoding getEncoding()
+    {
+        return encoding;
+    }
+
     public override string toString()
     {
-        return "[numberLiteral: "~numberLiteral~"]";
+        return "[numberLiteral: "~numberLiteral~" ("~to!(string)(encoding)~")]";
     }
 }
 
