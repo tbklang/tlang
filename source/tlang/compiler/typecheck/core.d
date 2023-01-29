@@ -410,21 +410,6 @@ public final class TypeChecker
 
             if(cast(NumberLiteral)statement)
             {
-                /* TODO: For now */
-
-                /**
-                * Typechecking
-                *
-                * If the number literal contains a `.` then it is a float
-                * else if is an int (NOTE: This may need to be more specific
-                * with literal encoders down the line)
-                */
-                NumberLiteral numLit = cast(NumberLiteral)statement;
-                import std.string : indexOf;
-                bool isFloat = indexOf(numLit.getNumber(), ".") > -1; 
-                gprintln("NUMBER LIT: isFloat: "~to!(string)(isFloat));
-                addType(getType(modulle, isFloat ? "float" : "int"));
-
                 /**
                 * Codegen
                 *
@@ -435,21 +420,34 @@ public final class TypeChecker
                 */
                 Value valInstr;
 
-                /* Generate a LiteralValue (Integer literal) */
-                if(!isFloat)
+                /* Generate a LiteralValue (IntegerLiteral) */
+                if(cast(IntegerLiteral)statement)
                 {
-                    ulong i = to!(ulong)((cast(NumberLiteral)statement).getNumber());
+                    IntegerLiteral integerLitreal = cast(IntegerLiteral)statement;
+
+
+                    ulong i = to!(ulong)(integerLitreal.getNumber());
+
+                    // TODO: Insert getEncoding stuff here
                     LiteralValue litValInstr = new LiteralValue(i, 4);
 
                     valInstr = litValInstr;
+
+                    // TODO: Insert get encoding stuff here
+                    addType(getType(modulle, "int"));
                 }
-                /* Generate a LiteralValueFloat (Floating point literal) */
+                /* Generate a LiteralValueFloat (FloatingLiteral) */
                 else
                 {
-                    double i = to!(float)((cast(NumberLiteral)statement).getNumber());
+                    FloatingLiteral floatLiteral = cast(FloatingLiteral)statement;
+
+                    double i = to!(float)(floatLiteral.getNumber());
                     LiteralValueFloat litValInstr = new LiteralValueFloat(i, 4);
 
                     valInstr = litValInstr;
+
+                    // TODO: Insert get encoding stuff here
+                    addType(getType(modulle, "float"));
                 }
                 
                 addInstr(valInstr);

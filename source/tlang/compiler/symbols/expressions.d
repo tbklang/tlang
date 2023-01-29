@@ -85,7 +85,7 @@ public class BinaryOperatorExpression : OperatorExpression
     }
 }
 
-public enum NumberLiteralEncoding
+public enum IntegerLiteralEncoding
 {
     SIGNED_INTEGER,
     UNSIGNED_INTEGER,
@@ -93,30 +93,54 @@ public enum NumberLiteralEncoding
     UNSIGNED_LONG
 }
 
-public class NumberLiteral : Expression
+public final class IntegerLiteral : NumberLiteral
 {
-    private string numberLiteral;
-    private NumberLiteralEncoding encoding;
+    private IntegerLiteralEncoding encoding;
 
-    /* TODO: Take in info like tyoe */
-    this(string numberLiteral)
+    this(string integerLiteral)
     {
-        this.numberLiteral = numberLiteral;
+        super(integerLiteral);
     }
 
-    public string getNumber()
-    {
-        return numberLiteral;
-    }
-
-    public NumberLiteralEncoding getEncoding()
+    public IntegerLiteralEncoding getEncoding()
     {
         return encoding;
     }
 
     public override string toString()
     {
-        return "[numberLiteral: "~numberLiteral~" ("~to!(string)(encoding)~")]";
+        return "[integerLiteral: "~numberLiteral~" ("~to!(string)(encoding)~")]";
+    }
+}
+
+//TODO: Work on floating point literal encodings
+public final class FloatingLiteral : NumberLiteral
+{
+    // TODO: Put the equivalent of FloatingLiteralEncoding here
+
+    this(string floatingLiteral)
+    {
+        super(floatingLiteral);
+    }
+
+    public override string toString()
+    {
+        return "[floatingLiteral: "~numberLiteral~"]"; // ("~to!(string)(encoding)~")]";
+    }
+}
+
+public abstract class NumberLiteral : Expression
+{
+    private string numberLiteral;
+
+    this(string numberLiteral)
+    {
+        this.numberLiteral = numberLiteral;
+    }
+
+    public final string getNumber()
+    {
+        return numberLiteral;
     }
 }
 

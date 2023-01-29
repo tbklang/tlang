@@ -1060,6 +1060,20 @@ public final class Parser
     {
         gprintln("parseExpression(): Enter", DebugType.WARNING);
 
+
+        /** 
+         * Helper methods
+         *
+         * (TODO: These should be moved elsewhere)
+         */
+        bool isFloatLiteral(string numberLiteral)
+        {
+            import std.string : indexOf;
+            bool isFloat = indexOf(numberLiteral, ".") > -1; 
+            return isFloat;
+        }
+
+
         /* The expression to be returned */
         Expression[] retExpression;
 
@@ -1113,8 +1127,19 @@ public final class Parser
             /* If it is a number literal */
             if (symbol == SymbolType.NUMBER_LITERAL)
             { 
-                /* TODO: Do number checking here to get correct NUmberLiteral */
-                NumberLiteral numberLiteral = new NumberLiteral(getCurrentToken().getToken());
+                string numberLiteralStr = getCurrentToken().getToken();
+                NumberLiteral numberLiteral;
+
+                // If floating point literal
+                if(isFloatLiteral(numberLiteralStr))
+                {
+                    numberLiteral = new FloatingLiteral(getCurrentToken().getToken());
+                }
+                // Else, then an integer literal
+                else
+                {
+                    numberLiteral = new IntegerLiteral(getCurrentToken().getToken());
+                }
                 
                 /* Add expression to stack */
                 addRetExp(numberLiteral);
