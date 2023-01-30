@@ -38,7 +38,7 @@ public class FetchInst :  Instruction
 
 public class Value : Instruction
 {
-
+    public Type type;
 }
 
 public class StorageDeclaration : Instruction
@@ -59,9 +59,9 @@ public class VariableAssignmentInstr : Instruction
     /* Name of variable being declared */
     public string varName; /*TODO: Might not be needed */
 
-    public const Instruction data;
+    public const Value data; // TODO: Make `Value` to constrain
 
-    this(string varName, Instruction data)
+    this(string varName, Value data)
     {
         this.varName = varName;
         this.data = data;
@@ -124,30 +124,28 @@ public final class FetchValueVar : Value
 public final class LiteralValue : Value
 {
     /* Data */
-    public ulong data;
-    public byte len;
+    public string data;
 
-    this(ulong data, byte len)
+    this(string data, Type type)
     {
         this.data = data;
-        this.len = len;
+        this.type = type;
 
-        addInfo = "Data: "~to!(string)(data)~", Length: "~to!(string)(len);
+        addInfo = "Data: "~to!(string)(data)~", Type: "~to!(string)(type);
     }
 }
 
 public final class LiteralValueFloat : Value
 {
     /* Data */
-    public double data; /* TODO: Is this best way to store? Consirring floats/doubles */
-    public byte len;
+    public string data; /* TODO: Is this best way to store? Consirring floats/doubles */
 
-    this(double data, byte len)
+    this(string data, Type type)
     {
         this.data = data;
-        this.len = len;
+        this.type = type;
 
-        addInfo = "Data: "~to!(string)(data)~", Length: "~to!(string)(len);
+        addInfo = "Data: "~to!(string)(data)~", Type: "~to!(string)(type);
     }
 }
 
