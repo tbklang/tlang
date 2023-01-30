@@ -1333,6 +1333,8 @@ public class DNodeGenerator
                 DNode vStdAlDNode = pool(vAsStdAl);
                 // node.needs(vStdAlDNode);
 
+                // FIXME: Convert to using a VariableAssignmentNode (for the sake of uniformity)
+
                 DNode expression = expressionPass(vAsStdAl.getExpression(), context);
                 vStdAlDNode.needs(expression);
 

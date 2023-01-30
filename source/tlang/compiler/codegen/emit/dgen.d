@@ -127,6 +127,13 @@ public final class DCodeEmitter : CodeEmitter
             gprintln("Is ContextNull?: "~to!(string)(context is null));
             gprintln("Wazza contect: "~to!(string)(context.container));
             auto typedEntityVariable = typeChecker.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
+            gprintln("Hi"~to!(string)(varAs));
+            gprintln("Hi"~to!(string)(varAs.data));
+            gprintln("Hi"~to!(string)(varAs.data.type));
+
+            // NOTE: For tetsing issue #94 coercion (remove when done)
+            string typeName = (cast(Type)varAs.data.type).getName();
+            gprintln("VariableAssignmentInstr: The data to assign's type is: "~typeName);
 
 
             /* If it is not external */

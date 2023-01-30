@@ -425,24 +425,35 @@ public final class TypeChecker
                 {
                     IntegerLiteral integerLitreal = cast(IntegerLiteral)statement;
 
-
-                    ulong i = to!(ulong)(integerLitreal.getNumber());
+                    /**
+                     * Determine the type of this value instruction by finding
+                     * the encoding of the integer literal (part of doing issue #94)
+                     */
+                    Type literalEncodingType;
+                    if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_INTEGER)
+                    {
+                        literalEncodingType = getType(modulle, "int");
+                    }
+                    assert(literalEncodingType);
 
                     // TODO: Insert getEncoding stuff here
-                    LiteralValue litValInstr = new LiteralValue(i, 4);
+                    LiteralValue litValInstr = new LiteralValue(integerLitreal.getNumber(), literalEncodingType);
 
                     valInstr = litValInstr;
 
                     // TODO: Insert get encoding stuff here
-                    addType(getType(modulle, "int"));
+                    addType(literalEncodingType);
                 }
                 /* Generate a LiteralValueFloat (FloatingLiteral) */
                 else
                 {
                     FloatingLiteral floatLiteral = cast(FloatingLiteral)statement;
 
-                    double i = to!(float)(floatLiteral.getNumber());
-                    LiteralValueFloat litValInstr = new LiteralValueFloat(i, 4);
+                    gprintln("We haven't sorted ouyt literal encoding for floating onts yet (null below hey!)", DebugType.ERROR);
+                    Type bruhType = null;
+                    assert(bruhType);
+                    
+                    LiteralValueFloat litValInstr = new LiteralValueFloat(floatLiteral.getNumber(), bruhType);
 
                     valInstr = litValInstr;
 
@@ -810,13 +821,25 @@ public final class TypeChecker
             * 3. Generate VarAssignInstruction with Value-instruction
             * 4. Set the VarAssignInstr's Context to that of the Variable assigning to
             */
-            Instruction valueInstr = popInstr();
+            Instruction instr = popInstr();
+            assert(instr);
+            Value valueInstr = cast(Value)instr;
+            assert(valueInstr);
             gprintln("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr), DebugType.WARNING);
+
+
+            Type rightHandType = popType();
+            gprintln("RightHandType (assignment): "~to!(string)(rightHandType));
+
+        
             gprintln(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
             varAssInstr.context = variableAssignmentContext;
             
             addInstr(varAssInstr);
+
+            // Push the type we popped (as the Value Instr's type is our VarAssNode type)
+            addType(rightHandType);
         }
         /* TODO: Add support */
         /**
@@ -840,18 +863,86 @@ public final class TypeChecker
             gprintln("HELLO FELLA (name): "~variableName);
             
 
+            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
+
 
             // CHeck if this variable declaration has an assignment attached
             VariableAssignmentInstr assignmentInstr;
             if(variablePNode.getAssignment())
             {
+                // TODO: A popType() should be done here techncially, IF we do this then it
+                // ... must be pushed by VariableAssigmnetNode
+                Type assignmentType = popType();
+                assert(assignmentType);
+
                 Instruction poppedInstr = popInstr();
                 assignmentInstr = cast(VariableAssignmentInstr)poppedInstr;
                 assert(assignmentInstr);
+
+
+                // TODO: We should add a typecheck here where we update the type of the valInstr if it is of
+                // ... type NumberLiteral and coerce it to the variable referred to by the VariableAssignment
+                // ... see issue #94 part on "Coercion"
+                // If the types match then everything is fine
+                if(isSameType(variableDeclarationType, assignmentType))
+                {
+                    gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
+                }
+                // If the types do not match
+                else
+                {
+                    // Obtain the embedded instruction of the variable assignment instruction
+                    assert(assignmentInstr.data);
+                    Value embeddedInstruction = cast(Value)assignmentInstr.data;
+                    assert(embeddedInstruction);
+
+                    // If it is a LiteralValue (integer literal) (support for issue #94)
+                    if(cast(LiteralValue)embeddedInstruction)
+                    {
+                        // TODO: Add a check for if these types are both atleast integral (as in the Variable's type)
+                        // ... THEN (TODO): Check if range makes sense
+                        bool isIntegral = !(cast(Integer)variableDeclarationType is null); // Integrality check
+
+                        if(isIntegral)
+                        {
+                            bool isCoercible = true; // TODO: Range check
+
+                            if(isCoercible)
+                            {
+                                // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
+                                // ... as during code emit that is what will be hoisted out and checked regarding its type
+                                // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
+                                embeddedInstruction.type = variableDeclarationType;
+                            }
+                            else
+                            {
+                                gprintln("Not coercible (range violation)", DebugType.ERROR);
+                                assert(false);
+                            }
+                        }
+                        else
+                        {
+                            gprintln("Not coercible (lacking integral var type)", DebugType.ERROR);
+                            assert(false);
+                        }
+                        
+                    }
+                    // If it is a LiteralFloatingValue (support for issue #94)
+                    else if(cast(LiteralValue)embeddedInstruction)
+                    {
+                        gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
+                        assert(false);
+                    }
+                    else
+                    {
+                        gprintln("MISMATCH: Variable's declared type ('"~to!(string)(variableDeclarationType)~"') does not match that of assignment expression's type ('"~to!(string)(assignmentType)~"')", DebugType.ERROR);
+                        assert(false);
+                    }
+                }
             }
 
 
-            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
+            
 
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variableDeclarationType, assignmentInstr);
 
@@ -899,7 +990,22 @@ public final class TypeChecker
                 * 2. Pop Value-instruction
                 * 3. Generate VarAssignInstruction with Value-instruction
                 */
-                Instruction valueInstr = popInstr();
+                Instruction instr = popInstr();
+                assert(instr);
+                Value valueInstr = cast(Value)instr;
+                assert(valueInstr);
+
+                // TODO: A popType() should be done here techncially, IF we do this then it
+                // ... must be pushed by VariableAssigmnetNode
+                Type assignmentType = popType();
+                assert(assignmentType);
+
+
+                gprintln("Instruction popped: "~to!(string)(instr));
+                gprintln("Type popped: "~to!(string)(assignmentType));
+                
+
+                // TODO: WOAH! We should be consuming here though!!! not making!?!?
                 VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, valueInstr);
 
                 /* Set the VariableAssigmmentInstruction's context to that of the stdalone entity */
@@ -908,6 +1014,9 @@ public final class TypeChecker
                 addInstrB(vAInstr);
 
                 gprintln("VariableAssignmentStdAlone", DebugType.ERROR);
+
+                gprintln("VariableAssignmentStdAlone needs some reworking", DebugType.ERROR);
+                assert(false);
             }
             /**
             * Return statement (ReturnStmt)
