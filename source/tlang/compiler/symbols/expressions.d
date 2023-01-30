@@ -97,9 +97,10 @@ public final class IntegerLiteral : NumberLiteral
 {
     private IntegerLiteralEncoding encoding;
 
-    this(string integerLiteral)
+    this(string integerLiteral, IntegerLiteralEncoding encoding)
     {
         super(integerLiteral);
+        this.encoding = encoding;
     }
 
     public IntegerLiteralEncoding getEncoding()

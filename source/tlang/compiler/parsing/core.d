@@ -1133,12 +1133,16 @@ public final class Parser
                 // If floating point literal
                 if(isFloatLiteral(numberLiteralStr))
                 {
+                    // TODO: Issue #94, siiliar to below for integers
                     numberLiteral = new FloatingLiteral(getCurrentToken().getToken());
                 }
                 // Else, then an integer literal
                 else
                 {
-                    numberLiteral = new IntegerLiteral(getCurrentToken().getToken());
+                    // TODO: Issue #94, we should be checking the range here
+                    // ... along with any explicit encoders and setting it
+                    // ... for now default to SIGNED_INTEGER.
+                    numberLiteral = new IntegerLiteral(getCurrentToken().getToken(), IntegerLiteralEncoding.SIGNED_INTEGER);
                 }
                 
                 /* Add expression to stack */
