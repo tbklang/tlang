@@ -511,7 +511,8 @@ public final class TypeChecker
                 /* TODO: still wip the expresison parser */
 
                 /* TODO: TYpe needs ansatz too `.updateName()` call */
-                addType(getType(gVar.getContext().getContainer(), gVar.getType()));
+                Type variableType = getType(gVar.getContext().getContainer(), gVar.getType());
+                addType(variableType); // TODO: Remove me with removal of typequeue
 
                 gprintln("Yaa, it's rewind time");
 
@@ -529,28 +530,43 @@ public final class TypeChecker
 
 
                 addInstr(fVV);
+
+                /* The type of a FetchValueInstruction is the type of the variable being fetched */
+                fVV.type = variableType;
             }
             // else if(cast()) !!!! Continue here 
             else if(cast(BinaryOperatorExpression)statement)
             {
                 BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
                 SymbolType binOperator = binOpExp.getOperator();
+            
+                
+
+                
                 
 
                 /**
-                * Typechecking (TODO)
+                * Codegen/Type checking
+                *
+                * Retrieve the two Value Instructions
+                *
+                * They would be placed as if they were on stack
+                * hence we need to burger-flip them around (swap)
                 */
-                Type vRhsType = popType();
-                Type vLhsType = popType();
+                Value vRhsInstr = cast(Value)popInstr();
+                Value vLhsInstr = cast(Value)popInstr();
+
+                Type vRhsType = vRhsInstr.type;
+                Type vLhsType = vLhsInstr.type;
 
                 /**
-                * TODO:
+                * TODO
                 * Types must either BE THE SAME or BE COMPATIBLE
                 */
                 if(isSameType(vLhsType, vRhsType))
                 {
                     /* Left type + Right type = left/right type (just use left - it doesn't matter) */
-                    addType(vLhsType);
+                    addType(vLhsType); // TODO: Remove me when the typequeue is removed
                 }
                 else
                 {
@@ -558,20 +574,11 @@ public final class TypeChecker
                     assert(false);
                 }
                 
-
-                /**
-                * Codegen
-                *
-                * Retrieve the two Value Instructions
-                *
-                * They would be placed as if they were on stack
-                * hence we need to burger-flip them around (swap)
-                */
-                Instruction vRhsInstr = popInstr();
-                Instruction vLhsInstr = popInstr();
-                
                 BinOpInstr addInst = new BinOpInstr(vLhsInstr, vRhsInstr, binOperator);
                 addInstr(addInst);
+
+                /* Set the Value instruction's type */
+                addInst.type = vLhsType;
             }
             /* Unary operator expressions */
             else if(cast(UnaryOperatorExpression)statement)
@@ -579,13 +586,15 @@ public final class TypeChecker
                 UnaryOperatorExpression unaryOpExp = cast(UnaryOperatorExpression)statement;
                 SymbolType unaryOperator = unaryOpExp.getOperator();
                 
-
+                /* The type of the eventual UnaryOpInstr */
+                Type unaryOpType;
                 
 
                 /**
                 * Typechecking (TODO)
                 */
-                Type expType = popType();
+                Value expInstr = cast(Value)popInstr();
+                Type expType = expInstr.type;
 
                 /* TODO: Ad type check for operator */
 
@@ -610,7 +619,7 @@ public final class TypeChecker
                         // Get the type being referred to
                         Type referredType = pointerType.getReferredType();
 
-                        addType(referredType);
+                        unaryOpType = referredType;
                     }
                     else
                     {
@@ -626,7 +635,7 @@ public final class TypeChecker
                     * a new type onto the stack which is `<type>*`
                     */
                     Type ptrType = new Pointer(expType);
-                    addType(ptrType);
+                    unaryOpType = ptrType;
                 }
                 /* This should never occur */
                 else
@@ -636,13 +645,8 @@ public final class TypeChecker
                 }
                 
 
-                /**
-                * Codegen
-                *
-                * Retrieve the instruction
-                *
-                */
-                Instruction expInstr = popInstr();
+             
+                
 
                 // TODO: For type checking and semantics we should be checking WHAT is being ampersanded
                 // ... as in we should only be allowing Ident's to be ampersanded, not, for example, literals
@@ -652,6 +656,8 @@ public final class TypeChecker
                 UnaryOpInstr addInst = new UnaryOpInstr(expInstr, unaryOperator);
                 gprintln("Made unaryop instr: "~to!(string)(addInst));
                 addInstr(addInst);
+
+                addInst.type = unaryOpType;
             }
             /* Function calls */
             else if(cast(FunctionCall)statement)
@@ -695,7 +701,8 @@ public final class TypeChecker
                             /* TODO: Determine type and match up */
                             gprintln("Yeah");
                             gprintln(valueInstr);
-                            Type argType = popType();
+                            // Type argType = popType(); // TODO: Remove with removal of typequeue
+                            Type argType = valueInstr.type;
                             // gprintln(argType);
 
                             Variable parameter = paremeters[parmCount];
@@ -754,7 +761,11 @@ public final class TypeChecker
                 funcCallInstr.context = funcCall.getContext();
 
                 addInstr(funcCallInstr);
-                addType(getType(func.parentOf(), func.getType()));
+
+                /* Set the Value instruction's type */
+                Type funcCallInstrType = getType(func.parentOf(), func.getType());
+                funcCallInstr.type = funcCallInstrType;
+                addType(funcCallInstrType); // TODO: Remove me when the typequeue is removed
             }
             /* Type cast operator */
             else if(cast(CastedExpression)statement)
@@ -762,14 +773,16 @@ public final class TypeChecker
                 CastedExpression castedExpression = cast(CastedExpression)statement;
                 gprintln("Context: "~to!(string)(castedExpression.context));
                 gprintln("ParentOf: "~to!(string)(castedExpression.parentOf()));
+                
+                /* Extract the type that the cast is casting towards */
                 Type castToType = getType(castedExpression.context.container, castedExpression.getToType());
 
                 /* Pop the type associated with the embedded expression */
-                Type typeBeingCasted = popType(); // TODO: Is there anything we would want to do with this?
+                Type typeBeingCasted = popType(); // TODO: Is there anything we would want to do with this? // TOOD: Remove with typequeue removal
                 gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
 
                 /* Push the type to cast to onto the stack such that we typify the associated instruction */
-                addType(castToType);
+                addType(castToType); // TODO: Remove with typequeue removal
 
                 /**
                 * Codegen
@@ -782,13 +795,22 @@ public final class TypeChecker
                 Value uncastedInstruction = cast(Value)popInstr();
                 assert(uncastedInstruction);
 
+                /* Extract the type of the expression being casted */
+                typeBeingCasted = uncastedInstruction.type;
+                gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
+                
+
                 printCodeQueue();
                 printTypeQueue();
 
+                // TODO: Remove the `castToType` argument, this should be solely based off of the `.type` (as set below)
                 CastedValueInstruction castedValueInstruction = new CastedValueInstruction(uncastedInstruction, castToType);
                 castedValueInstruction.context = castedExpression.context;
 
                 addInstr(castedValueInstruction);
+
+                /* The type of the cats expression is that of the type it casts to */
+                castedValueInstruction.type = castToType;
             }
         }
         /* VariableAssigbmentDNode */
@@ -828,18 +850,22 @@ public final class TypeChecker
             gprintln("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr), DebugType.WARNING);
 
 
-            Type rightHandType = popType();
+            Type rightHandType = popType(); // TODO: Remove with the removal of the typequeue
+            rightHandType = valueInstr.type;
             gprintln("RightHandType (assignment): "~to!(string)(rightHandType));
+
+            
 
         
             gprintln(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
             varAssInstr.context = variableAssignmentContext;
+            // NOTE: No need setting `varAssInstr.type` as the type if in `getEmbeddedInstruction().type`
             
             addInstr(varAssInstr);
 
             // Push the type we popped (as the Value Instr's type is our VarAssNode type)
-            addType(rightHandType);
+            addType(rightHandType); //TODO: Remove this with removal pf tyopequee
         }
         /* TODO: Add support */
         /**
@@ -870,14 +896,16 @@ public final class TypeChecker
             VariableAssignmentInstr assignmentInstr;
             if(variablePNode.getAssignment())
             {
-                // TODO: A popType() should be done here techncially, IF we do this then it
-                // ... must be pushed by VariableAssigmnetNode
-                Type assignmentType = popType();
-                assert(assignmentType);
-
                 Instruction poppedInstr = popInstr();
+                assert(poppedInstr);
                 assignmentInstr = cast(VariableAssignmentInstr)poppedInstr;
                 assert(assignmentInstr);
+
+                // Obtain the embedded instruction of the variable assignment instruction
+                // ... along with said embedded instruction's type
+                assert(assignmentInstr.data);
+                Value embeddedInstruction = cast(Value)assignmentInstr.data;
+                Type assignmentType = embeddedInstruction.type;
 
 
                 // TODO: We should add a typecheck here where we update the type of the valInstr if it is of
@@ -891,11 +919,6 @@ public final class TypeChecker
                 // If the types do not match
                 else
                 {
-                    // Obtain the embedded instruction of the variable assignment instruction
-                    assert(assignmentInstr.data);
-                    Value embeddedInstruction = cast(Value)assignmentInstr.data;
-                    assert(embeddedInstruction);
-
                     // If it is a LiteralValue (integer literal) (support for issue #94)
                     if(cast(LiteralValue)embeddedInstruction)
                     {
@@ -951,10 +974,6 @@ public final class TypeChecker
 
 
             addInstrB(varDecInstr);
-
-            
-            
-            
         }
         /* TODO: Add class init, see #8 */
         else if(cast(compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
