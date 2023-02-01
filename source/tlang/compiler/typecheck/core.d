@@ -366,7 +366,7 @@ public final class TypeChecker
     * Adds a Type to the type queue right at the beginning
     * of it
     */
-    private void addType(Type typeName)
+    private void deprecated_addType(Type typeName)
     {
         typeStack.insert(typeName);
     }
@@ -375,12 +375,12 @@ public final class TypeChecker
     * Adds a Type to the type queue right at the end
     * of it
     */
-    private void addTypeB(Type typeName)
+    private void deprecated_addTypeB(Type typeName)
     {
         typeStack.insertAfter(typeStack[], typeName);
     }
 
-    private Type popType()
+    private Type deprecated_popType()
     {
         Type typeCur = typeStack.front();
         
@@ -442,7 +442,7 @@ public final class TypeChecker
                     valInstr = litValInstr;
 
                     // TODO: Insert get encoding stuff here
-                    addType(literalEncodingType);
+                    // addType(literalEncodingType);
                 }
                 /* Generate a LiteralValueFloat (FloatingLiteral) */
                 else
@@ -458,7 +458,7 @@ public final class TypeChecker
                     valInstr = litValInstr;
 
                     // TODO: Insert get encoding stuff here
-                    addType(getType(modulle, "float"));
+                    // addType(getType(modulle, "float"));
                 }
                 
                 addInstr(valInstr);
@@ -472,18 +472,20 @@ public final class TypeChecker
                 * Add the char* type as string literals should be
                 * interned
                 */
-                addType(getType(modulle, "char*"));
+                gprintln("Please implement strings", DebugType.ERROR);
+                // assert(false);
+                // addType(getType(modulle, "char*"));
                 
-                /**
-                * Add the instruction and pass the literal to it
-                */
-                StringExpression strExp = cast(StringExpression)statement;
-                string strLit = strExp.getStringLiteral();
-                gprintln("String literal: `"~strLit~"`");
-                StringLiteral strLitInstr = new StringLiteral(strLit);
-                addInstr(strLitInstr);
+                // /**
+                // * Add the instruction and pass the literal to it
+                // */
+                // StringExpression strExp = cast(StringExpression)statement;
+                // string strLit = strExp.getStringLiteral();
+                // gprintln("String literal: `"~strLit~"`");
+                // StringLiteral strLitInstr = new StringLiteral(strLit);
+                // addInstr(strLitInstr);
 
-                gprintln("Typecheck(): String literal processing... [done]");
+                // gprintln("Typecheck(): String literal processing... [done]");
             }
             else if(cast(VariableExpression)statement)
             {
@@ -512,7 +514,7 @@ public final class TypeChecker
 
                 /* TODO: TYpe needs ansatz too `.updateName()` call */
                 Type variableType = getType(gVar.getContext().getContainer(), gVar.getType());
-                addType(variableType); // TODO: Remove me with removal of typequeue
+                // addType(variableType); // TODO: Remove me with removal of typequeue
 
                 gprintln("Yaa, it's rewind time");
 
@@ -563,10 +565,12 @@ public final class TypeChecker
                 * TODO
                 * Types must either BE THE SAME or BE COMPATIBLE
                 */
+                Type chosenType;
                 if(isSameType(vLhsType, vRhsType))
                 {
                     /* Left type + Right type = left/right type (just use left - it doesn't matter) */
-                    addType(vLhsType); // TODO: Remove me when the typequeue is removed
+                    // addType(vLhsType); // TODO: Remove me when the typequeue is removed
+                    chosenType = vLhsType;
                 }
                 else
                 {
@@ -578,7 +582,7 @@ public final class TypeChecker
                 addInstr(addInst);
 
                 /* Set the Value instruction's type */
-                addInst.type = vLhsType;
+                addInst.type = chosenType;
             }
             /* Unary operator expressions */
             else if(cast(UnaryOperatorExpression)statement)
@@ -765,7 +769,7 @@ public final class TypeChecker
                 /* Set the Value instruction's type */
                 Type funcCallInstrType = getType(func.parentOf(), func.getType());
                 funcCallInstr.type = funcCallInstrType;
-                addType(funcCallInstrType); // TODO: Remove me when the typequeue is removed
+                // addType(funcCallInstrType); // TODO: Remove me when the typequeue is removed
             }
             /* Type cast operator */
             else if(cast(CastedExpression)statement)
@@ -778,11 +782,11 @@ public final class TypeChecker
                 Type castToType = getType(castedExpression.context.container, castedExpression.getToType());
 
                 /* Pop the type associated with the embedded expression */
-                Type typeBeingCasted = popType(); // TODO: Is there anything we would want to do with this? // TOOD: Remove with typequeue removal
-                gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
+                Type typeBeingCasted; // = popType(); // TODO: Is there anything we would want to do with this? // TOOD: Remove with typequeue removal
+                // gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
 
                 /* Push the type to cast to onto the stack such that we typify the associated instruction */
-                addType(castToType); // TODO: Remove with typequeue removal
+                // addType(castToType); // TODO: Remove with typequeue removal
 
                 /**
                 * Codegen
@@ -801,7 +805,7 @@ public final class TypeChecker
                 
 
                 printCodeQueue();
-                printTypeQueue();
+                // printTypeQueue();
 
                 // TODO: Remove the `castToType` argument, this should be solely based off of the `.type` (as set below)
                 CastedValueInstruction castedValueInstruction = new CastedValueInstruction(uncastedInstruction, castToType);
@@ -850,7 +854,7 @@ public final class TypeChecker
             gprintln("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr), DebugType.WARNING);
 
 
-            Type rightHandType = popType(); // TODO: Remove with the removal of the typequeue
+            Type rightHandType; //= popType(); // TODO: Remove with the removal of the typequeue
             rightHandType = valueInstr.type;
             gprintln("RightHandType (assignment): "~to!(string)(rightHandType));
 
@@ -865,7 +869,7 @@ public final class TypeChecker
             addInstr(varAssInstr);
 
             // Push the type we popped (as the Value Instr's type is our VarAssNode type)
-            addType(rightHandType); //TODO: Remove this with removal pf tyopequee
+            // addType(rightHandType); //TODO: Remove this with removal pf tyopequee
         }
         /* TODO: Add support */
         /**
@@ -1016,7 +1020,7 @@ public final class TypeChecker
 
                 // TODO: A popType() should be done here techncially, IF we do this then it
                 // ... must be pushed by VariableAssigmnetNode
-                Type assignmentType = popType();
+                Type assignmentType = valueInstr.type;
                 assert(assignmentType);
 
 
@@ -1035,7 +1039,7 @@ public final class TypeChecker
                 gprintln("VariableAssignmentStdAlone", DebugType.ERROR);
 
                 gprintln("VariableAssignmentStdAlone needs some reworking", DebugType.ERROR);
-                assert(false);
+                // assert(false);
             }
             /**
             * Return statement (ReturnStmt)
