@@ -20,7 +20,12 @@ public class Instruction
         // this.instructionName = instructionName;
     }
 
-    public final override string toString()
+    public override string toString()
+    {
+        return "[Instruction: "~this.classinfo.name~":"~addInfo~"]";
+    }
+
+    private final string produceToStrEnclose(string addInfo)
     {
         return "[Instruction: "~this.classinfo.name~":"~addInfo~"]";
     }
@@ -143,6 +148,11 @@ public final class LiteralValue : Value
         this.type = type;
 
         addInfo = "Data: "~to!(string)(data)~", Type: "~to!(string)(type);
+    }
+
+    public override string toString()
+    {
+        return produceToStrEnclose("Data: "~to!(string)(data)~", Type: "~to!(string)(type));
     }
 }
 
