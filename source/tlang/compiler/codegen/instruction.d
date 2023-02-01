@@ -168,6 +168,11 @@ public final class LiteralValueFloat : Value
 
         addInfo = "Data: "~to!(string)(data)~", Type: "~to!(string)(type);
     }
+
+    public override string toString()
+    {
+        return produceToStrEnclose("Data: "~to!(string)(data)~", Type: "~to!(string)(type));
+    }
 }
 
 /* FIXME: Implement this */
