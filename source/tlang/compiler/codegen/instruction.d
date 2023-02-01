@@ -11,7 +11,7 @@ import compiler.symbols.typing.core : Type;
 public class Instruction
 {
     /* Context for the Instruction (used in emitter for name resolution) */
-    public Context context;
+    public Context context; //TODO: Make this private and add a setCOntext
 
     protected string addInfo;
 
@@ -33,6 +33,11 @@ public class Instruction
     public final Context getContext()
     {
         return context;
+    }
+
+    public final void setContext(Context context)
+    {
+        this.context = context;
     }
 }
 
