@@ -15,11 +15,6 @@ public class Instruction
 
     protected string addInfo;
 
-    this()
-    {
-        // this.instructionName = instructionName;
-    }
-
     public override string toString()
     {
         return "[Instruction: "~this.classinfo.name~":"~addInfo~"]";
