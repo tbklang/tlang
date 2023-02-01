@@ -534,7 +534,7 @@ public final class TypeChecker
                 addInstr(fVV);
 
                 /* The type of a FetchValueInstruction is the type of the variable being fetched */
-                fVV.type = variableType;
+                fVV.setInstrType(variableType);
             }
             // else if(cast()) !!!! Continue here 
             else if(cast(BinaryOperatorExpression)statement)
@@ -558,8 +558,8 @@ public final class TypeChecker
                 Value vRhsInstr = cast(Value)popInstr();
                 Value vLhsInstr = cast(Value)popInstr();
 
-                Type vRhsType = vRhsInstr.type;
-                Type vLhsType = vLhsInstr.type;
+                Type vRhsType = vRhsInstr.getInstrType();
+                Type vLhsType = vLhsInstr.getInstrType();
 
                 /**
                 * TODO
@@ -582,7 +582,7 @@ public final class TypeChecker
                 addInstr(addInst);
 
                 /* Set the Value instruction's type */
-                addInst.type = chosenType;
+                addInst.setInstrType(chosenType);
             }
             /* Unary operator expressions */
             else if(cast(UnaryOperatorExpression)statement)
@@ -598,7 +598,7 @@ public final class TypeChecker
                 * Typechecking (TODO)
                 */
                 Value expInstr = cast(Value)popInstr();
-                Type expType = expInstr.type;
+                Type expType = expInstr.getInstrType();
 
                 /* TODO: Ad type check for operator */
 
@@ -661,7 +661,7 @@ public final class TypeChecker
                 gprintln("Made unaryop instr: "~to!(string)(addInst));
                 addInstr(addInst);
 
-                addInst.type = unaryOpType;
+                addInst.setInstrType(unaryOpType);
             }
             /* Function calls */
             else if(cast(FunctionCall)statement)
@@ -706,7 +706,7 @@ public final class TypeChecker
                             gprintln("Yeah");
                             gprintln(valueInstr);
                             // Type argType = popType(); // TODO: Remove with removal of typequeue
-                            Type argType = valueInstr.type;
+                            Type argType = valueInstr.getInstrType();
                             // gprintln(argType);
 
                             Variable parameter = paremeters[parmCount];
@@ -768,7 +768,7 @@ public final class TypeChecker
 
                 /* Set the Value instruction's type */
                 Type funcCallInstrType = getType(func.parentOf(), func.getType());
-                funcCallInstr.type = funcCallInstrType;
+                funcCallInstr.setInstrType(funcCallInstrType);
                 // addType(funcCallInstrType); // TODO: Remove me when the typequeue is removed
             }
             /* Type cast operator */
@@ -800,7 +800,7 @@ public final class TypeChecker
                 assert(uncastedInstruction);
 
                 /* Extract the type of the expression being casted */
-                typeBeingCasted = uncastedInstruction.type;
+                typeBeingCasted = uncastedInstruction.getInstrType();
                 gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
                 
 
@@ -814,7 +814,7 @@ public final class TypeChecker
                 addInstr(castedValueInstruction);
 
                 /* The type of the cats expression is that of the type it casts to */
-                castedValueInstruction.type = castToType;
+                castedValueInstruction.setInstrType(castToType);
             }
         }
         /* VariableAssigbmentDNode */
@@ -855,7 +855,7 @@ public final class TypeChecker
 
 
             Type rightHandType; //= popType(); // TODO: Remove with the removal of the typequeue
-            rightHandType = valueInstr.type;
+            rightHandType = valueInstr.getInstrType();
             gprintln("RightHandType (assignment): "~to!(string)(rightHandType));
 
             
@@ -909,7 +909,7 @@ public final class TypeChecker
                 // ... along with said embedded instruction's type
                 assert(assignmentInstr.data);
                 Value embeddedInstruction = cast(Value)assignmentInstr.data;
-                Type assignmentType = embeddedInstruction.type;
+                Type assignmentType = embeddedInstruction.getInstrType();
 
 
                 // TODO: We should add a typecheck here where we update the type of the valInstr if it is of
@@ -939,7 +939,7 @@ public final class TypeChecker
                                 // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
                                 // ... as during code emit that is what will be hoisted out and checked regarding its type
                                 // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
-                                embeddedInstruction.type = variableDeclarationType;
+                                embeddedInstruction.setInstrType(variableDeclarationType);
                             }
                             else
                             {
@@ -1020,7 +1020,7 @@ public final class TypeChecker
 
                 // TODO: A popType() should be done here techncially, IF we do this then it
                 // ... must be pushed by VariableAssigmnetNode
-                Type assignmentType = valueInstr.type;
+                Type assignmentType = valueInstr.getInstrType();
                 assert(assignmentType);
 
 

@@ -38,7 +38,18 @@ public class FetchInst :  Instruction
 
 public class Value : Instruction
 {
-    public Type type;
+    /* The type of the Value this instruction produces */
+    private Type type;
+
+    public final void setInstrType(Type type)
+    {
+        this.type = type;
+    }
+
+    public final Type getInstrType()
+    {
+        return type;
+    }
 }
 
 public class StorageDeclaration : Instruction
@@ -59,7 +70,7 @@ public class VariableAssignmentInstr : Instruction
     /* Name of variable being declared */
     public string varName; /*TODO: Might not be needed */
 
-    public const Value data; // TODO: Make `Value` to constrain
+    public Value data;
 
     this(string varName, Value data)
     {
