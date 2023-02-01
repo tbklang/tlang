@@ -442,7 +442,6 @@ public final class TypeChecker
                     valInstr = litValInstr;
 
                     // TODO: Insert get encoding stuff here
-                    // addType(literalEncodingType);
                 }
                 /* Generate a LiteralValueFloat (FloatingLiteral) */
                 else
@@ -458,7 +457,6 @@ public final class TypeChecker
                     valInstr = litValInstr;
 
                     // TODO: Insert get encoding stuff here
-                    // addType(getType(modulle, "float"));
                 }
                 
                 addInstr(valInstr);
@@ -514,7 +512,6 @@ public final class TypeChecker
 
                 /* TODO: TYpe needs ansatz too `.updateName()` call */
                 Type variableType = getType(gVar.getContext().getContainer(), gVar.getType());
-                // addType(variableType); // TODO: Remove me with removal of typequeue
 
                 gprintln("Yaa, it's rewind time");
 
@@ -542,10 +539,6 @@ public final class TypeChecker
                 BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
                 SymbolType binOperator = binOpExp.getOperator();
             
-                
-
-                
-                
 
                 /**
                 * Codegen/Type checking
@@ -569,7 +562,6 @@ public final class TypeChecker
                 if(isSameType(vLhsType, vRhsType))
                 {
                     /* Left type + Right type = left/right type (just use left - it doesn't matter) */
-                    // addType(vLhsType); // TODO: Remove me when the typequeue is removed
                     chosenType = vLhsType;
                 }
                 else
@@ -667,7 +659,6 @@ public final class TypeChecker
             else if(cast(FunctionCall)statement)
             {
                 // gprintln("FuncCall hehe (REMOVE AFTER DONE)");
-                // printTypeQueue();
 
                 FunctionCall funcCall = cast(FunctionCall)statement;
 
@@ -705,7 +696,6 @@ public final class TypeChecker
                             /* TODO: Determine type and match up */
                             gprintln("Yeah");
                             gprintln(valueInstr);
-                            // Type argType = popType(); // TODO: Remove with removal of typequeue
                             Type argType = valueInstr.getInstrType();
                             // gprintln(argType);
 
@@ -719,7 +709,6 @@ public final class TypeChecker
                             // gprintln("FuncCall(Actual): "~valueInstr.toString());
 
 
-                            // printTypeQueue();
                             /* Match up types */
                             //if(argType == parmType)
                             if(isSameType(argType, parmType))
@@ -769,7 +758,6 @@ public final class TypeChecker
                 /* Set the Value instruction's type */
                 Type funcCallInstrType = getType(func.parentOf(), func.getType());
                 funcCallInstr.setInstrType(funcCallInstrType);
-                // addType(funcCallInstrType); // TODO: Remove me when the typequeue is removed
             }
             /* Type cast operator */
             else if(cast(CastedExpression)statement)
@@ -781,12 +769,6 @@ public final class TypeChecker
                 /* Extract the type that the cast is casting towards */
                 Type castToType = getType(castedExpression.context.container, castedExpression.getToType());
 
-                /* Pop the type associated with the embedded expression */
-                Type typeBeingCasted; // = popType(); // TODO: Is there anything we would want to do with this? // TOOD: Remove with typequeue removal
-                // gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
-
-                /* Push the type to cast to onto the stack such that we typify the associated instruction */
-                // addType(castToType); // TODO: Remove with typequeue removal
 
                 /**
                 * Codegen
@@ -800,12 +782,11 @@ public final class TypeChecker
                 assert(uncastedInstruction);
 
                 /* Extract the type of the expression being casted */
-                typeBeingCasted = uncastedInstruction.getInstrType();
+                Type typeBeingCasted = uncastedInstruction.getInstrType();
                 gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
                 
 
                 printCodeQueue();
-                // printTypeQueue();
 
                 // TODO: Remove the `castToType` argument, this should be solely based off of the `.type` (as set below)
                 CastedValueInstruction castedValueInstruction = new CastedValueInstruction(uncastedInstruction, castToType);
@@ -854,8 +835,7 @@ public final class TypeChecker
             gprintln("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr), DebugType.WARNING);
 
 
-            Type rightHandType; //= popType(); // TODO: Remove with the removal of the typequeue
-            rightHandType = valueInstr.getInstrType();
+            Type rightHandType = valueInstr.getInstrType();
             gprintln("RightHandType (assignment): "~to!(string)(rightHandType));
 
             
@@ -867,9 +847,6 @@ public final class TypeChecker
             // NOTE: No need setting `varAssInstr.type` as the type if in `getEmbeddedInstruction().type`
             
             addInstr(varAssInstr);
-
-            // Push the type we popped (as the Value Instr's type is our VarAssNode type)
-            // addType(rightHandType); //TODO: Remove this with removal pf tyopequee
         }
         /* TODO: Add support */
         /**
