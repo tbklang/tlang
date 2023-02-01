@@ -84,8 +84,7 @@ public final class TypeChecker
 
         /* Get the action-list (linearised bottom up graph) */
         DNode[] actionList = rootNode.getLinearizedNodes();
-        doTypeCheck(actionList);        
-        printTypeQueue();
+        doTypeCheck(actionList);
 
         /**
          * After processing globals executions the instructions will
@@ -120,7 +119,6 @@ public final class TypeChecker
 
             //TODO: Would this not mess with our queues?
             doTypeCheck(actionListFunc);
-            printTypeQueue();
             gprintln(funcNode.getTree());
 
             // The current code queue would be the function's body instructions
@@ -311,20 +309,6 @@ public final class TypeChecker
         }
     }
 
-    /*
-    * Prints the current contents of the code-queue
-    */
-    public void printTypeQueue()
-    {
-        import std.range : walkLength;
-        ulong i = 0;
-        foreach(Type instruction; typeStack)
-        {
-            gprintln("TypeQueue: "~to!(string)(i+1)~"/"~to!(string)(walkLength(typeStack[]))~": "~instruction.toString());
-            i++;
-        }
-    }
-
     /**
     * There are several types and comparing them differs
     */
@@ -359,40 +343,7 @@ public final class TypeChecker
 
 
 
-    private SList!(Type) typeStack;
-
-
-    /**
-    * Adds a Type to the type queue right at the beginning
-    * of it
-    */
-    private void deprecated_addType(Type typeName)
-    {
-        typeStack.insert(typeName);
-    }
-
-    /**
-    * Adds a Type to the type queue right at the end
-    * of it
-    */
-    private void deprecated_addTypeB(Type typeName)
-    {
-        typeStack.insertAfter(typeStack[], typeName);
-    }
-
-    private Type deprecated_popType()
-    {
-        Type typeCur = typeStack.front();
-        
-        typeStack.removeFront();
-
-        return typeCur;
-    }
-
-    public bool isTypesEmpty()
-    {
-        return typeStack.empty;
-    }
+    
 
     public void typeCheckThing(DNode dnode)
     {
