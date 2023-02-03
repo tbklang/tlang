@@ -476,7 +476,7 @@ public final class TypeChecker
                 * 2. Set the Context of it to where the VariableExpression occurred
                 */
                 FetchValueVar fVV = new FetchValueVar(variableName, 4);
-                fVV.context = g.getContext();
+                fVV.setContext(g.getContext());
 
 
                 addInstr(fVV);
@@ -702,7 +702,7 @@ public final class TypeChecker
                 * 4. AddInstr(combining those args)
                 * 5. DOne
                 */
-                funcCallInstr.context = funcCall.getContext();
+                funcCallInstr.setContext(funcCall.getContext());
 
                 addInstr(funcCallInstr);
 
@@ -741,7 +741,7 @@ public final class TypeChecker
 
                 // TODO: Remove the `castToType` argument, this should be solely based off of the `.type` (as set below)
                 CastedValueInstruction castedValueInstruction = new CastedValueInstruction(uncastedInstruction, castToType);
-                castedValueInstruction.context = castedExpression.context;
+                castedValueInstruction.setContext(castedExpression.context);
 
                 addInstr(castedValueInstruction);
 
@@ -794,7 +794,7 @@ public final class TypeChecker
         
             gprintln(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
-            varAssInstr.context = variableAssignmentContext;
+            varAssInstr.setContext(variableAssignmentContext);
             // NOTE: No need setting `varAssInstr.type` as the type if in `getEmbeddedInstruction().type`
             
             addInstr(varAssInstr);
@@ -902,7 +902,7 @@ public final class TypeChecker
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variableDeclarationType, assignmentInstr);
 
             /* NEW CODE (9th November 2021) Set the context */
-            varDecInstr.context = variablePNode.context;
+            varDecInstr.setContext(variablePNode.context);
 
 
             addInstrB(varDecInstr);
@@ -960,7 +960,7 @@ public final class TypeChecker
                 VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, valueInstr);
 
                 /* Set the VariableAssigmmentInstruction's context to that of the stdalone entity */
-                vAInstr.context = vasa.getContext();
+                vAInstr.setContext(vasa.getContext());
 
                 addInstrB(vAInstr);
 
@@ -988,7 +988,7 @@ public final class TypeChecker
                 Value returnExpressionInstr = cast(Value)popInstr();
                 assert(returnExpressionInstr);
                 ReturnInstruction returnInstr = new ReturnInstruction(returnExpressionInstr);
-                returnInstr.context = returnStatement.getContext();
+                returnInstr.setContext(returnStatement.getContext());
                 addInstrB(returnInstr);
             }
             /**
@@ -1065,7 +1065,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 IfStatementInstruction ifStatementInstruction = new IfStatementInstruction(branchInstructions);
-                ifStatementInstruction.context = ifStatement.getContext();
+                ifStatementInstruction.setContext(ifStatement.getContext());
                 addInstrB(ifStatementInstruction);
 
                 gprintln("If!");
@@ -1118,7 +1118,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 WhileLoopInstruction whileLoopInstruction = new WhileLoopInstruction(branchInstr);
-                whileLoopInstruction.context = whileLoop.getContext();
+                whileLoopInstruction.setContext(whileLoop.getContext());
                 addInstrB(whileLoopInstruction);
             }
             /**
@@ -1164,7 +1164,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 ForLoopInstruction forLoopInstruction = new ForLoopInstruction(branchInstr, preRunInstruction);
-                forLoopInstruction.context = forLoop.context;
+                forLoopInstruction.setContext(forLoop.context);
                 addInstrB(forLoopInstruction);
             }
             /* Branch */
@@ -1198,7 +1198,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 PointerDereferenceAssignmentInstruction pointerDereferenceAssignmentInstruction = new PointerDereferenceAssignmentInstruction(lhsPtrExprInstr, rhsExprInstr, ptrDerefAss.getDerefCount());
-                pointerDereferenceAssignmentInstruction.context = ptrDerefAss.context;
+                pointerDereferenceAssignmentInstruction.setContext(ptrDerefAss.context);
                 addInstrB(pointerDereferenceAssignmentInstruction);
             }
             /**
@@ -1221,7 +1221,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 DiscardInstruction discardInstruction = new DiscardInstruction(exprInstr);
-                discardInstruction.context = discardStatement.context;
+                discardInstruction.setContext(discardStatement.context);
                 addInstrB(discardInstruction);
             }
             /* Case of no matches */

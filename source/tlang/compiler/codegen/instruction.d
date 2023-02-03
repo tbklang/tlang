@@ -11,7 +11,7 @@ import compiler.symbols.typing.core : Type;
 public class Instruction
 {
     /* Context for the Instruction (used in emitter for name resolution) */
-    public Context context; //TODO: Make this private and add a setCOntext
+    private Context context; //TODO: Make this private and add a setCOntext
 
     protected string addInfo;
 
@@ -486,12 +486,10 @@ public final class CastedValueInstruction : Value
     /* The uncasted original instruction that must be executed-then-trimmed (casted) */
     private Value uncastedValue;
 
-    private Type castToType;
-
     this(Value uncastedValue, Type castToType)
     {
         this.uncastedValue = uncastedValue;
-        this.castToType = castToType;
+        this.type = castToType;
     }
 
     public Value getEmbeddedInstruction()
@@ -501,6 +499,6 @@ public final class CastedValueInstruction : Value
 
     public Type getCastToType()
     {
-        return castToType;
+        return type;
     }
 }
