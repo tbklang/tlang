@@ -140,7 +140,7 @@ public final class FetchValueVar : Value
 public final class LiteralValue : Value
 {
     /* Data */
-    public string data;
+    private string data;
 
     this(string data, Type type)
     {
@@ -148,6 +148,11 @@ public final class LiteralValue : Value
         this.type = type;
 
         addInfo = "Data: "~to!(string)(data)~", Type: "~to!(string)(type);
+    }
+
+    public string getLiteralValue()
+    {
+        return data;
     }
 
     public override string toString()
@@ -159,7 +164,7 @@ public final class LiteralValue : Value
 public final class LiteralValueFloat : Value
 {
     /* Data */
-    public string data; /* TODO: Is this best way to store? Consirring floats/doubles */
+    private string data;
 
     this(string data, Type type)
     {
@@ -167,6 +172,11 @@ public final class LiteralValueFloat : Value
         this.type = type;
 
         addInfo = "Data: "~to!(string)(data)~", Type: "~to!(string)(type);
+    }
+
+    public string getLiteralValue()
+    {
+        return data;
     }
 
     public override string toString()
@@ -252,10 +262,10 @@ public class BinOpInstr : Value
 */
 public class UnaryOpInstr : Value
 {
-    private Instruction exp;
+    private Value exp;
     private SymbolType operator;
 
-    this(Instruction exp, SymbolType operator)
+    this(Value exp, SymbolType operator)
     {
         this.exp = exp;
         this.operator = operator;
@@ -268,7 +278,7 @@ public class UnaryOpInstr : Value
         return operator;
     }
 
-    public Instruction getOperand()
+    public Value getOperand()
     {
         return exp;
     }

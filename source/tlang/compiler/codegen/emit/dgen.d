@@ -170,6 +170,7 @@ public final class DCodeEmitter : CodeEmitter
                 if(typedEntityVariable.getAssignment())
                 {
                     Value varAssInstr = varDecInstr.getAssignmentInstr();
+                    gprintln("VarDec(with assignment): My assignment type is: "~varAssInstr.getInstrType().getName());
 
                     // Generate the code to emit
                     return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
@@ -191,7 +192,7 @@ public final class DCodeEmitter : CodeEmitter
 
             LiteralValue literalValueInstr = cast(LiteralValue)instruction;
 
-            return to!(string)(literalValueInstr.data);
+            return to!(string)(literalValueInstr.getLiteralValue());
         }
         /* FetchValueVar */
         else if(cast(FetchValueVar)instruction)
