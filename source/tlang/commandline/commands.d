@@ -60,11 +60,11 @@ mixin template EmitBase()
     {
         @ArgNamed("symbol-mapper|sm", "The symbol mapping technique to use")
         @(ArgConfig.optional)
-        SymbolMappingTechnique symbolTechnique;
+        SymbolMappingTechnique symbolTechnique = SymbolMappingTechnique.HASHMAPPER;
 
         @ArgNamed("prettygen|pg", "Generate pretty-printed code")
         @(ArgConfig.optional)
-        bool prettyPrintCodeGen;
+        bool prettyPrintCodeGen = true;
         
         @ArgNamed("output|o", "Filename of generated object file")
         @(ArgConfig.optional)
