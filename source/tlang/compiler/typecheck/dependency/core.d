@@ -1290,12 +1290,8 @@ public class DNodeGenerator
                 /* Pool the assignment to get a DNode */
                 DNode expressionNode = expressionPass(varAssign.getExpression(), context);
 
-                /* This assignment depends on an expression being evaluated */
-                VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
-                varAssignNode.needs(expressionNode);
-
-                /* The variable declaration is dependant on the assignment */
-                variableDNode.needs(varAssignNode);
+                /* The variable declaration is dependant on the assigne expression */
+                variableDNode.needs(expressionNode);
             }
 
             /* The current container is dependent on this variable declaration */
@@ -1331,10 +1327,8 @@ public class DNodeGenerator
             {
                 /* Pool varass stdalone */
                 DNode vStdAlDNode = pool(vAsStdAl);
-                // node.needs(vStdAlDNode);
 
-                // FIXME: Convert to using a VariableAssignmentNode (for the sake of uniformity)
-
+                /* Pool the expression and make the vAStdAlDNode depend on it */
                 DNode expression = expressionPass(vAsStdAl.getExpression(), context);
                 vStdAlDNode.needs(expression);
 

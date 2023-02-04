@@ -21,13 +21,7 @@ import compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
 import compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
-{    
-    // Set to true when processing a variable declaration
-    // which expects an assignment. Set to false when
-    // said variable assignment has been processed
-    private bool varDecWantsConsumeVarAss = false;
-
-
+{
     // NOTE: In future store the mapper in the config please
     this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
@@ -141,20 +135,6 @@ public final class DCodeEmitter : CodeEmitter
             {
                 string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
-                
-                // If we are needed as part of a VariabvleDeclaration-with-assignment
-                if(varDecWantsConsumeVarAss)
-                {
-                    // Generate the code to emit (only the RHS of the = sign)
-                    string emitCode = transform(varAs.data);
-
-                    // Reset flag
-                    varDecWantsConsumeVarAss = false;
-
-                    return emitCode;
-                }
-
-
                 return renamedSymbol~" = "~transform(varAs.data)~";";
             }
             /* If it is external */
@@ -189,15 +169,7 @@ public final class DCodeEmitter : CodeEmitter
                 // Check to see if this declaration has an assignment attached
                 if(typedEntityVariable.getAssignment())
                 {
-                    // Set flag to expect different transform generation for VariableAssignment
-                    varDecWantsConsumeVarAss = true;
-
-                    // Fetch the variable assignment instruction
-                    // gprintln("Before crash: "~to!(string)(getCurrentInstruction()));
-                    // nextInstruction();
-                    // Instruction varAssInstr = getCurrentInstruction();
-                    
-                    VariableAssignmentInstr varAssInstr = varDecInstr.getAssignmentInstr();
+                    Value varAssInstr = varDecInstr.getAssignmentInstr();
 
                     // Generate the code to emit
                     return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";

@@ -824,20 +824,18 @@ public final class TypeChecker
             Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
 
 
-            // CHeck if this variable declaration has an assignment attached
-            VariableAssignmentInstr assignmentInstr;
+            // Check if this variable declaration has an assignment attached
+            Value assignmentInstr;
             if(variablePNode.getAssignment())
             {
                 Instruction poppedInstr = popInstr();
                 assert(poppedInstr);
-                assignmentInstr = cast(VariableAssignmentInstr)poppedInstr;
-                assert(assignmentInstr);
 
-                // Obtain the embedded instruction of the variable assignment instruction
-                // ... along with said embedded instruction's type
-                assert(assignmentInstr.data);
-                Value embeddedInstruction = cast(Value)assignmentInstr.data;
-                Type assignmentType = embeddedInstruction.getInstrType();
+                // Obtain the value instruction of the variable assignment
+                // ... along with the assignment's type
+                assignmentInstr = cast(Value)poppedInstr;
+                assert(assignmentInstr);
+                Type assignmentType = assignmentInstr.getInstrType();
 
 
                 // TODO: We should add a typecheck here where we update the type of the valInstr if it is of
@@ -852,7 +850,7 @@ public final class TypeChecker
                 else
                 {
                     // If it is a LiteralValue (integer literal) (support for issue #94)
-                    if(cast(LiteralValue)embeddedInstruction)
+                    if(cast(LiteralValue)assignmentInstr)
                     {
                         // TODO: Add a check for if these types are both atleast integral (as in the Variable's type)
                         // ... THEN (TODO): Check if range makes sense
@@ -867,7 +865,7 @@ public final class TypeChecker
                                 // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
                                 // ... as during code emit that is what will be hoisted out and checked regarding its type
                                 // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
-                                embeddedInstruction.setInstrType(variableDeclarationType);
+                                assignmentInstr.setInstrType(variableDeclarationType);
                             }
                             else
                             {
@@ -883,7 +881,7 @@ public final class TypeChecker
                         
                     }
                     // If it is a LiteralFloatingValue (support for issue #94)
-                    else if(cast(LiteralValue)embeddedInstruction)
+                    else if(cast(LiteralValue)assignmentInstr)
                     {
                         gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
                         assert(false);
