@@ -342,8 +342,150 @@ public final class TypeChecker
     }
 
 
+    /** 
+     * Given a type to try coerce towards and a literal value
+     * instruction, this will check whether the literal itself
+     * is within the range whereby it may be coerced
+     *
+     * Params:
+     *   variableType = the type to try coercing towards
+     *   assignmentInstruction = the literal to apply a range
+     *                           check to
+     */
+    private bool isCoercibleRange(Type toType, Value literalInstr)
+    {
+        // You should only be calling this on either a `LiteralValue`
+        // ... or a `LiteralValueFloat` instruction
+        // TODO: Add support for UnaryOpInstr (where the inner type is then)
+        // ... one of the above
+        assert(cast(LiteralValue)literalInstr || cast(LiteralValueFloat)literalInstr || cast(UnaryOpInstr)literalInstr);
 
-    
+        // LiteralValue (integer literal instructions)
+        if(cast(LiteralValue)literalInstr)
+        {
+
+        }
+        // LiteralValue (integer literal instructions)
+        else if(cast(LiteralValueFloat)literalInstr)
+        {
+
+        }
+        // Unary operator
+        else
+        {
+            UnaryOpInstr unaryOpLiteral = cast(UnaryOpInstr)literalInstr;
+            assert(unaryOpLiteral.getOperator() == SymbolType.SUB);
+
+            Value operandInstr = unaryOpLiteral.getOperand();
+
+            // LiteralValue (integer literal instructions) with subtraction infront
+            if(cast(LiteralValue)literalInstr)
+            {
+
+            }
+            // LiteralValue (integer literal instructions) with subtraction infront
+            else
+            {
+
+            }
+        }
+
+
+        return true;
+    }
+
+
+    /** 
+     * Attempts to perform coercion of the provided Value-instruction
+     * with respect to the provided variable type.
+     * 
+     * This should only be called if the types do not match.
+     * This will update the provided instruction's type-field
+     *
+     * Params:
+     *   variableType = the type to attempt coercing the instruction to
+     *   assignmentInstruction = instruction to coerce
+     */
+    private void attemptCoercion(Type variableType, Value assignmentInstruction)
+    {
+        /* Extract the type of the assignment instruction */
+        Type assignmentType = assignmentInstruction.getInstrType();
+
+        // If it is a LiteralValue (integer literal) (support for issue #94)
+        if(cast(LiteralValue)assignmentInstruction)
+        {
+            // TODO: Add a check for if these types are both atleast integral (as in the Variable's type)
+            // ... THEN (TODO): Check if range makes sense
+            bool isIntegral = !(cast(Integer)variableType is null); // Integrality check
+
+            if(isIntegral)
+            {
+                bool isCoercible = isCoercibleRange(variableType, assignmentInstruction); // TODO: Range check
+
+                if(isCoercible)
+                {
+                    // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
+                    // ... as during code emit that is what will be hoisted out and checked regarding its type
+                    // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
+                    assignmentInstruction.setInstrType(variableType);
+                }
+                else
+                {
+                    throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (range violation)");
+                }
+            }
+            else
+            {
+                throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+            }
+            
+        }
+        // If it is a LiteralValueFloat (support for issue #94)
+        else if(cast(LiteralValueFloat)assignmentInstruction)
+        {
+            gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
+            assert(false);
+        }
+        // Unary operator (specifically with a minus)
+        else if(cast(UnaryOpInstr)assignmentInstruction)
+        {
+            UnaryOpInstr unaryOpInstr = cast(UnaryOpInstr)assignmentInstruction;
+
+            if(unaryOpInstr.getOperator() == SymbolType.SUB)
+            {
+                Value operandInstr = unaryOpInstr.getOperand();
+
+                // If it is a negative LiteralValue (integer literal)
+                if(cast(LiteralValue)operandInstr)
+                {
+                    // TODO: Implement things here
+                    gprintln("Please implement coercing checking for negative integer literals", DebugType.ERROR);
+                    assert(false);
+                }
+                // If it is a negative LiteralValueFloat (floating-point literal)
+                else if(cast(LiteralValueFloat)operandInstr)
+                {
+                    gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
+                    assert(false);
+                }
+                // If anything else is embedded
+                else
+                {
+                    throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+                }
+            }
+            else
+            {
+                throw new TypeMismatchException(this, variableType, assignmentType, "Cannot coerce a non minus unary operation");
+            }
+        }
+        else
+        {
+            throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+        }
+    }
+
+
 
     public void typeCheckThing(DNode dnode)
     {
@@ -849,60 +991,14 @@ public final class TypeChecker
                 // If the types do not match
                 else
                 {
-                    // If it is a LiteralValue (integer literal) (support for issue #94)
-                    if(cast(LiteralValue)assignmentInstr)
-                    {
-                        // TODO: Add a check for if these types are both atleast integral (as in the Variable's type)
-                        // ... THEN (TODO): Check if range makes sense
-                        bool isIntegral = !(cast(Integer)variableDeclarationType is null); // Integrality check
-
-                        if(isIntegral)
-                        {
-                            bool isCoercible = true; // TODO: Range check
-
-                            if(isCoercible)
-                            {
-                                // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
-                                // ... as during code emit that is what will be hoisted out and checked regarding its type
-                                // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
-                                assignmentInstr.setInstrType(variableDeclarationType);
-                            }
-                            else
-                            {
-                                gprintln("Not coercible (range violation)", DebugType.ERROR);
-                                assert(false);
-                            }
-                        }
-                        else
-                        {
-                            gprintln("Not coercible (lacking integral var type)", DebugType.ERROR);
-                            assert(false);
-                        }
-                        
-                    }
-                    // If it is a LiteralFloatingValue (support for issue #94)
-                    else if(cast(LiteralValue)assignmentInstr)
-                    {
-                        gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
-                        assert(false);
-                    }
-                    else
-                    {
-                        gprintln("MISMATCH: Variable's declared type ('"~to!(string)(variableDeclarationType)~"') does not match that of assignment expression's type ('"~to!(string)(assignmentType)~"')", DebugType.ERROR);
-                        assert(false);
-                    }
+                    // Then attempt coercion
+                    attemptCoercion(variableDeclarationType, assignmentInstr);
                 }
             }
 
-
-            
-
+            /* Generate a variable declaration instruction and add it to the codequeue */
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variableDeclarationType, assignmentInstr);
-
-            /* NEW CODE (9th November 2021) Set the context */
             varDecInstr.setContext(variablePNode.context);
-
-
             addInstrB(varDecInstr);
         }
         /* TODO: Add class init, see #8 */
@@ -932,6 +1028,11 @@ public final class TypeChecker
                 VariableAssignmentStdAlone vasa = cast(VariableAssignmentStdAlone)statement;
                 string variableName = vasa.getVariableName();
 
+                /* Extract information about the variable declaration of the avriable being assigned to */
+                Context variableContext = vasa.getContext();
+                Variable variable = cast(Variable)resolver.resolveBest(variableContext.container, variableName);
+                Type variableDeclarationType = getType(variableContext.container, variable.getType());
+
                 /**
                 * Codegen
                 *
@@ -941,31 +1042,29 @@ public final class TypeChecker
                 */
                 Instruction instr = popInstr();
                 assert(instr);
-                Value valueInstr = cast(Value)instr;
-                assert(valueInstr);
+                Value assignmentInstr = cast(Value)instr;
+                assert(assignmentInstr);
 
-                // TODO: A popType() should be done here techncially, IF we do this then it
-                // ... must be pushed by VariableAssigmnetNode
-                Type assignmentType = valueInstr.getInstrType();
+                
+                Type assignmentType = assignmentInstr.getInstrType();
                 assert(assignmentType);
 
 
-                gprintln("Instruction popped: "~to!(string)(instr));
-                gprintln("Type popped: "~to!(string)(assignmentType));
-                
+                if(isSameType(variableDeclarationType, assignmentType))
+                {
+                    gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
+                }
+                // If the type's do not match
+                else
+                {
+                    // Then attempt coercion
+                    attemptCoercion(variableDeclarationType, assignmentInstr);
+                }
 
-                // TODO: WOAH! We should be consuming here though!!! not making!?!?
-                VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, valueInstr);
-
-                /* Set the VariableAssigmmentInstruction's context to that of the stdalone entity */
+                /* Generate a variable assignment instruction and add it to the codequeue */
+                VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, assignmentInstr);
                 vAInstr.setContext(vasa.getContext());
-
                 addInstrB(vAInstr);
-
-                gprintln("VariableAssignmentStdAlone", DebugType.ERROR);
-
-                gprintln("VariableAssignmentStdAlone needs some reworking", DebugType.ERROR);
-                // assert(false);
             }
             /**
             * Return statement (ReturnStmt)

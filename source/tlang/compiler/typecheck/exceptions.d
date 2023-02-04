@@ -4,16 +4,45 @@ import compiler.typecheck.core;
 import compiler.symbols.data;
 import compiler.typecheck.resolution;
 import std.string : cmp;
+import std.conv : to;
+import misc.exceptions: TError;
+import compiler.symbols.typing.core;
 
-public class TypeCheckerException : Exception
+public class TypeCheckerException : TError
 {
     private TypeChecker typeChecker;
 
-    this(TypeChecker typeChecker)
+    // NOTE: See if we use, as we seem to overwrite the `msg` value
+    // ... in sub-classes of this
+    public enum TypeheckError
+    {
+        GENERAL_ERROR
+    }
+
+    this(TypeChecker typeChecker, TypeheckError errType, string msg = "")
     {
         /* We set it after each child class calls this constructor (which sets it to empty) */
-        super("");
+        super("TypeCheck Error ("~to!(string)(errType)~")"~(msg.length > 0 ? ": "~msg : ""));
         this.typeChecker = typeChecker;
+    }
+
+    // TODO: Remove this constructor and make anything that is currently using it 
+    // ... switch to atleast specifying the errType
+    this(TypeChecker typeChecker)
+    {
+        this(typeChecker, TypeheckError.GENERAL_ERROR);
+    }
+}
+
+public final class TypeMismatchException : TypeCheckerException
+{
+    this(TypeChecker typeChecker, Type originalType, Type attemptedType, string msgIn = "")
+    {
+        super(typeChecker);
+
+        msg = "Type mismatch between type "~originalType.getName()~" and "~attemptedType.getName();
+
+        msg ~= msgIn.length > 0 ? ": "~msgIn : "";
     }
 }
 
