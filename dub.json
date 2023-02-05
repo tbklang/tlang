@@ -9,5 +9,6 @@
 	},
 	"description": "The official Tristan language compiler project",
 	"license": "GPLv3",
-	"name": "tlang"
+	"name": "tlang",
+	"homepage": "http://deavmi.assigned.network/projects/tlang"
 }
