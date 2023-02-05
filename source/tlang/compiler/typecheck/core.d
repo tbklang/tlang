@@ -2,7 +2,7 @@ module compiler.typecheck.core;
 
 import compiler.symbols.check;
 import compiler.symbols.data;
-import std.conv : to;
+import std.conv : to, ConvException;
 import std.string;
 import std.stdio;
 import gogga;
@@ -363,20 +363,67 @@ public final class TypeChecker
         {
             LiteralValue integerLiteral = cast(LiteralValue)literalInstr;
             string literal = integerLiteral.getLiteralValue();
-            ulong literalValue = to!(ulong)(literal);
 
-            if(isSameType(toType, getType(null, "ubyte")))
+            try
             {
-                if(literalValue >= 0 && literalValue <= 255)
+                ulong literalValue = to!(ulong)(literal); // TODO: Catch conversion exception when the literal is too big for `ulong`
+
+                if(isSameType(toType, getType(null, "ubyte")))
                 {
-                    // Valid coercion
-                    return true;
+                    if(literalValue >= 0 && literalValue <= 255)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
                 }
-                else
+                else if(isSameType(toType, getType(null, "ushort")))
                 {
-                    // Invalid coercion
-                    return false;
+                    if(literalValue >= 0 && literalValue <= 65_535)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
                 }
+                else if(isSameType(toType, getType(null, "uint")))
+                {
+                    if(literalValue >= 0 && literalValue <= 4_294_967_295)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
+                }
+                else if(isSameType(toType, getType(null, "ulong")))
+                {
+                    if(literalValue >= 0 && literalValue <= 18446744073709551615)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
+                }
+            }
+            catch(ConvException e)
+            {
+                throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.LITERAL_OVERFLOW, "Overflow when processing literal '"~literal~"'");
             }
         }
         // LiteralValue (integer literal instructions)
@@ -405,7 +452,7 @@ public final class TypeChecker
         }
 
 
-        return true;
+        return false;
     }
 
 

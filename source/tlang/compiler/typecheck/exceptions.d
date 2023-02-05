@@ -14,12 +14,13 @@ public class TypeCheckerException : TError
 
     // NOTE: See if we use, as we seem to overwrite the `msg` value
     // ... in sub-classes of this
-    public enum TypeheckError
+    public enum TypecheckError
     {
-        GENERAL_ERROR
+        GENERAL_ERROR,
+        LITERAL_OVERFLOW
     }
 
-    this(TypeChecker typeChecker, TypeheckError errType, string msg = "")
+    this(TypeChecker typeChecker, TypecheckError errType, string msg = "")
     {
         /* We set it after each child class calls this constructor (which sets it to empty) */
         super("TypeCheck Error ("~to!(string)(errType)~")"~(msg.length > 0 ? ": "~msg : ""));
@@ -30,7 +31,7 @@ public class TypeCheckerException : TError
     // ... switch to atleast specifying the errType
     this(TypeChecker typeChecker)
     {
-        this(typeChecker, TypeheckError.GENERAL_ERROR);
+        this(typeChecker, TypecheckError.GENERAL_ERROR);
     }
 }
 
