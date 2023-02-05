@@ -1,12 +1,12 @@
-module compiler.codegen.instruction;
+module tlang.compiler.codegen.instruction;
 
 import std.conv : to;
-import compiler.typecheck.dependency.core : Context;
+import tlang.compiler.typecheck.dependency.core : Context;
 import std.string : cmp;
-import compiler.symbols.data : SymbolType;
-import compiler.symbols.check : getCharacter;
+import tlang.compiler.symbols.data : SymbolType;
+import tlang.compiler.symbols.check : getCharacter;
 import gogga;
-import compiler.symbols.typing.core : Type;
+import tlang.compiler.symbols.typing.core : Type;
 
 public class Instruction
 {

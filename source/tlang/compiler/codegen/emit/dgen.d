@@ -1,9 +1,9 @@
-module compiler.codegen.emit.dgen;
+module tlang.compiler.codegen.emit.dgen;
 
-import compiler.codegen.emit.core : CodeEmitter;
-import compiler.typecheck.core;
+import tlang.compiler.codegen.emit.core : CodeEmitter;
+import tlang.compiler.typecheck.core;
 import std.container.slist : SList;
-import compiler.codegen.instruction;
+import tlang.compiler.codegen.instruction;
 import std.stdio;
 import std.file;
 import std.conv : to;
@@ -12,13 +12,13 @@ import gogga;
 import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
-import compiler.typecheck.dependency.core : Context, FunctionData, DNode;
-import compiler.codegen.mapper.core : SymbolMapper;
-import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
-import compiler.symbols.check : getCharacter;
+import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
+import tlang.compiler.codegen.mapper.core : SymbolMapper;
+import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
+import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
-import compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
-import compiler.configuration : CompilerConfiguration;
+import tlang.compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
+import tlang.compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
 {

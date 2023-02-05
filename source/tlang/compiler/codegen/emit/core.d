@@ -1,17 +1,17 @@
-module compiler.codegen.emit.core;
+module tlang.compiler.codegen.emit.core;
 
-import compiler.symbols.data;
-import compiler.typecheck.core;
+import tlang.compiler.symbols.data;
+import tlang.compiler.typecheck.core;
 import std.container.slist : SList;
-import compiler.codegen.instruction;
+import tlang.compiler.codegen.instruction;
 import std.stdio;
 import std.file;
-import compiler.codegen.instruction : Instruction;
+import tlang.compiler.codegen.instruction : Instruction;
 import std.range : walkLength;
 import gogga;
 import std.conv : to;
-import compiler.configuration : CompilerConfiguration;
-import compiler.codegen.mapper.core : SymbolMapper;
+import tlang.compiler.configuration : CompilerConfiguration;
+import tlang.compiler.codegen.mapper.core : SymbolMapper;
 
 /**
 * TODO: Perhaps have an interface that can emit(Context/Parent, Statement)

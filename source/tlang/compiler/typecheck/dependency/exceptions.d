@@ -1,4 +1,4 @@
-module compiler.typecheck.dependency.exceptions;
+module tlang.compiler.typecheck.dependency.exceptions;
 
 import misc.exceptions : TError;
 import std.conv : to;

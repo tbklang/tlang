@@ -1,6 +1,6 @@
-module compiler.docgen.core;
+module tlang.compiler.docgen.core;
 
-import compiler.parsing.core;
+import tlang.compiler.parsing.core;
 
 public final class DocumentGenerator
 {

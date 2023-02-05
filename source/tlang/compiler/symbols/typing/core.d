@@ -1,10 +1,10 @@
-module compiler.symbols.typing.core;
+module tlang.compiler.symbols.typing.core;
 
-import compiler.symbols.data;
+import tlang.compiler.symbols.data;
 import std.string : cmp;
 import std.conv : to;
 
-public import compiler.symbols.typing.builtins;
+public import tlang.compiler.symbols.typing.builtins;
 
 public class Type : Entity
 {
@@ -20,6 +20,9 @@ public class Type : Entity
     {
         super(name);
     }
+
+    // TODO: A comparator would be nice but I would have to then see
+    // ... where referene equality was used, hence I stear clear of that
 }
 
 public final class Void : Primitive

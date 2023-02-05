@@ -1,7 +1,7 @@
-module compiler.typecheck.dependency.variables;
+module tlang.compiler.typecheck.dependency.variables;
 
-import compiler.typecheck.dependency.core;
-import compiler.symbols.data;
+import tlang.compiler.typecheck.dependency.core;
+import tlang.compiler.symbols.data;
 
 /**
 * This module holds types related to variable declarations

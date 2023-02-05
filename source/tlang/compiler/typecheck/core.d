@@ -1,17 +1,17 @@
-module compiler.typecheck.core;
+module tlang.compiler.typecheck.core;
 
-import compiler.symbols.check;
-import compiler.symbols.data;
+import tlang.compiler.symbols.check;
+import tlang.compiler.symbols.data;
 import std.conv : to, ConvException;
 import std.string;
 import std.stdio;
 import gogga;
-import compiler.parsing.core;
-import compiler.typecheck.resolution;
-import compiler.typecheck.exceptions;
-import compiler.symbols.typing.core;
-import compiler.typecheck.dependency.core;
-import compiler.codegen.instruction;
+import tlang.compiler.parsing.core;
+import tlang.compiler.typecheck.resolution;
+import tlang.compiler.typecheck.exceptions;
+import tlang.compiler.symbols.typing.core;
+import tlang.compiler.typecheck.dependency.core;
+import tlang.compiler.codegen.instruction;
 import std.container.slist;
 import std.algorithm : reverse;
 
@@ -408,7 +408,7 @@ public final class TypeChecker
             }
             else if(isSameType(toType, getType(null, "ulong")))
             {
-                if(literalValue >= 0 && literalValue <= 18446744073709551615)
+                if(literalValue >= 0 && literalValue <= 18_446_744_073_709_551_615)
                 {
                     // Valid coercion
                     return true;
@@ -423,7 +423,7 @@ public final class TypeChecker
         // LiteralValue (integer literal instructions)
         else if(cast(LiteralValueFloat)literalInstr)
         {
-
+            
         }
         // Unary operator
         else
@@ -547,9 +547,9 @@ public final class TypeChecker
         gprintln("typeCheckThing(): "~dnode.toString());
 
         /* ExpressionDNodes */
-        if(cast(compiler.typecheck.dependency.expression.ExpressionDNode)dnode)
+        if(cast(tlang.compiler.typecheck.dependency.expression.ExpressionDNode)dnode)
         {
-            compiler.typecheck.dependency.expression.ExpressionDNode expDNode = cast(compiler.typecheck.dependency.expression.ExpressionDNode)dnode;
+            tlang.compiler.typecheck.dependency.expression.ExpressionDNode expDNode = cast(tlang.compiler.typecheck.dependency.expression.ExpressionDNode)dnode;
 
             Statement statement = expDNode.getEntity();
             gprintln("Hdfsfdjfds"~to!(string)(statement));
@@ -959,13 +959,13 @@ public final class TypeChecker
             }
         }
         /* VariableAssigbmentDNode */
-        else if(cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode)
+        else if(cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode)
         {
-            import compiler.typecheck.dependency.variables;
+            import tlang.compiler.typecheck.dependency.variables;
 
             /* Get the variable's name */
             string variableName;
-            VariableAssignmentNode varAssignDNode = cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
+            VariableAssignmentNode varAssignDNode = cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
             Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
             variableName = resolver.generateName(modulle, assignTo);
             gprintln("VariableAssignmentNode: "~to!(string)(variableName));
@@ -1013,7 +1013,7 @@ public final class TypeChecker
         * TODO: We need to emit different code dependeing on variable declaration TYPE
         * We could use context for this, ClassVariableDec vs ModuleVariableDec
         */
-        else if(cast(compiler.typecheck.dependency.variables.StaticVariableDeclaration)dnode)
+        else if(cast(tlang.compiler.typecheck.dependency.variables.StaticVariableDeclaration)dnode)
         {
             /* TODO: Add skipping if context is within a class */
             /* We need to wait for class static node, to do an InitInstruction (static init) */
@@ -1069,7 +1069,7 @@ public final class TypeChecker
             addInstrB(varDecInstr);
         }
         /* TODO: Add class init, see #8 */
-        else if(cast(compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
+        else if(cast(tlang.compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
         {
             /* Extract the class node and create a static allocation instruction out of it */
             Clazz clazzPNode = cast(Clazz)dnode.getEntity();
@@ -1081,7 +1081,7 @@ public final class TypeChecker
         }
         /* It will pop a bunch of shiiit */
         /* TODO: ANy statement */
-        else if(cast(compiler.typecheck.dependency.core.DNode)dnode)
+        else if(cast(tlang.compiler.typecheck.dependency.core.DNode)dnode)
         {
             /* TODO: Get the STatement */
             Statement statement = dnode.getEntity();
@@ -1962,8 +1962,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_module1.t";
 
@@ -2009,8 +2009,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_module2.t";
 
@@ -2054,8 +2054,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_non_module.t";
 
@@ -2099,8 +2099,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_member.t";
 
@@ -2143,8 +2143,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/precedence_collision_test.t";
 
@@ -2189,8 +2189,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container.t";
 
@@ -2274,8 +2274,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/typecheck/simple_function_call.t";
 

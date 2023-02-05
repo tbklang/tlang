@@ -1,8 +1,8 @@
-module compiler.symbols.containers;
+module tlang.compiler.symbols.containers;
 
-import compiler.symbols.data;
+import tlang.compiler.symbols.data;
 import std.conv : to;
-import compiler.symbols.typing.core;
+import tlang.compiler.symbols.typing.core;
 
 /**
 * Used so often that we may as well

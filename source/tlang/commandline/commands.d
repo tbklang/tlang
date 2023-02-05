@@ -4,21 +4,21 @@
  * All command-line arguments and their impementations
  */
 
-module commandline.commands;
+module tlang.commandline.commands;
 
 import jcli;
 import std.stdio;
 import misc.exceptions : TError;
 import std.exception : ErrnoException;
-import compiler.lexer.core : Lexer;
-import compiler.lexer.tokens : Token;
-import compiler.parsing.core : Parser;
-import compiler.typecheck.core : TypeChecker;
+import tlang.compiler.lexer.core : Lexer;
+import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.parsing.core : Parser;
+import tlang.compiler.typecheck.core : TypeChecker;
 import gogga;
-import compiler.core : Compiler, beginCompilation;
-import compiler.configuration : ConfigEntry;
+import tlang.compiler.core : Compiler, beginCompilation;
+import tlang.compiler.configuration : ConfigEntry;
 import std.conv : to;
-import compiler.codegen.mapper.core : SymbolMappingTechnique;
+import tlang.compiler.codegen.mapper.core : SymbolMappingTechnique;
 
 //TODO: Re-order the definitions below so that they appear with compile first, then lex, parse, ..., help
 

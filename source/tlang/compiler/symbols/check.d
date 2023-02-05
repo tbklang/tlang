@@ -1,6 +1,6 @@
-module compiler.symbols.check;
+module tlang.compiler.symbols.check;
 
-import compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.tokens : Token;
 import std.conv : to;
 import std.string : isNumeric, cmp;
 import misc.utils;
@@ -205,6 +205,28 @@ public bool isIdentifier_Dot(Token tokenIn)
     }
 }
 
+private bool isNumericLiteral(string token)
+{
+    import std.algorithm.searching : canFind;
+    import tlang.compiler.lexer.core :Lexer;
+    if(canFind(token, "UL") || canFind(token, "UI"))
+    {
+        return isNumeric(token[0..$-2]);
+    }
+    else if(canFind(token, "L") || canFind(token, "I"))
+    {
+        return isNumeric(token[0..$-1]);
+    }
+    else
+    {
+        // TODO: Check if we would even get here in terms of what the lexer
+        // ... would be able to rpoduce.
+        // We would get ehre with `1` for example, however check if `1A`
+        // would even be possible (if not then remove isNumeric below, else keep)
+        return isNumeric(token);
+    }
+}
+
 public SymbolType getSymbolType(Token tokenIn)
 {
     string token = tokenIn.getToken();
@@ -226,7 +248,8 @@ public SymbolType getSymbolType(Token tokenIn)
         return SymbolType.STRING_LITERAL;
     }
     /* Number literal check */
-    else if (isNumeric(token))
+    // FIXME: Add support for 2UI and 2I (isNumeric checks via D's logic)
+    else if (isNumericLiteral(token))
     {
         return SymbolType.NUMBER_LITERAL;
     }

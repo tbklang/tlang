@@ -1,6 +1,6 @@
-module compiler.symbols.expressions;
+module tlang.compiler.symbols.expressions;
 
-import compiler.symbols.data;
+import tlang.compiler.symbols.data;
 import std.conv : to;
 
 /* TODO: Look into arrays later */
@@ -147,7 +147,7 @@ public abstract class NumberLiteral : Expression
 
 public class Expression : Statement
 {
-    import compiler.typecheck.core;
+    import tlang.compiler.typecheck.core;
     /* TODO: Takes in symbol table? */
     public string evaluateType(TypeChecker typechecker, Container c)
     {

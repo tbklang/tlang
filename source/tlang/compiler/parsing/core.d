@@ -1,14 +1,14 @@
-module compiler.parsing.core;
+module tlang.compiler.parsing.core;
 
 import gogga;
 import std.conv : to, ConvException;
 import std.string : isNumeric, cmp;
-import compiler.symbols.check;
-import compiler.symbols.data;
-import compiler.lexer.tokens : Token;
+import tlang.compiler.symbols.check;
+import tlang.compiler.symbols.data;
+import tlang.compiler.lexer.tokens : Token;
 import core.stdc.stdlib;
 import misc.exceptions : TError;
-import compiler.parsing.exceptions;
+import tlang.compiler.parsing.exceptions;
 
 // public final class ParserError : TError
 // {
@@ -1142,37 +1142,78 @@ public final class Parser
                     // TODO: Issue #94, we should be checking the range here
                     // ... along with any explicit encoders and setting it
                     // ... for now default to SIGNED_INTEGER.
-
+                    IntegerLiteralEncoding chosenEncoding;
                     // TODO (X-platform): Use `size_t` here
-                    // TODO (Redundant-later): Since we check here, remove the conv check in the typechecker!
+                    ulong literalValue;
+
+
+                    
+                    
                     // TODO: Add a check for the `U`, `UL` stuff here
-                    try
+                    import std.algorithm.searching : canFind;
+                    // Explicit integer encoding (unsigned long)
+                    if(canFind(numberLiteralStr, "UL"))
                     {
-                        ulong literalValue = to!(ulong)(numberLiteralStr);
-                        IntegerLiteralEncoding chosenEncoding;
+                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
 
-                        // Signed integer range [0, 2_147_483_647]
-                        if(literalValue >= 0 && literalValue <= 2_147_483_647)
-                        {
-                            chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
-                        }
-                        // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
-                        else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
-                        {
-                            chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
-                        }
-                        // Unsigned long range [9_223_372_036_854_775_808, 18_446_744_073_709_551_615]
-                        else
-                        {
-                            chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
-                        }
-
-                        numberLiteral = new IntegerLiteral(getCurrentToken().getToken(), chosenEncoding);
+                        // Strip the `UL` away
+                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
                     }
-                    catch(ConvException e)
+                    // Explicit integer encoding (signed long)
+                    else if(canFind(numberLiteralStr, "L"))
                     {
-                        throw new ParserException(this, ParserException.ParserErrorType.LITERAL_OVERFLOW, "Literal '"~numberLiteralStr~"' would overflow");
+                        chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+
+                        // Strip the `L` away
+                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
                     }
+                    // Explicit integer encoding (unsigned int)
+                    else if(canFind(numberLiteralStr, "UI"))
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_INTEGER;
+
+                        // Strip the `UI` away
+                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
+                    }
+                    // Explicit integer encoding (signed int)
+                    else if(canFind(numberLiteralStr, "I"))
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+
+                        // Strip the `I` away
+                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
+                    }
+                    else
+                    {
+                        try
+                        {
+                            // TODO (X-platform): Use `size_t` here
+                            literalValue = to!(ulong)(numberLiteralStr);
+                            
+
+                            // Signed integer range [0, 2_147_483_647]
+                            if(literalValue >= 0 && literalValue <= 2_147_483_647)
+                            {
+                                chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+                            }
+                            // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
+                            else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
+                            {
+                                chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+                            }
+                            // Unsigned long range [9_223_372_036_854_775_808, 18_446_744_073_709_551_615]
+                            else
+                            {
+                                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
+                            }
+                        }
+                        catch(ConvException e)
+                        {
+                            throw new ParserException(this, ParserException.ParserErrorType.LITERAL_OVERFLOW, "Literal '"~numberLiteralStr~"' would overflow");
+                        }
+                    }
+
+                    numberLiteral = new IntegerLiteral(numberLiteralStr, chosenEncoding);
                 }
                 
                 /* Add expression to stack */
@@ -2049,9 +2090,9 @@ unittest
 
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.lexer.exceptions;
-    import compiler.lexer.tokens;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.lexer.tokens;
 
     string sourceCode = `
 module myModule;
@@ -2090,9 +2131,9 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.lexer.exceptions;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
     string sourceCode = `
 module myModule;
@@ -2258,9 +2299,9 @@ class myClass2
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.lexer.exceptions;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
 
     string sourceCode = `
@@ -2327,9 +2368,9 @@ void function()
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.lexer.exceptions;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
 
     string sourceCode = `
@@ -2410,9 +2451,9 @@ int myFunction(int i, int j)
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.lexer.exceptions;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
 
     string sourceCode = `
@@ -2513,9 +2554,9 @@ void function()
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.lexer.exceptions;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
     string sourceCode = `
 module simple_pointer;
@@ -2614,9 +2655,9 @@ int thing()
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.lexer.exceptions;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
 
     string sourceCode = `
@@ -2738,9 +2779,9 @@ void function()
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.lexer.exceptions;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
 
     string sourceCode = `

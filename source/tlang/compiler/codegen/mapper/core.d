@@ -1,7 +1,7 @@
-module compiler.codegen.mapper.core;
+module tlang.compiler.codegen.mapper.core;
 
-import compiler.typecheck.core;
-import compiler.symbols.data;
+import tlang.compiler.typecheck.core;
+import tlang.compiler.symbols.data;
 import std.conv : to;
 import gogga;
 

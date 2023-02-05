@@ -1,18 +1,18 @@
-module compiler.typecheck.dependency.core;
+module tlang.compiler.typecheck.dependency.core;
 
-import compiler.symbols.check;
-import compiler.symbols.data;
+import tlang.compiler.symbols.check;
+import tlang.compiler.symbols.data;
 import std.conv : to;
 import std.string;
 import std.stdio;
 import gogga;
-import compiler.parsing.core;
-import compiler.typecheck.resolution;
-import compiler.typecheck.exceptions;
-import compiler.typecheck.core;
-import compiler.symbols.typing.core;
-import compiler.symbols.typing.builtins;
-import compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
+import tlang.compiler.parsing.core;
+import tlang.compiler.typecheck.resolution;
+import tlang.compiler.typecheck.exceptions;
+import tlang.compiler.typecheck.core;
+import tlang.compiler.symbols.typing.core;
+import tlang.compiler.symbols.typing.builtins;
+import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
 
 
 /**
@@ -547,9 +547,9 @@ public class DNodeGenerator
 
     
     
-    import compiler.typecheck.dependency.expression;
-    import compiler.typecheck.dependency.classes.classObject;
-    import compiler.typecheck.dependency.classes.classVirtualInit;
+    import tlang.compiler.typecheck.dependency.expression;
+    import tlang.compiler.typecheck.dependency.classes.classObject;
+    import tlang.compiler.typecheck.dependency.classes.classVirtualInit;
 
     /* TODO: As mentioned in classObject.d we should static init the class type here */
     private ClassVirtualInit virtualInit(Clazz clazz)
@@ -1173,7 +1173,7 @@ public class DNodeGenerator
     }
 
 
-    import compiler.typecheck.dependency.variables;
+    import tlang.compiler.typecheck.dependency.variables;
     private ModuleVariableDeclaration pool_module_vardec(Variable entity)
     {
         foreach(DNode dnode; nodePool)
@@ -1669,7 +1669,7 @@ public class DNodeGenerator
         return node;
     }
 
-    import compiler.typecheck.dependency.classes.classStaticDep;
+    import tlang.compiler.typecheck.dependency.classes.classStaticDep;
     private ClassStaticNode poolClassStatic(Clazz clazz)
     {
         /* Sanity check */

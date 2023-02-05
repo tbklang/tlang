@@ -1,12 +1,12 @@
-module compiler.typecheck.exceptions;
+module tlang.compiler.typecheck.exceptions;
 
-import compiler.typecheck.core;
-import compiler.symbols.data;
-import compiler.typecheck.resolution;
+import tlang.compiler.typecheck.core;
+import tlang.compiler.symbols.data;
+import tlang.compiler.typecheck.resolution;
 import std.string : cmp;
 import std.conv : to;
 import misc.exceptions: TError;
-import compiler.symbols.typing.core;
+import tlang.compiler.symbols.typing.core;
 
 public class TypeCheckerException : TError
 {

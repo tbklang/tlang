@@ -1,11 +1,11 @@
-module compiler.lexer.core;
+module tlang.compiler.lexer.core;
 
 import std.container.slist;
 import gogga;
 import std.conv : to;
 import std.ascii : isDigit;
-import compiler.lexer.exceptions;
-import compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.exceptions;
+import tlang.compiler.lexer.tokens : Token;
 
 public final class Lexer
 {
@@ -65,7 +65,7 @@ public final class Lexer
     */
     private bool isBuildUpValidIdent()
     {
-        import compiler.symbols.check;
+        import tlang.compiler.symbols.check;
         return isPathIdentifier(currentToken) || isIdentifier(currentToken);
     }
 

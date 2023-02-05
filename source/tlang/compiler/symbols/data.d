@@ -1,8 +1,8 @@
-module compiler.symbols.data;
+module tlang.compiler.symbols.data;
 
-public import compiler.symbols.check;
+public import tlang.compiler.symbols.check;
 import std.conv : to;
-import compiler.typecheck.dependency.core : Context;
+import tlang.compiler.typecheck.dependency.core : Context;
 
 
 /**
@@ -232,7 +232,7 @@ public class TypedEntity : Entity
     }
 }
 
-public import compiler.symbols.containers;
+public import tlang.compiler.symbols.containers;
 
 public class ArgumentList
 {
@@ -308,7 +308,7 @@ public class Function : TypedEntity, Container
 
     public Statement[] getStatements()
     {
-        import compiler.symbols.containers : weightReorder;
+        import tlang.compiler.symbols.containers : weightReorder;
         return weightReorder(bodyStatements);
     }
 
@@ -385,7 +385,7 @@ public class Variable : TypedEntity
 }
 
 
-public import compiler.symbols.expressions;
+public import tlang.compiler.symbols.expressions;
 
 
 
@@ -531,7 +531,7 @@ public class VariableExpression : IdentExpression
 
 
 
-    import compiler.typecheck.core;
+    import tlang.compiler.typecheck.core;
     public override string evaluateType(TypeChecker typeChecker, Container c)
     {
         string type;
