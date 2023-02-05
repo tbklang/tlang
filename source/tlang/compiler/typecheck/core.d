@@ -316,8 +316,6 @@ public final class TypeChecker
     {
         bool same = false;
 
-        
-
         /* Handling for Integers */
         if(typeid(type1) == typeid(type2) && cast(Integer)type1 !is null)
         {
@@ -363,7 +361,23 @@ public final class TypeChecker
         // LiteralValue (integer literal instructions)
         if(cast(LiteralValue)literalInstr)
         {
+            LiteralValue integerLiteral = cast(LiteralValue)literalInstr;
+            string literal = integerLiteral.getLiteralValue();
+            ulong literalValue = to!(ulong)(literal);
 
+            if(isSameType(toType, getType(null, "ubyte")))
+            {
+                if(literalValue >= 0 && literalValue <= 255)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
         }
         // LiteralValue (integer literal instructions)
         else if(cast(LiteralValueFloat)literalInstr)
