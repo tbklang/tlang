@@ -364,66 +364,60 @@ public final class TypeChecker
             LiteralValue integerLiteral = cast(LiteralValue)literalInstr;
             string literal = integerLiteral.getLiteralValue();
 
-            try
-            {
-                ulong literalValue = to!(ulong)(literal); // TODO: Catch conversion exception when the literal is too big for `ulong`
+            // NOTE (X-platform): For cross-platform sake we should change the `ulong` to `size_t`
+            ulong literalValue = to!(ulong)(literal);
 
-                if(isSameType(toType, getType(null, "ubyte")))
+            if(isSameType(toType, getType(null, "ubyte")))
+            {
+                if(literalValue >= 0 && literalValue <= 255)
                 {
-                    if(literalValue >= 0 && literalValue <= 255)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
+                    // Valid coercion
+                    return true;
                 }
-                else if(isSameType(toType, getType(null, "ushort")))
+                else
                 {
-                    if(literalValue >= 0 && literalValue <= 65_535)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
-                }
-                else if(isSameType(toType, getType(null, "uint")))
-                {
-                    if(literalValue >= 0 && literalValue <= 4_294_967_295)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
-                }
-                else if(isSameType(toType, getType(null, "ulong")))
-                {
-                    if(literalValue >= 0 && literalValue <= 18446744073709551615)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
+                    // Invalid coercion
+                    return false;
                 }
             }
-            catch(ConvException e)
+            else if(isSameType(toType, getType(null, "ushort")))
             {
-                throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.LITERAL_OVERFLOW, "Overflow when processing literal '"~literal~"'");
+                if(literalValue >= 0 && literalValue <= 65_535)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            else if(isSameType(toType, getType(null, "uint")))
+            {
+                if(literalValue >= 0 && literalValue <= 4_294_967_295)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            else if(isSameType(toType, getType(null, "ulong")))
+            {
+                if(literalValue >= 0 && literalValue <= 18446744073709551615)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
             }
         }
         // LiteralValue (integer literal instructions)
@@ -587,6 +581,18 @@ public final class TypeChecker
                     if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_INTEGER)
                     {
                         literalEncodingType = getType(modulle, "int");
+                    }
+                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_INTEGER)
+                    {
+                        literalEncodingType = getType(modulle, "uint");
+                    }
+                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_LONG)
+                    {
+                        literalEncodingType = getType(modulle, "long");
+                    }
+                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_LONG)
+                    {
+                        literalEncodingType = getType(modulle, "ulong");
                     }
                     assert(literalEncodingType);
 

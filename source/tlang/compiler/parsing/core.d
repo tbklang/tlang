@@ -1,7 +1,7 @@
 module compiler.parsing.core;
 
 import gogga;
-import std.conv : to;
+import std.conv : to, ConvException;
 import std.string : isNumeric, cmp;
 import compiler.symbols.check;
 import compiler.symbols.data;
@@ -1142,7 +1142,37 @@ public final class Parser
                     // TODO: Issue #94, we should be checking the range here
                     // ... along with any explicit encoders and setting it
                     // ... for now default to SIGNED_INTEGER.
-                    numberLiteral = new IntegerLiteral(getCurrentToken().getToken(), IntegerLiteralEncoding.SIGNED_INTEGER);
+
+                    // TODO (X-platform): Use `size_t` here
+                    // TODO (Redundant-later): Since we check here, remove the conv check in the typechecker!
+                    // TODO: Add a check for the `U`, `UL` stuff here
+                    try
+                    {
+                        ulong literalValue = to!(ulong)(numberLiteralStr);
+                        IntegerLiteralEncoding chosenEncoding;
+
+                        // Signed integer range [0, 2_147_483_647]
+                        if(literalValue >= 0 && literalValue <= 2_147_483_647)
+                        {
+                            chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+                        }
+                        // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
+                        else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
+                        {
+                            chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+                        }
+                        // Unsigned long range [9_223_372_036_854_775_808, 18_446_744_073_709_551_615]
+                        else
+                        {
+                            chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
+                        }
+
+                        numberLiteral = new IntegerLiteral(getCurrentToken().getToken(), chosenEncoding);
+                    }
+                    catch(ConvException e)
+                    {
+                        throw new ParserException(this, ParserException.ParserErrorType.LITERAL_OVERFLOW, "Literal '"~numberLiteralStr~"' would overflow");
+                    }
                 }
                 
                 /* Add expression to stack */

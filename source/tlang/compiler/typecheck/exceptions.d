@@ -16,8 +16,7 @@ public class TypeCheckerException : TError
     // ... in sub-classes of this
     public enum TypecheckError
     {
-        GENERAL_ERROR,
-        LITERAL_OVERFLOW
+        GENERAL_ERROR
     }
 
     this(TypeChecker typeChecker, TypecheckError errType, string msg = "")
