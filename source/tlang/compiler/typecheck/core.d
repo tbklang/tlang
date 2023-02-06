@@ -334,7 +334,6 @@ public final class TypeChecker
             }
         }
 
-
         gprintln("isSameType("~to!(string)(type1)~","~to!(string)(type2)~"): "~to!(string)(same), DebugType.ERROR);
         return same;
     }
@@ -419,6 +418,64 @@ public final class TypeChecker
                     return false;
                 }
             }
+            // Handling for signed bytes [0, 127]
+            else if(isSameType(toType, getType(null, "byte")))
+            {
+                if(literalValue >= 0 && literalValue <= 127)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            // Handling for signed shorts [0, 32_767]
+            else if(isSameType(toType, getType(null, "short")))
+            {
+                if(literalValue >= 0 && literalValue <= 32_767)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            // Handling for signed integers [0, 2_147_483_647]
+            else if(isSameType(toType, getType(null, "int")))
+            {
+                if(literalValue >= 0 && literalValue <= 2_147_483_647)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            // Handling for signed longs [0, 9_223_372_036_854_775_807]
+            else if(isSameType(toType, getType(null, "long")))
+            {
+                if(literalValue >= 0 && literalValue <= 9_223_372_036_854_775_807)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+
+            // TODO: Add missing coercion for sigend types here
         }
         // LiteralValue (integer literal instructions)
         else if(cast(LiteralValueFloat)literalInstr)
@@ -434,9 +491,69 @@ public final class TypeChecker
             Value operandInstr = unaryOpLiteral.getOperand();
 
             // LiteralValue (integer literal instructions) with subtraction infront
-            if(cast(LiteralValue)literalInstr)
+            if(cast(LiteralValue)operandInstr)
             {
+                LiteralValue theLiteral = cast(LiteralValue)operandInstr;
 
+                // Then the actual literal will be `-<value>`
+                string negativeLiteral = "-"~theLiteral.getLiteralValue();
+                gprintln("Negated literal: "~negativeLiteral);
+
+                // NOTE (X-platform): For cross-platform sake we should change the `long` to `ssize_t`
+                long literalValue = to!(long)(negativeLiteral);
+
+                if(isSameType(toType, getType(null, "byte")))
+                {
+                    if(literalValue >= -128 && literalValue <= 127)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
+                }
+                else if(isSameType(toType, getType(null, "short")))
+                {
+                    if(literalValue >= -32_768 && literalValue <= 32_767)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
+                }
+                else if(isSameType(toType, getType(null, "int")))
+                {
+                    if(literalValue >= -2_147_483_648 && literalValue <= 2_147_483_647)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
+                }
+                else if(isSameType(toType, getType(null, "long")))
+                {
+                    if(literalValue >= -9_223_372_036_854_775_808 && literalValue <= 9_223_372_036_854_775_807)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
+                }
             }
             // LiteralValue (integer literal instructions) with subtraction infront
             else
@@ -463,6 +580,8 @@ public final class TypeChecker
      */
     private void attemptCoercion(Type variableType, Value assignmentInstruction)
     {
+        gprintln("VibeCheck?");
+
         /* Extract the type of the assignment instruction */
         Type assignmentType = assignmentInstruction.getInstrType();
 
@@ -513,9 +632,34 @@ public final class TypeChecker
                 // If it is a negative LiteralValue (integer literal)
                 if(cast(LiteralValue)operandInstr)
                 {
-                    // TODO: Implement things here
-                    gprintln("Please implement coercing checking for negative integer literals", DebugType.ERROR);
-                    assert(false);
+                    bool isIntegral = !(cast(Integer)variableType is null);
+
+                    if(isIntegral)
+                    {
+                        LiteralValue literalValue = cast(LiteralValue)operandInstr;
+
+                        
+
+                        bool isCoercible = isCoercibleRange(variableType, assignmentInstruction); // TODO: Range check
+
+                        if(isCoercible)
+                        {
+                            // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
+                            // ... as during code emit that is what will be hoisted out and checked regarding its type
+                            // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
+                            assignmentInstruction.setInstrType(variableType);
+                        }
+                        else
+                        {
+                            throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (range violation)");
+                        }
+
+
+
+                        // TODO: Implement things here
+                        // gprintln("Please implement coercing checking for negative integer literals", DebugType.ERROR);
+                        // assert(false);
+                    }
                 }
                 // If it is a negative LiteralValueFloat (floating-point literal)
                 else if(cast(LiteralValueFloat)operandInstr)
@@ -758,6 +902,24 @@ public final class TypeChecker
                 if(unaryOperator == SymbolType.ADD || unaryOperator == SymbolType.SUB)
                 {
                     /* TODO: I guess any type fr */
+
+                    // TODO: Note below is a legitimately good question, given a type
+                    // ... <valueType>, what does applying a `-` infront of it (`-<valueType>`)
+                    // ... mean in terms of its type?
+                    //
+                    // ... Does it remain the same type? We ask because of literal encoding.
+                    // ... I believe the best way forward would be specifically to handle
+                    // ... cases where `cast(LiteralValue)expInstr` is true here - just
+                    // ... as we had the special handling for it in `NumberLiteral` statements
+                    // ... before.
+                    // if(cast(LiteralValue)expInstr)
+                    // {
+                    //     LiteralValue literalValue = cast(LiteralValue)expInstr;
+                    // }
+
+
+
+                    unaryOpType = expType;
                 }
                 /* If pointer dereference */
                 else if(unaryOperator == SymbolType.STAR)
