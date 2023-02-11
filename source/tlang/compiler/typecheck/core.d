@@ -1065,7 +1065,8 @@ public final class TypeChecker
                                 printCodeQueue();
                                 gprintln("Wrong actual argument type for function call", DebugType.ERROR);
                                 gprintln("Cannot pass value of type '"~argType.getName()~"' to function accepting '"~parmType.getName()~"'", DebugType.ERROR);
-                                assert(false);
+
+                                throw new TypeMismatchException(this, parmType, argType, "The actual argument's type does not match that of the function's parameter type");
                             }
 
                             parmCount--;
