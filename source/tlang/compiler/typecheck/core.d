@@ -474,8 +474,6 @@ public final class TypeChecker
                     return false;
                 }
             }
-
-            // TODO: Add missing coercion for sigend types here
         }
         // LiteralValue (integer literal instructions)
         else if(cast(LiteralValueFloat)literalInstr)
@@ -903,23 +901,46 @@ public final class TypeChecker
                 {
                     /* TODO: I guess any type fr */
 
-                    // TODO: Note below is a legitimately good question, given a type
-                    // ... <valueType>, what does applying a `-` infront of it (`-<valueType>`)
-                    // ... mean in terms of its type?
-                    //
-                    // ... Does it remain the same type? We ask because of literal encoding.
-                    // ... I believe the best way forward would be specifically to handle
-                    // ... cases where `cast(LiteralValue)expInstr` is true here - just
-                    // ... as we had the special handling for it in `NumberLiteral` statements
-                    // ... before.
-                    // if(cast(LiteralValue)expInstr)
-                    // {
-                    //     LiteralValue literalValue = cast(LiteralValue)expInstr;
-                    // }
+                    if(unaryOperator == SymbolType.SUB)
+                    {
+                        // TODO: Note below is a legitimately good question, given a type
+                        // ... <valueType>, what does applying a `-` infront of it (`-<valueType>`)
+                        // ... mean in terms of its type?
+                        //
+                        // ... Does it remain the same type? We ask because of literal encoding.
+                        // ... I believe the best way forward would be specifically to handle
+                        // ... cases where `cast(LiteralValue)expInstr` is true here - just
+                        // ... as we had the special handling for it in `NumberLiteral` statements
+                        // ... before.
+                        if(cast(LiteralValue)expInstr)
+                        {
+                            LiteralValue literalValue = cast(LiteralValue)expInstr;
+                            string literalValueStr = literalValue.getLiteralValue();
+                            ulong literalValueNumber = to!(ulong)(literalValueStr); // TODO: Add a conv check for overflow
 
+                            if(literalValueNumber >= 9_223_372_036_854_775_808)
+                            {
+                                // TODO: I don't think we are meant to be doing the below, atleast for coercive cases
+                                // TODO: make this error nicer
+                                // throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Cannot represent -"~literalValueStr~" as too big");
+                            }
+                            // TODO: Check case of literal being 9223372036854775808 or above
+                            // ... and having a `-` infront of it, then disallow
 
-
-                    unaryOpType = expType;
+                            // TODO: Remove the below (just for now)
+                            unaryOpType = expType;
+                        }
+                        else
+                        {
+                            // Else just copy the tyoe of the expInstr over
+                            unaryOpType = expType;
+                        }
+                    }
+                    else
+                    {
+                        // Else just copy the tyoe of the expInstr over
+                        unaryOpType = expType;
+                    }
                 }
                 /* If pointer dereference */
                 else if(unaryOperator == SymbolType.STAR)
