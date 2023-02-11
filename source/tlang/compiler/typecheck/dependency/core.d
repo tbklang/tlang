@@ -1271,6 +1271,7 @@ public class DNodeGenerator
             else
             {
                 /* This should never happen */
+                gprintln("#ThisShouldNeverHappen Fault: A variable declaration with a kind-of type we don't know", DebugType.ERROR);
                 assert(false);
             }
 
