@@ -98,32 +98,32 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
 
     
 
-    /* Pointer handling `<type>*` */
-    else if(lastIndexOf(typeString, "*") > -1)
+    /* Pointer handling `<type>*` and Array handling `<type>*` */
+    else if((lastIndexOf(typeString, "*") > -1) || (lastIndexOf(typeString, "[]") > -1))
     {
-        gprintln("PtrLstIndexOf: "~to!(string)(lastIndexOf(typeString, "*")));
-        gprintln("ArrayLstIndexOf: "~to!(string)(lastIndexOf(typeString, "[]")));
+        // Find the `*` (if any)
+        long starPos = lastIndexOf(typeString, "*");
 
-        long ptrTypePos = lastIndexOf(typeString, "*");
+        // Find the `[]` (if any)
+        long brackPos = lastIndexOf(typeString, "[]");
+
+        // Determine which one is the rightmost
+        long rightmostTypePos;
+        if(starPos > brackPos)
+        {
+            rightmostTypePos = starPos;
+        }
+        else
+        {
+            rightmostTypePos = brackPos;
+        }
+
+        long ptrTypePos = rightmostTypePos;
         string ptrType = typeString[0..(ptrTypePos)];
         gprintln("TypeStr: "~typeString);
         gprintln("Pointer to '"~ptrType~"'", DebugType.ERROR);
 
         return new Pointer(tc.getType(tc.getModule(), ptrType));
-    }
-    /* Array handling `<type>[]` */
-    else if(lastIndexOf(typeString, "[]") > -1)
-    {
-        gprintln("PtrLstIndexOf: "~to!(string)(lastIndexOf(typeString, "*")));
-        gprintln("ArrayLstIndexOf: "~to!(string)(lastIndexOf(typeString, "[]")));
-
-        long arrayTypePos = lastIndexOf(typeString, "[]");
-        string arrayType = typeString[0..(arrayTypePos)];
-        gprintln("Array of '"~arrayType~"'", DebugType.WARNING);
-
-        // NOTE: We disabled the below as we are basically just a pointer type
-        // return new Array(tc.getType(tc.getModule(), arrayType));
-        return new Pointer(tc.getType(tc.getModule(), arrayType));
     }
     // TODO: Add support for arrays like `[<number>]`
     

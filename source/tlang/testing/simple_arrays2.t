@@ -2,5 +2,6 @@ module simple_arrays2;
 
 void function()
 {
-    int*[] myArray;
+    int*[] myArray1;
+    int[]* myArray2;
 }
