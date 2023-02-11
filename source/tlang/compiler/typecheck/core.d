@@ -961,8 +961,7 @@ public final class TypeChecker
                     }
                     else
                     {
-                        gprintln("You cannot dereference a type that is not a pointer type!", DebugType.ERROR);
-                        assert(false);
+                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "You cannot dereference a type that is not a pointer type!");
                     }
                 }
                 /* If pointer create `&` */
