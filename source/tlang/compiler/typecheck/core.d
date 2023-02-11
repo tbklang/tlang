@@ -868,8 +868,7 @@ public final class TypeChecker
                 }
                 else
                 {
-                    gprintln("Binary operator expression requires both types be same, but got '"~vRhsType.toString()~"' and '"~vLhsType.toString()~"'", DebugType.ERROR);
-                    assert(false);
+                    throw new TypeMismatchException(this, vLhsType, vRhsType, "Binary operator expression requires both types be same");
                 }
                 
                 BinOpInstr addInst = new BinOpInstr(vLhsInstr, vRhsInstr, binOperator);
