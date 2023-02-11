@@ -103,8 +103,11 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
         string arrayType = typeString[0..(arrayTypePos)];
         gprintln("Array of '"~arrayType~"'");
 
-        return new Array(tc.getType(tc.getModule(), arrayType));
+        // NOTE: We disabled the below as we are basically just a pointer type
+        // return new Array(tc.getType(tc.getModule(), arrayType));
+        return new Pointer(tc.getType(tc.getModule(), arrayType));
     }
+    // TODO: Add support for arrays like `[<number>]`
     
     
     /* TODO: Add all remaining types, BUGS probabloy occur on failed looks ups when hitting this */
