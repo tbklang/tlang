@@ -135,4 +135,9 @@ public class Array : Type
 
         this.elementType = elementType;
     }
+
+    public Type getComponentType()
+    {
+        return elementType;
+    }
 }
