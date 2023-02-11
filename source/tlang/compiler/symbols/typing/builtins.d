@@ -125,7 +125,7 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
 
         return new Pointer(tc.getType(tc.getModule(), ptrType));
     }
-    // TODO: Add support for arrays like `[<number>]`
+    // TODO: Add support for arrays like `<componentType>[<number>]`
     
     
     /* TODO: Add all remaining types, BUGS probabloy occur on failed looks ups when hitting this */
