@@ -1267,10 +1267,39 @@ public class DNodeGenerator
             {
 
             }
+            /* Array-type */
+            else if(cast(Array)variableType)
+            {
+                // TODO: For array support not all too sure what I shoudl put here, perhap nothing?
+                Array arrayType = cast(Array)variableType;
+
+                // TODO: We might need to do pointer magic
+
+                // (TODO) Check component type
+                Type componentType = arrayType.getComponentType();
+
+                // If the component type is a primitive type
+                if(cast(Primitive)componentType)
+                {
+                    /* Do nothing (I presume?) */
+                }
+                // If not
+                else
+                {
+                    // TODO: Add more advanced handling here
+                    gprintln("Advanced component types l;ike arrays of arrays or arrays of classes etc not yet supported", DebugType.ERROR);
+                    assert(false);
+                }
+
+                gprintln("Arrays (and these are stack arrays) are not yet supported", DebugType.ERROR);
+                assert(false);
+            }
             /* Anything else */
             else
             {
                 /* This should never happen */
+                gprintln(variableType);
+                gprintln(variableType.classinfo);
                 gprintln("#ThisShouldNeverHappen Fault: A variable declaration with a kind-of type we don't know", DebugType.ERROR);
                 assert(false);
             }
