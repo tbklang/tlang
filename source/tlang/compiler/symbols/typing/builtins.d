@@ -4,6 +4,7 @@ import tlang.compiler.symbols.typing.core;
 import std.string : cmp, indexOf, lastIndexOf;
 import gogga;
 import tlang.compiler.typecheck.core;
+import std.conv : to;
 
 /**
 * TODO: We should write spec here like I want int and stuff of proper size so imma hard code em
@@ -84,24 +85,41 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
     * This is so that we can support things such as:
     *
     * `char*[]`
+
+    * Current problem here is that if we have `int*[]`
+    * it will immediately start with `int*` -> new Pointer(int)
+    *
+    * Instead of `new Pointer(int*)`
+    *
+    * Switching the pointer-array checks arround doesn't help
+    * as the above works but then `int[]*` will be new Pointer(int)
+    * (and leaving out the `*`)
     */
 
+    
 
     /* Pointer handling `<type>*` */
     else if(lastIndexOf(typeString, "*") > -1)
     {
+        gprintln("PtrLstIndexOf: "~to!(string)(lastIndexOf(typeString, "*")));
+        gprintln("ArrayLstIndexOf: "~to!(string)(lastIndexOf(typeString, "[]")));
+
         long ptrTypePos = lastIndexOf(typeString, "*");
         string ptrType = typeString[0..(ptrTypePos)];
-        gprintln("Pointer to '"~ptrType~"'");
+        gprintln("TypeStr: "~typeString);
+        gprintln("Pointer to '"~ptrType~"'", DebugType.ERROR);
 
         return new Pointer(tc.getType(tc.getModule(), ptrType));
     }
     /* Array handling `<type>[]` */
     else if(lastIndexOf(typeString, "[]") > -1)
     {
+        gprintln("PtrLstIndexOf: "~to!(string)(lastIndexOf(typeString, "*")));
+        gprintln("ArrayLstIndexOf: "~to!(string)(lastIndexOf(typeString, "[]")));
+
         long arrayTypePos = lastIndexOf(typeString, "[]");
         string arrayType = typeString[0..(arrayTypePos)];
-        gprintln("Array of '"~arrayType~"'");
+        gprintln("Array of '"~arrayType~"'", DebugType.WARNING);
 
         // NOTE: We disabled the below as we are basically just a pointer type
         // return new Array(tc.getType(tc.getModule(), arrayType));
