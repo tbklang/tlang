@@ -1,6 +1,6 @@
-module compiler.configuration;
+module tlang.compiler.configuration;
 
-import compiler.core : CompilerException, CompilerError;
+import tlang.compiler.core : CompilerException, CompilerError;
 import std.string : cmp;
 
 private union ConfigValue

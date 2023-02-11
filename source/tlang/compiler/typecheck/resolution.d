@@ -1,8 +1,8 @@
-module compiler.typecheck.resolution;
+module tlang.compiler.typecheck.resolution;
 
-import compiler.typecheck.core;
+import tlang.compiler.typecheck.core;
 import gogga;
-import compiler.symbols.data;
+import tlang.compiler.symbols.data;
 import std.string;
 import std.conv : to;
 

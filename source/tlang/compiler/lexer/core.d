@@ -1,69 +1,11 @@
-module compiler.lexer.core;
+module tlang.compiler.lexer.core;
 
 import std.container.slist;
 import gogga;
 import std.conv : to;
-import std.string : cmp;
 import std.ascii : isDigit;
-import misc.exceptions : TError;
-
-public enum LexerError
-{
-    EXHAUSTED_CHARACTERS,
-    OTHER
-}
-
-public final class LexerException : TError
-{
-    public const Lexer offendingInstance;
-    public const LexerError errType;
-
-    this(Lexer offendingInstance, LexerError errType = LexerError.OTHER, string msg = "")
-    {
-        string positionString = "("~to!(string)(offendingInstance.line)~", "~to!(string)(offendingInstance.column)~")";
-        super("LexerException("~to!(string)(errType)~")"~(msg.length ? ": "~msg : "")~" at "~positionString);
-        this.offendingInstance = offendingInstance;
-        this.errType = errType;
-    }
-
-    this(Lexer offendingInstance, string msg)
-    {
-        this(offendingInstance, LexerError.OTHER, msg);
-    }
-}
-
-/* TODO: Add Token type (which matches column and position too) */
-public final class Token
-{
-    /* The token */
-    private string token;
-
-    /* Line number information */
-    private ulong line, column;
-
-    this(string token, ulong line, ulong column)
-    {
-        this.token = token;
-        this.line = line;
-        this.column = column;
-    }
-
-    override bool opEquals(Object other)
-    {
-        return cmp(token, (cast(Token)other).getToken()) == 0;
-    }
-
-    override string toString()
-    {
-        /* TODO (Column number): Don't adjust here, do it maybe in the lexer itself */
-        return token~" at ("~to!(string)(line)~", "~to!(string)(column-token.length)~")";
-    }
-
-    public string getToken()
-    {
-        return token;
-    }
-}
+import tlang.compiler.lexer.exceptions;
+import tlang.compiler.lexer.tokens : Token;
 
 public final class Lexer
 {
@@ -79,6 +21,19 @@ public final class Lexer
     private char currentChar; /* Current character */
     private bool stringMode; /* Whether we are in a string "we are here" or not */
     private bool floatMode; /* Whether or not we are building a floating point constant */
+
+
+    // TODO: Move these all to end, I don't like em here
+    public ulong getLine()
+    {
+        return this.line;
+    }
+
+    public ulong getColumn()
+    {
+        return this.column;
+    }
+
 
     /* The tokens */
     private Token[] tokens;
@@ -110,7 +65,7 @@ public final class Lexer
     */
     private bool isBuildUpValidIdent()
     {
-        import compiler.symbols.check;
+        import tlang.compiler.symbols.check;
         return isPathIdentifier(currentToken) || isIdentifier(currentToken);
     }
 

@@ -1,8 +1,8 @@
-module compiler.codegen.mapper.hashmapper;
+module tlang.compiler.codegen.mapper.hashmapper;
 
-import compiler.codegen.mapper.core : SymbolMapper;
-import compiler.typecheck.core;
-import compiler.symbols.data;
+import tlang.compiler.codegen.mapper.core : SymbolMapper;
+import tlang.compiler.typecheck.core;
+import tlang.compiler.symbols.data;
 
 public final class HashMapper : SymbolMapper
 {

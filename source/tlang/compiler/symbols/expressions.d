@@ -1,6 +1,6 @@
-module compiler.symbols.expressions;
+module tlang.compiler.symbols.expressions;
 
-import compiler.symbols.data;
+import tlang.compiler.symbols.data;
 import std.conv : to;
 
 /* TODO: Look into arrays later */
@@ -85,30 +85,69 @@ public class BinaryOperatorExpression : OperatorExpression
     }
 }
 
-public class NumberLiteral : Expression
+public enum IntegerLiteralEncoding
+{
+    SIGNED_INTEGER,
+    UNSIGNED_INTEGER,
+    SIGNED_LONG,
+    UNSIGNED_LONG
+}
+
+public final class IntegerLiteral : NumberLiteral
+{
+    private IntegerLiteralEncoding encoding;
+
+    this(string integerLiteral, IntegerLiteralEncoding encoding)
+    {
+        super(integerLiteral);
+        this.encoding = encoding;
+    }
+
+    public IntegerLiteralEncoding getEncoding()
+    {
+        return encoding;
+    }
+
+    public override string toString()
+    {
+        return "[integerLiteral: "~numberLiteral~" ("~to!(string)(encoding)~")]";
+    }
+}
+
+//TODO: Work on floating point literal encodings
+public final class FloatingLiteral : NumberLiteral
+{
+    // TODO: Put the equivalent of FloatingLiteralEncoding here
+
+    this(string floatingLiteral)
+    {
+        super(floatingLiteral);
+    }
+
+    public override string toString()
+    {
+        return "[floatingLiteral: "~numberLiteral~"]"; // ("~to!(string)(encoding)~")]";
+    }
+}
+
+public abstract class NumberLiteral : Expression
 {
     private string numberLiteral;
 
-    /* TODO: Take in info like tyoe */
     this(string numberLiteral)
     {
         this.numberLiteral = numberLiteral;
     }
 
-    public string getNumber()
+    public final string getNumber()
     {
         return numberLiteral;
-    }
-
-    public override string toString()
-    {
-        return "[numberLiteral: "~numberLiteral~"]";
     }
 }
 
 public class Expression : Statement
 {
-    import compiler.typecheck.core;
+    import tlang.compiler.typecheck.core;
     /* TODO: Takes in symbol table? */
     public string evaluateType(TypeChecker typechecker, Container c)
     {

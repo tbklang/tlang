@@ -1,26 +1,26 @@
-module compiler.codegen.instruction;
+module tlang.compiler.codegen.instruction;
 
 import std.conv : to;
-import compiler.typecheck.dependency.core : Context;
+import tlang.compiler.typecheck.dependency.core : Context;
 import std.string : cmp;
-import compiler.symbols.data : SymbolType;
-import compiler.symbols.check : getCharacter;
+import tlang.compiler.symbols.data : SymbolType;
+import tlang.compiler.symbols.check : getCharacter;
 import gogga;
-import compiler.symbols.typing.core : Type;
+import tlang.compiler.symbols.typing.core : Type;
 
 public class Instruction
 {
     /* Context for the Instruction (used in emitter for name resolution) */
-    public Context context;
+    private Context context; //TODO: Make this private and add a setCOntext
 
     protected string addInfo;
 
-    this()
+    public override string toString()
     {
-        // this.instructionName = instructionName;
+        return "[Instruction: "~this.classinfo.name~":"~addInfo~"]";
     }
 
-    public final override string toString()
+    private final string produceToStrEnclose(string addInfo)
     {
         return "[Instruction: "~this.classinfo.name~":"~addInfo~"]";
     }
@@ -28,6 +28,11 @@ public class Instruction
     public final Context getContext()
     {
         return context;
+    }
+
+    public final void setContext(Context context)
+    {
+        this.context = context;
     }
 }
 
@@ -38,7 +43,18 @@ public class FetchInst :  Instruction
 
 public class Value : Instruction
 {
+    /* The type of the Value this instruction produces */
+    private Type type;
 
+    public final void setInstrType(Type type)
+    {
+        this.type = type;
+    }
+
+    public final Type getInstrType()
+    {
+        return type;
+    }
 }
 
 public class StorageDeclaration : Instruction
@@ -59,9 +75,9 @@ public class VariableAssignmentInstr : Instruction
     /* Name of variable being declared */
     public string varName; /*TODO: Might not be needed */
 
-    public const Instruction data;
+    public Value data;
 
-    this(string varName, Instruction data)
+    this(string varName, Value data)
     {
         this.varName = varName;
         this.data = data;
@@ -81,11 +97,11 @@ public final class VariableDeclaration : StorageDeclaration
     /* Type of the variable being declared */
     public const Type varType;
 
-    /* VariableAssignmentInstr-instruction to be assigned */
-    private VariableAssignmentInstr varAssInstr;
+    /* Value-instruction to be assigned */
+    private Value varAssInstr;
 
     //TODO: This must take in type information
-    this(string varName, byte len, Type varType, VariableAssignmentInstr varAssInstr)
+    this(string varName, byte len, Type varType, Value varAssInstr)
     {
         this.varName = varName;
         this.length = len;
@@ -96,7 +112,7 @@ public final class VariableDeclaration : StorageDeclaration
         addInfo = "varName: "~varName;
     }
 
-    public VariableAssignmentInstr getAssignmentInstr()
+    public Value getAssignmentInstr()
     {
         return varAssInstr;
     }
@@ -124,30 +140,48 @@ public final class FetchValueVar : Value
 public final class LiteralValue : Value
 {
     /* Data */
-    public ulong data;
-    public byte len;
+    private string data;
 
-    this(ulong data, byte len)
+    this(string data, Type type)
     {
         this.data = data;
-        this.len = len;
+        this.type = type;
 
-        addInfo = "Data: "~to!(string)(data)~", Length: "~to!(string)(len);
+        addInfo = "Data: "~to!(string)(data)~", Type: "~to!(string)(type);
+    }
+
+    public string getLiteralValue()
+    {
+        return data;
+    }
+
+    public override string toString()
+    {
+        return produceToStrEnclose("Data: "~to!(string)(data)~", Type: "~to!(string)(type));
     }
 }
 
 public final class LiteralValueFloat : Value
 {
     /* Data */
-    public double data; /* TODO: Is this best way to store? Consirring floats/doubles */
-    public byte len;
+    private string data;
 
-    this(double data, byte len)
+    this(string data, Type type)
     {
         this.data = data;
-        this.len = len;
+        this.type = type;
 
-        addInfo = "Data: "~to!(string)(data)~", Length: "~to!(string)(len);
+        addInfo = "Data: "~to!(string)(data)~", Type: "~to!(string)(type);
+    }
+
+    public string getLiteralValue()
+    {
+        return data;
+    }
+
+    public override string toString()
+    {
+        return produceToStrEnclose("Data: "~to!(string)(data)~", Type: "~to!(string)(type));
     }
 }
 
@@ -228,10 +262,10 @@ public class BinOpInstr : Value
 */
 public class UnaryOpInstr : Value
 {
-    private Instruction exp;
+    private Value exp;
     private SymbolType operator;
 
-    this(Instruction exp, SymbolType operator)
+    this(Value exp, SymbolType operator)
     {
         this.exp = exp;
         this.operator = operator;
@@ -244,7 +278,7 @@ public class UnaryOpInstr : Value
         return operator;
     }
 
-    public Instruction getOperand()
+    public Value getOperand()
     {
         return exp;
     }
@@ -462,12 +496,10 @@ public final class CastedValueInstruction : Value
     /* The uncasted original instruction that must be executed-then-trimmed (casted) */
     private Value uncastedValue;
 
-    private Type castToType;
-
     this(Value uncastedValue, Type castToType)
     {
         this.uncastedValue = uncastedValue;
-        this.castToType = castToType;
+        this.type = castToType;
     }
 
     public Value getEmbeddedInstruction()
@@ -477,6 +509,6 @@ public final class CastedValueInstruction : Value
 
     public Type getCastToType()
     {
-        return castToType;
+        return type;
     }
 }

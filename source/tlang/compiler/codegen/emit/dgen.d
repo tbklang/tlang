@@ -1,9 +1,9 @@
-module compiler.codegen.emit.dgen;
+module tlang.compiler.codegen.emit.dgen;
 
-import compiler.codegen.emit.core : CodeEmitter;
-import compiler.typecheck.core;
+import tlang.compiler.codegen.emit.core : CodeEmitter;
+import tlang.compiler.typecheck.core;
 import std.container.slist : SList;
-import compiler.codegen.instruction;
+import tlang.compiler.codegen.instruction;
 import std.stdio;
 import std.file;
 import std.conv : to;
@@ -12,22 +12,16 @@ import gogga;
 import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
-import compiler.typecheck.dependency.core : Context, FunctionData, DNode;
-import compiler.codegen.mapper.core : SymbolMapper;
-import compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
-import compiler.symbols.check : getCharacter;
+import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
+import tlang.compiler.codegen.mapper.core : SymbolMapper;
+import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
+import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
-import compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
-import compiler.configuration : CompilerConfiguration;
+import tlang.compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
+import tlang.compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
-{    
-    // Set to true when processing a variable declaration
-    // which expects an assignment. Set to false when
-    // said variable assignment has been processed
-    private bool varDecWantsConsumeVarAss = false;
-
-
+{
     // NOTE: In future store the mapper in the config please
     this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
@@ -127,26 +121,19 @@ public final class DCodeEmitter : CodeEmitter
             gprintln("Is ContextNull?: "~to!(string)(context is null));
             gprintln("Wazza contect: "~to!(string)(context.container));
             auto typedEntityVariable = typeChecker.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
+            gprintln("Hi"~to!(string)(varAs));
+            gprintln("Hi"~to!(string)(varAs.data));
+            gprintln("Hi"~to!(string)(varAs.data.getInstrType()));
+
+            // NOTE: For tetsing issue #94 coercion (remove when done)
+            string typeName = (cast(Type)varAs.data.getInstrType()).getName();
+            gprintln("VariableAssignmentInstr: The data to assign's type is: "~typeName);
 
 
             /* If it is not external */
             if(!typedEntityVariable.isExternal())
             {
                 string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
-
-                
-                // If we are needed as part of a VariabvleDeclaration-with-assignment
-                if(varDecWantsConsumeVarAss)
-                {
-                    // Generate the code to emit (only the RHS of the = sign)
-                    string emitCode = transform(varAs.data);
-
-                    // Reset flag
-                    varDecWantsConsumeVarAss = false;
-
-                    return emitCode;
-                }
-
 
                 return renamedSymbol~" = "~transform(varAs.data)~";";
             }
@@ -182,15 +169,8 @@ public final class DCodeEmitter : CodeEmitter
                 // Check to see if this declaration has an assignment attached
                 if(typedEntityVariable.getAssignment())
                 {
-                    // Set flag to expect different transform generation for VariableAssignment
-                    varDecWantsConsumeVarAss = true;
-
-                    // Fetch the variable assignment instruction
-                    // gprintln("Before crash: "~to!(string)(getCurrentInstruction()));
-                    // nextInstruction();
-                    // Instruction varAssInstr = getCurrentInstruction();
-                    
-                    VariableAssignmentInstr varAssInstr = varDecInstr.getAssignmentInstr();
+                    Value varAssInstr = varDecInstr.getAssignmentInstr();
+                    gprintln("VarDec(with assignment): My assignment type is: "~varAssInstr.getInstrType().getName());
 
                     // Generate the code to emit
                     return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
@@ -212,7 +192,7 @@ public final class DCodeEmitter : CodeEmitter
 
             LiteralValue literalValueInstr = cast(LiteralValue)instruction;
 
-            return to!(string)(literalValueInstr.data);
+            return to!(string)(literalValueInstr.getLiteralValue());
         }
         /* FetchValueVar */
         else if(cast(FetchValueVar)instruction)

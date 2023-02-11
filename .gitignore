@@ -1,6 +1,7 @@
 # TLP artefacts
 tlangout.c
 tlang.out
+*.o
 
 # Build files
 #tlang

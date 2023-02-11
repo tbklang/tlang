@@ -1,18 +1,18 @@
-module compiler.typecheck.dependency.core;
+module tlang.compiler.typecheck.dependency.core;
 
-import compiler.symbols.check;
-import compiler.symbols.data;
+import tlang.compiler.symbols.check;
+import tlang.compiler.symbols.data;
 import std.conv : to;
 import std.string;
 import std.stdio;
 import gogga;
-import compiler.parsing.core;
-import compiler.typecheck.resolution;
-import compiler.typecheck.exceptions;
-import compiler.typecheck.core;
-import compiler.symbols.typing.core;
-import compiler.symbols.typing.builtins;
-import compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
+import tlang.compiler.parsing.core;
+import tlang.compiler.typecheck.resolution;
+import tlang.compiler.typecheck.exceptions;
+import tlang.compiler.typecheck.core;
+import tlang.compiler.symbols.typing.core;
+import tlang.compiler.symbols.typing.builtins;
+import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
 
 
 /**
@@ -547,9 +547,9 @@ public class DNodeGenerator
 
     
     
-    import compiler.typecheck.dependency.expression;
-    import compiler.typecheck.dependency.classes.classObject;
-    import compiler.typecheck.dependency.classes.classVirtualInit;
+    import tlang.compiler.typecheck.dependency.expression;
+    import tlang.compiler.typecheck.dependency.classes.classObject;
+    import tlang.compiler.typecheck.dependency.classes.classVirtualInit;
 
     /* TODO: As mentioned in classObject.d we should static init the class type here */
     private ClassVirtualInit virtualInit(Clazz clazz)
@@ -1173,7 +1173,7 @@ public class DNodeGenerator
     }
 
 
-    import compiler.typecheck.dependency.variables;
+    import tlang.compiler.typecheck.dependency.variables;
     private ModuleVariableDeclaration pool_module_vardec(Variable entity)
     {
         foreach(DNode dnode; nodePool)
@@ -1290,12 +1290,8 @@ public class DNodeGenerator
                 /* Pool the assignment to get a DNode */
                 DNode expressionNode = expressionPass(varAssign.getExpression(), context);
 
-                /* This assignment depends on an expression being evaluated */
-                VariableAssignmentNode varAssignNode = new VariableAssignmentNode(this, varAssign);
-                varAssignNode.needs(expressionNode);
-
-                /* The variable declaration is dependant on the assignment */
-                variableDNode.needs(varAssignNode);
+                /* The variable declaration is dependant on the assigne expression */
+                variableDNode.needs(expressionNode);
             }
 
             /* The current container is dependent on this variable declaration */
@@ -1331,8 +1327,8 @@ public class DNodeGenerator
             {
                 /* Pool varass stdalone */
                 DNode vStdAlDNode = pool(vAsStdAl);
-                // node.needs(vStdAlDNode);
 
+                /* Pool the expression and make the vAStdAlDNode depend on it */
                 DNode expression = expressionPass(vAsStdAl.getExpression(), context);
                 vStdAlDNode.needs(expression);
 
@@ -1673,7 +1669,7 @@ public class DNodeGenerator
         return node;
     }
 
-    import compiler.typecheck.dependency.classes.classStaticDep;
+    import tlang.compiler.typecheck.dependency.classes.classStaticDep;
     private ClassStaticNode poolClassStatic(Clazz clazz)
     {
         /* Sanity check */

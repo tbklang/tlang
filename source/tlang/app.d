@@ -4,10 +4,10 @@
  * This is the entry point for the TLP
  * reference compiler.
  */
-module tlang;
+module tlang.app;
 
 import std.stdio;
-import commandline.args;
+import tlang.commandline.args;
 
 void main(string[] args)
 {

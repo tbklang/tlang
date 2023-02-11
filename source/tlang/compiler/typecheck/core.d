@@ -1,17 +1,17 @@
-module compiler.typecheck.core;
+module tlang.compiler.typecheck.core;
 
-import compiler.symbols.check;
-import compiler.symbols.data;
-import std.conv : to;
+import tlang.compiler.symbols.check;
+import tlang.compiler.symbols.data;
+import std.conv : to, ConvException;
 import std.string;
 import std.stdio;
 import gogga;
-import compiler.parsing.core;
-import compiler.typecheck.resolution;
-import compiler.typecheck.exceptions;
-import compiler.symbols.typing.core;
-import compiler.typecheck.dependency.core;
-import compiler.codegen.instruction;
+import tlang.compiler.parsing.core;
+import tlang.compiler.typecheck.resolution;
+import tlang.compiler.typecheck.exceptions;
+import tlang.compiler.symbols.typing.core;
+import tlang.compiler.typecheck.dependency.core;
+import tlang.compiler.codegen.instruction;
 import std.container.slist;
 import std.algorithm : reverse;
 
@@ -84,8 +84,7 @@ public final class TypeChecker
 
         /* Get the action-list (linearised bottom up graph) */
         DNode[] actionList = rootNode.getLinearizedNodes();
-        doTypeCheck(actionList);        
-        printTypeQueue();
+        doTypeCheck(actionList);
 
         /**
          * After processing globals executions the instructions will
@@ -120,7 +119,6 @@ public final class TypeChecker
 
             //TODO: Would this not mess with our queues?
             doTypeCheck(actionListFunc);
-            printTypeQueue();
             gprintln(funcNode.getTree());
 
             // The current code queue would be the function's body instructions
@@ -311,28 +309,12 @@ public final class TypeChecker
         }
     }
 
-    /*
-    * Prints the current contents of the code-queue
-    */
-    public void printTypeQueue()
-    {
-        import std.range : walkLength;
-        ulong i = 0;
-        foreach(Type instruction; typeStack)
-        {
-            gprintln("TypeQueue: "~to!(string)(i+1)~"/"~to!(string)(walkLength(typeStack[]))~": "~instruction.toString());
-            i++;
-        }
-    }
-
     /**
     * There are several types and comparing them differs
     */
     private bool isSameType(Type type1, Type type2)
     {
         bool same = false;
-
-        
 
         /* Handling for Integers */
         if(typeid(type1) == typeid(type2) && cast(Integer)type1 !is null)
@@ -352,56 +334,364 @@ public final class TypeChecker
             }
         }
 
-
         gprintln("isSameType("~to!(string)(type1)~","~to!(string)(type2)~"): "~to!(string)(same), DebugType.ERROR);
         return same;
     }
 
 
-
-    private SList!(Type) typeStack;
-
-
-    /**
-    * Adds a Type to the type queue right at the beginning
-    * of it
-    */
-    private void addType(Type typeName)
+    /** 
+     * Given a type to try coerce towards and a literal value
+     * instruction, this will check whether the literal itself
+     * is within the range whereby it may be coerced
+     *
+     * Params:
+     *   variableType = the type to try coercing towards
+     *   assignmentInstruction = the literal to apply a range
+     *                           check to
+     */
+    private bool isCoercibleRange(Type toType, Value literalInstr)
     {
-        typeStack.insert(typeName);
+        // You should only be calling this on either a `LiteralValue`
+        // ... or a `LiteralValueFloat` instruction
+        // TODO: Add support for UnaryOpInstr (where the inner type is then)
+        // ... one of the above
+        assert(cast(LiteralValue)literalInstr || cast(LiteralValueFloat)literalInstr || cast(UnaryOpInstr)literalInstr);
+
+        // LiteralValue (integer literal instructions)
+        if(cast(LiteralValue)literalInstr)
+        {
+            LiteralValue integerLiteral = cast(LiteralValue)literalInstr;
+            string literal = integerLiteral.getLiteralValue();
+
+            // NOTE (X-platform): For cross-platform sake we should change the `ulong` to `size_t`
+            ulong literalValue = to!(ulong)(literal);
+
+            if(isSameType(toType, getType(null, "ubyte")))
+            {
+                if(literalValue >= 0 && literalValue <= 255)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            else if(isSameType(toType, getType(null, "ushort")))
+            {
+                if(literalValue >= 0 && literalValue <= 65_535)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            else if(isSameType(toType, getType(null, "uint")))
+            {
+                if(literalValue >= 0 && literalValue <= 4_294_967_295)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            else if(isSameType(toType, getType(null, "ulong")))
+            {
+                if(literalValue >= 0 && literalValue <= 18_446_744_073_709_551_615)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            // Handling for signed bytes [0, 127]
+            else if(isSameType(toType, getType(null, "byte")))
+            {
+                if(literalValue >= 0 && literalValue <= 127)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            // Handling for signed shorts [0, 32_767]
+            else if(isSameType(toType, getType(null, "short")))
+            {
+                if(literalValue >= 0 && literalValue <= 32_767)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            // Handling for signed integers [0, 2_147_483_647]
+            else if(isSameType(toType, getType(null, "int")))
+            {
+                if(literalValue >= 0 && literalValue <= 2_147_483_647)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+            // Handling for signed longs [0, 9_223_372_036_854_775_807]
+            else if(isSameType(toType, getType(null, "long")))
+            {
+                if(literalValue >= 0 && literalValue <= 9_223_372_036_854_775_807)
+                {
+                    // Valid coercion
+                    return true;
+                }
+                else
+                {
+                    // Invalid coercion
+                    return false;
+                }
+            }
+        }
+        // LiteralValue (integer literal instructions)
+        else if(cast(LiteralValueFloat)literalInstr)
+        {
+            
+        }
+        // Unary operator
+        else
+        {
+            UnaryOpInstr unaryOpLiteral = cast(UnaryOpInstr)literalInstr;
+            assert(unaryOpLiteral.getOperator() == SymbolType.SUB);
+
+            Value operandInstr = unaryOpLiteral.getOperand();
+
+            // LiteralValue (integer literal instructions) with subtraction infront
+            if(cast(LiteralValue)operandInstr)
+            {
+                LiteralValue theLiteral = cast(LiteralValue)operandInstr;
+
+                // Then the actual literal will be `-<value>`
+                string negativeLiteral = "-"~theLiteral.getLiteralValue();
+                gprintln("Negated literal: "~negativeLiteral);
+
+                // NOTE (X-platform): For cross-platform sake we should change the `long` to `ssize_t`
+                long literalValue = to!(long)(negativeLiteral);
+
+                if(isSameType(toType, getType(null, "byte")))
+                {
+                    if(literalValue >= -128 && literalValue <= 127)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
+                }
+                else if(isSameType(toType, getType(null, "short")))
+                {
+                    if(literalValue >= -32_768 && literalValue <= 32_767)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
+                }
+                else if(isSameType(toType, getType(null, "int")))
+                {
+                    if(literalValue >= -2_147_483_648 && literalValue <= 2_147_483_647)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
+                }
+                else if(isSameType(toType, getType(null, "long")))
+                {
+                    if(literalValue >= -9_223_372_036_854_775_808 && literalValue <= 9_223_372_036_854_775_807)
+                    {
+                        // Valid coercion
+                        return true;
+                    }
+                    else
+                    {
+                        // Invalid coercion
+                        return false;
+                    }
+                }
+            }
+            // LiteralValue (integer literal instructions) with subtraction infront
+            else
+            {
+
+            }
+        }
+
+
+        return false;
     }
 
-    /**
-    * Adds a Type to the type queue right at the end
-    * of it
-    */
-    private void addTypeB(Type typeName)
+
+    /** 
+     * Attempts to perform coercion of the provided Value-instruction
+     * with respect to the provided variable type.
+     * 
+     * This should only be called if the types do not match.
+     * This will update the provided instruction's type-field
+     *
+     * Params:
+     *   variableType = the type to attempt coercing the instruction to
+     *   assignmentInstruction = instruction to coerce
+     */
+    private void attemptCoercion(Type variableType, Value assignmentInstruction)
     {
-        typeStack.insertAfter(typeStack[], typeName);
+        gprintln("VibeCheck?");
+
+        /* Extract the type of the assignment instruction */
+        Type assignmentType = assignmentInstruction.getInstrType();
+
+        // If it is a LiteralValue (integer literal) (support for issue #94)
+        if(cast(LiteralValue)assignmentInstruction)
+        {
+            // TODO: Add a check for if these types are both atleast integral (as in the Variable's type)
+            // ... THEN (TODO): Check if range makes sense
+            bool isIntegral = !(cast(Integer)variableType is null); // Integrality check
+
+            if(isIntegral)
+            {
+                bool isCoercible = isCoercibleRange(variableType, assignmentInstruction); // TODO: Range check
+
+                if(isCoercible)
+                {
+                    // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
+                    // ... as during code emit that is what will be hoisted out and checked regarding its type
+                    // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
+                    assignmentInstruction.setInstrType(variableType);
+                }
+                else
+                {
+                    throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (range violation)");
+                }
+            }
+            else
+            {
+                throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+            }
+            
+        }
+        // If it is a LiteralValueFloat (support for issue #94)
+        else if(cast(LiteralValueFloat)assignmentInstruction)
+        {
+            gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
+            assert(false);
+        }
+        // Unary operator (specifically with a minus)
+        else if(cast(UnaryOpInstr)assignmentInstruction)
+        {
+            UnaryOpInstr unaryOpInstr = cast(UnaryOpInstr)assignmentInstruction;
+
+            if(unaryOpInstr.getOperator() == SymbolType.SUB)
+            {
+                Value operandInstr = unaryOpInstr.getOperand();
+
+                // If it is a negative LiteralValue (integer literal)
+                if(cast(LiteralValue)operandInstr)
+                {
+                    bool isIntegral = !(cast(Integer)variableType is null);
+
+                    if(isIntegral)
+                    {
+                        LiteralValue literalValue = cast(LiteralValue)operandInstr;
+
+                        
+
+                        bool isCoercible = isCoercibleRange(variableType, assignmentInstruction); // TODO: Range check
+
+                        if(isCoercible)
+                        {
+                            // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
+                            // ... as during code emit that is what will be hoisted out and checked regarding its type
+                            // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
+                            assignmentInstruction.setInstrType(variableType);
+                        }
+                        else
+                        {
+                            throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (range violation)");
+                        }
+
+
+
+                        // TODO: Implement things here
+                        // gprintln("Please implement coercing checking for negative integer literals", DebugType.ERROR);
+                        // assert(false);
+                    }
+                }
+                // If it is a negative LiteralValueFloat (floating-point literal)
+                else if(cast(LiteralValueFloat)operandInstr)
+                {
+                    gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
+                    assert(false);
+                }
+                // If anything else is embedded
+                else
+                {
+                    throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+                }
+            }
+            else
+            {
+                throw new TypeMismatchException(this, variableType, assignmentType, "Cannot coerce a non minus unary operation");
+            }
+        }
+        else
+        {
+            throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+        }
     }
 
-    private Type popType()
-    {
-        Type typeCur = typeStack.front();
-        
-        typeStack.removeFront();
 
-        return typeCur;
-    }
-
-    public bool isTypesEmpty()
-    {
-        return typeStack.empty;
-    }
 
     public void typeCheckThing(DNode dnode)
     {
         gprintln("typeCheckThing(): "~dnode.toString());
 
         /* ExpressionDNodes */
-        if(cast(compiler.typecheck.dependency.expression.ExpressionDNode)dnode)
+        if(cast(tlang.compiler.typecheck.dependency.expression.ExpressionDNode)dnode)
         {
-            compiler.typecheck.dependency.expression.ExpressionDNode expDNode = cast(compiler.typecheck.dependency.expression.ExpressionDNode)dnode;
+            tlang.compiler.typecheck.dependency.expression.ExpressionDNode expDNode = cast(tlang.compiler.typecheck.dependency.expression.ExpressionDNode)dnode;
 
             Statement statement = expDNode.getEntity();
             gprintln("Hdfsfdjfds"~to!(string)(statement));
@@ -410,21 +700,6 @@ public final class TypeChecker
 
             if(cast(NumberLiteral)statement)
             {
-                /* TODO: For now */
-
-                /**
-                * Typechecking
-                *
-                * If the number literal contains a `.` then it is a float
-                * else if is an int (NOTE: This may need to be more specific
-                * with literal encoders down the line)
-                */
-                NumberLiteral numLit = cast(NumberLiteral)statement;
-                import std.string : indexOf;
-                bool isFloat = indexOf(numLit.getNumber(), ".") > -1; 
-                gprintln("NUMBER LIT: isFloat: "~to!(string)(isFloat));
-                addType(getType(modulle, isFloat ? "float" : "int"));
-
                 /**
                 * Codegen
                 *
@@ -435,21 +710,55 @@ public final class TypeChecker
                 */
                 Value valInstr;
 
-                /* Generate a LiteralValue (Integer literal) */
-                if(!isFloat)
+                /* Generate a LiteralValue (IntegerLiteral) */
+                if(cast(IntegerLiteral)statement)
                 {
-                    ulong i = to!(ulong)((cast(NumberLiteral)statement).getNumber());
-                    LiteralValue litValInstr = new LiteralValue(i, 4);
+                    IntegerLiteral integerLitreal = cast(IntegerLiteral)statement;
+
+                    /**
+                     * Determine the type of this value instruction by finding
+                     * the encoding of the integer literal (part of doing issue #94)
+                     */
+                    Type literalEncodingType;
+                    if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_INTEGER)
+                    {
+                        literalEncodingType = getType(modulle, "int");
+                    }
+                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_INTEGER)
+                    {
+                        literalEncodingType = getType(modulle, "uint");
+                    }
+                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_LONG)
+                    {
+                        literalEncodingType = getType(modulle, "long");
+                    }
+                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_LONG)
+                    {
+                        literalEncodingType = getType(modulle, "ulong");
+                    }
+                    assert(literalEncodingType);
+
+                    // TODO: Insert getEncoding stuff here
+                    LiteralValue litValInstr = new LiteralValue(integerLitreal.getNumber(), literalEncodingType);
 
                     valInstr = litValInstr;
+
+                    // TODO: Insert get encoding stuff here
                 }
-                /* Generate a LiteralValueFloat (Floating point literal) */
+                /* Generate a LiteralValueFloat (FloatingLiteral) */
                 else
                 {
-                    double i = to!(float)((cast(NumberLiteral)statement).getNumber());
-                    LiteralValueFloat litValInstr = new LiteralValueFloat(i, 4);
+                    FloatingLiteral floatLiteral = cast(FloatingLiteral)statement;
+
+                    gprintln("We haven't sorted ouyt literal encoding for floating onts yet (null below hey!)", DebugType.ERROR);
+                    Type bruhType = null;
+                    assert(bruhType);
+                    
+                    LiteralValueFloat litValInstr = new LiteralValueFloat(floatLiteral.getNumber(), bruhType);
 
                     valInstr = litValInstr;
+
+                    // TODO: Insert get encoding stuff here
                 }
                 
                 addInstr(valInstr);
@@ -463,18 +772,20 @@ public final class TypeChecker
                 * Add the char* type as string literals should be
                 * interned
                 */
-                addType(getType(modulle, "char*"));
+                gprintln("Please implement strings", DebugType.ERROR);
+                // assert(false);
+                // addType(getType(modulle, "char*"));
                 
-                /**
-                * Add the instruction and pass the literal to it
-                */
-                StringExpression strExp = cast(StringExpression)statement;
-                string strLit = strExp.getStringLiteral();
-                gprintln("String literal: `"~strLit~"`");
-                StringLiteral strLitInstr = new StringLiteral(strLit);
-                addInstr(strLitInstr);
+                // /**
+                // * Add the instruction and pass the literal to it
+                // */
+                // StringExpression strExp = cast(StringExpression)statement;
+                // string strLit = strExp.getStringLiteral();
+                // gprintln("String literal: `"~strLit~"`");
+                // StringLiteral strLitInstr = new StringLiteral(strLit);
+                // addInstr(strLitInstr);
 
-                gprintln("Typecheck(): String literal processing... [done]");
+                // gprintln("Typecheck(): String literal processing... [done]");
             }
             else if(cast(VariableExpression)statement)
             {
@@ -502,7 +813,7 @@ public final class TypeChecker
                 /* TODO: still wip the expresison parser */
 
                 /* TODO: TYpe needs ansatz too `.updateName()` call */
-                addType(getType(gVar.getContext().getContainer(), gVar.getType()));
+                Type variableType = getType(gVar.getContext().getContainer(), gVar.getType());
 
                 gprintln("Yaa, it's rewind time");
 
@@ -516,53 +827,55 @@ public final class TypeChecker
                 * 2. Set the Context of it to where the VariableExpression occurred
                 */
                 FetchValueVar fVV = new FetchValueVar(variableName, 4);
-                fVV.context = g.getContext();
+                fVV.setContext(g.getContext());
 
 
                 addInstr(fVV);
+
+                /* The type of a FetchValueInstruction is the type of the variable being fetched */
+                fVV.setInstrType(variableType);
             }
             // else if(cast()) !!!! Continue here 
             else if(cast(BinaryOperatorExpression)statement)
             {
                 BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
                 SymbolType binOperator = binOpExp.getOperator();
-                
+            
 
                 /**
-                * Typechecking (TODO)
-                */
-                Type vRhsType = popType();
-                Type vLhsType = popType();
-
-                /**
-                * TODO:
-                * Types must either BE THE SAME or BE COMPATIBLE
-                */
-                if(isSameType(vLhsType, vRhsType))
-                {
-                    /* Left type + Right type = left/right type (just use left - it doesn't matter) */
-                    addType(vLhsType);
-                }
-                else
-                {
-                    gprintln("Binary operator expression requires both types be same, but got '"~vRhsType.toString()~"' and '"~vLhsType.toString()~"'", DebugType.ERROR);
-                    assert(false);
-                }
-                
-
-                /**
-                * Codegen
+                * Codegen/Type checking
                 *
                 * Retrieve the two Value Instructions
                 *
                 * They would be placed as if they were on stack
                 * hence we need to burger-flip them around (swap)
                 */
-                Instruction vRhsInstr = popInstr();
-                Instruction vLhsInstr = popInstr();
+                Value vRhsInstr = cast(Value)popInstr();
+                Value vLhsInstr = cast(Value)popInstr();
+
+                Type vRhsType = vRhsInstr.getInstrType();
+                Type vLhsType = vLhsInstr.getInstrType();
+
+                /**
+                * TODO
+                * Types must either BE THE SAME or BE COMPATIBLE
+                */
+                Type chosenType;
+                if(isSameType(vLhsType, vRhsType))
+                {
+                    /* Left type + Right type = left/right type (just use left - it doesn't matter) */
+                    chosenType = vLhsType;
+                }
+                else
+                {
+                    throw new TypeMismatchException(this, vLhsType, vRhsType, "Binary operator expression requires both types be same");
+                }
                 
                 BinOpInstr addInst = new BinOpInstr(vLhsInstr, vRhsInstr, binOperator);
                 addInstr(addInst);
+
+                /* Set the Value instruction's type */
+                addInst.setInstrType(chosenType);
             }
             /* Unary operator expressions */
             else if(cast(UnaryOperatorExpression)statement)
@@ -570,13 +883,15 @@ public final class TypeChecker
                 UnaryOperatorExpression unaryOpExp = cast(UnaryOperatorExpression)statement;
                 SymbolType unaryOperator = unaryOpExp.getOperator();
                 
-
+                /* The type of the eventual UnaryOpInstr */
+                Type unaryOpType;
                 
 
                 /**
                 * Typechecking (TODO)
                 */
-                Type expType = popType();
+                Value expInstr = cast(Value)popInstr();
+                Type expType = expInstr.getInstrType();
 
                 /* TODO: Ad type check for operator */
 
@@ -584,6 +899,47 @@ public final class TypeChecker
                 if(unaryOperator == SymbolType.ADD || unaryOperator == SymbolType.SUB)
                 {
                     /* TODO: I guess any type fr */
+
+                    if(unaryOperator == SymbolType.SUB)
+                    {
+                        // TODO: Note below is a legitimately good question, given a type
+                        // ... <valueType>, what does applying a `-` infront of it (`-<valueType>`)
+                        // ... mean in terms of its type?
+                        //
+                        // ... Does it remain the same type? We ask because of literal encoding.
+                        // ... I believe the best way forward would be specifically to handle
+                        // ... cases where `cast(LiteralValue)expInstr` is true here - just
+                        // ... as we had the special handling for it in `NumberLiteral` statements
+                        // ... before.
+                        if(cast(LiteralValue)expInstr)
+                        {
+                            LiteralValue literalValue = cast(LiteralValue)expInstr;
+                            string literalValueStr = literalValue.getLiteralValue();
+                            ulong literalValueNumber = to!(ulong)(literalValueStr); // TODO: Add a conv check for overflow
+
+                            if(literalValueNumber >= 9_223_372_036_854_775_808)
+                            {
+                                // TODO: I don't think we are meant to be doing the below, atleast for coercive cases
+                                // TODO: make this error nicer
+                                // throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Cannot represent -"~literalValueStr~" as too big");
+                            }
+                            // TODO: Check case of literal being 9223372036854775808 or above
+                            // ... and having a `-` infront of it, then disallow
+
+                            // TODO: Remove the below (just for now)
+                            unaryOpType = expType;
+                        }
+                        else
+                        {
+                            // Else just copy the tyoe of the expInstr over
+                            unaryOpType = expType;
+                        }
+                    }
+                    else
+                    {
+                        // Else just copy the tyoe of the expInstr over
+                        unaryOpType = expType;
+                    }
                 }
                 /* If pointer dereference */
                 else if(unaryOperator == SymbolType.STAR)
@@ -601,12 +957,11 @@ public final class TypeChecker
                         // Get the type being referred to
                         Type referredType = pointerType.getReferredType();
 
-                        addType(referredType);
+                        unaryOpType = referredType;
                     }
                     else
                     {
-                        gprintln("You cannot dereference a type that is not a pointer type!", DebugType.ERROR);
-                        assert(false);
+                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "You cannot dereference a type that is not a pointer type!");
                     }
                 }
                 /* If pointer create `&` */
@@ -617,7 +972,7 @@ public final class TypeChecker
                     * a new type onto the stack which is `<type>*`
                     */
                     Type ptrType = new Pointer(expType);
-                    addType(ptrType);
+                    unaryOpType = ptrType;
                 }
                 /* This should never occur */
                 else
@@ -627,13 +982,8 @@ public final class TypeChecker
                 }
                 
 
-                /**
-                * Codegen
-                *
-                * Retrieve the instruction
-                *
-                */
-                Instruction expInstr = popInstr();
+             
+                
 
                 // TODO: For type checking and semantics we should be checking WHAT is being ampersanded
                 // ... as in we should only be allowing Ident's to be ampersanded, not, for example, literals
@@ -643,12 +993,13 @@ public final class TypeChecker
                 UnaryOpInstr addInst = new UnaryOpInstr(expInstr, unaryOperator);
                 gprintln("Made unaryop instr: "~to!(string)(addInst));
                 addInstr(addInst);
+
+                addInst.setInstrType(unaryOpType);
             }
             /* Function calls */
             else if(cast(FunctionCall)statement)
             {
                 // gprintln("FuncCall hehe (REMOVE AFTER DONE)");
-                // printTypeQueue();
 
                 FunctionCall funcCall = cast(FunctionCall)statement;
 
@@ -686,7 +1037,7 @@ public final class TypeChecker
                             /* TODO: Determine type and match up */
                             gprintln("Yeah");
                             gprintln(valueInstr);
-                            Type argType = popType();
+                            Type argType = valueInstr.getInstrType();
                             // gprintln(argType);
 
                             Variable parameter = paremeters[parmCount];
@@ -699,7 +1050,6 @@ public final class TypeChecker
                             // gprintln("FuncCall(Actual): "~valueInstr.toString());
 
 
-                            // printTypeQueue();
                             /* Match up types */
                             //if(argType == parmType)
                             if(isSameType(argType, parmType))
@@ -715,13 +1065,15 @@ public final class TypeChecker
                                 printCodeQueue();
                                 gprintln("Wrong actual argument type for function call", DebugType.ERROR);
                                 gprintln("Cannot pass value of type '"~argType.getName()~"' to function accepting '"~parmType.getName()~"'", DebugType.ERROR);
-                                assert(false);
+
+                                throw new TypeMismatchException(this, parmType, argType, "The actual argument's type does not match that of the function's parameter type");
                             }
 
                             parmCount--;
                         }
                         else
                         {
+                            // TODO: This should enver happen, see book and remove soon (see Cleanup: Remove any pushbacks #101)
                             /* Push it back */
                             addInstr(instr);
                             break;
@@ -742,10 +1094,13 @@ public final class TypeChecker
                 * 4. AddInstr(combining those args)
                 * 5. DOne
                 */
-                funcCallInstr.context = funcCall.getContext();
+                funcCallInstr.setContext(funcCall.getContext());
 
                 addInstr(funcCallInstr);
-                addType(getType(func.parentOf(), func.getType()));
+
+                /* Set the Value instruction's type */
+                Type funcCallInstrType = getType(func.parentOf(), func.getType());
+                funcCallInstr.setInstrType(funcCallInstrType);
             }
             /* Type cast operator */
             else if(cast(CastedExpression)statement)
@@ -753,14 +1108,10 @@ public final class TypeChecker
                 CastedExpression castedExpression = cast(CastedExpression)statement;
                 gprintln("Context: "~to!(string)(castedExpression.context));
                 gprintln("ParentOf: "~to!(string)(castedExpression.parentOf()));
+                
+                /* Extract the type that the cast is casting towards */
                 Type castToType = getType(castedExpression.context.container, castedExpression.getToType());
 
-                /* Pop the type associated with the embedded expression */
-                Type typeBeingCasted = popType(); // TODO: Is there anything we would want to do with this?
-                gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
-
-                /* Push the type to cast to onto the stack such that we typify the associated instruction */
-                addType(castToType);
 
                 /**
                 * Codegen
@@ -773,23 +1124,31 @@ public final class TypeChecker
                 Value uncastedInstruction = cast(Value)popInstr();
                 assert(uncastedInstruction);
 
-                printCodeQueue();
-                printTypeQueue();
+                /* Extract the type of the expression being casted */
+                Type typeBeingCasted = uncastedInstruction.getInstrType();
+                gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
+                
 
+                printCodeQueue();
+
+                // TODO: Remove the `castToType` argument, this should be solely based off of the `.type` (as set below)
                 CastedValueInstruction castedValueInstruction = new CastedValueInstruction(uncastedInstruction, castToType);
-                castedValueInstruction.context = castedExpression.context;
+                castedValueInstruction.setContext(castedExpression.context);
 
                 addInstr(castedValueInstruction);
+
+                /* The type of the cats expression is that of the type it casts to */
+                castedValueInstruction.setInstrType(castToType);
             }
         }
         /* VariableAssigbmentDNode */
-        else if(cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode)
+        else if(cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode)
         {
-            import compiler.typecheck.dependency.variables;
+            import tlang.compiler.typecheck.dependency.variables;
 
             /* Get the variable's name */
             string variableName;
-            VariableAssignmentNode varAssignDNode = cast(compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
+            VariableAssignmentNode varAssignDNode = cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
             Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
             variableName = resolver.generateName(modulle, assignTo);
             gprintln("VariableAssignmentNode: "~to!(string)(variableName));
@@ -812,11 +1171,23 @@ public final class TypeChecker
             * 3. Generate VarAssignInstruction with Value-instruction
             * 4. Set the VarAssignInstr's Context to that of the Variable assigning to
             */
-            Instruction valueInstr = popInstr();
+            Instruction instr = popInstr();
+            assert(instr);
+            Value valueInstr = cast(Value)instr;
+            assert(valueInstr);
             gprintln("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr), DebugType.WARNING);
+
+
+            Type rightHandType = valueInstr.getInstrType();
+            gprintln("RightHandType (assignment): "~to!(string)(rightHandType));
+
+            
+
+        
             gprintln(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
-            varAssInstr.context = variableAssignmentContext;
+            varAssInstr.setContext(variableAssignmentContext);
+            // NOTE: No need setting `varAssInstr.type` as the type if in `getEmbeddedInstruction().type`
             
             addInstr(varAssInstr);
         }
@@ -825,7 +1196,7 @@ public final class TypeChecker
         * TODO: We need to emit different code dependeing on variable declaration TYPE
         * We could use context for this, ClassVariableDec vs ModuleVariableDec
         */
-        else if(cast(compiler.typecheck.dependency.variables.StaticVariableDeclaration)dnode)
+        else if(cast(tlang.compiler.typecheck.dependency.variables.StaticVariableDeclaration)dnode)
         {
             /* TODO: Add skipping if context is within a class */
             /* We need to wait for class static node, to do an InitInstruction (static init) */
@@ -842,33 +1213,46 @@ public final class TypeChecker
             gprintln("HELLO FELLA (name): "~variableName);
             
 
+            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
 
-            // CHeck if this variable declaration has an assignment attached
-            VariableAssignmentInstr assignmentInstr;
+
+            // Check if this variable declaration has an assignment attached
+            Value assignmentInstr;
             if(variablePNode.getAssignment())
             {
                 Instruction poppedInstr = popInstr();
-                assignmentInstr = cast(VariableAssignmentInstr)poppedInstr;
+                assert(poppedInstr);
+
+                // Obtain the value instruction of the variable assignment
+                // ... along with the assignment's type
+                assignmentInstr = cast(Value)poppedInstr;
                 assert(assignmentInstr);
+                Type assignmentType = assignmentInstr.getInstrType();
+
+
+                // TODO: We should add a typecheck here where we update the type of the valInstr if it is of
+                // ... type NumberLiteral and coerce it to the variable referred to by the VariableAssignment
+                // ... see issue #94 part on "Coercion"
+                // If the types match then everything is fine
+                if(isSameType(variableDeclarationType, assignmentType))
+                {
+                    gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
+                }
+                // If the types do not match
+                else
+                {
+                    // Then attempt coercion
+                    attemptCoercion(variableDeclarationType, assignmentInstr);
+                }
             }
 
-
-            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
-
+            /* Generate a variable declaration instruction and add it to the codequeue */
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variableDeclarationType, assignmentInstr);
-
-            /* NEW CODE (9th November 2021) Set the context */
-            varDecInstr.context = variablePNode.context;
-
-
+            varDecInstr.setContext(variablePNode.context);
             addInstrB(varDecInstr);
-
-            
-            
-            
         }
         /* TODO: Add class init, see #8 */
-        else if(cast(compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
+        else if(cast(tlang.compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
         {
             /* Extract the class node and create a static allocation instruction out of it */
             Clazz clazzPNode = cast(Clazz)dnode.getEntity();
@@ -880,7 +1264,7 @@ public final class TypeChecker
         }
         /* It will pop a bunch of shiiit */
         /* TODO: ANy statement */
-        else if(cast(compiler.typecheck.dependency.core.DNode)dnode)
+        else if(cast(tlang.compiler.typecheck.dependency.core.DNode)dnode)
         {
             /* TODO: Get the STatement */
             Statement statement = dnode.getEntity();
@@ -894,6 +1278,11 @@ public final class TypeChecker
                 VariableAssignmentStdAlone vasa = cast(VariableAssignmentStdAlone)statement;
                 string variableName = vasa.getVariableName();
 
+                /* Extract information about the variable declaration of the avriable being assigned to */
+                Context variableContext = vasa.getContext();
+                Variable variable = cast(Variable)resolver.resolveBest(variableContext.container, variableName);
+                Type variableDeclarationType = getType(variableContext.container, variable.getType());
+
                 /**
                 * Codegen
                 *
@@ -901,15 +1290,31 @@ public final class TypeChecker
                 * 2. Pop Value-instruction
                 * 3. Generate VarAssignInstruction with Value-instruction
                 */
-                Instruction valueInstr = popInstr();
-                VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, valueInstr);
+                Instruction instr = popInstr();
+                assert(instr);
+                Value assignmentInstr = cast(Value)instr;
+                assert(assignmentInstr);
 
-                /* Set the VariableAssigmmentInstruction's context to that of the stdalone entity */
-                vAInstr.context = vasa.getContext();
+                
+                Type assignmentType = assignmentInstr.getInstrType();
+                assert(assignmentType);
 
+
+                if(isSameType(variableDeclarationType, assignmentType))
+                {
+                    gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
+                }
+                // If the type's do not match
+                else
+                {
+                    // Then attempt coercion
+                    attemptCoercion(variableDeclarationType, assignmentInstr);
+                }
+
+                /* Generate a variable assignment instruction and add it to the codequeue */
+                VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, assignmentInstr);
+                vAInstr.setContext(vasa.getContext());
                 addInstrB(vAInstr);
-
-                gprintln("VariableAssignmentStdAlone", DebugType.ERROR);
             }
             /**
             * Return statement (ReturnStmt)
@@ -930,7 +1335,7 @@ public final class TypeChecker
                 Value returnExpressionInstr = cast(Value)popInstr();
                 assert(returnExpressionInstr);
                 ReturnInstruction returnInstr = new ReturnInstruction(returnExpressionInstr);
-                returnInstr.context = returnStatement.getContext();
+                returnInstr.setContext(returnStatement.getContext());
                 addInstrB(returnInstr);
             }
             /**
@@ -1007,7 +1412,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 IfStatementInstruction ifStatementInstruction = new IfStatementInstruction(branchInstructions);
-                ifStatementInstruction.context = ifStatement.getContext();
+                ifStatementInstruction.setContext(ifStatement.getContext());
                 addInstrB(ifStatementInstruction);
 
                 gprintln("If!");
@@ -1060,7 +1465,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 WhileLoopInstruction whileLoopInstruction = new WhileLoopInstruction(branchInstr);
-                whileLoopInstruction.context = whileLoop.getContext();
+                whileLoopInstruction.setContext(whileLoop.getContext());
                 addInstrB(whileLoopInstruction);
             }
             /**
@@ -1106,7 +1511,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 ForLoopInstruction forLoopInstruction = new ForLoopInstruction(branchInstr, preRunInstruction);
-                forLoopInstruction.context = forLoop.context;
+                forLoopInstruction.setContext(forLoop.context);
                 addInstrB(forLoopInstruction);
             }
             /* Branch */
@@ -1140,7 +1545,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 PointerDereferenceAssignmentInstruction pointerDereferenceAssignmentInstruction = new PointerDereferenceAssignmentInstruction(lhsPtrExprInstr, rhsExprInstr, ptrDerefAss.getDerefCount());
-                pointerDereferenceAssignmentInstruction.context = ptrDerefAss.context;
+                pointerDereferenceAssignmentInstruction.setContext(ptrDerefAss.context);
                 addInstrB(pointerDereferenceAssignmentInstruction);
             }
             /**
@@ -1163,7 +1568,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 DiscardInstruction discardInstruction = new DiscardInstruction(exprInstr);
-                discardInstruction.context = discardStatement.context;
+                discardInstruction.setContext(discardStatement.context);
                 addInstrB(discardInstruction);
             }
             /* Case of no matches */
@@ -1740,8 +2145,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_module1.t";
 
@@ -1787,8 +2192,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_module2.t";
 
@@ -1832,8 +2237,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container_non_module.t";
 
@@ -1877,8 +2282,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_member.t";
 
@@ -1921,8 +2326,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/precedence_collision_test.t";
 
@@ -1967,8 +2372,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/collide_container.t";
 
@@ -2052,8 +2457,8 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.parsing.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.parsing.core;
 
     string sourceFile = "source/tlang/testing/typecheck/simple_function_call.t";
 

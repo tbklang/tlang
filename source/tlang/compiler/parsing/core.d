@@ -1,14 +1,14 @@
-module compiler.parsing.core;
+module tlang.compiler.parsing.core;
 
 import gogga;
-import std.conv : to;
+import std.conv : to, ConvException;
 import std.string : isNumeric, cmp;
-import compiler.symbols.check;
-import compiler.symbols.data;
-import compiler.lexer.core : Token;
+import tlang.compiler.symbols.check;
+import tlang.compiler.symbols.data;
+import tlang.compiler.lexer.tokens : Token;
 import core.stdc.stdlib;
 import misc.exceptions : TError;
-import compiler.parsing.exceptions;
+import tlang.compiler.parsing.exceptions;
 
 // public final class ParserError : TError
 // {
@@ -1061,6 +1061,20 @@ public final class Parser
     {
         gprintln("parseExpression(): Enter", DebugType.WARNING);
 
+
+        /** 
+         * Helper methods
+         *
+         * (TODO: These should be moved elsewhere)
+         */
+        bool isFloatLiteral(string numberLiteral)
+        {
+            import std.string : indexOf;
+            bool isFloat = indexOf(numberLiteral, ".") > -1; 
+            return isFloat;
+        }
+
+
         /* The expression to be returned */
         Expression[] retExpression;
 
@@ -1114,8 +1128,94 @@ public final class Parser
             /* If it is a number literal */
             if (symbol == SymbolType.NUMBER_LITERAL)
             { 
-                /* TODO: Do number checking here to get correct NUmberLiteral */
-                NumberLiteral numberLiteral = new NumberLiteral(getCurrentToken().getToken());
+                string numberLiteralStr = getCurrentToken().getToken();
+                NumberLiteral numberLiteral;
+
+                // If floating point literal
+                if(isFloatLiteral(numberLiteralStr))
+                {
+                    // TODO: Issue #94, siiliar to below for integers
+                    numberLiteral = new FloatingLiteral(getCurrentToken().getToken());
+                }
+                // Else, then an integer literal
+                else
+                {
+                    // TODO: Issue #94, we should be checking the range here
+                    // ... along with any explicit encoders and setting it
+                    // ... for now default to SIGNED_INTEGER.
+                    IntegerLiteralEncoding chosenEncoding;
+                    // TODO (X-platform): Use `size_t` here
+                    ulong literalValue;
+
+
+                    
+                    
+                    // TODO: Add a check for the `U`, `UL` stuff here
+                    import std.algorithm.searching : canFind;
+                    // Explicit integer encoding (unsigned long)
+                    if(canFind(numberLiteralStr, "UL"))
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
+
+                        // Strip the `UL` away
+                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
+                    }
+                    // Explicit integer encoding (signed long)
+                    else if(canFind(numberLiteralStr, "L"))
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+
+                        // Strip the `L` away
+                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
+                    }
+                    // Explicit integer encoding (unsigned int)
+                    else if(canFind(numberLiteralStr, "UI"))
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_INTEGER;
+
+                        // Strip the `UI` away
+                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
+                    }
+                    // Explicit integer encoding (signed int)
+                    else if(canFind(numberLiteralStr, "I"))
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+
+                        // Strip the `I` away
+                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
+                    }
+                    else
+                    {
+                        try
+                        {
+                            // TODO (X-platform): Use `size_t` here
+                            literalValue = to!(ulong)(numberLiteralStr);
+                            
+
+                            // Signed integer range [0, 2_147_483_647]
+                            if(literalValue >= 0 && literalValue <= 2_147_483_647)
+                            {
+                                chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+                            }
+                            // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
+                            else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
+                            {
+                                chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+                            }
+                            // Unsigned long range [9_223_372_036_854_775_808, 18_446_744_073_709_551_615]
+                            else
+                            {
+                                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
+                            }
+                        }
+                        catch(ConvException e)
+                        {
+                            throw new ParserException(this, ParserException.ParserErrorType.LITERAL_OVERFLOW, "Literal '"~numberLiteralStr~"' would overflow");
+                        }
+                    }
+
+                    numberLiteral = new IntegerLiteral(numberLiteralStr, chosenEncoding);
+                }
                 
                 /* Add expression to stack */
                 addRetExp(numberLiteral);
@@ -1998,7 +2098,9 @@ unittest
 
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.lexer.tokens;
 
     string sourceCode = `
 module myModule;
@@ -2037,8 +2139,9 @@ unittest
 {
     import std.file;
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
     string sourceCode = `
 module myModule;
@@ -2204,8 +2307,9 @@ class myClass2
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
 
     string sourceCode = `
@@ -2272,8 +2376,9 @@ void function()
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
 
     string sourceCode = `
@@ -2354,8 +2459,9 @@ int myFunction(int i, int j)
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
 
     string sourceCode = `
@@ -2456,8 +2562,9 @@ void function()
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
     string sourceCode = `
 module simple_pointer;
@@ -2556,8 +2663,9 @@ int thing()
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
 
     string sourceCode = `
@@ -2679,8 +2787,9 @@ void function()
 unittest
 {
     import std.stdio;
-    import compiler.lexer.core;
-    import compiler.typecheck.core;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.exceptions;
+    import tlang.compiler.typecheck.core;
 
 
     string sourceCode = `

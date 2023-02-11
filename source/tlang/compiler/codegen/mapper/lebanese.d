@@ -1,8 +1,8 @@
-module compiler.codegen.mapper.lebanese;
+module tlang.compiler.codegen.mapper.lebanese;
 
-import compiler.codegen.mapper.core : SymbolMapper;
-import compiler.typecheck.core;
-import compiler.symbols.data;
+import tlang.compiler.codegen.mapper.core : SymbolMapper;
+import tlang.compiler.typecheck.core;
+import tlang.compiler.symbols.data;
 import std.string : replace;
 
 public final class LebaneseMapper : SymbolMapper

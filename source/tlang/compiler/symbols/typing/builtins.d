@@ -1,9 +1,9 @@
-module compiler.symbols.typing.builtins;
+module tlang.compiler.symbols.typing.builtins;
 
-import compiler.symbols.typing.core;
+import tlang.compiler.symbols.typing.core;
 import std.string : cmp, indexOf, lastIndexOf;
 import gogga;
-import compiler.typecheck.core;
+import tlang.compiler.typecheck.core;
 
 /**
 * TODO: We should write spec here like I want int and stuff of proper size so imma hard code em

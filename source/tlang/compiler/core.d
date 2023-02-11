@@ -1,23 +1,24 @@
-module compiler.core;
+module tlang.compiler.core;
 
 import gogga;
 import std.conv : to;
-import compiler.lexer.core;
+import tlang.compiler.lexer.core;
+import tlang.compiler.lexer.tokens : Token;
 import std.stdio : File;
-import compiler.parsing.core;
-import compiler.symbols.check;
-import compiler.symbols.data;
-import compiler.typecheck.core;
-import compiler.typecheck.exceptions;
+import tlang.compiler.parsing.core;
+import tlang.compiler.symbols.check;
+import tlang.compiler.symbols.data;
+import tlang.compiler.typecheck.core;
+import tlang.compiler.typecheck.exceptions;
 import core.stdc.stdlib;
-import compiler.codegen.emit.core;
-import compiler.codegen.emit.dgen;
+import tlang.compiler.codegen.emit.core;
+import tlang.compiler.codegen.emit.dgen;
 import misc.exceptions : TError;
-import compiler.codegen.mapper.core : SymbolMapper;
-import compiler.codegen.mapper.hashmapper : HashMapper;
-import compiler.codegen.mapper.lebanese : LebaneseMapper;
+import tlang.compiler.codegen.mapper.core : SymbolMapper;
+import tlang.compiler.codegen.mapper.hashmapper : HashMapper;
+import tlang.compiler.codegen.mapper.lebanese : LebaneseMapper;
 import std.string : cmp;
-import compiler.configuration : CompilerConfiguration, ConfigEntry;
+import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
 
 // TODO: Add configentry unittests
 
