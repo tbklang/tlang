@@ -76,28 +76,6 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
     {
         return new Integer("ubyte", 1, false);
     }
-
-
-    /**
-    * FIXME: For the below we need to find which is the RIGHT-MOST and THEN
-    * go from there
-    *
-    * This is so that we can support things such as:
-    *
-    * `char*[]`
-
-    * Current problem here is that if we have `int*[]`
-    * it will immediately start with `int*` -> new Pointer(int)
-    *
-    * Instead of `new Pointer(int*)`
-    *
-    * Switching the pointer-array checks arround doesn't help
-    * as the above works but then `int[]*` will be new Pointer(int)
-    * (and leaving out the `*`)
-    */
-
-    
-
     /* Pointer handling `<type>*` and Array handling `<type>*` */
     else if((lastIndexOf(typeString, "*") > -1) || (lastIndexOf(typeString, "[]") > -1))
     {
