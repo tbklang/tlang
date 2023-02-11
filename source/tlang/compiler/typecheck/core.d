@@ -1072,6 +1072,7 @@ public final class TypeChecker
                         }
                         else
                         {
+                            // TODO: This should enver happen, see book and remove soon (see Cleanup: Remove any pushbacks #101)
                             /* Push it back */
                             addInstr(instr);
                             break;
