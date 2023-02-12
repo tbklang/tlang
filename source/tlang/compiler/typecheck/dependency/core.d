@@ -1267,11 +1267,11 @@ public class DNodeGenerator
             {
 
             }
-            /* Array-type */
-            else if(cast(Array)variableType)
+            /* Stack-based array-type */
+            else if(cast(StackArray)variableType)
             {
                 // TODO: For array support not all too sure what I shoudl put here, perhap nothing?
-                Array arrayType = cast(Array)variableType;
+                StackArray arrayType = cast(StackArray)variableType;
 
                 // TODO: We might need to do pointer magic
 
@@ -1292,7 +1292,7 @@ public class DNodeGenerator
                 }
 
                 gprintln("Arrays (and these are stack arrays) are not yet supported", DebugType.ERROR);
-                assert(false);
+                // assert(false);
             }
             /* Anything else */
             else

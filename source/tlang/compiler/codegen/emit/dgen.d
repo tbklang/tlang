@@ -17,7 +17,7 @@ import tlang.compiler.codegen.mapper.core : SymbolMapper;
 import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
-import tlang.compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
+import tlang.compiler.symbols.typing.core;
 import tlang.compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
@@ -90,6 +90,18 @@ public final class DCodeEmitter : CodeEmitter
         else if(cast(Void)typeIn)
         {
             return "void";
+        }
+        /* Stack-based array type */
+        else if(cast(StackArray)typeIn)
+        {
+            // TODO: Still implement stakc-based arrays
+            // we won't be able to tyoe transform just here
+            // ... as we need <componentType> <varName>[<arraySize>]
+            // ... hence this must be performed in avriable declaration
+            StackArray stackArray = cast(StackArray)typeIn;
+            
+            return typeTransform(stackArray.getComponentType());
+            // return "KAK TODO";
         }
 
         gprintln("Type transform unimplemented");
@@ -165,6 +177,14 @@ public final class DCodeEmitter : CodeEmitter
                 // NOTE: Best would be identity-mapping Entity's to a name
                 string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
+
+                // Check if the type is a stack-based array
+                // ... if so then take make symbolName := `<symbolName>[<stackArraySize>]`
+                if(cast(StackArray)varDecInstr.varType)
+                {
+                    StackArray stackArray = cast(StackArray)varDecInstr.varType;
+                    renamedSymbol~="["~to!(string)(stackArray.getAllocatedSize())~"]";
+                }
 
                 // Check to see if this declaration has an assignment attached
                 if(typedEntityVariable.getAssignment())

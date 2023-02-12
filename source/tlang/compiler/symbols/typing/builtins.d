@@ -13,6 +13,8 @@ import std.conv : to;
 */
 public Type getBuiltInType(TypeChecker tc, string typeString)
 {
+    gprintln("getBuiltInType("~typeString~")");
+
     /* `int`, signed (2-complement) */
     if(cmp(typeString, "int") == 0)
     {
@@ -76,6 +78,34 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
     {
         return new Integer("ubyte", 1, false);
     }
+    /* Stack-based array handling `<componentType>[<number>]` */
+    else if(isStackArray(typeString))
+    {
+        // TODO: Construct this by dissecting `typeString`
+        StackArray stackArray;
+
+        // Find the last occuring `[`
+        long lastOBracketPos = lastIndexOf(typeString, "[");
+        assert(lastOBracketPos > -1);
+
+        // Find the component type (everything before `lastOBracketPos`)
+        string componentTypeString = typeString[0..lastOBracketPos];
+        gprintln("StackArray (component type): "~componentTypeString);
+
+        // Determine the size of the array (from `pos('[')+1` to typeString.length-2)
+        string arraySizeString = typeString[lastOBracketPos+1..$-1];
+        ulong arraySize = to!(ulong)(arraySizeString);
+        gprintln("StackArray (stack size): "~to!(string)(arraySize));
+
+
+        gprintln("typeString: "~typeString);
+
+        stackArray = new StackArray(tc.getType(tc.getModule(), componentTypeString), arraySize);
+
+        gprintln("Stack-based array types are still being implemented", DebugType.ERROR);
+        // assert(false);
+        return stackArray;
+    }
     /* Pointer handling `<type>*` and Array handling `<type>*` */
     else if((lastIndexOf(typeString, "*") > -1) || (lastIndexOf(typeString, "[]") > -1))
     {
@@ -103,7 +133,7 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
 
         return new Pointer(tc.getType(tc.getModule(), ptrType));
     }
-    // TODO: Add support for arrays like `<componentType>[<number>]`
+    
     
     
     /* TODO: Add all remaining types, BUGS probabloy occur on failed looks ups when hitting this */
@@ -112,8 +142,36 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
     {
 
 
-
+        gprintln("getBuiltInType("~typeString~"): Failed to map to a built-in type", DebugType.ERROR);
 
         return null;
     }
+}
+
+/** 
+ * Given a type string this returns true if the provided
+ * type string is infact a stack array type
+ *
+ * Params:
+ *   typeString = the type string to check
+ * Returns: a true if it is s atck array, false
+ *          otherwise.
+ */
+private bool isStackArray(string typeString)
+{
+    // FIXME: THis below will be picked up by `int[]` before us
+    // e.g. int[][222] (a stack array of size 222 of `int[]` (a.k.a. `int*`))
+
+    // TODO: Also how will we fix: int[222][] which is int[222]*, ak..a a pojnter to a stack array of size 222 which
+    // ... is simply not a thing it would just be int[][] (int[]*) - irrespective of where the array is (on stack or heap)
+
+    // TODO: Length check? Or parser would have caught?
+
+    // Ensure `<...>[ <something> ]`
+    if(typeString[$-1] == ']' && typeString[$-2] != '[')
+    {
+        return true;
+    }
+
+    return false;
 }

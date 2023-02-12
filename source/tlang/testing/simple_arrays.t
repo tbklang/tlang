@@ -2,5 +2,5 @@ module simple_arrays;
 
 void function()
 {
-    int**[]* myArray;
+    int[][22222] myArray;
 }

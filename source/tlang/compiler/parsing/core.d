@@ -1334,7 +1334,9 @@ public final class Parser
                 addRetExp(toAdd);
             }
             /* Detect if this expression is coming to an end, then return */
-            else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE || symbol == SymbolType.COMMA || symbol == SymbolType.ASSIGN)
+            else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE ||
+                    symbol == SymbolType.COMMA || symbol == SymbolType.ASSIGN ||
+                    symbol == SymbolType.CBRACKET)
             {
                 break;
             }
@@ -1439,12 +1441,38 @@ public final class Parser
         /* Handling of pointer and array types */
         while(getSymbolType(getCurrentToken()) == SymbolType.STAR || getSymbolType(getCurrentToken()) == SymbolType.OBRACKET)
         {
-            /* If we have `[` then expect a `]` */
+            /* If we have `[` then expect a number and/or a `]` */
             if(getSymbolType(getCurrentToken()) == SymbolType.OBRACKET)
             {
                 nextToken();
+                SymbolType nextType = getSymbolType(getCurrentToken());
+                string potentialStackSize;
+
+                /* If a we have a number */
+                if(nextType == SymbolType.NUMBER_LITERAL)
+                {
+                    // TODO: Ensure the returned thing is a number
+                    // TODO: Ensure said number is non-negative
+                    // TODO: May as well now start adding `]` as a seperator or stopper or something
+                    IntegerLiteral stackArraySize = cast(IntegerLiteral)parseExpression();
+
+                    // If the expression is an integer (which it should be)
+                    if(stackArraySize)
+                    {
+                        gprintln("StackArraySize: "~stackArraySize.toString());
+                        potentialStackSize = stackArraySize.getNumber();
+                    }
+                    // If not, then error
+                    else
+                    {
+                        gprintln("Expected an integer as stack-array size but got iets ander", DebugType.ERROR);
+                        // TODO: Rather throw a parsing error
+                        assert(false);
+                    }
+                }
+
                 expect(SymbolType.CBRACKET, getCurrentToken());
-                type=type~"[]";
+                type=type~"["~potentialStackSize~"]";
             }
             /* If we have `*` */
             else
