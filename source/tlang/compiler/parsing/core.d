@@ -1518,24 +1518,45 @@ public final class Parser
             nextToken();
         }
 
+        /* If we are going to be assigning into an array (indexed) */
+        bool arrayIndexing = false;
+
 
         /* If the current token is ASSIGN then array indexing is occuring */
         if(getSymbolType(getCurrentToken()) == SymbolType.ASSIGN)
         {
+            // TODO: Move all below code to the branch below that handles this case
             gprintln("We have an array assignment, here is the indexers: "~to!(string)(arrayIndexExprs), DebugType.WARNING);
+
+            // Our identifier will be some weird malformed-looking `mrArray[][1]` (because os atck array size declarations no-number literal)
+            // ... expressions don't make it in (we have arrayIndexExprs for that). Therefore what we must do is actually
+            // strip the array bracket syntax away to get the name
+            import std.string : indexOf;
+            long firstBracket = indexOf(type, "[");
+            assert(firstBracket > -1);
+            identifier = type[0..firstBracket];
+            gprintln("Then identifier is type actually: "~identifier);
+
+            // Then we are doing an array-indexed assignment
+            arrayIndexing = true;
         }
-
-
-        /* Expect an identifier (CAN NOT be dotted) */
-        expect(SymbolType.IDENT_TYPE, getCurrentToken());
-        if(!isIdentifier_NoDot(getCurrentToken()))
+        /* If we have an identifier the a declaration is occuring */
+        else if(getSymbolType(getCurrentToken()) == SymbolType.IDENT_TYPE)
         {
-            expect("Identifier cannot be dotted");
-        }
-        identifier = getCurrentToken().getToken();
+            /* Expect an identifier (CAN NOT be dotted) */
+            expect(SymbolType.IDENT_TYPE, getCurrentToken());
+            if(!isIdentifier_NoDot(getCurrentToken()))
+            {
+                expect("Identifier cannot be dotted");
+            }
+            identifier = getCurrentToken().getToken();
 
-        nextToken();
-        gprintln("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ getCurrentToken().getToken());
+            nextToken();
+            gprintln("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ getCurrentToken().getToken());
+        }
+
+
+       
 
         /* Check if it is `(` (func dec) */
         SymbolType symbolType = getSymbolType(getCurrentToken());
@@ -1583,7 +1604,7 @@ public final class Parser
             }
         }
         /* Check for `=` (var dec) */
-        else if (symbolType == SymbolType.ASSIGN)
+        else if (symbolType == SymbolType.ASSIGN && (arrayIndexing == false))
         {
             // Only continue if variable declarations are allowed
             if(allowVarDec)
@@ -1618,6 +1639,12 @@ public final class Parser
             {
                 expect("Variables declarations are not allowed.");
             }
+        }
+        /* Check for `=` (array indexed assignment) */
+        else if (symbolType == SymbolType.ASSIGN && (arrayIndexing == true))
+        {
+            gprintln("We are still implenenting array assignments", DebugType.ERROR);
+            assert(false);
         }
         else
         {
