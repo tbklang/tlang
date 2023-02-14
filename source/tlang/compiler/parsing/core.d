@@ -1424,6 +1424,16 @@ public final class Parser
         return retExpression[0];
     }
 
+    private void parseArrayIndex()
+    {
+        gprintln("parseArrayIndex(): Enter", DebugType.WARNING);
+
+
+
+
+        gprintln("parseArrayIndex(): Leave", DebugType.WARNING);
+    }
+
     private TypedEntity parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true)
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
@@ -1438,6 +1448,15 @@ public final class Parser
         string identifier;
         nextToken();
 
+      
+
+        /* Potential array index expressions (assignment) */
+        // Think myArray[i][1] -> [`i`, `1`]
+        Expression[] arrayIndexExprs;
+
+        /* Potential stack-array type size (declaration) */
+        string potentialStackSize;
+
         /* Handling of pointer and array types */
         while(getSymbolType(getCurrentToken()) == SymbolType.STAR || getSymbolType(getCurrentToken()) == SymbolType.OBRACKET)
         {
@@ -1446,30 +1465,46 @@ public final class Parser
             {
                 nextToken();
                 SymbolType nextType = getSymbolType(getCurrentToken());
-                string potentialStackSize;
+                
 
-                /* If a we have a number */
-                if(nextType == SymbolType.NUMBER_LITERAL)
+                /* Check if the next symbol is NOT a `]` */
+                if(nextType != SymbolType.CBRACKET)
                 {
-                    // TODO: Ensure the returned thing is a number
-                    // TODO: Ensure said number is non-negative
-                    // TODO: May as well now start adding `]` as a seperator or stopper or something
-                    IntegerLiteral stackArraySize = cast(IntegerLiteral)parseExpression();
+                    
 
-                    // If the expression is an integer (which it should be)
-                    if(stackArraySize)
+                    arrayIndexExprs ~= parseExpression();
+
+                    /**
+                     * If it is the case it is a number literal then save it
+                     * anyways just for the case whereby we may be declaring
+                     * a stack-array type
+                     *
+                     * TODO: Double check any error checking here which should be deferred to later
+                     */
+                    if(nextType == SymbolType.NUMBER_LITERAL)
                     {
-                        gprintln("StackArraySize: "~stackArraySize.toString());
-                        potentialStackSize = stackArraySize.getNumber();
-                    }
-                    // If not, then error
-                    else
-                    {
-                        gprintln("Expected an integer as stack-array size but got iets ander", DebugType.ERROR);
-                        // TODO: Rather throw a parsing error
-                        assert(false);
+                        // TODO: Ensure the returned thing is a number
+                        // TODO: Ensure said number is non-negative
+                        // TODO: May as well now start adding `]` as a seperator or stopper or something
+                        IntegerLiteral stackArraySize = cast(IntegerLiteral)arrayIndexExprs[$-1];
+
+                        // If the expression is an integer (which it should be)
+                        if(stackArraySize)
+                        {
+                            gprintln("StackArraySize: "~stackArraySize.toString());
+                            potentialStackSize = stackArraySize.getNumber();
+                        }
+                        // If not, then error
+                        else
+                        {
+                            gprintln("Expected an integer as stack-array size but got iets ander", DebugType.ERROR);
+                            // TODO: Rather throw a parsing error
+                            assert(false);
+                        }
                     }
                 }
+
+                
 
                 expect(SymbolType.CBRACKET, getCurrentToken());
                 type=type~"["~potentialStackSize~"]";
@@ -1482,7 +1517,15 @@ public final class Parser
             
             nextToken();
         }
-        
+
+
+        /* If the current token is ASSIGN then array indexing is occuring */
+        if(getSymbolType(getCurrentToken()) == SymbolType.ASSIGN)
+        {
+            gprintln("We have an array assignment, here is the indexers: "~to!(string)(arrayIndexExprs), DebugType.WARNING);
+        }
+
+
         /* Expect an identifier (CAN NOT be dotted) */
         expect(SymbolType.IDENT_TYPE, getCurrentToken());
         if(!isIdentifier_NoDot(getCurrentToken()))
