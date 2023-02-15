@@ -1434,6 +1434,7 @@ public final class Parser
         gprintln("parseArrayIndex(): Leave", DebugType.WARNING);
     }
 
+    // TODO: Update to `Statement` as this can return an ArrayAssignment now
     private TypedEntity parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true)
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
@@ -1648,7 +1649,7 @@ public final class Parser
             identifier = type[0..firstBracket];
             gprintln("Then identifier is type actually: "~identifier);
 
-            
+
             gprintln("We are still implenenting array assignments", DebugType.ERROR);
             assert(false);
         }

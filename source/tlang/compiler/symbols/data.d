@@ -458,6 +458,27 @@ public class VariableAssignmentStdAlone : Statement
     }
 }
 
+// TODO: Add an ArrayAssignment thing here, would be similiar to PointerDeference
+// mmmh, we would also need to ensure during typechecking/codegen/emit that we don't
+// do pointer arithmetic. Makes sense we would have a ArrayAssign and expression for indexers
+// but during codegen we check WHO was being assigned to and their type and based on that
+// generate the correct INSTRUCTION
+public final class ArrayAssignment : Statement
+{
+    private Expression assignmentExpression;
+
+    /** 
+     * If we have `myArray[i][1]` then we would have
+     * TODO: We should actually maybe backtrack or something
+     * because what we want is a left-hand side expressio
+     * actually. Mmmh, might not be possible, I mean it is
+     * if we count but mmh.
+     * This is actually doable and probably the best way to do it.
+     * 
+     */
+    private Expression leftHandExpression
+}
+
 
 public class PointerDereferenceAssignment : Statement
 {
