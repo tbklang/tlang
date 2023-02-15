@@ -19,6 +19,7 @@ import tlang.compiler.parsing.exceptions;
 
 bool isUnitTest;
 
+// TODO: Technically we could make a core parser etc
 public final class Parser
 {
     /**
@@ -101,6 +102,11 @@ public final class Parser
     private void previousToken()
     {
         tokenPtr--;   
+    }
+
+    private void setCursor(ulong newPosition)
+    {
+        tokenPtr = newPosition;
     }
 
     /**
