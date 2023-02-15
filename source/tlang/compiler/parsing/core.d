@@ -1554,6 +1554,11 @@ public final class Parser
             nextToken();
             gprintln("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ getCurrentToken().getToken());
         }
+        /* Anything else is an error */
+        else
+        {
+            expect("Either a identity or an assignment symbol is expected");
+        }
 
 
        
