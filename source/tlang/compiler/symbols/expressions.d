@@ -200,3 +200,33 @@ public final class CastedExpression : Expression
         return uncastedExpression;
     }
 }
+
+public final class ArrayIndex : Expression
+{
+    /* The expression to index of */
+    private Expression indexInto;
+
+    /* The expression used as the index */
+    private Expression index;
+
+    this(Expression indexInto, Expression index)
+    {
+        this.indexInto = indexInto;
+        this.index = index;
+    }
+
+    public Expression getIndexed()
+    {
+        return indexInto;
+    }
+
+    public Expression getIndex()
+    {
+        return index;
+    }
+
+    public override string toString()
+    {
+        return "ArrayIndex [to: "~indexInto.toString()~", idx: "~index.toString()~"]";
+    }
+}

@@ -476,7 +476,7 @@ public final class ArrayAssignment : Statement
      * This is actually doable and probably the best way to do it.
      * 
      */
-    private Expression leftHandExpression
+    private Expression leftHandExpression;
 }
 
 
