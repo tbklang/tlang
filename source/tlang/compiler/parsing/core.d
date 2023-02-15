@@ -109,6 +109,11 @@ public final class Parser
         tokenPtr = newPosition;
     }
 
+    private ulong getCursor()
+    {
+        return tokenPtr;
+    }
+
     /**
     * Parses if statements
     *
