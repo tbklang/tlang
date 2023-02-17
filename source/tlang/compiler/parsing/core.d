@@ -1314,7 +1314,6 @@ public final class Parser
             /* If we have a `[` (array index/access) */
             else if(symbol == SymbolType.OBRACKET)
             {
-                gprintln("TODO: Implement array acesses/indexes", DebugType.ERROR);
                 // Pop off an expression which will be `indexTo`
                 Expression indexTo = removeExp();
                 gprintln("indexTo: "~indexTo.toString());
