@@ -1054,7 +1054,6 @@ public final class Parser
         return castedExpression;
     }
 
-
     /**
     * Parses an expression
     *
@@ -1312,6 +1311,24 @@ public final class Parser
                 /* Get the next token */
                 nextToken();
             }
+            /* If we have a `[` (array index/access) */
+            else if(symbol == SymbolType.OBRACKET)
+            {
+                gprintln("TODO: Implement array acesses/indexes", DebugType.ERROR);
+                // Pop off an expression which will be `indexTo`
+                Expression indexTo = removeExp();
+                gprintln("indexTo: "~indexTo.toString());
+
+                /* Get the index expression */
+                nextToken();
+                Expression index = parseExpression();
+                nextToken();
+                gprintln("IndexExpr: "~index.toString());
+                // gprintln(getCurrentToken());
+
+                ArrayIndex arrayIndexExpr = new ArrayIndex(indexTo, index);
+                addRetExp(arrayIndexExpr);
+            }
             /* If it is an identifier */
             else if (symbol == SymbolType.IDENT_TYPE)
             {
@@ -1435,15 +1452,7 @@ public final class Parser
         return retExpression[0];
     }
 
-    private void parseArrayIndex()
-    {
-        gprintln("parseArrayIndex(): Enter", DebugType.WARNING);
-
-
-
-
-        gprintln("parseArrayIndex(): Leave", DebugType.WARNING);
-    }
+    
 
     // TODO: Update to `Statement` as this can return an ArrayAssignment now
     private TypedEntity parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true)
@@ -1465,6 +1474,9 @@ public final class Parser
         /* Potential array index expressions (assignment) */
         // Think myArray[i][1] -> [`i`, `1`]
         Expression[] arrayIndexExprs;
+
+        // We are currently 1 past the "type" (the identifier) so go back one
+        ulong arrayAssignTokenBeginPos = getCursor()-1;
 
         /* Potential stack-array type size (declaration) */
         string potentialStackSize;
@@ -1648,6 +1660,10 @@ public final class Parser
         /* Check for `=` (array indexed assignment) */
         else if (symbolType == SymbolType.ASSIGN && (arrayIndexing == true))
         {
+            // Set the token pointer back to the beginning
+            setCursor(arrayAssignTokenBeginPos);
+            gprintln("Looking at: "~to!(string)(getCurrentToken()));
+
             // TODO: Move all below code to the branch below that handles this case
             gprintln("We have an array assignment, here is the indexers: "~to!(string)(arrayIndexExprs), DebugType.WARNING);
 
@@ -1662,6 +1678,9 @@ public final class Parser
 
 
             gprintln("We are still implenenting array assignments", DebugType.ERROR);
+
+            ArrayIndex muhIndex = cast(ArrayIndex)parseExpression();
+            gprintln("Expback: "~muhIndex.toString());
             assert(false);
         }
         else
