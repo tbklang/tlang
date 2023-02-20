@@ -1680,6 +1680,19 @@ public final class Parser
 
             ArrayIndex muhIndex = cast(ArrayIndex)parseExpression();
             gprintln("Expback: "~muhIndex.toString());
+
+            /* Expect a `=` and consume it */
+            gprintln(getCurrentToken());
+            expect(SymbolType.ASSIGN, getCurrentToken());
+            nextToken();
+
+            /* Parse the expression being assigned followed by a semi-colon `;` */
+            Expression expressionBeingAssigned = parseExpression();
+            expect(SymbolType.SEMICOLON, getCurrentToken());
+
+            // TODO: Get the expression after the `=`
+            ArrayAssignment arrayAssignment = new ArrayAssignment(muhIndex, expressionBeingAssigned);
+            gprintln("Created array assignment: "~arrayAssignment.toString());
             assert(false);
         }
         else

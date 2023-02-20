@@ -468,15 +468,36 @@ public final class ArrayAssignment : Statement
     private Expression assignmentExpression;
 
     /** 
-     * If we have `myArray[i][1]` then we would have
-     * TODO: We should actually maybe backtrack or something
-     * because what we want is a left-hand side expressio
-     * actually. Mmmh, might not be possible, I mean it is
-     * if we count but mmh.
-     * This is actually doable and probably the best way to do it.
-     * 
+     * The left hand side of:
+     *      e.g. myArray[i][1] = 2;
+     *
+     * Therefore the `myArray[i][1]` part
      */
-    private Expression leftHandExpression;
+    private ArrayIndex leftHandExpression;
+
+    this(ArrayIndex leftHandExpression, Expression assignmentExpression)
+    {
+        this.leftHandExpression = leftHandExpression;
+        this.assignmentExpression = assignmentExpression;
+
+        /* Weighted as 2 */
+        weight = 2;
+    }
+
+    public ArrayIndex getArrayLeft()
+    {
+        return leftHandExpression;
+    }
+
+    public Expression getAssignmentExpression()
+    {
+        return assignmentExpression;
+    }
+
+    public override string toString()
+    {
+        return "ArrayAssignment [leftHand: "~leftHandExpression.toString()~", assignmentExpr: "~assignmentExpression.toString()~"]";
+    }
 }
 
 
