@@ -10,9 +10,10 @@ on:
   pull_request:
     branches: [ "master" ]
 
+on: workflow_dispatch
+
 permissions:
   contents: read
-
 
 jobs:
   build:
