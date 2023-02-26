@@ -1,6 +1,8 @@
 tlang
 =====
 
+[![D](https://github.com/tbklang/tlang/actions/workflows/d.yml/badge.svg)](https://github.com/tbklang/tlang/actions/workflows/d.yml)
+
 Official Tristan Language project compiler
 
 ## Docs
