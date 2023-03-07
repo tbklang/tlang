@@ -543,6 +543,40 @@ public final class ArrayIndexInstruction : Value
     }
 }
 
+//TODO: ArrayIndexAssignmentInstruction
+public final class ArrayIndexAssignmentInstruction : Instruction
+{
+    // TODO: We then need the left hand side array evaluation instruction (a pointer value basically)
+    // private Value arrayPtrEval;
+
+    // TODO: We then also need a `Value` field for the index expression instruction
+    // private Value index;
+
+    // NOTE: We now to the above to using an ArrayIndexInstruction
+    private ArrayIndexInstruction arrayPtrEval;
+
+    // TODO: We then also need another `Value` field for the expression instruction
+    // ... being assigned into the pointer-array
+    private Value assignment;
+
+    this(ArrayIndexInstruction arrayPtrEval, Value assignment)
+    {
+        this.arrayPtrEval = arrayPtrEval;
+        // this.index = index;
+        this.assignment = assignment;
+    }
+
+    public ArrayIndexInstruction getArrayPtrEval()
+    {
+        return arrayPtrEval;
+    }
+
+    public Value getAssignmentInstr()
+    {
+        return assignment;
+    }
+}
+
 // TODO: StackArrayIndexInstruction
 public final class StackArrayIndexInstruction : Value
 {
@@ -609,5 +643,10 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
     public Value getAssignedValue()
     {
         return assignment;
+    }
+
+    public override string toString()
+    {
+        return "StackArrayASSIGN [name: "~arrayName~", index: "~index.toString()~", Assignment: "~assignment.toString()~"]";
     }
 }
