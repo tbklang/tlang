@@ -534,10 +534,12 @@ public final class DCodeEmitter : CodeEmitter
          */
         else if(cast(ArrayIndexInstruction)instruction)
         {
-            gprintln("TODO: Implement array index emit", DebugType.ERROR);
+            ArrayIndexInstruction arrAssInstr = cast(ArrayIndexInstruction)instruction;
+
+            gprintln("TODO: Implement Pointer-array index emit", DebugType.ERROR);
 
 
-            return "(TODO: Array index emit)";
+            return "(TODO: Pointer-array index emit)";
         }
         /** 
          * Array indexing (stack-based arrays)
@@ -545,6 +547,15 @@ public final class DCodeEmitter : CodeEmitter
          * TODO: Add a new `StackArrayIndexInstruction`
          * TODO: Add instruction generation in typechecker line 1714 for this
          */
+        else if(cast(StackArrayIndexInstruction)instruction)
+        {
+            StackArrayIndexInstruction stackArrAssInstr = cast(StackArrayIndexInstruction)instruction;
+
+            gprintln("TODO: Implement Stack-array index emit", DebugType.ERROR);
+
+
+            return "(TODO: Stack-array index emit)";
+        }
         // TODO: MAAAAN we don't even have this yet
         // else if(cast(StringExpression))
 
