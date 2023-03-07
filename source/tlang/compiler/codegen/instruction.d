@@ -575,7 +575,24 @@ public final class StackArrayIndexInstruction : Value
 }
 
 // TODO: StackArrayIndexAssignmentInstruction
-public final class StackArrayIndexAssignmentInstruction
+public final class StackArrayIndexAssignmentInstruction : Instruction
 {
-    
+    // TODO: We need a `string` field here which is looked up with the 
+    // ... associated context of this instruction and refers to the
+    // ... stack-array being index-assigned into
+    private string arrayName;
+
+    // TODO: We then also need a `Value` field for the index expression instruction
+    private Value index;
+
+    // TODO: We then also need another `Value` field for the expression instruction
+    // ... being assigned into the stack-array at said index
+    private Value assignment;
+
+    this(string arrayName, Value index, Value assignment)
+    {
+        this.arrayName = arrayName;
+        this.index = index;
+        this.assignment = assignment;
+    }
 }
