@@ -542,3 +542,40 @@ public final class ArrayIndexInstruction : Value
         return "ArrayIndexInstr [IndexTo: "~indexTo.toString()~", Index: "~index.toString()~"]";
     }
 }
+
+// TODO: StackArrayIndexInstruction
+public final class StackArrayIndexInstruction : Value
+{
+    /* Index-to instruction */
+    private Value indexTo;
+
+    /* The index */
+    private Value index;
+
+    this(Value indexTo, Value index)
+    {
+        this.indexTo = indexTo;
+        this.index = index;
+    }
+
+    public Value getIndexInstr()
+    {
+        return index;
+    }
+
+    public Value getIndexedToInstr()
+    {
+        return indexTo;
+    }
+
+    public override string toString()
+    {
+        return "StackArrayIndexInstr [IndexTo: "~indexTo.toString()~", Index: "~index.toString()~"]";
+    }
+}
+
+// TODO: StackArrayIndexAssignmentInstruction
+public final class StackArrayIndexAssignmentInstruction
+{
+    
+}
