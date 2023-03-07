@@ -595,4 +595,19 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
         this.index = index;
         this.assignment = assignment;
     }
+
+    public string getArrayName()
+    {
+        return arrayName;
+    }
+
+    public Value getIndexInstr()
+    {
+        return index;
+    }
+
+    public Value getAssignedValue()
+    {
+        return assignment;
+    }
 }
