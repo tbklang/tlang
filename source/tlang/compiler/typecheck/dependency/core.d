@@ -1156,6 +1156,31 @@ public class DNodeGenerator
 
             dnode.needs(uncastedExpressionDNode);
         }
+        /**
+        * Array indexing (ArrayIndex)
+        */
+        else if(cast(ArrayIndex)exp)
+        {
+            gprintln("Working on expressionPass'ing of ArrayIndex", DebugType.ERROR);
+
+            ArrayIndex arrayIndex = cast(ArrayIndex)exp;
+
+            // Set the context as we need to grab it later in the typechecker
+            arrayIndex.context = context;
+
+            /* The index's expression */
+            Expression indexExp = arrayIndex.getIndex();
+            DNode indexExpDNode = expressionPass(indexExp, context);
+            dnode.needs(indexExpDNode);
+
+            /* The thing being indexeds' expression */
+            Expression indexedExp = arrayIndex.getIndexed();
+            DNode indexedExpDNode = expressionPass(indexedExp, context);
+            dnode.needs(indexedExpDNode);
+
+
+            // assert(false);
+        }
         else
         {
             // dnode = new DNode(this, exp);
@@ -1369,6 +1394,46 @@ public class DNodeGenerator
                 Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
                 return null;
             }            
+        }
+        /**
+        * Array assignments
+        */
+        else if(cast(ArrayAssignment)entity)
+        {
+            ArrayAssignment arrayAssignment = cast(ArrayAssignment)entity;
+            arrayAssignment.setContext(context);
+            DNode arrayAssDerefDNode = pool(arrayAssignment);
+
+            /* Pass the expression to be assigned */
+            Expression assignedExpression = arrayAssignment.getAssignmentExpression();
+            DNode assignmentExpressionDNode = expressionPass(assignedExpression, context);
+            arrayAssDerefDNode.needs(assignmentExpressionDNode);
+
+            /**
+            * Extract the ArrayIndex expression
+            *
+            * This consists of two parts (e.g. `myArray[i]`):
+            *
+            * 1. The indexTo `myArray`
+            * 2. The index `i`
+            */
+            ArrayIndex arrayIndexExpression = arrayAssignment.getArrayLeft();
+            Expression indexTo = arrayIndexExpression.getIndexed();
+            Expression index = arrayIndexExpression.getIndex();
+
+            DNode indexToExpression = expressionPass(indexTo, context);
+            arrayAssDerefDNode.needs(indexToExpression);
+
+            DNode indexExpression = expressionPass(index, context);
+            arrayAssDerefDNode.needs(indexExpression);
+            
+
+
+
+            gprintln("Please implement array assignment dependency generation", DebugType.ERROR);
+            // assert(false);
+
+            return arrayAssDerefDNode;
         }
         /**
         * Function definitions
