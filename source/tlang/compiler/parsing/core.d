@@ -475,6 +475,13 @@ public final class Parser
                 expect(SymbolType.SEMICOLON, getCurrentToken());
                 nextToken();
             }
+            /* If it is an arrau assignment */
+            else if(cast(ArrayAssignment)ret)
+            {
+                /* Expect a semicolon and consume it */
+                expect(SymbolType.SEMICOLON, getCurrentToken());
+                nextToken();
+            }
             /* This should never happen */
             else
             {
@@ -1454,13 +1461,13 @@ public final class Parser
     
 
     // TODO: Update to `Statement` as this can return an ArrayAssignment now
-    private TypedEntity parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true)
+    private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true)
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
 
 
         /* Generated object */
-        TypedEntity generated;
+        Statement generated;
 
 
         /* TODO: Save type */
@@ -1693,7 +1700,9 @@ public final class Parser
             // TODO: Get the expression after the `=`
             ArrayAssignment arrayAssignment = new ArrayAssignment(muhIndex, expressionBeingAssigned);
             gprintln("Created array assignment: "~arrayAssignment.toString());
-            assert(false);
+            // assert(false);
+
+            generated = arrayAssignment;
         }
         else
         {
@@ -2095,14 +2104,20 @@ public final class Parser
 
             // We now parse function definition but with `wantsBody` set to false
             // indicating no body should be allowed.
-            pseudoEntity = parseTypedDeclaration(false, false, true);
+            pseudoEntity = cast(TypedEntity)parseTypedDeclaration(false, false, true);
+
+            // TODO: Add a check for this cast (AND parse wise if it is evan possible)
+            assert(pseudoEntity);
         }
         /* External variable symbol */
         else if(externType == SymbolType.EXTERN_EVAR)
         {
             // We now parse a variable declaration but with the `wantsBody` set to false
             // indicating no assignment should be allowed.
-            pseudoEntity = parseTypedDeclaration(false, true, false);
+            pseudoEntity = cast(TypedEntity)parseTypedDeclaration(false, true, false);
+
+            // TODO: Add a check for this cast (AND parse wise if it is evan possible)
+            assert(pseudoEntity);
         }
         /* Anything else is invalid */
         else
