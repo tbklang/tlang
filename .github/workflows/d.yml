@@ -58,9 +58,6 @@ jobs:
         run: chmod +x tlang
         
         
-      - name: Basic test
-        run: ./tlang --help
-      
-      - name: List files here
-        run: ls -la
+      - name: Simple function call
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t
       
