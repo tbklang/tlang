@@ -97,4 +97,49 @@ jobs:
       - name: test3
         run: ./tlang typecheck source/tlang/testing/test3.t
         
-  
+  emit:
+    needs: build
+    name: Emit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v3
+        with:
+          name: tbin
+        
+      - name: Chmod compiler
+        run: chmod +x tlang  
+        
+      - name: Simple functions
+        run: |
+          ./tlang compile source/tlang/testing/simple_functions.t
+          ./tlang.out
+      - name: Simple variables
+        run: |
+          ./tlang compile source/tlang/testing/simple_variables.t
+          ./tlang.out
+      - name: Simple conditions
+        run: |
+          ./tlang compile source/tlang/testing/simple_conditions.t
+          ./tlang.out
+      - name: Nested conditionals
+        run: |
+          ./tlang compile source/tlang/testing/nested_conditionals.t
+          ./tlang.out
+      - name: Simple function decls
+        run: |
+          ./tlang compile source/tlang/testing/simple_function_decls.t
+          ./tlang.out
+      - name: Simple function (only) decls
+        run: |
+          ./tlang compile source/tlang/testing/simple_variables_only_decs.t
+          ./tlang.out
+      - name: Simple variables decls assignment
+        run: |
+          ./tlang compile source/tlang/testing/simple_variables_decls_ass.t
+          ./tlang.out
+      - name: Simple while
+        run: |
+          ./tlang compile source/tlang/testing/simple_while.t
+          ./tlang.out
