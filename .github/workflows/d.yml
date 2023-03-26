@@ -54,3 +54,7 @@ jobs:
         
       - name: Basic test
         run: ./tlang --help
+      
+      - name: List files here
+        run: ls -la
+      
