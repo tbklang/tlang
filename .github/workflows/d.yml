@@ -27,10 +27,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/upload-artifact@v3
-        with:
-          name: tbin
-          path: tlang
+      
       
       - name: Install D compiler
         uses: dlang-community/setup-dlang@v1
@@ -39,4 +36,9 @@ jobs:
 
       - name: Build
         run: dub build
+        
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tbin
+          path: tlang
         
