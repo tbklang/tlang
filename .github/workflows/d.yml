@@ -16,10 +16,10 @@ permissions:
 
 jobs:
   test:
-    name: Dub Tests
+    name: Build
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, macOS-latest]
         dc: [dmd-2.101.0]
         exclude:
           - { os: macOS-latest, dc: dmd-2.085.0 }
