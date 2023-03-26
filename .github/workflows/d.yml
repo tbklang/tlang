@@ -37,8 +37,7 @@ jobs:
       - name: Build
         run: dub build
         
-      - name: Chmod compiler
-        run: chmod +x tlang
+      
         
       - uses: actions/upload-artifact@v3
         with:
@@ -54,6 +53,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: tbin
+        
+      - name: Chmod compiler
+        run: chmod +x tlang
+        
         
       - name: Basic test
         run: ./tlang --help
