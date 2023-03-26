@@ -187,5 +187,11 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_pointer.t
           ./tlang.out
+      - name: Simple extern
+        run: |
+          chmod +x extern_test.sh
+          ./extern_test.sh
+
+      
 
       
