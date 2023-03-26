@@ -53,4 +53,4 @@ jobs:
           name: tbin
         
       - name: Basic test
-        run: tlang --help
+        run: ./tlang --help
