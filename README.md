@@ -1,7 +1,7 @@
 tlang
 =====
 
-[![D](https://github.com/tbklang/tlang/actions/workflows/d.yml/badge.svg?branch=vardec_varass_dependency)](https://github.com/tbklang/tlang/actions/workflows/d.yml)
+[ ![D](https://github.com/tbklang/tlang/actions/workflows/d.yml/badge.svg?branch=vardec_varass_dependency) ](https://github.com/tbklang/tlang/actions/workflows/d.yml)
 
 Official Tristan Language project compiler
 
