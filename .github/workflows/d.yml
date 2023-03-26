@@ -225,25 +225,25 @@ jobs:
 ####### Deployment section #######
 ##################################
 
-  deploy:
-    needs: [build, unittests, typecheck, syntaxcheck, emit]
-    name: Deply alpha build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Download tlang compiler
-        uses: actions/download-artifact@v3
-        with:
-          name: tbin
+#   deploy:
+#     needs: [build, unittests, typecheck, syntaxcheck, emit]
+#     name: Deply alpha build
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#       - name: Download tlang compiler
+#         uses: actions/download-artifact@v3
+#         with:
+#           name: tbin
         
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.YES_TOKEN_DEPLOY }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build"
-          files: |
-            tbin  
+#       - uses: "marvinpinto/action-automatic-releases@latest"
+#         with:
+#           repo_token: "${{ secrets.YES_TOKEN_DEPLOY }}"
+#           automatic_release_tag: "latest"
+#           prerelease: true
+#           title: "Development Build"
+#           files: |
+#             tbin  
         
 
 
