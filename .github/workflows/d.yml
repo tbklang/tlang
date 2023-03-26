@@ -61,4 +61,20 @@ jobs:
         
       - name: Simple function call
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t
+      - name: Simple function call 1
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call_1.t
+      - name: Simple float constant
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_float_constant.t
+      - name: Simple float constant bad
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_float_constant_bad.t
+      - name: Simple string
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_string.t
+      - name: Simple array
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
+      - name: Collide container module1
+        run: ./tlang typecheck source/tlang/testing/collide_container_module1.t
+      - name: Collide container module2
+        run: ./tlang typecheck source/tlang/testing/collide_container_module2.t
+        
+      
       
