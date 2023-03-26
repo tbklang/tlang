@@ -47,13 +47,22 @@ jobs:
   unittests:
     needs: build
     name: Unit tests
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        dc: [dmd-2.101.0]
+        exclude:
+          - { os: macOS-latest, dc: dmd-2.085.0 }
+    runs-on: ${{ matrix.os }}
+    
+    
+    
     steps:
       - uses: actions/checkout@v2
-      - name: Download math result for job 1
-        uses: actions/download-artifact@v3
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v1
         with:
-          name: tbin
+          compiler: ${{ matrix.dc }}
         
       - name: DUB unit tests with coverage
         run: dub test --coverage
