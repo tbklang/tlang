@@ -72,6 +72,27 @@ jobs:
           name: coverage files
           path: \*.lst
 
+  syntaxcheck:
+    needs: [build, unittests]
+    name: Syntax checking (fine typecheck home)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download tlang compiler
+        uses: actions/download-artifact@v3
+        with:
+          name: tbin
+        
+      - name: Chmod compiler
+        run: chmod +x tlang
+      # TODO: Maybe check below and make them typeheck again
+      - name: Simple float constant
+        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant.t
+      - name: Simple float constant bad
+        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant_bad.t
+      - name: Simple string
+        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_string.t
+
   typecheck:
     needs: [build, unittests]
     name: Typechecking tests
@@ -132,27 +153,6 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/simple_literals5.t
       - name: Simple literals 6
         run: ./tlang typecheck source/tlang/testing/simple_literals6.t
-        
-  syntaxcheck:
-    needs: [build, unittests]
-    name: Syntax checking (fine typecheck home)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Download tlang compiler
-        uses: actions/download-artifact@v3
-        with:
-          name: tbin
-        
-      - name: Chmod compiler
-        run: chmod +x tlang
-      # TODO: Maybe check below and make them typeheck again
-      - name: Simple float constant
-        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant.t
-      - name: Simple float constant bad
-        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant_bad.t
-      - name: Simple string
-        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_string.t
         
   emit:
     needs: [build, unittests]
