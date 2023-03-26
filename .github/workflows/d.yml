@@ -64,7 +64,7 @@ jobs:
           path: \*.lst
 
   typecheck:
-    needs: build
+    needs: [build, unittests]
     name: Typechecking tests
     runs-on: ubuntu-latest
     steps:
