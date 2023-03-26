@@ -133,6 +133,20 @@ jobs:
       - name: Simple literals 6
         run: ./tlang typecheck source/tlang/testing/simple_literals6.t
         
+  syntaxcheck:
+    needs: [build, unittests]
+    name: Syntax checking (fine typecheck home)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download tlang compiler
+        uses: actions/download-artifact@v3
+        with:
+          name: tbin
+        
+      - name: Chmod compiler
+        run: chmod +x tlang
+      # TODO: Maybe check below and make them typeheck again
       - name: Simple float constant
         run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant.t
       - name: Simple float constant bad
