@@ -179,4 +179,13 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_for_loops.t
           ./tlang.out
+      - name: Simple cast
+        run: |
+          ./tlang compile source/tlang/testing/simple_cast.t
+          ./tlang.out
+      - name: Simple pointer
+        run: |
+          ./tlang compile source/tlang/testing/simple_pointer.t
+          ./tlang.out
+
       
