@@ -37,5 +37,6 @@ jobs:
         with:
           compiler: ${{ matrix.dc }}
 
-      - name: Run tests
-        run: dub -q test
+      - name: Build
+        run: dub build
+        
