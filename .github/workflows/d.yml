@@ -15,11 +15,11 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  build:
     name: Build
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest]
         dc: [dmd-2.101.0]
         exclude:
           - { os: macOS-latest, dc: dmd-2.085.0 }
@@ -41,4 +41,14 @@ jobs:
         with:
           name: tbin
           path: tlang
+          
+  test:
+    needs: build
+    name: RUn compiler tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v3
+        with:
+          name: tbin
         
