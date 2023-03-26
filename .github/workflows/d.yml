@@ -43,7 +43,26 @@ jobs:
         with:
           name: tbin
           path: tlang
-          
+
+  unittests:
+    needs: build
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v3
+        with:
+          name: tbin
+        
+      - name: DUB unit tests with coverage
+        run: dub test --coverage
+        
+      - uses: actions/upload-artifact@v3
+        with:
+          name: coverage files
+          path: \*.lst
+
   typecheck:
     needs: build
     name: Typechecking tests
