@@ -71,10 +71,18 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_string.t
       - name: Simple array
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
+        
+        
       - name: Collide container module1
         run: ./tlang typecheck source/tlang/testing/collide_container_module1.t
       - name: Collide container module2
         run: ./tlang typecheck source/tlang/testing/collide_container_module2.t
+      - name: Collide container non-module
+        run: ./tlang typecheck source/tlang/testing/collide_container_non_module.t
+      - name: Collide container
+        run: ./tlang typecheck source/tlang/testing/collide_container.t
+      - name: Collide member
+        run: ./tlang typecheck source/tlang/testing/collide_member.t
         
-      
-      
+        
+  
