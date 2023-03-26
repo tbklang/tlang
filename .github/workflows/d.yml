@@ -126,7 +126,7 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/test3.t
         
   emit:
-    needs: build
+    needs: [build, unittests]
     name: Emit tests
     runs-on: ubuntu-latest
     steps:
