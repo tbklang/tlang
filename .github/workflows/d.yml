@@ -44,9 +44,9 @@ jobs:
           name: tbin
           path: tlang
           
-  test:
+  typecheck:
     needs: build
-    name: Run compiler tests
+    name: Typechecking tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -83,6 +83,18 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/collide_container.t
       - name: Collide member
         run: ./tlang typecheck source/tlang/testing/collide_member.t
+      - name: Precedence collision test
+        run: ./tlang typecheck source/tlang/testing/precedence_collision_test.t
         
+      - name: Else if without if
+        run: ./tlang typecheck source/tlang/testing/else_if_without_if.pl
+      - name: Simple module positive
+        run: ./tlang typecheck source/tlang/testing/simple1_module_positive.t
+      - name: Simple OOP
+        run: ./tlang typecheck source/tlang/testing/simple1_oop.t
+      - name: Simple name recognition
+        run: ./tlang typecheck source/tlang/testing/simple2_name_recognition.t
+      - name: test3
+        run: ./tlang typecheck source/tlang/testing/test3.t
         
   
