@@ -125,6 +125,19 @@ jobs:
       - name: test3
         run: ./tlang typecheck source/tlang/testing/test3.t
         
+      - name: Simple literals
+        run: ./tlang typecheck source/tlang/testing/simple_literals.t
+      - name: Simple literals 2
+        run: ./tlang typecheck source/tlang/testing/simple_literals2.t
+      - name: Simple literals 3
+        run: ./tlang typecheck source/tlang/testing/simple_literals3.t
+      - name: Simple literals 4
+        run: ./tlang typecheck source/tlang/testing/simple_literals4.t
+      - name: Simple literals 5
+        run: ./tlang typecheck source/tlang/testing/simple_literals5.t
+      - name: Simple literals 6
+        run: ./tlang typecheck source/tlang/testing/simple_literals6.t
+        
   emit:
     needs: [build, unittests]
     name: Emit tests
