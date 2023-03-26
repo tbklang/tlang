@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Download math result for job 1
+      - name: Download tlang compiler
         uses: actions/download-artifact@v3
         with:
           name: tbin
@@ -144,7 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Download math result for job 1
+      - name: Download tlang compiler
         uses: actions/download-artifact@v3
         with:
           name: tbin
