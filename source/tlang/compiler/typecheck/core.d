@@ -731,10 +731,11 @@ public final class TypeChecker
      * Params:
      *   parameterType = the function's parameter typoe
      *   argumentType = the argument's type
+     *   outputType = variable to place updated type into
      *
      * Returns: true if the so, false otherwise
      */
-    private bool canCoerceStackArray(Type parameterType, Type argumentType)
+    private bool canCoerceStackArray(Type parameterType, Type argumentType, ref Type outputType)
     {
         // If the argument being passed in is a stack array
         if(cast(StackArray)argumentType)
@@ -752,6 +753,7 @@ public final class TypeChecker
                 // Now create a new type for the stack array which is
                 // effectively <stackArrayType>*
                 Type stackArrayTypeCoerced = new Pointer(stackArrCompType);
+                outputType = stackArrayTypeCoerced;
 
                 // If the coerced stack array's component type is the same as the pointer's component type
                 return isSameType(parameterPointerCompType, stackArrayTypeCoerced);
@@ -1135,6 +1137,9 @@ public final class TypeChecker
                             // gprintln("FuncCall(Formal): "~parmType.getName());
                             // gprintln("FuncCall(Actual): "~valueInstr.toString());
 
+                            /* Scratch type used only for stack-array coercion */
+                            Type coercionScratchType;
+
 
                             /* Match up types */
                             //if(argType == parmType)
@@ -1147,12 +1152,27 @@ public final class TypeChecker
                                 gprintln(funcCallInstr.getEvaluationInstructions());
                             }
                             /* Stack-array argument to pointer parameter coercion check */
-                            else if(canCoerceStackArray(parmType, argType))
+                            else if(canCoerceStackArray(parmType, argType, coercionScratchType))
                             {
                                 // TODO: Add stack coercion check here
+                                gprintln("Stack-based array has been coerced for function call");
 
-                                bool stackArrCoerceStatus = canCoerceStackArray(parmType, argType);
-                                gprintln("Could accept?: "~to!(string)(stackArrCoerceStatus));
+                                // bool stackArrCoerceStatus = canCoerceStackArray(parmType, argType);
+                                // gprintln("Could accept?: "~to!(string)(stackArrCoerceStatus));
+
+                                // // TODO: Purposefully crash
+                                // gprintln("Arg instr: "~valueInstr.toString());
+                                // *(cast(byte*)0)=2;
+
+                                // Update the fetch-var instruction's type to the coerced 
+                                // TODO: Should we have applied this technically earlier then fallen through to
+                                // ... the branch above? That would have worked and been neater - we should do
+                                // ... that to avoid duplicating any code
+                                valueInstr.setInstrType(coercionScratchType);
+
+                                /* Add the instruction into the FunctionCallInstr */
+                                funcCallInstr.setEvalInstr(parmCount, valueInstr);
+                                gprintln(funcCallInstr.getEvaluationInstructions());
                             }
                             else
                             {
