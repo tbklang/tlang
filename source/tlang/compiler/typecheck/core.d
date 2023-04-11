@@ -722,6 +722,53 @@ public final class TypeChecker
         return false;
     }
 
+    /** 
+     * Used to check if the type of the argument being passed into
+     * a function call is a stack array and if the function's parameter
+     * type is a pointer then this will check if the component type
+     * of the stack array is the same as that of the pointer
+     *
+     * Params:
+     *   parameterType = the function's parameter typoe
+     *   argumentType = the argument's type
+     *
+     * Returns: true if the so, false otherwise
+     */
+    private bool canCoerceStackArray(Type parameterType, Type argumentType)
+    {
+        // If the argument being passed in is a stack array
+        if(cast(StackArray)argumentType)
+        {
+            StackArray stackArrayType = cast(StackArray)argumentType;
+
+            // Get the component type of the stack array
+            Type stackArrCompType = stackArrayType.getComponentType();
+
+            // Now check if the parameter is a pointer type
+            if(cast(Pointer)parameterType)
+            {
+                Pointer parameterPointerCompType = cast(Pointer)parameterType;
+
+                // Now create a new type for the stack array which is
+                // effectively <stackArrayType>*
+                Type stackArrayTypeCoerced = new Pointer(stackArrCompType);
+
+                // If the coerced stack array's component type is the same as the pointer's component type
+                return isSameType(parameterPointerCompType, stackArrayTypeCoerced);
+            }
+            // If not, then return false immedtaiely
+            else
+            {
+                return false;
+            }
+        }
+        // If not, then immediately return false
+        else
+        {   
+            return false;
+        }
+    }
+
 
     public void typeCheckThing(DNode dnode)
     {
@@ -1101,54 +1148,7 @@ public final class TypeChecker
                             }
                             else
                             {
-                                /** 
-                                 * Used to check if the type of the argument being passed into
-                                 * a function call is a stack array and if the function's parameter
-                                 * type is a pointer then this will check if the component type
-                                 * of the stack array is the same as that of the pointer
-                                 *
-                                 * Params:
-                                 *   parameterType = the function's parameter typoe
-                                 *   argumentType = the argument's type
-                                 *
-                                 * Returns: true if the so, false otherwise
-                                 */
-                                bool canCoerceStackArray(Type parameterType, Type argumentType)
-                                {
-                                    // If the argument being passed in is a stack array
-                                    if(cast(StackArray)argumentType)
-                                    {
-                                        StackArray stackArrayType = cast(StackArray)argumentType;
-
-                                        // Get the component type of the stack array
-                                        Type stackArrCompType = stackArrayType.getComponentType();
-
-                                        // Now check if the parameter is a pointer type
-                                        if(cast(Pointer)parameterType)
-                                        {
-                                            Pointer parameterPointerCompType = cast(Pointer)parameterType;
-
-                                            // Now create a new type for the stack array which is
-                                            // effectively <stackArrayType>*
-                                            Type stackArrayTypeCoerced = new Pointer(stackArrCompType);
-
-                                            // If the coerced stack array's component type is the same as the pointer's component type
-                                            gprintln("t1: "~parameterPointerCompType.toString());
-                                            gprintln("t2: "~stackArrayTypeCoerced.toString());
-                                            return isSameType(parameterPointerCompType, stackArrayTypeCoerced);
-                                        }
-                                        // If not, then return false immedtaiely
-                                        else
-                                        {
-                                            return false;
-                                        }
-                                    }
-                                    // If not, then immediately return false
-                                    else
-                                    {   
-                                        return false;
-                                    }
-                                }
+                                // TODO: Add stack coercion check here
 
                                 bool stackArrCoerceStatus = canCoerceStackArray(parmType, argType);
                                 gprintln("Could accept?: "~to!(string)(stackArrCoerceStatus));
