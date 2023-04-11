@@ -1,0 +1,250 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+name: D
+
+on:
+  push:
+    branches: [ "vardec_varass_dependency" ]
+  pull_request:
+    branches: [ "vardec_varass_dependency" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        dc: [dmd-2.101.0]
+        exclude:
+          - { os: macOS-latest, dc: dmd-2.085.0 }
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: ${{ matrix.dc }}
+
+      - name: Build
+        run: dub build
+        
+      
+        
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tbin
+          path: tlang
+
+  unittests:
+    needs: build
+    name: Unit tests
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        dc: [dmd-2.101.0]
+        exclude:
+          - { os: macOS-latest, dc: dmd-2.085.0 }
+    runs-on: ${{ matrix.os }}
+    
+    
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: ${{ matrix.dc }}
+        
+      - name: DUB unit tests with coverage
+        run: dub test --coverage
+        
+      - uses: actions/upload-artifact@v3
+        with:
+          name: coverage files
+          path: \*.lst
+
+  syntaxcheck:
+    needs: [build, unittests]
+    name: Syntax checking (fine typecheck home)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download tlang compiler
+        uses: actions/download-artifact@v3
+        with:
+          name: tbin
+        
+      - name: Chmod compiler
+        run: chmod +x tlang
+      # TODO: Maybe check below and make them typeheck again
+      - name: Simple float constant
+        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant.t
+      - name: Simple float constant bad
+        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant_bad.t
+      - name: Simple string
+        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_string.t
+
+  typecheck:
+    needs: [build, unittests]
+    name: Typechecking tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download tlang compiler
+        uses: actions/download-artifact@v3
+        with:
+          name: tbin
+        
+      - name: Chmod compiler
+        run: chmod +x tlang
+        
+        
+      - name: Simple function call
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t
+      - name: Simple function call 1
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call_1.t
+
+      - name: Simple array
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
+        
+        
+      - name: Collide container module1
+        run: ./tlang typecheck source/tlang/testing/collide_container_module1.t
+      - name: Collide container module2
+        run: ./tlang typecheck source/tlang/testing/collide_container_module2.t
+      - name: Collide container non-module
+        run: ./tlang typecheck source/tlang/testing/collide_container_non_module.t
+      - name: Collide container
+        run: ./tlang typecheck source/tlang/testing/collide_container.t
+      - name: Collide member
+        run: ./tlang typecheck source/tlang/testing/collide_member.t
+      - name: Precedence collision test
+        run: ./tlang typecheck source/tlang/testing/precedence_collision_test.t
+        
+      - name: Else if without if
+        run: ./tlang typecheck source/tlang/testing/else_if_without_if.pl
+      - name: Simple module positive
+        run: ./tlang typecheck source/tlang/testing/simple1_module_positive.t
+      - name: Simple OOP
+        run: ./tlang typecheck source/tlang/testing/simple1_oop.t
+      - name: Simple name recognition
+        run: ./tlang typecheck source/tlang/testing/simple2_name_recognition.t
+      - name: test3
+        run: ./tlang typecheck source/tlang/testing/test3.t
+        
+      - name: Simple literals
+        run: ./tlang typecheck source/tlang/testing/simple_literals.t
+      - name: Simple literals 2
+        run: ./tlang typecheck source/tlang/testing/simple_literals2.t
+      - name: Simple literals 3
+        run: ./tlang typecheck source/tlang/testing/simple_literals3.t
+      - name: Simple literals 4
+        run: ./tlang typecheck source/tlang/testing/simple_literals4.t
+      - name: Simple literals 5
+        run: ./tlang typecheck source/tlang/testing/simple_literals5.t
+      - name: Simple literals 6
+        run: ./tlang typecheck source/tlang/testing/simple_literals6.t
+        
+  emit:
+    needs: [build, unittests]
+    name: Emit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download tlang compiler
+        uses: actions/download-artifact@v3
+        with:
+          name: tbin
+        
+      - name: Chmod compiler
+        run: chmod +x tlang  
+        
+      - name: Simple functions
+        run: |
+          ./tlang compile source/tlang/testing/simple_functions.t
+          ./tlang.out
+      - name: Simple variables
+        run: |
+          ./tlang compile source/tlang/testing/simple_variables.t
+          ./tlang.out
+      - name: Simple conditions
+        run: |
+          ./tlang compile source/tlang/testing/simple_conditions.t
+          ./tlang.out
+      - name: Nested conditionals
+        run: |
+          ./tlang compile source/tlang/testing/nested_conditionals.t
+          ./tlang.out
+      - name: Simple function decls
+        run: |
+          ./tlang compile source/tlang/testing/simple_function_decls.t
+          ./tlang.out
+      - name: Simple function (only) decls
+        run: |
+          ./tlang compile source/tlang/testing/simple_variables_only_decs.t
+          ./tlang.out
+      - name: Simple variables decls assignment
+        run: |
+          ./tlang compile source/tlang/testing/simple_variables_decls_ass.t
+          ./tlang.out
+      - name: Simple while
+        run: |
+          ./tlang compile source/tlang/testing/simple_while.t
+          ./tlang.out
+      #- name: Simple do-while
+      #  run: |
+      #    ./tlang compile source/tlang/testing/simple_do_while.t
+      #    ./tlang.out
+      - name: Simple for-loops
+        run: |
+          ./tlang compile source/tlang/testing/simple_for_loops.t
+          ./tlang.out
+      - name: Simple cast
+        run: |
+          ./tlang compile source/tlang/testing/simple_cast.t
+          ./tlang.out
+      - name: Simple pointer
+        run: |
+          ./tlang compile source/tlang/testing/simple_pointer.t
+          ./tlang.out
+      - name: Simple extern
+        run: |
+          chmod +x extern_test.sh
+          ./extern_test.sh
+
+##################################
+####### Deployment section #######
+##################################
+
+#   deploy:
+#     needs: [build, unittests, typecheck, syntaxcheck, emit]
+#     name: Deply alpha build
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#       - name: Download tlang compiler
+#         uses: actions/download-artifact@v3
+#         with:
+#           name: tbin
+        
+#       - uses: "marvinpinto/action-automatic-releases@latest"
+#         with:
+#           repo_token: "${{ secrets.YES_TOKEN_DEPLOY }}"
+#           automatic_release_tag: "latest"
+#           prerelease: true
+#           title: "Development Build"
+#           files: |
+#             tbin  
+        
+
+
+      
