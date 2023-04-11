@@ -115,6 +115,8 @@ jobs:
 
       - name: Simple array
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
+      - name: Stack-based array coercion
+        run: ./tlang typecheck source/tlang/testing/simple_stack_array_coerce.t
         
         
       - name: Collide container module1
