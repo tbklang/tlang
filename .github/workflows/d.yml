@@ -113,11 +113,13 @@ jobs:
       - name: Simple function call 1
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call_1.t
 
+      # Array support
       - name: Simple array
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
       - name: Stack-based array coercion
         run: ./tlang typecheck source/tlang/testing/simple_stack_array_coerce.t
-        
+      - name: Complex stack-based arrays
+        run: ./tlang typecheck source/tlang/testing/complex_stack_arrays1.t
         
       - name: Collide container module1
         run: ./tlang typecheck source/tlang/testing/collide_container_module1.t
