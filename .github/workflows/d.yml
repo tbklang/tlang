@@ -243,6 +243,19 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/complex_stack_arrays1.t
           ./tlang.out
+      - name: Simple array
+        run: |
+          ./tlang compile source/tlang/testing/simple_array.t
+          ./tlang.out
+      - name: Simple array 2
+        run: |
+          ./tlang compile source/tlang/testing/simple_arrays2.t
+          ./tlang.out
+      - name: Simple array 4
+        run: |
+          ./tlang compile source/tlang/testing/simple_arrays4.t
+          ./tlang.out
+
 
 ##################################
 ####### Deployment section #######
