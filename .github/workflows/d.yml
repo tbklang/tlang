@@ -117,9 +117,9 @@ jobs:
       - name: Simple array
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
       - name: Simple array 2
-        run: ./tlang typecheck source/tlang/testing/typecheck/simple_array2.t
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_arrays2.t
       - name: Simple array 4
-        run: ./tlang typecheck source/tlang/testing/typecheck/simple_array4.t
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_arrays4.t
       - name: Simple array
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
 
