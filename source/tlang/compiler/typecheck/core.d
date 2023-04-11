@@ -1157,13 +1157,6 @@ public final class TypeChecker
                                 // TODO: Add stack coercion check here
                                 gprintln("Stack-based array has been coerced for function call");
 
-                                // bool stackArrCoerceStatus = canCoerceStackArray(parmType, argType);
-                                // gprintln("Could accept?: "~to!(string)(stackArrCoerceStatus));
-
-                                // // TODO: Purposefully crash
-                                // gprintln("Arg instr: "~valueInstr.toString());
-                                // *(cast(byte*)0)=2;
-
                                 // Update the fetch-var instruction's type to the coerced 
                                 // TODO: Should we have applied this technically earlier then fallen through to
                                 // ... the branch above? That would have worked and been neater - we should do
