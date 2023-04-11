@@ -116,6 +116,13 @@ jobs:
       # Array support
       - name: Simple array
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
+      - name: Simple array 2
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_array2.t
+      - name: Simple array 4
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_array4.t
+      - name: Simple array
+        run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
+
       - name: Stack-based array coercion
         run: ./tlang typecheck source/tlang/testing/simple_stack_array_coerce.t
       - name: Complex stack-based arrays
