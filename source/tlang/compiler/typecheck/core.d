@@ -1128,8 +1128,14 @@ public final class TypeChecker
                                         {
                                             Pointer parameterPointerCompType = cast(Pointer)parameterType;
 
-                                            // If the stack array's component type is the same as the pointer's component type
-                                            return isSameType(parameterPointerCompType, stackArrCompType);
+                                            // Now create a new type for the stack array which is
+                                            // effectively <stackArrayType>*
+                                            Type stackArrayTypeCoerced = new Pointer(stackArrCompType);
+
+                                            // If the coerced stack array's component type is the same as the pointer's component type
+                                            gprintln("t1: "~parameterPointerCompType.toString());
+                                            gprintln("t2: "~stackArrayTypeCoerced.toString());
+                                            return isSameType(parameterPointerCompType, stackArrayTypeCoerced);
                                         }
                                         // If not, then return false immedtaiely
                                         else
@@ -1139,12 +1145,13 @@ public final class TypeChecker
                                     }
                                     // If not, then immediately return false
                                     else
-                                    {
+                                    {   
                                         return false;
                                     }
                                 }
 
-                                
+                                bool stackArrCoerceStatus = canCoerceStackArray(parmType, argType);
+                                gprintln("Could accept?: "~to!(string)(stackArrCoerceStatus));
 
 
                                 printCodeQueue();
