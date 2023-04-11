@@ -856,6 +856,40 @@ public final class TypeChecker
                 Type vRhsType = vRhsInstr.getInstrType();
                 Type vLhsType = vLhsInstr.getInstrType();
 
+
+                void attemptPointerAriehmeticCoercion(Value vInstr1, Value vInstr2)
+                {
+                    // Get the types of `vInstr1` and `vInstr2` respectively
+                    Type t1 = vInstr1.getInstrType();
+                    Type t2 = vInstr2.getInstrType();
+
+                    // TODO: Check if T1 is a pointer and then if T2 is an integer make it a pointer
+                    if(cast(Pointer)t1 && cast(Integer)t2)
+                    {
+                        Pointer t1Ptr = cast(Pointer)t1;
+
+                        Type coercedType = new Pointer(t1Ptr.getReferredType());
+                        vInstr2.setInstrType(coercedType);
+                    }
+                    // TODO: Else check if T2 is a pointer and then if T1 is an integer and make it a pointer
+                    else if(cast(Pointer)t2 && cast(Integer)t2)
+                    {
+                        Pointer t2Ptr = cast(Pointer)t2;
+
+                        Type coercedType = new Pointer(t2Ptr.getReferredType());
+                        vInstr1.setInstrType(coercedType);
+                    }
+                    else if(cast(Pointer)t1 && cast(Pointer)t2)
+                    {
+                        // Do nothing
+                        // TODO: Remove this branch
+                    }
+                    else
+                    {
+                        // Do nothing
+                    }
+                }
+
                 /**
                 * TODO
                 * Types must either BE THE SAME or BE COMPATIBLE
