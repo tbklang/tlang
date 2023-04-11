@@ -1146,14 +1146,16 @@ public final class TypeChecker
                                 funcCallInstr.setEvalInstr(parmCount, valueInstr);
                                 gprintln(funcCallInstr.getEvaluationInstructions());
                             }
-                            else
+                            /* Stack-array argument to pointer parameter coercion check */
+                            else if(canCoerceStackArray(parmType, argType))
                             {
                                 // TODO: Add stack coercion check here
 
                                 bool stackArrCoerceStatus = canCoerceStackArray(parmType, argType);
                                 gprintln("Could accept?: "~to!(string)(stackArrCoerceStatus));
-
-
+                            }
+                            else
+                            {
                                 printCodeQueue();
                                 gprintln("Wrong actual argument type for function call", DebugType.ERROR);
                                 gprintln("Cannot pass value of type '"~argType.getName()~"' to function accepting '"~parmType.getName()~"'", DebugType.ERROR);
