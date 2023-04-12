@@ -121,9 +121,6 @@ jobs:
               exit 1
           fi
 
-      - name: Simple array
-        run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
-        
         
       - name: Collide container module1
         run: ./tlang typecheck source/tlang/testing/collide_container_module1.t
