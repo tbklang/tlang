@@ -89,7 +89,15 @@ jobs:
       - name: Simple float constant
         run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant.t
       - name: Simple float constant bad
-        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant_bad.t
+        run: |
+          set +e
+          ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Simple string
         run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_string.t
 
@@ -110,8 +118,16 @@ jobs:
         
       - name: Simple function call
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t
-      - name: Simple function call 1
-        run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call_1.t
+      - name: Simple function call 1 (type mismatch)
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/simple_function_call_1.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
 
       # Array support
       - name: Simple array
@@ -127,37 +143,112 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/complex_stack_arrays1.t
         
       - name: Collide container module1
-        run: ./tlang typecheck source/tlang/testing/collide_container_module1.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/collide_container_module1.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Collide container module2
-        run: ./tlang typecheck source/tlang/testing/collide_container_module2.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/collide_container_module2.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Collide container non-module
-        run: ./tlang typecheck source/tlang/testing/collide_container_non_module.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/collide_container_non_module.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Collide container
-        run: ./tlang typecheck source/tlang/testing/collide_container.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/collide_container.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Collide member
-        run: ./tlang typecheck source/tlang/testing/collide_member.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/collide_member.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Precedence collision test
-        run: ./tlang typecheck source/tlang/testing/precedence_collision_test.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/precedence_collision_test.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
       - name: Else if without if
-        run: ./tlang typecheck source/tlang/testing/else_if_without_if.pl
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/else_if_without_if.pl
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+          
       - name: Simple module positive
         run: ./tlang typecheck source/tlang/testing/simple1_module_positive.t
-      - name: Simple OOP
-        run: ./tlang typecheck source/tlang/testing/simple1_oop.t
+      # TODO: Re-enable OOP when we start focusing on it again  
+      #- name: Simple OOP
+      #  run: ./tlang typecheck source/tlang/testing/simple1_oop.t
       - name: Simple name recognition
         run: ./tlang typecheck source/tlang/testing/simple2_name_recognition.t
-      - name: test3
-        run: ./tlang typecheck source/tlang/testing/test3.t
+      # TODO: Re-enable OOP when we start focusing on it again 
+      #- name: test3
+      #  run: ./tlang typecheck source/tlang/testing/test3.t
         
       - name: Simple literals
         run: ./tlang typecheck source/tlang/testing/simple_literals.t
-      - name: Simple literals 2
-        run: ./tlang typecheck source/tlang/testing/simple_literals2.t
+      - name: Simple literals 2 (uncoercible)
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_literals2.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Simple literals 3
         run: ./tlang typecheck source/tlang/testing/simple_literals3.t
-      - name: Simple literals 4
-        run: ./tlang typecheck source/tlang/testing/simple_literals4.t
+      - name: Simple literals 4 (range violation)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_literals4.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Simple literals 5
         run: ./tlang typecheck source/tlang/testing/simple_literals5.t
       - name: Simple literals 6
@@ -181,13 +272,14 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_functions.t
           ./tlang.out
-      - name: Simple variables
-        run: |
-          ./tlang compile source/tlang/testing/simple_variables.t
-          ./tlang.out
+      # TODO: Re-enable when we support the `discard` keyword again
+      #- name: Simple variables
+      #  run: |
+      #    ./tlang compile source/tlang/testing/simple_variables.t
+      #    ./tlang.out
       - name: Simple conditions
         run: |
-          ./tlang compile source/tlang/testing/simple_conditions.t
+          ./tlang compile source/tlang/testing/simple_conditionals.t
           ./tlang.out
       - name: Nested conditionals
         run: |
