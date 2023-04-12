@@ -211,6 +211,7 @@ struct lexCommand
         catch(TError t)
         {
             gprintln(t.msg, DebugType.ERROR);
+            exit(-1);
         }
         catch(ErrnoException e)
         {
@@ -260,6 +261,7 @@ struct parseCommand
         catch(TError t)
         {
             gprintln(t.msg, DebugType.ERROR);
+            exit(-1);
         }
         catch(ErrnoException e)
         {
@@ -311,6 +313,7 @@ struct typecheckCommand
         catch(TError t)
         {
             gprintln(t.msg, DebugType.ERROR);
+            exit(-1);
         }
         catch(ErrnoException e)
         {
