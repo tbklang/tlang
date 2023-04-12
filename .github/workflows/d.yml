@@ -74,7 +74,6 @@ jobs:
 
   syntaxcheck:
     needs: [build, unittests]
-    if: always()
     name: Syntax checking (fine typecheck home)
     runs-on: ubuntu-latest
     steps:
@@ -97,7 +96,6 @@ jobs:
   typecheck:
     needs: [build, unittests]
     name: Typechecking tests
-    if: always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -113,14 +111,7 @@ jobs:
       - name: Simple function call
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t
       - name: Simple function call 1 (type mismatch)
-        run: |
-          ./tlang typecheck source/tlang/testing/typecheck/simple_function_call_1.t
-          if [ $? = 255 ]
-          then
-              exit 0
-          else
-              exit 1
-          fi
+        run: ./source/tlang/testing/typecheck/simple_function_call_1.sh
 
       - name: Simple array
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
@@ -166,7 +157,6 @@ jobs:
   emit:
     needs: [build, unittests]
     name: Emit tests
-    if: always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
