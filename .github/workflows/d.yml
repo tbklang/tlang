@@ -123,17 +123,65 @@ jobs:
 
         
       - name: Collide container module1
-        run: ./tlang typecheck source/tlang/testing/collide_container_module1.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/collide_container_module1.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Collide container module2
-        run: ./tlang typecheck source/tlang/testing/collide_container_module2.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/collide_container_module2.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Collide container non-module
-        run: ./tlang typecheck source/tlang/testing/collide_container_non_module.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/collide_container_non_module.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Collide container
-        run: ./tlang typecheck source/tlang/testing/collide_container.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/collide_container.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Collide member
-        run: ./tlang typecheck source/tlang/testing/collide_member.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/collide_member.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Precedence collision test
-        run: ./tlang typecheck source/tlang/testing/precedence_collision_test.t
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/precedence_collision_test.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
       - name: Else if without if
         run: ./tlang typecheck source/tlang/testing/else_if_without_if.pl
