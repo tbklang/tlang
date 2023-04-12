@@ -179,7 +179,7 @@ jobs:
       #    ./tlang.out
       - name: Simple conditions
         run: |
-          ./tlang compile source/tlang/testing/simple_conditions.t
+          ./tlang compile source/tlang/testing/simple_conditionals.t
           ./tlang.out
       - name: Nested conditionals
         run: |
