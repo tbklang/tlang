@@ -22,15 +22,60 @@ import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
 
 // TODO: Add configentry unittests
 
+/** 
+ * The sub-error type of `CompilerException`
+ */
 public enum CompilerError
 {
+    /** 
+     * Occurs when tokens are requested but
+     * the tokenization process has not yet
+     * occurred
+     */
     LEX_NOT_PERFORMED,
+
+    /** 
+     * Occurs if the tokenization process resulted
+     * in zero tokens being produced
+     */
     NO_TOKENS,
+
+    /** 
+     * Occurs if typechecking is performed
+     * but no module was produced due to
+     * parsing not yet being performed
+     */
     PARSE_NOT_YET_PERFORMED,
+
+    /** 
+     * Occurs if emit was called but no
+     * code queue wa sproduced due to
+     * typechecking not being performed
+     * yet
+     */
     TYPECHECK_NOT_YET_PERFORMED,
+
+    /** 
+     * Occurs on a configuration error
+     */
     CONFIG_ERROR,
+
+    /** 
+     * Occurs if a configuration key cannot
+     * be found
+     */
     CONFIG_KEY_NOT_FOUND,
+    
+    /** 
+     * Occurs when the type of the configuration
+     * key requested does not match its actual type
+     */
     CONFIG_TYPE_ERROR,
+
+    /** 
+     * Occurs when a duplicate configuration key
+     * entry is attempted to be created
+     */
     CONFIG_DUPLICATE_ENTRY
 }
 
