@@ -168,6 +168,7 @@ struct compileCommand
         {
             /* TODO: Use gogga error */
             writeln("Could not open source file "~sourceFile);
+            exit(-2);
         }
     }
 }
@@ -215,6 +216,7 @@ struct lexCommand
         {
             /* TODO: Use gogga error */
             writeln("Could not open source file "~sourceFile);
+            exit(-2);
         }
     }
 }
@@ -263,6 +265,7 @@ struct parseCommand
         {
             /* TODO: Use gogga error */
             writeln("Could not open source file "~sourceFile);
+            exit(-2);
         }
     }
 }
@@ -313,6 +316,7 @@ struct typecheckCommand
         {
             /* TODO: Use gogga error */
             writeln("Could not open source file "~sourceFile);
+            exit(-2);
         }
     }
 }
