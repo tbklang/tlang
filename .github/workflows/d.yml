@@ -209,7 +209,7 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/simple_literals.t
       - name: Simple literals 2 (uncoercible)
         run: |
-          set e+
+          set +e
           ./tlang typecheck source/tlang/testing/simple_literals2.t
           if [ $? = 255 ]
           then
