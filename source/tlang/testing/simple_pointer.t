@@ -4,7 +4,7 @@ int j;
 
 int function(int* ptr)
 {
-    *ptr = 2+2;
+    *(ptr+0) = 2+2;
     return (*ptr)+1*2;
 }
 
