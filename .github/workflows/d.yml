@@ -110,7 +110,7 @@ jobs:
         
       - name: Simple function call
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t
-      - name: Simple function call 1
+      - name: Simple function call 1 (type mismatch)
         run: |
           ./tlang typecheck source/tlang/testing/typecheck/simple_function_call_1.t
           if [ $? = 255 ]
