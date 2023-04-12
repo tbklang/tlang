@@ -227,8 +227,16 @@ jobs:
           fi
       - name: Simple literals 3
         run: ./tlang typecheck source/tlang/testing/simple_literals3.t
-      - name: Simple literals 4
-        run: ./tlang typecheck source/tlang/testing/simple_literals4.t
+      - name: Simple literals 4 (range violation)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_literals4.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Simple literals 5
         run: ./tlang typecheck source/tlang/testing/simple_literals5.t
       - name: Simple literals 6
