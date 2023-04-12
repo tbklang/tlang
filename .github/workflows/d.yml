@@ -184,7 +184,16 @@ jobs:
           fi
         
       - name: Else if without if
-        run: ./tlang typecheck source/tlang/testing/else_if_without_if.pl
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/else_if_without_if.pl
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+          
       - name: Simple module positive
         run: ./tlang typecheck source/tlang/testing/simple1_module_positive.t
       - name: Simple OOP
