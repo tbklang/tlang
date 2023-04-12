@@ -89,7 +89,15 @@ jobs:
       - name: Simple float constant
         run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant.t
       - name: Simple float constant bad
-        run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant_bad.t
+        run: |
+          set +e
+          ./tlang syntaxcheck source/tlang/testing/typecheck/simple_float_constant_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
       - name: Simple string
         run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_string.t
 
