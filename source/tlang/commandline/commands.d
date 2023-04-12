@@ -19,6 +19,7 @@ import tlang.compiler.core : Compiler, beginCompilation;
 import tlang.compiler.configuration : ConfigEntry;
 import std.conv : to;
 import tlang.compiler.codegen.mapper.core : SymbolMappingTechnique;
+import core.stdc.stdlib : exit;
 
 //TODO: Re-order the definitions below so that they appear with compile first, then lex, parse, ..., help
 
@@ -161,11 +162,13 @@ struct compileCommand
         catch(TError t)
         {
             gprintln(t.msg, DebugType.ERROR);
+            exit(-1);
         }
         catch(ErrnoException e)
         {
             /* TODO: Use gogga error */
             writeln("Could not open source file "~sourceFile);
+            exit(-2);
         }
     }
 }
@@ -208,11 +211,13 @@ struct lexCommand
         catch(TError t)
         {
             gprintln(t.msg, DebugType.ERROR);
+            exit(-1);
         }
         catch(ErrnoException e)
         {
             /* TODO: Use gogga error */
             writeln("Could not open source file "~sourceFile);
+            exit(-2);
         }
     }
 }
@@ -256,11 +261,13 @@ struct parseCommand
         catch(TError t)
         {
             gprintln(t.msg, DebugType.ERROR);
+            exit(-1);
         }
         catch(ErrnoException e)
         {
             /* TODO: Use gogga error */
             writeln("Could not open source file "~sourceFile);
+            exit(-2);
         }
     }
 }
@@ -306,11 +313,13 @@ struct typecheckCommand
         catch(TError t)
         {
             gprintln(t.msg, DebugType.ERROR);
+            exit(-1);
         }
         catch(ErrnoException e)
         {
             /* TODO: Use gogga error */
             writeln("Could not open source file "~sourceFile);
+            exit(-2);
         }
     }
 }
