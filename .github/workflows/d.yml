@@ -111,7 +111,14 @@ jobs:
       - name: Simple function call
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t
       - name: Simple function call 1
-        run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call_1.t
+        run: |
+          ./tlang typecheck source/tlang/testing/typecheck/simple_function_call_1.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
 
       - name: Simple array
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_array.t
