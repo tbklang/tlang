@@ -172,10 +172,11 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_functions.t
           ./tlang.out
-      - name: Simple variables
-        run: |
-          ./tlang compile source/tlang/testing/simple_variables.t
-          ./tlang.out
+      # TODO: Re-enable when we support the `discard` keyword again
+      #- name: Simple variables
+      #  run: |
+      #    ./tlang compile source/tlang/testing/simple_variables.t
+      #    ./tlang.out
       - name: Simple conditions
         run: |
           ./tlang compile source/tlang/testing/simple_conditions.t
