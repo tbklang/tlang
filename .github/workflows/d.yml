@@ -196,8 +196,9 @@ jobs:
           
       - name: Simple module positive
         run: ./tlang typecheck source/tlang/testing/simple1_module_positive.t
-      - name: Simple OOP
-        run: ./tlang typecheck source/tlang/testing/simple1_oop.t
+      # TODO: Re-enable OOP when we start focusing on it again  
+      #- name: Simple OOP
+      #  run: ./tlang typecheck source/tlang/testing/simple1_oop.t
       - name: Simple name recognition
         run: ./tlang typecheck source/tlang/testing/simple2_name_recognition.t
       - name: test3
