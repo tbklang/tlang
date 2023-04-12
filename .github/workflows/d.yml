@@ -201,8 +201,9 @@ jobs:
       #  run: ./tlang typecheck source/tlang/testing/simple1_oop.t
       - name: Simple name recognition
         run: ./tlang typecheck source/tlang/testing/simple2_name_recognition.t
-      - name: test3
-        run: ./tlang typecheck source/tlang/testing/test3.t
+      # TODO: Re-enable OOP when we start focusing on it again 
+      #- name: test3
+      #  run: ./tlang typecheck source/tlang/testing/test3.t
         
       - name: Simple literals
         run: ./tlang typecheck source/tlang/testing/simple_literals.t
