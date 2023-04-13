@@ -445,7 +445,7 @@ public final class DCodeEmitter : CodeEmitter
             {
                 starsOfLiberty ~= "*";
             }
-            emit ~= starsOfLiberty~transform(lhsPtrAddrExprInstr);
+            emit ~= starsOfLiberty~"("~transform(lhsPtrAddrExprInstr)~")";
 
             /* Assignment operator follows */
             emit ~= " = ";
