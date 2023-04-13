@@ -899,15 +899,17 @@ public final class TypeChecker
                 Value vRhsInstr = cast(Value)popInstr();
                 Value vLhsInstr = cast(Value)popInstr();
 
+                /** 
+                 * Attempt to coerce the types of both instructions if one is
+                 * a pointer and another is an integer, else do nothing
+                 */
+                attemptPointerAriehmeticCoercion(vLhsInstr, vRhsInstr);
+
+
                 Type vRhsType = vRhsInstr.getInstrType();
                 Type vLhsType = vLhsInstr.getInstrType();
 
 
-                // TODO: Hoist up and document
-                // TODO: Call this before the `isSameType()` check and before we do
-                // ... `vRhsType` and `vLhsType` above, we want toe most updated types (if any)
-
-                
 
                 /**
                 * TODO
