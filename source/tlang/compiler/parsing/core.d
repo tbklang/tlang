@@ -1569,14 +1569,6 @@ public final class Parser
 
             return generated;
         }
-        
-        // /* Expect an identifier (CAN NOT be dotted) */
-        // expect(SymbolType.IDENT_TYPE, getCurrentToken());
-        // if(!isIdentifier_NoDot(getCurrentToken()))
-        // {
-        //     expect("Identifier cannot be dotted");
-        // }
-        // identifier = getCurrentToken().getToken();
 
         /* If we are going to be assigning into an array (indexed) */
         bool arrayIndexing = false;
