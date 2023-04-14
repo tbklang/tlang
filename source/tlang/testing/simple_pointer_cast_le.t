@@ -11,6 +11,7 @@ int function(int* ptr)
 {
     byte* bytePtr = cast(byte*)ptr;
     *bytePtr = 2+2;
+    *(bytePtr+1) = 1;
     
     return (*ptr)+1*2;
 }

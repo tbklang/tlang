@@ -826,8 +826,8 @@ int main()
 int main()
 {
     int retValue = thing();
-    assert(t_e159019f766be1a175186a13f16bcfb7 == 4);
-    assert(retValue == 6);
+    assert(t_e159019f766be1a175186a13f16bcfb7 == 256+4);
+    assert(retValue == 256+4+2);
 
     return 0;
 }`);
