@@ -1043,10 +1043,23 @@ public final class Parser
         expect(SymbolType.LBRACE, getCurrentToken());
         nextToken();
 
-        /* Expect a type */
-        expect(SymbolType.IDENT_TYPE, getCurrentToken());
-        string toType = getCurrentToken().getToken();
-        nextToken();
+        /** 
+         * Expect a type
+         *
+         * The way we do this is to re-use the logic
+         * that `parseTypedDeclaration()` uses but we
+         * ask it to not parse further than the last token
+         * constituting the type (i.e. before starting to
+         * parse the identifier token).
+         *
+         * It then will return a bogus `TypedEntity` with
+         * a verfiable bogus name `BOGUS_NAME_STOP_SHORT_OF_IDENTIFIER_TYPE_FETCH` (TODO: Make sure we use this)
+         * which means we can call `getType()` and extract
+         * the type string
+         */
+        TypedEntity bogusEntity = cast(TypedEntity)parseTypedDeclaration(false, false, false, true);
+        assert(bogusEntity);
+        string toType = bogusEntity.getType();
 
         /* Expect a `)` closing brace */
         expect(SymbolType.RBRACE, getCurrentToken());
@@ -1461,7 +1474,7 @@ public final class Parser
     
 
     // TODO: Update to `Statement` as this can return an ArrayAssignment now
-    private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true)
+    private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true, bool onlyType = false)
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
 
@@ -1547,6 +1560,23 @@ public final class Parser
             
             nextToken();
         }
+
+        /* If were requested to only find a type, then stop here and return it */
+        if(onlyType)
+        {
+            /* Create a bogus TypedEntity for the sole purpose of returning the type */
+            generated = new TypedEntity("BOGUS_NAME_STOP_SHORT_OF_IDENTIFIER_TYPE_FETCH", type);
+
+            return generated;
+        }
+        
+        // /* Expect an identifier (CAN NOT be dotted) */
+        // expect(SymbolType.IDENT_TYPE, getCurrentToken());
+        // if(!isIdentifier_NoDot(getCurrentToken()))
+        // {
+        //     expect("Identifier cannot be dotted");
+        // }
+        // identifier = getCurrentToken().getToken();
 
         /* If we are going to be assigning into an array (indexed) */
         bool arrayIndexing = false;
