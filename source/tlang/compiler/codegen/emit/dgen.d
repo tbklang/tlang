@@ -818,6 +818,7 @@ int main()
     return 0;
 }`);
         }
+        // TODO: Add semantic test for simple_pointer_cast.t
         else if(cmp(typeChecker.getModule().getName(), "simple_extern") == 0)
         {
             file.writeln(`
