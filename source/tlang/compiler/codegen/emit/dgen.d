@@ -818,7 +818,20 @@ int main()
     return 0;
 }`);
         }
-        // TODO: Add semantic test for simple_pointer_cast.t
+        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_cast_le") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int retValue = thing();
+    assert(t_e159019f766be1a175186a13f16bcfb7 == 4);
+    assert(retValue == 6);
+
+    return 0;
+}`);
+        }
         else if(cmp(typeChecker.getModule().getName(), "simple_extern") == 0)
         {
             file.writeln(`

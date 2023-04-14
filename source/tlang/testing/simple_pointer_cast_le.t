@@ -1,4 +1,4 @@
-module simple_pointer_cast;
+module simple_pointer_cast_le;
 
 int j;
 
@@ -9,7 +9,9 @@ int ret()
 
 int function(int* ptr)
 {
-    *(cast(int*)ret())=2;
+    byte* bytePtr = cast(byte*)ptr;
+    *bytePtr = 2+2;
+    
     return (*ptr)+1*2;
 }
 
