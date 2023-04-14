@@ -10,7 +10,6 @@ int ret()
 int function(int* ptr)
 {
     *(cast(int*)ret())=2;
-    *(ptr+ret()) = 2+2;
     return (*ptr)+1*2;
 }
 
