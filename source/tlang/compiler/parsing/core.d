@@ -1035,7 +1035,14 @@ public final class Parser
         expect(SymbolType.LBRACE, getCurrentToken());
         nextToken();
 
-        /* Expect a type */
+        /** 
+         * Expect a type
+         *
+         * FIXME: This won't work for advanced things like `int*`,
+         * what we should do is probably duplicate the eventual code
+         * that `parseTypedDeclaration()` uses - maybe hoist it into
+         * its own `parseType()`?
+         */
         expect(SymbolType.IDENT_TYPE, getCurrentToken());
         string toType = getCurrentToken().getToken();
         nextToken();
