@@ -1036,6 +1036,19 @@ int main()
     return 0;
 }`);
         }
+        else if(cmp(typeChecker.getModule().getName(), "simple_stack_arrays4") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = function();
+    assert(result == 61);
+
+    return 0;
+}`);
+        }
         else
         {
             file.writeln(`

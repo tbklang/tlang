@@ -324,11 +324,17 @@ jobs:
 
 
       # Array support
-      # TODO: Actually add semantic tests for these
+      - name: Stack-based arrays simple
+        run: |
+          ./tlang compile source/tlang/testing/simple_stack_arrays4.t
+          ./tlang.out
       - name: Stack-based array coercion
         run: |
           ./tlang compile source/tlang/testing/simple_stack_array_coerce.t
           ./tlang.out
+      
+
+      # TODO: Actually add semantic tests for these
       - name: Complex stack-based arrays
         run: |
           ./tlang compile source/tlang/testing/complex_stack_arrays1.t
