@@ -907,10 +907,13 @@ public final class Parser
             if(getSymbolType(getCurrentToken()) == SymbolType.IDENT_TYPE)
             {
                 // TODO: Here we should apply the call to `parseTypedDeclaration(...)` as explained in #111
+                TypedEntity bogusEntity = parseTypedDeclaration(false, false, false, true);
+                string type = bogusEntity.getType();
+
 
                 /* Get the type (this can be doted) */
-                string type = getCurrentToken().getToken();
-                nextToken();
+                // string type = getCurrentToken().getToken();
+                // nextToken();
 
                 /* If it is a star `*` */
                 while(getSymbolType(getCurrentToken()) == SymbolType.STAR)
