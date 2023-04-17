@@ -317,6 +317,10 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_pointer.t
           ./tlang.out
+      - name: Simple pointer cast (little endian)
+        run: |
+          ././tlang compile source/tlang/testing/simple_pointer_cast_le.t
+          ./tlang.out
       - name: Simple extern
         run: |
           chmod +x extern_test.sh
@@ -356,6 +360,10 @@ jobs:
           ./tlang.out
 
 
+      - name: Simple pointer (malloc and free)
+        run: |
+          chmod +x malloc_test.sh
+          ./malloc_test.sh
 ##################################
 ####### Deployment section #######
 ##################################

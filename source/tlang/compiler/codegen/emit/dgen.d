@@ -465,7 +465,7 @@ public final class DCodeEmitter : CodeEmitter
             {
                 starsOfLiberty ~= "*";
             }
-            emit ~= starsOfLiberty~transform(lhsPtrAddrExprInstr);
+            emit ~= starsOfLiberty~"("~transform(lhsPtrAddrExprInstr)~")";
 
             /* Assignment operator follows */
             emit ~= " = ";
@@ -1004,6 +1004,34 @@ int main()
     int retValue = thing();
     assert(t_87bc875d0b65f741b69fb100a0edebc7 == 4);
     assert(retValue == 6);
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_cast_le") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int retValue = thing();
+    assert(t_e159019f766be1a175186a13f16bcfb7 == 256+4);
+    assert(retValue == 256+4+2);
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_malloc") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    test();
+    
+    // TODO: Test the value
 
     return 0;
 }`);
