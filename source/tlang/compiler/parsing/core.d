@@ -910,14 +910,6 @@ public final class Parser
                 TypedEntity bogusEntity = parseTypedDeclaration(false, false, false, true);
                 string type = bogusEntity.getType();
 
-                // /* If it is a star `*` */
-                // while(getSymbolType(getCurrentToken()) == SymbolType.STAR)
-                // {
-                //     // Make type a pointer
-                //     type = type~"*";
-                //     nextToken();
-                // }
-
                 /* Get the identifier (This CAN NOT be dotted) */
                 expect(SymbolType.IDENT_TYPE, getCurrentToken());
                 if(!isIdentifier_NoDot(getCurrentToken()))
