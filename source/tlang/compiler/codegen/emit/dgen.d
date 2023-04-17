@@ -832,6 +832,20 @@ int main()
     return 0;
 }`);
         }
+        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_malloc") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    test();
+    
+    // TODO: Test the value
+
+    return 0;
+}`);
+        }
         else if(cmp(typeChecker.getModule().getName(), "simple_extern") == 0)
         {
             file.writeln(`

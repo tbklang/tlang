@@ -313,7 +313,10 @@ jobs:
         run: |
           chmod +x extern_test.sh
           ./extern_test.sh
-
+      - name: Simple pointer (malloc and free)
+        run: |
+          chmod +x malloc_test.sh
+          ./malloc_test.sh
 ##################################
 ####### Deployment section #######
 ##################################
