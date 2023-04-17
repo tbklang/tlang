@@ -316,8 +316,16 @@ public final class TypeChecker
     {
         bool same = false;
 
+        /* Handling for pointers */
+        if(typeid(type1) == typeid(type2) && cast(Pointer)type1 !is null)
+        {
+            Pointer p1 = cast(Pointer)type1, p2 = cast(Pointer)type2;
+
+            /* Now check that both of their referred types are the same */
+            return isSameType(p1.getReferredType(), p2.getReferredType());
+        }
         /* Handling for Integers */
-        if(typeid(type1) == typeid(type2) && cast(Integer)type1 !is null)
+        else if(typeid(type1) == typeid(type2) && cast(Integer)type1 !is null)
         {
             Integer i1 = cast(Integer)type1, i2 = cast(Integer)type2;
 
