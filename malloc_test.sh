@@ -1,4 +1,4 @@
-#1/bin/sh
+#!/bin/sh
 
 # Compile C to object file as library to link in
 gcc source/tlang/testing/mem.c -c -o mem.o
@@ -10,4 +10,4 @@ gcc source/tlang/testing/mem.c -c -o mem.o
 ./tlang.out
 
 # Run (with strace) to see it
-strace ./tlang.out
+strace -e brk ./tlang.out
