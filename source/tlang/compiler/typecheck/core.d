@@ -316,8 +316,16 @@ public final class TypeChecker
     {
         bool same = false;
 
+        /* Handling for pointers */
+        if(typeid(type1) == typeid(type2) && cast(Pointer)type1 !is null)
+        {
+            Pointer p1 = cast(Pointer)type1, p2 = cast(Pointer)type2;
+
+            /* Now check that both of their referred types are the same */
+            return isSameType(p1.getReferredType(), p2.getReferredType());
+        }
         /* Handling for Integers */
-        if(typeid(type1) == typeid(type2) && cast(Integer)type1 !is null)
+        else if(typeid(type1) == typeid(type2) && cast(Integer)type1 !is null)
         {
             Integer i1 = cast(Integer)type1, i2 = cast(Integer)type2;
 
@@ -682,6 +690,52 @@ public final class TypeChecker
         }
     }
 
+    /** 
+     * Given two Value-based instructions this will firstly check if
+     * at least one of the two is of type Pointer, then checks if the
+     * remaining instruction is an of type Integer - the remaining instruction
+     * will then be coerced into a pointer.
+     *
+     * If both are Pointers, neither are pointers or one or the other is
+     * a Pointer and another is non-Integer then nothing will be coerced.
+     * and this function is effectively a no-op.
+     *
+     * Params:
+     *   vInstr1 = the first instruction
+     *   vInstr2 = the second instruction
+     */
+    private void attemptPointerAriehmeticCoercion(Value vInstr1, Value vInstr2)
+    {
+        // Get the types of `vInstr1` and `vInstr2` respectively
+        Type t1 = vInstr1.getInstrType();
+        Type t2 = vInstr2.getInstrType();
+
+        // TODO: Check if T1 is a pointer and then if T2 is an integer make it a pointer
+        if(cast(Pointer)t1 && cast(Integer)t2)
+        {
+            Pointer t1Ptr = cast(Pointer)t1;
+
+            Type coercedType = new Pointer(t1Ptr.getReferredType());
+            vInstr2.setInstrType(coercedType);
+        }
+        // TODO: Else check if T2 is a pointer and then if T1 is an integer and make it a pointer
+        else if(cast(Pointer)t2 && cast(Integer)t2)
+        {
+            Pointer t2Ptr = cast(Pointer)t2;
+
+            Type coercedType = new Pointer(t2Ptr.getReferredType());
+            vInstr1.setInstrType(coercedType);
+        }
+        else if(cast(Pointer)t1 && cast(Pointer)t2)
+        {
+            // Do nothing
+            // TODO: Remove this branch
+        }
+        else
+        {
+            // Do nothing
+        }
+    }
 
 
     public void typeCheckThing(DNode dnode)
@@ -853,8 +907,17 @@ public final class TypeChecker
                 Value vRhsInstr = cast(Value)popInstr();
                 Value vLhsInstr = cast(Value)popInstr();
 
+                /** 
+                 * Attempt to coerce the types of both instructions if one is
+                 * a pointer and another is an integer, else do nothing
+                 */
+                attemptPointerAriehmeticCoercion(vLhsInstr, vRhsInstr);
+
+
                 Type vRhsType = vRhsInstr.getInstrType();
                 Type vLhsType = vLhsInstr.getInstrType();
+
+
 
                 /**
                 * TODO
