@@ -364,6 +364,10 @@ jobs:
         run: |
           chmod +x malloc_test.sh
           ./malloc_test.sh
+      - name: Simple pointer (array syntax)
+        run: |
+          ./tlang compile source/tlang/testing/simple_pointer_array_syntax.t
+          ./tlang.out
 ##################################
 ####### Deployment section #######
 ##################################

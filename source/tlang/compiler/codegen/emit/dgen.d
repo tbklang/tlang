@@ -1008,6 +1008,20 @@ int main()
     return 0;
 }`);
         }
+        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_array_syntax") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int retValue = thing();
+    assert(t_9d01d71b858651e520c9b503122a1b7a == 4);
+    assert(retValue == 6);
+
+    return 0;
+}`);
+        }
         else if(cmp(typeChecker.getModule().getName(), "simple_pointer_cast_le") == 0)
         {
             file.writeln(`
