@@ -906,17 +906,9 @@ public final class Parser
             /* Check if the first thing is a type */
             if(getSymbolType(getCurrentToken()) == SymbolType.IDENT_TYPE)
             {
-                /* Get the type (this can be doted) */
-                string type = getCurrentToken().getToken();
-                nextToken();
-
-                /* If it is a star `*` */
-                while(getSymbolType(getCurrentToken()) == SymbolType.STAR)
-                {
-                    // Make type a pointer
-                    type = type~"*";
-                    nextToken();
-                }
+                /* Get the type */
+                TypedEntity bogusEntity = parseTypedDeclaration(false, false, false, true);
+                string type = bogusEntity.getType();
 
                 /* Get the identifier (This CAN NOT be dotted) */
                 expect(SymbolType.IDENT_TYPE, getCurrentToken());
