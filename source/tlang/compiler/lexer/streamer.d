@@ -43,4 +43,19 @@ public class StreamingLexer : LexerInterface
     {
         return 0;
     }
+
+    public override ulong getLine()
+    {
+        return 0;
+    }
+
+    public override ulong getColumn()
+    {
+        return 0;
+    }
+
+    public override Token[] getTokens()
+    {
+        return [];
+    }
 }
