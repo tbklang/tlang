@@ -6,7 +6,7 @@ import std.conv : to;
 import std.ascii : isDigit;
 
 import tlang.compiler.lexer.exceptions;
-import tlang.compiler.lexer.core2 : LexerInterface;
+import tlang.compiler.lexer.core : LexerInterface;
 import tlang.compiler.lexer.tokens : Token;
 
 public final class BasicLexer : LexerInterface

@@ -2,7 +2,7 @@ module tlang.compiler.core;
 
 import gogga;
 import std.conv : to;
-import tlang.compiler.lexer.core2 : LexerInterface;
+import tlang.compiler.lexer.core : LexerInterface;
 import tlang.compiler.lexer.basic : BasicLexer;
 import tlang.compiler.lexer.tokens : Token;
 import std.stdio : File;

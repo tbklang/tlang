@@ -19,7 +19,7 @@ import tlang.compiler.parsing.exceptions;
 
 bool isUnitTest;
 
-import tlang.compiler.lexer.core2 : LexerInterface;
+import tlang.compiler.lexer.core : LexerInterface;
 
 // TODO: Technically we could make a core parser etc
 public final class Parser
