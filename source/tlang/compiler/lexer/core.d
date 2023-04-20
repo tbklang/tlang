@@ -5,10 +5,14 @@ import gogga;
 import std.conv : to;
 import std.ascii : isDigit;
 import tlang.compiler.lexer.exceptions;
+import tlang.compiler.lexer.core2 : LexerInterface;
 import tlang.compiler.lexer.tokens : Token;
 
-public final class Lexer
+public final class Lexer : LexerInterface
 {
+    // TODO: We must provide the parser a LexerInterface and NOT Token[]
+    // ... such that it can call us to do its work
+    
     /**
     * Lexer state data
     */
