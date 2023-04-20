@@ -49,4 +49,11 @@ public interface LexerInterface
      * Returns: true if more tokens are available, false otherwise
      */
     public bool hasTokens();
+
+    /** 
+     * Exhaustively provide a list of all tokens
+     *
+     * Returns: a `Token[]` containing all tokens
+     */
+    public Token[] getTokens();
 }
