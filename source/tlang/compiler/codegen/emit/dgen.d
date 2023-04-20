@@ -1078,6 +1078,20 @@ int main()
     return 0;
 }`);
         }
+        else if(cmp(typeChecker.getModule().getName(), "simple_stack_array_coerce_ptr_syntax") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = function();
+    assert(result == 420+69);
+    printf("stackArr sum: %d\n", result);
+
+    return 0;
+}`);
+        }
         else if(cmp(typeChecker.getModule().getName(), "simple_stack_arrays4") == 0)
         {
             file.writeln(`
