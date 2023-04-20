@@ -51,6 +51,20 @@ public interface LexerInterface
     public bool hasTokens();
 
     /** 
+     * Get the line position of the lexer in the source text
+     *
+     * Returns: the position
+     */
+    public ulong getLine();
+
+    /** 
+     * Get the column position of the lexer in the source text
+     *
+     * Returns: the position
+     */
+    public ulong getColumn();
+
+    /** 
      * Exhaustively provide a list of all tokens
      *
      * Returns: a `Token[]` containing all tokens
