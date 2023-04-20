@@ -184,8 +184,8 @@ public class Compiler
         }
         else
         {
-            /* Spawn a new parser with the provided tokens */
-            this.parser = new Parser(lexedTokens);
+            /* Spawn a new parser with the lexer (token source) */
+            this.parser = new Parser(lexer);
 
             modulle = parser.parse();
         }
