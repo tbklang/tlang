@@ -13,4 +13,6 @@ public interface LexerInterface
     public void setCursor(ulong);
 
     public ulong getCursor();
+
+    public bool hasTokens();
 }
