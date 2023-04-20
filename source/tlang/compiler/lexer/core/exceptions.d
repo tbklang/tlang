@@ -1,7 +1,7 @@
-module tlang.compiler.lexer.exceptions;
+module tlang.compiler.lexer.core.exceptions;
 
 import misc.exceptions : TError;
-import tlang.compiler.lexer.core : LexerInterface;
+import tlang.compiler.lexer.core;
 import std.conv : to;
 
 public enum LexerError

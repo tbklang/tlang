@@ -2600,8 +2600,8 @@ unittest
 
 version(unittest)
 {
-    import tlang.compiler.lexer.core : LexerInterface;
-    import tlang.compiler.lexer.basic : BasicLexer;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.kinds.basic : BasicLexer;
 }
 
 /* Test name colliding with container name (2/3) [module, nested collider] */

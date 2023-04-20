@@ -1,4 +1,4 @@
-module tlang.compiler.lexer.tokens;
+module tlang.compiler.lexer.core.tokens;
 
 import std.string : cmp;
 import std.conv : to;

@@ -1,7 +1,6 @@
 module tlang.compiler.lexer.streamer;
 
-import tlang.compiler.lexer.core : LexerInterface;
-import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.core;
 
 public class StreamingLexer : LexerInterface
 {

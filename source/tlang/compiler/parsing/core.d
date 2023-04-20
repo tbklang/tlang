@@ -5,7 +5,7 @@ import std.conv : to, ConvException;
 import std.string : isNumeric, cmp;
 import tlang.compiler.symbols.check;
 import tlang.compiler.symbols.data;
-import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.core;
 import core.stdc.stdlib;
 import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
@@ -2244,8 +2244,11 @@ public final class Parser
 
 version(unittest)
 {
-    import tlang.compiler.lexer.core : LexerInterface;
-    import tlang.compiler.lexer.basic : BasicLexer;
+    import std.file;
+    import std.stdio;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.kinds.basic : BasicLexer;
+    import tlang.compiler.typecheck.core;
 }
 
 /**
@@ -2253,13 +2256,6 @@ version(unittest)
  */
 unittest
 {
-
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.lexer.exceptions;
-    import tlang.compiler.lexer.tokens;
-
     string sourceCode = `
 module myModule;
 `;
@@ -2295,12 +2291,6 @@ module myModule;
 */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.lexer.exceptions;
-    import tlang.compiler.typecheck.core;
-
     string sourceCode = `
 module myModule;
 
@@ -2464,12 +2454,6 @@ class myClass2
  */
 unittest
 {
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.lexer.exceptions;
-    import tlang.compiler.typecheck.core;
-
-
     string sourceCode = `
 module parser_discard;
 
@@ -2533,12 +2517,6 @@ void function()
  */
 unittest
 {
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.lexer.exceptions;
-    import tlang.compiler.typecheck.core;
-
-
     string sourceCode = `
 module parser_function_def;
 
@@ -2616,12 +2594,6 @@ int myFunction(int i, int j)
  */
 unittest
 {
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.lexer.exceptions;
-    import tlang.compiler.typecheck.core;
-
-
     string sourceCode = `
 module parser_while;
 
@@ -2719,11 +2691,6 @@ void function()
  */
 unittest
 {
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.lexer.exceptions;
-    import tlang.compiler.typecheck.core;
-
     string sourceCode = `
 module simple_pointer;
 
@@ -2820,12 +2787,6 @@ int thing()
  */
 unittest
 {
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.lexer.exceptions;
-    import tlang.compiler.typecheck.core;
-
-
     string sourceCode = `
 module parser_for;
 
@@ -2944,12 +2905,6 @@ void function()
  */
 unittest
 {
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.lexer.exceptions;
-    import tlang.compiler.typecheck.core;
-
-
     string sourceCode = `
 module parser_if;
 

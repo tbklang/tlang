@@ -1,6 +1,6 @@
-module tlang.compiler.lexer.core;
+module tlang.compiler.lexer.core.lexer;
 
-import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.core.tokens : Token;
 
 /** 
  * Defines the interface a lexer must provide

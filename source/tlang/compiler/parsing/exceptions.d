@@ -4,7 +4,7 @@ import tlang.compiler.parsing.core;
 import misc.exceptions;
 import tlang.compiler.symbols.check;
 import tlang.compiler.symbols.data;
-import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.core;
 import std.conv : to;
 
 public class ParserException : TError

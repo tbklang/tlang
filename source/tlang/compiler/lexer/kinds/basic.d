@@ -1,13 +1,11 @@
-module tlang.compiler.lexer.basic;
+module tlang.compiler.lexer.kinds.basic;
 
 import std.container.slist;
 import gogga;
 import std.conv : to;
 import std.ascii : isDigit;
 
-import tlang.compiler.lexer.exceptions;
-import tlang.compiler.lexer.core : LexerInterface;
-import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.core;
 
 public final class BasicLexer : LexerInterface
 {
