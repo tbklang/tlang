@@ -141,6 +141,16 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/simple_stack_array_coerce.t
       - name: Complex stack-based arrays
         run: ./tlang typecheck source/tlang/testing/complex_stack_arrays1.t
+      - name: Stack-based array coercion (type mismatch)
+        run: |
+          set +e
+          ./tlang compile source/tlang/testing/simple_stack_array_coerce_wrong.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
       - name: Collide container module1
         run: |
@@ -340,6 +350,7 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_stack_array_coerce_ptr_syntax.t
           ./tlang.out
+
 
       # TODO: Actually add semantic tests for these
       - name: Complex stack-based arrays
