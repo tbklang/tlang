@@ -2575,7 +2575,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2622,7 +2622,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2667,7 +2667,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2712,7 +2712,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2756,7 +2756,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2802,7 +2802,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2887,7 +2887,7 @@ unittest
     Lexer currentLexer = new Lexer(sourceCode);
     currentLexer.performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
