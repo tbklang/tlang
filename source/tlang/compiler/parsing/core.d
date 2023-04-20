@@ -19,11 +19,18 @@ import tlang.compiler.parsing.exceptions;
 
 bool isUnitTest;
 
+import tlang.compiler.lexer.core2 : LexerInterface;
+
 // TODO: Technically we could make a core parser etc
 public final class Parser
 {
+    /** 
+     * TOkens management (new)
+     */
+    private LexerInterface lexer;
+
     /**
-    * Tokens management
+    * Tokens management (old)
     */
     private Token[] tokens;
     private Token currentToken;
@@ -75,6 +82,18 @@ public final class Parser
     {
         this.tokens = tokens;
         currentToken = tokens[0];
+    }
+
+    /** 
+     * Constructs a new parser with the given lexer
+     * from which tokens can be sourced from
+     *
+     * Params:
+     *   lexer = the token source
+     */
+    this(LexerInterface lexer)
+    {
+        this.lexer = lexer;
     }
 
     /**
