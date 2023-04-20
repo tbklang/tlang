@@ -1,6 +1,7 @@
 module tlang.compiler.lexer.streamer;
 
 import tlang.compiler.lexer.core2 : LexerInterface;
+import tlang.compiler.lexer.tokens : Token;
 
 public class StreamingLexer : LexerInterface
 {
@@ -11,5 +12,35 @@ public class StreamingLexer : LexerInterface
     this(string sourceCode)
     {
         
+    }
+
+    public override bool hasTokens()
+    {
+        return true;
+    }
+
+    public override void nextToken()
+    {
+
+    }
+
+    public override void previousToken()
+    {
+
+    }
+
+    public override Token getCurrentToken()
+    {
+        return null;
+    }
+
+    public override void setCursor(ulong cursor)
+    {
+
+    }
+
+    public override ulong getCursor()
+    {
+        return 0;
     }
 }
