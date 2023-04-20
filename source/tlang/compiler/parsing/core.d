@@ -75,15 +75,6 @@ public final class Parser
         }
     }
 
-    /**
-    * Costructs a new parser with the given set of Tokens
-    */
-    this(Token[] tokens)
-    {
-        this.tokens = tokens;
-        currentToken = tokens[0];
-    }
-
     /** 
      * Constructs a new parser with the given lexer
      * from which tokens can be sourced from
@@ -96,42 +87,7 @@ public final class Parser
         this.lexer = lexer;
     }
 
-    /**
-    * Moves the token pointer to the next token
-    *
-    * Returns true if successful, false otherwise
-    * (if we have exhausted the tokens source)
-    */
-    private void nextToken()
-    {
-        tokenPtr++;
-    }
-
-    private bool hasTokens()
-    {
-        return tokenPtr < tokens.length;
-    }
-
-    private Token getCurrentToken()
-    {
-        /* TODO: Throw an exception here when we try get more than we can */
-        return tokens[tokenPtr];
-    }
-
-    private void previousToken()
-    {
-        tokenPtr--;   
-    }
-
-    private void setCursor(ulong newPosition)
-    {
-        tokenPtr = newPosition;
-    }
-
-    private ulong getCursor()
-    {
-        return tokenPtr;
-    }
+    
 
     /**
     * Parses if statements
