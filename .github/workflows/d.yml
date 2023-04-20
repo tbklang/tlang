@@ -129,6 +129,62 @@ jobs:
               exit 1
           fi
 
+      # Array support
+      - name: Simple array
+        run: ./tlang typecheck source/tlang/testing/simple_arrays.t
+      - name: Simple array 2
+        run: ./tlang typecheck source/tlang/testing/simple_arrays2.t
+      - name: Simple array 4
+        run: ./tlang typecheck source/tlang/testing/simple_arrays4.t
+
+      - name: Stack-based array coercion
+        run: ./tlang typecheck source/tlang/testing/simple_stack_array_coerce.t
+      - name: Complex stack-based arrays
+        run: ./tlang typecheck source/tlang/testing/complex_stack_arrays1.t
+      - name: Stack-based array coercion (type mismatch)
+        run: |
+          set +e
+          ./tlang compile source/tlang/testing/simple_stack_array_coerce_wrong.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Stack-based array coercion (good permutations))
+        run: |
+          ./tlang typecheck source/tlang/testing/complex_stack_array_coerce_permutation_good.t
+      - name: Stack-based array coercion (type mismatch - bad permutation 1)
+        run: |
+          set +e
+          ./tlang compile source/tlang/testing/complex_stack_array_coerce_bad1.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+      - name: Stack-based array coercion (type mismatch - bad permutation 2)
+        run: |
+          set +e
+          ./tlang compile source/tlang/testing/complex_stack_array_coerce_bad2.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+      - name: Stack-based array coercion (type mismatch - bad permutation 3)
+        run: |
+          set +e
+          ./tlang compile source/tlang/testing/complex_stack_array_coerce_bad3.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
       - name: Collide container module1
         run: |
@@ -313,10 +369,57 @@ jobs:
         run: |
           chmod +x extern_test.sh
           ./extern_test.sh
+
+
+      # Array support
+      - name: Stack-based arrays simple
+        run: |
+          ./tlang compile source/tlang/testing/simple_stack_arrays4.t
+          ./tlang.out
+      - name: Stack-based array coercion (array syntax)
+        run: |
+          ./tlang compile source/tlang/testing/simple_stack_array_coerce.t
+          ./tlang.out
+      - name: Stack-based array coercion (pointer syntax)
+        run: |
+          ./tlang compile source/tlang/testing/simple_stack_array_coerce_ptr_syntax.t
+          ./tlang.out
+      - name: Stack-based array with normal array coercion (complex)
+        run: |
+          ./tlang compile source/tlang/testing/complex_stack_array_coerce.t
+          ./tlang.out
+
+
+      # TODO: Actually add semantic tests for these
+      - name: Complex stack-based arrays
+        run: |
+          ./tlang compile source/tlang/testing/complex_stack_arrays1.t
+          ./tlang.out
+      - name: Simple array
+        run: |
+          ./tlang compile source/tlang/testing/simple_arrays.t
+          ./tlang.out
+      - name: Simple array 2
+        run: |
+          ./tlang compile source/tlang/testing/simple_arrays2.t
+          ./tlang.out
+      - name: Simple array 4
+        run: |
+          ./tlang compile source/tlang/testing/simple_arrays4.t
+          ./tlang.out
+
+
       - name: Simple pointer (malloc and free)
         run: |
           chmod +x malloc_test.sh
           ./malloc_test.sh
+      - name: Simple pointer (array syntax)
+        run: |
+          ./tlang compile source/tlang/testing/simple_pointer_array_syntax.t
+          ./tlang.out
+
+
+
 ##################################
 ####### Deployment section #######
 ##################################

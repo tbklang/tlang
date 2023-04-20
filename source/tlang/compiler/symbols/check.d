@@ -58,6 +58,8 @@ public enum SymbolType
     SMALLER_THAN,
     GREATER_THAN_OR_EQUALS,
     SMALLER_THAN_OR_EQUALS,
+    OBRACKET,
+    CBRACKET,
     CAST,
     EXTERN,
     EXTERN_EFUNC,
@@ -417,6 +419,16 @@ public SymbolType getSymbolType(Token tokenIn)
     else if (token[0] == '}')
     {
         return SymbolType.CCURLY;
+    }
+    /* Left-bracket checl */
+    else if(token[0] == '[')
+    {
+        return SymbolType.OBRACKET;
+    }
+    /* Right-bracket check */
+    else if(token[0] == ']')
+    {
+        return SymbolType.CBRACKET;
     }
     /* Comma check */
     else if (token[0] == ',')

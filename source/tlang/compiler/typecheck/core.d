@@ -691,6 +691,95 @@ public final class TypeChecker
     }
 
     /** 
+     * Determines whether the provided Value-instruction refers
+     * to a StackArray. This is used for array indexing checks,
+     * to disambiguate between pointer-arrays and stack-based
+     * arrays.
+     *
+     * Params:
+     *   valInstr = the Value-based instruction to inspect
+     * Returns: true if the FetchValInstr refers to a stack-array,
+     * false otherwise
+     */
+    private bool isStackArrayIndex(Value valInstr)
+    {
+        // TODO: Rename
+        Value indexToInstr = valInstr;
+
+        /* We need a `FetchValueInstruction` as the first condition */
+        FetchValueVar potFVV = cast(FetchValueVar)indexToInstr;
+        if(potFVV)
+        {
+            /** 
+                * Obtain the array variable being referred to
+                * and obtain it's declared type
+                */
+            Context potFVVCtx = potFVV.getContext();
+            Variable potStackArrVar = cast(Variable)resolver.resolveBest(potFVVCtx.getContainer(), potFVV.varName);
+            Type variableDeclaredType = getType(potFVVCtx.getContainer(), potStackArrVar.getType());
+
+            /**
+            * If the type is `StackArray`
+            */
+            if(cast(StackArray)variableDeclaredType)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** 
+     * Used to check if the type of the argument being passed into
+     * a function call is a stack array and if the function's parameter
+     * type is a pointer then this will check if the component type
+     * of the stack array is the same as that of the pointer
+     *
+     * Params:
+     *   parameterType = the function's parameter typoe
+     *   argumentType = the argument's type
+     *   outputType = variable to place updated type into
+     *
+     * Returns: true if the so, false otherwise
+     */
+    private bool canCoerceStackArray(Type parameterType, Type argumentType, ref Type outputType)
+    {
+        // If the argument being passed in is a stack array
+        if(cast(StackArray)argumentType)
+        {
+            StackArray stackArrayType = cast(StackArray)argumentType;
+
+            // Get the component type of the stack array
+            Type stackArrCompType = stackArrayType.getComponentType();
+
+            // Now check if the parameter is a pointer type
+            if(cast(Pointer)parameterType)
+            {
+                Pointer parameterPointerCompType = cast(Pointer)parameterType;
+
+                // Now create a new type for the stack array which is
+                // effectively <stackArrayType>*
+                Type stackArrayTypeCoerced = new Pointer(stackArrCompType);
+                outputType = stackArrayTypeCoerced;
+
+                // If the coerced stack array's component type is the same as the pointer's component type
+                return isSameType(parameterPointerCompType, stackArrayTypeCoerced);
+            }
+            // If not, then return false immedtaiely
+            else
+            {
+                return false;
+            }
+        }
+        // If not, then immediately return false
+        else
+        {   
+            return false;
+        }
+    }
+
+    /**
      * Given two Value-based instructions this will firstly check if
      * at least one of the two is of type Pointer, then checks if the
      * remaining instruction is an of type Integer - the remaining instruction
@@ -1112,12 +1201,31 @@ public final class TypeChecker
                             // gprintln("FuncCall(Formal): "~parmType.getName());
                             // gprintln("FuncCall(Actual): "~valueInstr.toString());
 
+                            /* Scratch type used only for stack-array coercion */
+                            Type coercionScratchType;
+
 
                             /* Match up types */
                             //if(argType == parmType)
                             if(isSameType(argType, parmType))
                             {
                                 gprintln("Match type");
+
+                                /* Add the instruction into the FunctionCallInstr */
+                                funcCallInstr.setEvalInstr(parmCount, valueInstr);
+                                gprintln(funcCallInstr.getEvaluationInstructions());
+                            }
+                            /* Stack-array argument to pointer parameter coercion check */
+                            else if(canCoerceStackArray(parmType, argType, coercionScratchType))
+                            {
+                                // TODO: Add stack coercion check here
+                                gprintln("Stack-based array has been coerced for function call");
+
+                                // Update the fetch-var instruction's type to the coerced 
+                                // TODO: Should we have applied this technically earlier then fallen through to
+                                // ... the branch above? That would have worked and been neater - we should do
+                                // ... that to avoid duplicating any code
+                                valueInstr.setInstrType(coercionScratchType);
 
                                 /* Add the instruction into the FunctionCallInstr */
                                 funcCallInstr.setEvalInstr(parmCount, valueInstr);
@@ -1202,6 +1310,125 @@ public final class TypeChecker
 
                 /* The type of the cats expression is that of the type it casts to */
                 castedValueInstruction.setInstrType(castToType);
+            }
+            /* ArrayIndex */
+            else if(cast(ArrayIndex)statement)
+            {
+                ArrayIndex arrayIndex = cast(ArrayIndex)statement;
+                Type accessType;
+
+                /* Pop the thing being indexed (the indexTo expression) */
+                Value indexToInstr = cast(Value)popInstr();
+                Type indexToType = indexToInstr.getInstrType();
+                assert(indexToType);
+                gprintln("ArrayIndex: Type of `indexToInstr`: "~indexToType.toString());
+
+                /* Pop the index instruction (the index expression) */
+                Value indexInstr = cast(Value)popInstr();
+                Type indexType = indexInstr.getInstrType();
+                assert(indexType);
+
+
+                // TODO: Type check here the `indexToInstr` ensure that it is an array
+                // TODO: Type check the indexInstr and ensure it is an integral type (index can not be anything else)
+
+                // TODO: We need iets different for stack-arrays here
+                
+
+
+                /* Final Instruction generated */
+                Instruction generatedInstruction;
+
+
+                // // TODO: We need to add a check here for if the `arrayRefInstruction` is a name
+                // // ... and if so if its type is `StackArray`, else we will enter the wrong thing below
+
+                // TODO: Look up based on the name of the `FetchValueInstruction` (so if it is)
+                // ... AND if it refers to a stack array
+                bool isStackArray = isStackArrayIndex(indexToInstr);
+                gprintln("isStackArray (being indexed-on)?: "~to!(string)(isStackArray), DebugType.ERROR);
+
+
+               
+                // /* The type of what is being indexed on */
+                // Type indexingOnType = arrayRefInstruction.getInstrType();
+                // gprintln("Indexing-on type: "~indexingOnType.toString(), DebugType.WARNING);
+
+
+                /* Stack-array type `<compnentType>[<size>]` */
+                if(isStackArray)
+                {
+                    StackArray stackArray = cast(StackArray)indexToType;
+                    accessType = stackArray.getComponentType();
+                    gprintln("ArrayIndex: Stack-array access");
+
+
+                    gprintln("<<<<<<<< STCK ARRAY INDEX CODE GEN >>>>>>>>", DebugType.ERROR);
+
+
+
+                    /**
+                    * Codegen and type checking
+                    *
+                    * 1. Set the type (TODO)
+                    * 2. Set the context (TODO)
+                    */
+                    StackArrayIndexInstruction stackArrayIndexInstr = new StackArrayIndexInstruction(indexToInstr, indexInstr);
+                    stackArrayIndexInstr.setInstrType(accessType);
+                    stackArrayIndexInstr.setContext(arrayIndex.context);
+
+                    gprintln("IndexTo: "~indexToInstr.toString(), DebugType.ERROR);
+                    gprintln("Index: "~indexInstr.toString(), DebugType.ERROR);
+                    gprintln("Stack ARray type: "~stackArray.getComponentType().toString(), DebugType.ERROR);
+
+                    
+
+                    // assert(false);
+                    generatedInstruction = stackArrayIndexInstr;
+                }
+                /* Array type `<componentType>[]` */
+                else if(cast(Pointer)indexToType)
+                {
+                    gprintln("ArrayIndex: Pointer access");
+
+                    Pointer pointer = cast(Pointer)indexToType;
+                    accessType = pointer.getReferredType();
+
+                    /**
+                    * Codegen and type checking
+                    *
+                    * 1. Embed the index instruction and indexed-to instruction
+                    * 2. Set the type of this instruction to the type of the array's component type
+                    * 3. (TODO) Set the context
+                    */
+                    ArrayIndexInstruction arrayIndexInstr = new ArrayIndexInstruction(indexToInstr, indexInstr);
+                    arrayIndexInstr.setInstrType(accessType);
+
+                    generatedInstruction = arrayIndexInstr;
+                }
+                else
+                {
+                    // TODO: Throw an error here
+                    // throw new TypeMismatchException()
+                    gprintln("Indexing to an entity other than a stack array or pointer!", DebugType.ERROR);
+                    assert(false);
+                }
+
+
+
+                // TODO: context (arrayIndex)
+
+                gprintln("ArrayIndex: [toInstr: "~indexToInstr.toString()~", indexInstr: "~indexInstr.toString()~"]");
+
+                gprintln("Array index not yet supported", DebugType.ERROR);
+                // assert(false);
+
+                addInstr(generatedInstruction);
+            }
+            else
+            {
+                gprintln("This ain't it chief", DebugType.ERROR);
+                assert(false);
             }
         }
         /* VariableAssigbmentDNode */
@@ -1633,6 +1860,129 @@ public final class TypeChecker
                 DiscardInstruction discardInstruction = new DiscardInstruction(exprInstr);
                 discardInstruction.setContext(discardStatement.context);
                 addInstrB(discardInstruction);
+            }
+            /**
+            * Array assignments (ArrayAssignment)
+            */
+            else if(cast(ArrayAssignment)statement)
+            {
+                ArrayAssignment arrayAssignment = cast(ArrayAssignment)statement;
+
+                gprintln("Note, dependency processing of ArrayAssignment is not yet implemented, recall seggy", DebugType.ERROR);
+                printCodeQueue();
+
+                // TODO: We need to implement this, what should we put here
+                // ... we also should be setting the correct types if need be
+
+                /**
+                 * At this point the code queue top of stack should look like this
+                 * (as a requirement for Array assignments) (top-to-bottom)
+                 *
+                 * 1. Index instruction
+                 * 2. Array name instruction
+                 * 3. Assigment expression instruction
+                 */
+                Value indexInstruction = cast(Value)popInstr();
+
+                
+                // FIXME: Actually this may not always be the case, the name fetching makes sense
+                // ... for stack arrays but not pointer ones where the arrayRef may be generated
+                // ... from something else.
+                Value arrayRefInstruction = cast(Value)popInstr();
+                Value assignmentInstr = cast(Value)popInstr();
+
+                gprintln("indexInstruction: "~indexInstruction.toString(), DebugType.WARNING);
+                gprintln("arrayRefInstruction: "~arrayRefInstruction.toString(), DebugType.WARNING);
+                gprintln("assignmentInstr: "~assignmentInstr.toString(), DebugType.WARNING);
+
+
+                /* Final Instruction generated */
+                Instruction generatedInstruction;
+
+
+                // TODO: We need to add a check here for if the `arrayRefInstruction` is a name
+                // ... and if so if its type is `StackArray`, else we will enter the wrong thing below
+                bool isStackArray = isStackArrayIndex(arrayRefInstruction);
+                gprintln("isStackArray (being assigned to)?: "~to!(string)(isStackArray), DebugType.ERROR);
+
+
+               
+                /* The type of what is being indexed on */
+                Type indexingOnType = arrayRefInstruction.getInstrType();
+                gprintln("Indexing-on type: "~indexingOnType.toString(), DebugType.WARNING);
+                gprintln("Indexing-on type: "~indexingOnType.classinfo.toString(), DebugType.WARNING);
+
+                
+                /* Stack-array type `<compnentType>[<size>]` */
+                if(isStackArray)
+                {
+                    // TODO: Crashing here currently with `simple_stack_arrays2.t`
+                    // gprint("arrayRefInstruction: ");
+                    // gprintln(arrayRefInstruction);
+    
+                    // StackArrayIndexInstruction stackArrayIndex = cast(StackArrayIndexInstruction)arrayRefInstruction;
+                    
+                    FetchValueVar arrayFetch = cast(FetchValueVar)arrayRefInstruction;
+
+                    /** 
+                     * Hoist out the declared stack array variable
+                     */
+                    Context stackVarContext = arrayFetch.getContext();
+                    assert(stackVarContext); //TODO: We must set the Context when we make the `StackArrayIndexInstruction`
+                    
+                    Variable arrayVariable = cast(Variable)resolver.resolveBest(stackVarContext.container, arrayFetch.varName);
+                    Type arrayVariableDeclarationType = getType(stackVarContext.container, arrayVariable.getType());
+
+                    gprintln("TODO: We are still working on generating an assignment instruction for assigning to stack arrays", DebugType.ERROR);
+                    gprintln("TODO: Implement instruction generation for stack-based arrays", DebugType.ERROR);
+
+                    // TODO: Use StackArrayIndexAssignmentInstruction
+                    StackArrayIndexAssignmentInstruction stackAssignmentInstr = new StackArrayIndexAssignmentInstruction(arrayFetch.varName, indexInstruction, assignmentInstr);
+
+                    // TODO: See issue on `Stack-array support` for what to do next
+                    // assert(false);
+                    generatedInstruction = stackAssignmentInstr;
+
+                    // TODO: Set context
+                    /* Set the context */
+                    stackAssignmentInstr.setContext(arrayAssignment.getContext());
+
+
+                    gprintln(">>>>> "~stackAssignmentInstr.toString());
+                    gprintln("Assigning into this array: "~to!(string)(assignmentInstr));
+                    // assert(false);
+                }
+                /* Array type `<componentType>[]` */
+                else if(cast(Pointer)indexingOnType)
+                {
+                    // TODO: Update this and don't use pointer dereference assignment
+                    /** 
+                     * Create a new pointer dereference assignment instruction
+                     *
+                     * 1. The deref is level 1 (as array index == one `*`)
+                     * 2. The left-hand side is to be `new ArrayIndexInstruction(arrayRefInstruction, indexInstruction)`
+                     * 3. Assignment expression is to be `assignmentInstr`
+                     */
+                    // NOTE: We couple arrBasePtr+offset (index) using an ArrayIndexInstruction (optimization/code-reuse)
+                    ArrayIndexInstruction arrIndex = new ArrayIndexInstruction(arrayRefInstruction, indexInstruction);
+                    ArrayIndexAssignmentInstruction arrDerefAssInstr = new ArrayIndexAssignmentInstruction(arrIndex, assignmentInstr);
+
+                    gprintln("TODO: Implement instruction generation for pointer-based arrays", DebugType.ERROR);
+                    generatedInstruction = arrDerefAssInstr;
+                    // assert(false);
+
+                    // TODO: Set context
+                }
+                // TODO: handle this error (if even possible?)
+                else
+                {
+                    assert(false);
+                }
+
+                assert(generatedInstruction !is null);
+
+                /* Add the instruction */
+                addInstrB(generatedInstruction);
             }
             /* Case of no matches */
             else

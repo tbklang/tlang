@@ -17,7 +17,7 @@ import tlang.compiler.codegen.mapper.core : SymbolMapper;
 import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
-import tlang.compiler.symbols.typing.core : Type, Primitive, Integer, Void, Pointer;
+import tlang.compiler.symbols.typing.core;
 import tlang.compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
@@ -90,6 +90,18 @@ public final class DCodeEmitter : CodeEmitter
         else if(cast(Void)typeIn)
         {
             return "void";
+        }
+        /* Stack-based array type */
+        else if(cast(StackArray)typeIn)
+        {
+            // TODO: Still implement stakc-based arrays
+            // we won't be able to tyoe transform just here
+            // ... as we need <componentType> <varName>[<arraySize>]
+            // ... hence this must be performed in avriable declaration
+            StackArray stackArray = cast(StackArray)typeIn;
+            
+            return typeTransform(stackArray.getComponentType());
+            // return "KAK TODO";
         }
 
         gprintln("Type transform unimplemented");
@@ -165,6 +177,14 @@ public final class DCodeEmitter : CodeEmitter
                 // NOTE: Best would be identity-mapping Entity's to a name
                 string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
+
+                // Check if the type is a stack-based array
+                // ... if so then take make symbolName := `<symbolName>[<stackArraySize>]`
+                if(cast(StackArray)varDecInstr.varType)
+                {
+                    StackArray stackArray = cast(StackArray)varDecInstr.varType;
+                    renamedSymbol~="["~to!(string)(stackArray.getAllocatedSize())~"]";
+                }
 
                 // Check to see if this declaration has an assignment attached
                 if(typedEntityVariable.getAssignment())
@@ -507,6 +527,176 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        /** 
+         * Array indexing (pointer-based arrays)
+         *
+         * Handles `myArray[<index>]` where `myArray` is
+         * of type `int[]` (i.e. `int*`)
+         */
+        else if(cast(ArrayIndexInstruction)instruction)
+        {
+            ArrayIndexInstruction arrAssInstr = cast(ArrayIndexInstruction)instruction;
+
+            gprintln("TODO: Implement Pointer-array index emit", DebugType.ERROR);
+
+            gprintln("ArrayInstr: "~arrAssInstr.getIndexedToInstr().toString());
+            gprintln("ArrayIndexInstr: "~to!(string)(arrAssInstr.getIndexInstr()));
+
+            
+            /* Obtain the entity being indexed */
+            Value indexed = arrAssInstr.getIndexedToInstr();
+
+            /* Obtain the index */
+            Value index = arrAssInstr.getIndexInstr();
+
+            
+            /** 
+             * Emit *(<indexedEval>+<index>)
+             */
+            string emit;
+            emit ~= "*(";
+
+            
+            emit ~= transform(indexed);
+            emit ~= "+";
+            emit ~= transform(index);
+            emit ~= ")";
+
+
+
+            // return "*("~transform(indexed)~"+"~transform(index)~")";
+            return emit;
+        }
+        /** 
+         * Array assignments (pointer-based arrays)
+         *
+         * Handles `myArray[<index>] = <expression>` where `myArray`
+         * is of type `int[]` (i.e. `int*`)
+         */
+        else if(cast(ArrayIndexAssignmentInstruction)instruction)
+        {
+            ArrayIndexAssignmentInstruction arrayAssignmentInstr = cast(ArrayIndexAssignmentInstruction)instruction;
+
+            /** 
+             * Obtain the array pointer evaluation
+             */
+            ArrayIndexInstruction arrayPtrEval = arrayAssignmentInstr.getArrayPtrEval();
+
+            // NOTE: See above
+            // /** 
+            //  * Obtain the index being assigned at
+            //  */
+            // Value index = arrayAssignmentInstr.getIndexInstr();
+
+            /** 
+             * Obtain the expression being assigned
+             */
+            Value assignmentInstr = arrayAssignmentInstr.getAssignmentInstr();
+
+
+            /** 
+             * Emit *(<arrayPtrVal>+<indexInstr>) = <assignmentInstr>;
+             */
+            string emit;
+            // NOTE: Below is done by ArrayIndexInstruction
+            // emit ~= "*(";
+            // emit ~= transform(arrayPtrEval);
+            // emit ~= "+";
+            // emit ~= transform(index);
+            // emit ~= ")";
+            emit ~= transform(arrayPtrEval);
+
+            emit ~= " = ";
+            emit ~= transform(assignmentInstr);
+            emit ~= ";";
+
+
+            return emit; 
+        }
+        /** 
+         * Array indexing (stack-based arrays)
+         *
+         * Handles `myArray[<index>]` where `myArray` is
+         * of type `int[<size>]` (i.e. a stack-array)
+         */
+        else if(cast(StackArrayIndexInstruction)instruction)
+        {
+            StackArrayIndexInstruction stackArrInstr = cast(StackArrayIndexInstruction)instruction;
+            Context context = stackArrInstr.getContext();
+            
+            /* Obtain the stack array variable being indexed */
+            // TODO: Investigate, nroamlly we do a `FetchValueVar` as like the instr which is fine actually
+            FetchValueVar array = cast(FetchValueVar)stackArrInstr.getIndexedToInstr();
+            assert(array);
+            Variable arrayVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), array.varName);
+
+            /* Perform symbol mapping */
+            string arrayName = mapper.symbolLookup(arrayVariable);
+
+            /* Obtain the index expression */
+            Value indexInstr = stackArrInstr.getIndexInstr();
+
+            /** 
+             * Emit <arrayName>[<index>]
+             */
+            string emit = arrayName;
+            emit ~= "[";
+            emit ~= transform(indexInstr);
+            emit ~= "]";
+
+
+            gprintln("TODO: Implement Stack-array index emit", DebugType.ERROR);
+
+            
+            
+
+            // return "(TODO: Stack-array index emit)";
+            return emit;
+        }
+        /** 
+         * Array assignments (stack-based arrays)
+         *
+         * Handles `myArray[<index>] = <expression>` where `myArray`
+         * is of type `int[<size>]` (i.e. a stack-array)
+         */
+        else if(cast(StackArrayIndexAssignmentInstruction)instruction)
+        {
+            StackArrayIndexAssignmentInstruction stackArrAssInstr = cast(StackArrayIndexAssignmentInstruction)instruction;
+            Context context = stackArrAssInstr.getContext();
+            assert(context);
+
+            /** 
+             * Obtain the stack array being assigned to
+             */
+            string arrayName = stackArrAssInstr.getArrayName();
+            Variable arrayVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), arrayName);
+
+            /* Perform symbol mapping */
+            string arrayNameMapped = mapper.symbolLookup(arrayVariable);
+
+            /* Obtain the index expression */
+            Value indexInstr = stackArrAssInstr.getIndexInstr();
+
+            /* Obtain the expresison being assigned */
+            Value assignmentInstr = stackArrAssInstr.getAssignedValue();
+
+            /** 
+             * Emit <arrayName>[<index>] = <expression>;
+             */
+            string emit = arrayNameMapped;
+            emit ~= "[";
+            emit ~= transform(indexInstr);
+            emit ~= "]";
+
+            emit ~= " = ";
+            emit ~= transform(assignmentInstr);
+            emit ~= ";";
+
+
+            // return "(StackArrAssignmentInstr: TODO)";
+
+            return emit;
+        }
         // TODO: MAAAAN we don't even have this yet
         // else if(cast(StringExpression))
 
@@ -818,6 +1008,20 @@ int main()
     return 0;
 }`);
         }
+        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_array_syntax") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int retValue = thing();
+    assert(t_9d01d71b858651e520c9b503122a1b7a == 4);
+    assert(retValue == 6);
+
+    return 0;
+}`);
+        }
         else if(cmp(typeChecker.getModule().getName(), "simple_pointer_cast_le") == 0)
         {
             file.writeln(`
@@ -856,6 +1060,64 @@ int main()
     test();
    
     
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "simple_stack_array_coerce") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = function();
+    assert(result == 420+69);
+    printf("stackArr sum: %d\n", result);
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "complex_stack_array_coerce") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = function();
+    assert(result == 69+420);
+
+    printf("val1: %d\n", t_596f49b2a2784a3c1b073ccfe174caa0);
+    printf("val2: %d\n", t_4233b83329676d70ab4afaa00b504564);
+    printf("stackArr sum: %d\n", result);
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "simple_stack_array_coerce_ptr_syntax") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = function();
+    assert(result == 420+69);
+    printf("stackArr sum: %d\n", result);
+
+    return 0;
+}`);
+        }
+        else if(cmp(typeChecker.getModule().getName(), "simple_stack_arrays4") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = function();
+    assert(result == 61);
 
     return 0;
 }`);

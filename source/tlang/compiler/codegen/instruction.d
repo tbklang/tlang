@@ -512,3 +512,141 @@ public final class CastedValueInstruction : Value
         return type;
     }
 }
+
+public final class ArrayIndexInstruction : Value
+{
+    /* Index-to instruction */
+    private Value indexTo;
+
+    /* The index */
+    private Value index;
+
+    this(Value indexTo, Value index)
+    {
+        this.indexTo = indexTo;
+        this.index = index;
+    }
+
+    public Value getIndexInstr()
+    {
+        return index;
+    }
+
+    public Value getIndexedToInstr()
+    {
+        return indexTo;
+    }
+
+    public override string toString()
+    {
+        return "ArrayIndexInstr [IndexTo: "~indexTo.toString()~", Index: "~index.toString()~"]";
+    }
+}
+
+//TODO: ArrayIndexAssignmentInstruction
+public final class ArrayIndexAssignmentInstruction : Instruction
+{
+    // TODO: We then need the left hand side array evaluation instruction (a pointer value basically)
+    // private Value arrayPtrEval;
+
+    // TODO: We then also need a `Value` field for the index expression instruction
+    // private Value index;
+
+    // NOTE: We now to the above to using an ArrayIndexInstruction
+    private ArrayIndexInstruction arrayPtrEval;
+
+    // TODO: We then also need another `Value` field for the expression instruction
+    // ... being assigned into the pointer-array
+    private Value assignment;
+
+    this(ArrayIndexInstruction arrayPtrEval, Value assignment)
+    {
+        this.arrayPtrEval = arrayPtrEval;
+        // this.index = index;
+        this.assignment = assignment;
+    }
+
+    public ArrayIndexInstruction getArrayPtrEval()
+    {
+        return arrayPtrEval;
+    }
+
+    public Value getAssignmentInstr()
+    {
+        return assignment;
+    }
+}
+
+// TODO: StackArrayIndexInstruction
+public final class StackArrayIndexInstruction : Value
+{
+    /* Index-to instruction */
+    private Value indexTo;
+
+    /* The index */
+    private Value index;
+
+    this(Value indexTo, Value index)
+    {
+        this.indexTo = indexTo;
+        this.index = index;
+    }
+
+    public Value getIndexInstr()
+    {
+        return index;
+    }
+
+    public Value getIndexedToInstr()
+    {
+        return indexTo;
+    }
+
+    public override string toString()
+    {
+        return "StackArrayIndexInstr [IndexTo: "~indexTo.toString()~", Index: "~index.toString()~"]";
+    }
+}
+
+// TODO: StackArrayIndexAssignmentInstruction
+public final class StackArrayIndexAssignmentInstruction : Instruction
+{
+    // TODO: We need a `string` field here which is looked up with the 
+    // ... associated context of this instruction and refers to the
+    // ... stack-array being index-assigned into
+    private string arrayName;
+
+    // TODO: We then also need a `Value` field for the index expression instruction
+    private Value index;
+
+    // TODO: We then also need another `Value` field for the expression instruction
+    // ... being assigned into the stack-array at said index
+    private Value assignment;
+
+    this(string arrayName, Value index, Value assignment)
+    {
+        this.arrayName = arrayName;
+        this.index = index;
+        this.assignment = assignment;
+    }
+
+    public string getArrayName()
+    {
+        return arrayName;
+    }
+
+    public Value getIndexInstr()
+    {
+        return index;
+    }
+
+    public Value getAssignedValue()
+    {
+        return assignment;
+    }
+
+    public override string toString()
+    {
+        return "StackArrayASSIGN [name: "~arrayName~", index: "~index.toString()~", Assignment: "~assignment.toString()~"]";
+    }
+}

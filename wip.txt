@@ -1,0 +1,10 @@
+Arrays support
+
+1. Todo: Add expression support for int k = `myArray[1+1]`; (for example)
+2. COntinue working on indexer support
+3. How would we process:
+	```
+	myArray[i][1]
+
+	We should take the [`i`, `1`] and produce a nested assignment expression
+	```

@@ -458,6 +458,48 @@ public class VariableAssignmentStdAlone : Statement
     }
 }
 
+// TODO: Add an ArrayAssignment thing here, would be similiar to PointerDeference
+// mmmh, we would also need to ensure during typechecking/codegen/emit that we don't
+// do pointer arithmetic. Makes sense we would have a ArrayAssign and expression for indexers
+// but during codegen we check WHO was being assigned to and their type and based on that
+// generate the correct INSTRUCTION
+public final class ArrayAssignment : Statement
+{
+    private Expression assignmentExpression;
+
+    /** 
+     * The left hand side of:
+     *      e.g. myArray[i][1] = 2;
+     *
+     * Therefore the `myArray[i][1]` part
+     */
+    private ArrayIndex leftHandExpression;
+
+    this(ArrayIndex leftHandExpression, Expression assignmentExpression)
+    {
+        this.leftHandExpression = leftHandExpression;
+        this.assignmentExpression = assignmentExpression;
+
+        /* Weighted as 2 */
+        weight = 2;
+    }
+
+    public ArrayIndex getArrayLeft()
+    {
+        return leftHandExpression;
+    }
+
+    public Expression getAssignmentExpression()
+    {
+        return assignmentExpression;
+    }
+
+    public override string toString()
+    {
+        return "ArrayAssignment [leftHand: "~leftHandExpression.toString()~", assignmentExpr: "~assignmentExpression.toString()~"]";
+    }
+}
+
 
 public class PointerDereferenceAssignment : Statement
 {

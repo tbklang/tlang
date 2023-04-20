@@ -455,9 +455,10 @@ public final class Parser
         *
         * 1. `int ptr` (and we looked ahead to `ptr`)
         * 2. `int* ptr` (and we looked ahead to `*`)
+        * 3. `int[] thing` (and we looked ahead to `[`)
         */
         /* If we have an identifier/type then declaration */
-        else if(type == SymbolType.IDENT_TYPE || type == SymbolType.STAR)
+        else if(type == SymbolType.IDENT_TYPE || type == SymbolType.STAR || type == SymbolType.OBRACKET)
         {
             previousToken();
             ret = parseTypedDeclaration();
@@ -469,6 +470,13 @@ public final class Parser
             }
             /* If it is a variable declaration then */
             else if(cast(Variable)ret)
+            {
+                /* Expect a semicolon and consume it */
+                expect(SymbolType.SEMICOLON, getCurrentToken());
+                nextToken();
+            }
+            /* If it is an arrau assignment */
+            else if(cast(ArrayAssignment)ret)
             {
                 /* Expect a semicolon and consume it */
                 expect(SymbolType.SEMICOLON, getCurrentToken());
@@ -907,7 +915,7 @@ public final class Parser
             if(getSymbolType(getCurrentToken()) == SymbolType.IDENT_TYPE)
             {
                 /* Get the type */
-                TypedEntity bogusEntity = parseTypedDeclaration(false, false, false, true);
+                TypedEntity bogusEntity = cast(TypedEntity)parseTypedDeclaration(false, false, false, true);
                 string type = bogusEntity.getType();
 
                 /* Get the identifier (This CAN NOT be dotted) */
@@ -1041,7 +1049,8 @@ public final class Parser
          * which means we can call `getType()` and extract
          * the type string
          */
-        TypedEntity bogusEntity = parseTypedDeclaration(false, false, false, true);
+        TypedEntity bogusEntity = cast(TypedEntity)parseTypedDeclaration(false, false, false, true);
+        assert(bogusEntity);
         string toType = bogusEntity.getType();
 
         /* Expect a `)` closing brace */
@@ -1056,7 +1065,6 @@ public final class Parser
 
         return castedExpression;
     }
-
 
     /**
     * Parses an expression
@@ -1315,6 +1323,23 @@ public final class Parser
                 /* Get the next token */
                 nextToken();
             }
+            /* If we have a `[` (array index/access) */
+            else if(symbol == SymbolType.OBRACKET)
+            {
+                // Pop off an expression which will be `indexTo`
+                Expression indexTo = removeExp();
+                gprintln("indexTo: "~indexTo.toString());
+
+                /* Get the index expression */
+                nextToken();
+                Expression index = parseExpression();
+                nextToken();
+                gprintln("IndexExpr: "~index.toString());
+                // gprintln(getCurrentToken());
+
+                ArrayIndex arrayIndexExpr = new ArrayIndex(indexTo, index);
+                addRetExp(arrayIndexExpr);
+            }
             /* If it is an identifier */
             else if (symbol == SymbolType.IDENT_TYPE)
             {
@@ -1348,7 +1373,9 @@ public final class Parser
                 addRetExp(toAdd);
             }
             /* Detect if this expression is coming to an end, then return */
-            else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE || symbol == SymbolType.COMMA || symbol == SymbolType.ASSIGN)
+            else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE ||
+                    symbol == SymbolType.COMMA || symbol == SymbolType.ASSIGN ||
+                    symbol == SymbolType.CBRACKET)
             {
                 break;
             }
@@ -1436,29 +1463,93 @@ public final class Parser
         return retExpression[0];
     }
 
-    private TypedEntity parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true, bool onlyType = false)
+    
+
+    // TODO: Update to `Statement` as this can return an ArrayAssignment now
+    private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true, bool onlyType = false)
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
 
 
         /* Generated object */
-        TypedEntity generated;
+        Statement generated;
 
 
         /* TODO: Save type */
         string type = getCurrentToken().getToken();
         string identifier;
-
-
-        // TODO: Insert pointer `*`-handling code here
         nextToken();
-        ulong derefCount = 0;
 
-        /* If we have a star */
-        while(getSymbolType(getCurrentToken()) == SymbolType.STAR)
+      
+
+        /* Potential array index expressions (assignment) */
+        // Think myArray[i][1] -> [`i`, `1`]
+        Expression[] arrayIndexExprs;
+
+        // We are currently 1 past the "type" (the identifier) so go back one
+        ulong arrayAssignTokenBeginPos = getCursor()-1;
+
+        /* Potential stack-array type size (declaration) */
+        string potentialStackSize;
+
+        /* Handling of pointer and array types */
+        while(getSymbolType(getCurrentToken()) == SymbolType.STAR || getSymbolType(getCurrentToken()) == SymbolType.OBRACKET)
         {
-            derefCount+=1;
-            type=type~"*";
+            /* If we have `[` then expect a number and/or a `]` */
+            if(getSymbolType(getCurrentToken()) == SymbolType.OBRACKET)
+            {
+                nextToken();
+                SymbolType nextType = getSymbolType(getCurrentToken());
+                
+
+                /* Check if the next symbol is NOT a `]` */
+                if(nextType != SymbolType.CBRACKET)
+                {
+                    
+
+                    arrayIndexExprs ~= parseExpression();
+
+                    /**
+                     * If it is the case it is a number literal then save it
+                     * anyways just for the case whereby we may be declaring
+                     * a stack-array type
+                     *
+                     * TODO: Double check any error checking here which should be deferred to later
+                     */
+                    if(nextType == SymbolType.NUMBER_LITERAL)
+                    {
+                        // TODO: Ensure the returned thing is a number
+                        // TODO: Ensure said number is non-negative
+                        // TODO: May as well now start adding `]` as a seperator or stopper or something
+                        IntegerLiteral stackArraySize = cast(IntegerLiteral)arrayIndexExprs[$-1];
+
+                        // If the expression is an integer (which it should be)
+                        if(stackArraySize)
+                        {
+                            gprintln("StackArraySize: "~stackArraySize.toString());
+                            potentialStackSize = stackArraySize.getNumber();
+                        }
+                        // If not, then error
+                        else
+                        {
+                            gprintln("Expected an integer as stack-array size but got iets ander", DebugType.ERROR);
+                            // TODO: Rather throw a parsing error
+                            assert(false);
+                        }
+                    }
+                }
+
+                
+
+                expect(SymbolType.CBRACKET, getCurrentToken());
+                type=type~"["~potentialStackSize~"]";
+            }
+            /* If we have `*` */
+            else
+            {
+                type=type~"*";
+            }
+            
             nextToken();
         }
 
@@ -1470,17 +1561,39 @@ public final class Parser
 
             return generated;
         }
-        
-        /* Expect an identifier (CAN NOT be dotted) */
-        expect(SymbolType.IDENT_TYPE, getCurrentToken());
-        if(!isIdentifier_NoDot(getCurrentToken()))
-        {
-            expect("Identifier cannot be dotted");
-        }
-        identifier = getCurrentToken().getToken();
 
-        nextToken();
-        gprintln("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ getCurrentToken().getToken());
+        /* If we are going to be assigning into an array (indexed) */
+        bool arrayIndexing = false;
+
+
+        /* If the current token is ASSIGN then array indexing is occuring */
+        if(getSymbolType(getCurrentToken()) == SymbolType.ASSIGN)
+        {
+            // Then we are doing an array-indexed assignment
+            arrayIndexing = true;
+        }
+        /* If we have an identifier the a declaration is occuring */
+        else if(getSymbolType(getCurrentToken()) == SymbolType.IDENT_TYPE)
+        {
+            /* Expect an identifier (CAN NOT be dotted) */
+            expect(SymbolType.IDENT_TYPE, getCurrentToken());
+            if(!isIdentifier_NoDot(getCurrentToken()))
+            {
+                expect("Identifier cannot be dotted");
+            }
+            identifier = getCurrentToken().getToken();
+
+            nextToken();
+            gprintln("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ getCurrentToken().getToken());
+        }
+        /* Anything else is an error */
+        else
+        {
+            expect("Either a identity or an assignment symbol is expected");
+        }
+
+
+       
 
         /* Check if it is `(` (func dec) */
         SymbolType symbolType = getSymbolType(getCurrentToken());
@@ -1528,7 +1641,7 @@ public final class Parser
             }
         }
         /* Check for `=` (var dec) */
-        else if (symbolType == SymbolType.ASSIGN)
+        else if (symbolType == SymbolType.ASSIGN && (arrayIndexing == false))
         {
             // Only continue if variable declarations are allowed
             if(allowVarDec)
@@ -1563,6 +1676,47 @@ public final class Parser
             {
                 expect("Variables declarations are not allowed.");
             }
+        }
+        /* Check for `=` (array indexed assignment) */
+        else if (symbolType == SymbolType.ASSIGN && (arrayIndexing == true))
+        {
+            // Set the token pointer back to the beginning
+            setCursor(arrayAssignTokenBeginPos);
+            gprintln("Looking at: "~to!(string)(getCurrentToken()));
+
+            // TODO: Move all below code to the branch below that handles this case
+            gprintln("We have an array assignment, here is the indexers: "~to!(string)(arrayIndexExprs), DebugType.WARNING);
+
+            // Our identifier will be some weird malformed-looking `mrArray[][1]` (because os atck array size declarations no-number literal)
+            // ... expressions don't make it in (we have arrayIndexExprs for that). Therefore what we must do is actually
+            // strip the array bracket syntax away to get the name
+            import std.string : indexOf;
+            long firstBracket = indexOf(type, "[");
+            assert(firstBracket > -1);
+            identifier = type[0..firstBracket];
+            gprintln("Then identifier is type actually: "~identifier);
+
+
+            gprintln("We are still implenenting array assignments", DebugType.ERROR);
+
+            ArrayIndex muhIndex = cast(ArrayIndex)parseExpression();
+            gprintln("Expback: "~muhIndex.toString());
+
+            /* Expect a `=` and consume it */
+            gprintln(getCurrentToken());
+            expect(SymbolType.ASSIGN, getCurrentToken());
+            nextToken();
+
+            /* Parse the expression being assigned followed by a semi-colon `;` */
+            Expression expressionBeingAssigned = parseExpression();
+            expect(SymbolType.SEMICOLON, getCurrentToken());
+
+            // TODO: Get the expression after the `=`
+            ArrayAssignment arrayAssignment = new ArrayAssignment(muhIndex, expressionBeingAssigned);
+            gprintln("Created array assignment: "~arrayAssignment.toString());
+            // assert(false);
+
+            generated = arrayAssignment;
         }
         else
         {
@@ -1964,14 +2118,20 @@ public final class Parser
 
             // We now parse function definition but with `wantsBody` set to false
             // indicating no body should be allowed.
-            pseudoEntity = parseTypedDeclaration(false, false, true);
+            pseudoEntity = cast(TypedEntity)parseTypedDeclaration(false, false, true);
+
+            // TODO: Add a check for this cast (AND parse wise if it is evan possible)
+            assert(pseudoEntity);
         }
         /* External variable symbol */
         else if(externType == SymbolType.EXTERN_EVAR)
         {
             // We now parse a variable declaration but with the `wantsBody` set to false
             // indicating no assignment should be allowed.
-            pseudoEntity = parseTypedDeclaration(false, true, false);
+            pseudoEntity = cast(TypedEntity)parseTypedDeclaration(false, true, false);
+
+            // TODO: Add a check for this cast (AND parse wise if it is evan possible)
+            assert(pseudoEntity);
         }
         /* Anything else is invalid */
         else

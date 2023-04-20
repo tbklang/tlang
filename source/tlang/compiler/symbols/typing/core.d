@@ -116,23 +116,32 @@ public class Pointer : Integer
 }
 
 /**
-* Array type
-* 
-* TODO: Might need investigation
+* Stack-based Array type
 */
-public class Array : Type
+public class StackArray : Type
 {
+    /* Size of the stack array to allocate */
+    private ulong arraySize;
+
+    /* Component type */
     private Type elementType;
 
-    this(Type elementType)
+    this(Type elementType, ulong arraySize)
     {
-        /* The name should be `elementType[]` */
-
-        // super(name, )
-
-        /* TODO: Differentiate between stack arrays and heap */
-        super(to!(string)(elementType)~"[]");
+        /* The name should be `elementType[arraySize]` */
+        super(to!(string)(elementType)~"["~to!(string)(arraySize)~"]");
 
         this.elementType = elementType;
+        this.arraySize = arraySize;
+    }
+
+    public Type getComponentType()
+    {
+        return elementType;
+    }
+
+    public ulong getAllocatedSize()
+    {
+        return arraySize;
     }
 }
