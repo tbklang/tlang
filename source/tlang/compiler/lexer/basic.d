@@ -697,7 +697,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = "hello \"world\";";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token("\"world\"", 0, 0), new Token(";", 0, 0)]);
@@ -708,7 +708,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = "hello \"world\"|| ";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token("\"world\"", 0, 0), new Token("||", 0, 0)]);
@@ -719,7 +719,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = "hello \"world\"||";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token("\"world\"", 0, 0), new Token("||", 0, 0)]);
@@ -730,7 +730,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = "hello \"world\";|";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token("\"world\"", 0, 0), new Token(";", 0, 0), new Token("|", 0, 0)]);
@@ -741,7 +741,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = " hello";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("hello", 0, 0)]);
@@ -752,7 +752,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = " hello;";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token(";", 0, 0)]);
@@ -763,7 +763,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = "hello \"world\\\"\"";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("hello", 0, 0), new Token("\"world\\\"\"", 0, 0)]);
@@ -774,7 +774,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = "'c'";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("'c'", 0, 0)]);
@@ -785,7 +785,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = "2121\n2121";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("2121", 0, 0), new Token("2121", 0, 0)]);
@@ -798,35 +798,35 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = " =\n";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("=", 0, 0)]);
 
     import std.algorithm.comparison;
     sourceCode = " = ==\n";
-    currentLexer = new Lexer(sourceCode);
+    currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("=", 0, 0), new Token("==", 0, 0)]);
 
     import std.algorithm.comparison;
     sourceCode = " ==\n";
-    currentLexer = new Lexer(sourceCode);
+    currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("==", 0, 0)]);
 
     import std.algorithm.comparison;
     sourceCode = " = =\n";
-    currentLexer = new Lexer(sourceCode);
+    currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("=", 0, 0), new Token("=", 0, 0)]);
 
     import std.algorithm.comparison;
     sourceCode = " ==, = ==\n";
-    currentLexer = new Lexer(sourceCode);
+    currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("==", 0, 0), new Token(",", 0, 0), new Token("=", 0, 0), new Token("==", 0, 0)]);
@@ -834,7 +834,7 @@ unittest
     // Test flushing of previous token
     import std.algorithm.comparison;
     sourceCode = "i==i=\n";
-    currentLexer = new Lexer(sourceCode);
+    currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("i", 0, 0), new Token("==", 0, 0), new Token("i", 0, 0), new Token("=", 0, 0)]);
@@ -849,18 +849,18 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode;
-    Lexer currentLexer;
+    BasicLexer currentLexer;
 
     /* 21L (valid) */
     sourceCode = "21L";
-    currentLexer = new Lexer(sourceCode);
+    currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("21L", 0, 0)]);
 
     /* 21UL (valid) */
     sourceCode = "21UL";
-    currentLexer = new Lexer(sourceCode);
+    currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("21UL", 0, 0)]);
@@ -889,7 +889,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = "1.5";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("1.5", 0, 0)]);
@@ -905,7 +905,7 @@ unittest
 {
     import std.algorithm.comparison;
     string sourceCode = "new A().l.p.p;";
-    Lexer currentLexer = new Lexer(sourceCode);
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [

@@ -2241,6 +2241,13 @@ public final class Parser
     }
 }
 
+
+version(unittest)
+{
+    import tlang.compiler.lexer.core : LexerInterface;
+    import tlang.compiler.lexer.basic : BasicLexer;
+}
+
 /**
  * Basic Module test case
  */
@@ -2257,10 +2264,10 @@ unittest
 module myModule;
 `;
 
-    Lexer currentLexer = new Lexer(sourceCode);
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        currentLexer.performLex();
+        (cast(BasicLexer)currentLexer).performLex();
         assert(true);
     }
     catch(LexerException e)
@@ -2316,10 +2323,10 @@ class myClass2
 }
 `;
 
-    Lexer currentLexer = new Lexer(sourceCode);
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        currentLexer.performLex();
+        (cast(BasicLexer)currentLexer).performLex();
         assert(true);
     }
     catch(LexerException e)
@@ -2473,10 +2480,10 @@ void function()
 `;
 
 
-    Lexer currentLexer = new Lexer(sourceCode);
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        currentLexer.performLex();
+        (cast(BasicLexer)currentLexer).performLex();
         assert(true);
     }
     catch(LexerException e)
@@ -2544,10 +2551,10 @@ int myFunction(int i, int j)
 `;
 
 
-    Lexer currentLexer = new Lexer(sourceCode);
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        currentLexer.performLex();
+        (cast(BasicLexer)currentLexer).performLex();
         assert(true);
     }
     catch(LexerException e)
@@ -2634,10 +2641,10 @@ void function()
 `;
 
 
-    Lexer currentLexer = new Lexer(sourceCode);
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        currentLexer.performLex();
+        (cast(BasicLexer)currentLexer).performLex();
         assert(true);
     }
     catch(LexerException e)
@@ -2745,10 +2752,10 @@ int thing()
     int** l;
 }
 `;
-    Lexer currentLexer = new Lexer(sourceCode);
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        currentLexer.performLex();
+        (cast(BasicLexer)currentLexer).performLex();
         assert(true);
     }
     catch(LexerException e)
@@ -2838,10 +2845,10 @@ void function()
 `;
 
 
-    Lexer currentLexer = new Lexer(sourceCode);
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        currentLexer.performLex();
+        (cast(BasicLexer)currentLexer).performLex();
         assert(true);
     }
     catch(LexerException e)
@@ -2969,10 +2976,10 @@ void function()
 `;
 
 
-    Lexer currentLexer = new Lexer(sourceCode);
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        currentLexer.performLex();
+        (cast(BasicLexer)currentLexer).performLex();
         assert(true);
     }
     catch(LexerException e)

@@ -2572,8 +2572,8 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
     Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
@@ -2598,7 +2598,11 @@ unittest
     }
 }
 
-
+version(unittest)
+{
+    import tlang.compiler.lexer.core : LexerInterface;
+    import tlang.compiler.lexer.basic : BasicLexer;
+}
 
 /* Test name colliding with container name (2/3) [module, nested collider] */
 unittest
@@ -2619,8 +2623,8 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
     Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
@@ -2664,8 +2668,8 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
     Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
@@ -2709,8 +2713,8 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
     Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
@@ -2753,8 +2757,8 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
     Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
@@ -2799,8 +2803,8 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
     Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
@@ -2884,8 +2888,8 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
     Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
