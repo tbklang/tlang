@@ -12,7 +12,48 @@ public final class Lexer : LexerInterface
 {
     // TODO: We must provide the parser a LexerInterface and NOT Token[]
     // ... such that it can call us to do its work
-    
+
+    /** 
+     * Post-perform lex() data
+     *
+     * This exports the LexerInterface API.
+     *
+     * To-do, ensure these can only be used AFTER `performLex()`
+     * has been called.
+     */
+    private ulong tokenPtr = 0;
+    public override void nextToken()
+    {
+        tokenPtr++;
+    }
+
+    public override bool hasTokens()
+    {
+        return tokenPtr < tokens.length;
+    }
+
+    public override Token getCurrentToken()
+    {
+        /* TODO: Throw an exception here when we try get more than we can */
+        return tokens[tokenPtr];
+    }
+
+    public override void previousToken()
+    {
+        tokenPtr--;   
+    }
+
+    public override void setCursor(ulong newPosition)
+    {
+        tokenPtr = newPosition;
+    }
+
+    public override ulong getCursor()
+    {
+        return tokenPtr;
+    }
+
+
     /**
     * Lexer state data
     */
