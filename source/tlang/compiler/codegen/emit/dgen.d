@@ -1078,6 +1078,23 @@ int main()
     return 0;
 }`);
         }
+        else if(cmp(typeChecker.getModule().getName(), "complex_stack_array_coerce") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = function();
+    assert(result == 69+420);
+
+    printf("val1: %d\n", t_596f49b2a2784a3c1b073ccfe174caa0);
+    printf("val2: %d\n", t_4233b83329676d70ab4afaa00b504564);
+    printf("stackArr sum: %d\n", result);
+
+    return 0;
+}`);
+        }
         else if(cmp(typeChecker.getModule().getName(), "simple_stack_array_coerce_ptr_syntax") == 0)
         {
             file.writeln(`

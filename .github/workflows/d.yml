@@ -350,6 +350,10 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_stack_array_coerce_ptr_syntax.t
           ./tlang.out
+      - name: Stack-based array with normal array coercion (complex)
+        run: |
+          ./tlang compile source/tlang/testing/complex_stack_array_coerce.t
+          ./tlang.out
 
 
       # TODO: Actually add semantic tests for these
