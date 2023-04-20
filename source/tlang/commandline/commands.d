@@ -10,7 +10,7 @@ import jcli;
 import std.stdio;
 import misc.exceptions : TError;
 import std.exception : ErrnoException;
-import tlang.compiler.lexer.core : Lexer;
+import tlang.compiler.lexer.basic : BasicLexer;
 import tlang.compiler.lexer.tokens : Token;
 import tlang.compiler.parsing.core : Parser;
 import tlang.compiler.typecheck.core : TypeChecker;
