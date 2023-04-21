@@ -100,6 +100,20 @@ jobs:
           fi
       - name: Simple string
         run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_string.t
+      
+      - name: Simple return (good)
+        run: |
+          ./tlang syntaxcheck source/tlang/testing/return/simple_return_good.t
+      - name: Simple return (bad return position)
+        run: |
+          set +e
+          ./tlang syntaxcheck source/tlang/testing/return/simple_return_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
 
 
       - name: Simple return (expressionless)
