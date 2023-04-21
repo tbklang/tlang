@@ -316,6 +316,9 @@ public final class TypeChecker
     {
         bool same = false;
 
+        // NOTE: We compare actual types, then check which type
+        // ... the order is important due to type hierachy
+
         /* Handling for pointers */
         if(typeid(type1) == typeid(type2) && cast(Pointer)type1 !is null)
         {
@@ -340,6 +343,11 @@ public final class TypeChecker
             {
                 same = false;
             }
+        }
+        /* Handling for all other cases */
+        else if(typeid(type1) == typeid(type2))
+        {
+            return true;
         }
 
         gprintln("isSameType("~to!(string)(type1)~","~to!(string)(type2)~"): "~to!(string)(same), DebugType.ERROR);
@@ -1612,6 +1620,11 @@ public final class TypeChecker
             else if(cast(ReturnStmt)statement)
             {
                 ReturnStmt returnStatement = cast(ReturnStmt)statement;
+                Function funcContainer = cast(Function)statement.parentOf();
+                string functionName = resolver.generateName(funcContainer.parentOf(), funcContainer);
+
+                /* Generated return instruction */
+                ReturnInstruction returnInstr;
 
                 /** 
                  * Typecheck
@@ -1621,31 +1634,75 @@ public final class TypeChecker
                  * parent could be used to check which function
                  * we belong to and hence do the typecheck
                  */
-                // ...
+                if(!funcContainer)
+                {
+                    throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "A return statement can only appear in the body of a function");
+                }
+                
+
+                Type functionReturnType = getType(funcContainer, funcContainer.getType());
+                
 
                 /**
                 * Codegen
                 *
                 * (1 and 2 only apply for return statements with an expression)
+                *
                 * 1. Pop the expression on the stack
                 * 2. Create a new ReturnInstruction with the expression instruction
                 * embedded in it
-                * 3. Set the Context of the instruction
-                * 4. Add this instruction back
                 */
-                ReturnInstruction returnInstr;
-                if(returnStatement.hasReturnExpression())
+
+                /* If the function's return type is void */
+                if(isSameType(functionReturnType, getBuiltInType(this, "void")))
                 {
-                    Value returnExpressionInstr = cast(Value)popInstr();
-                    assert(returnExpressionInstr);
-                    returnInstr = new ReturnInstruction(returnExpressionInstr);
+                    /* It is an error to have a return expression if function is return void */
+                    if(returnStatement.hasReturnExpression())
+                    {
+                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Function '"~functionName~"' of type void cannot have a return expression");
+                    }
+                    /* If we don't have an expression (expected) */
+                    else
+                    {
+                        /* Generate the instruction */
+                        returnInstr = new ReturnInstruction();
+                    }
                 }
+                /* If there is a non-void return type */
                 else
                 {
-                    returnInstr = new ReturnInstruction();
+                    /* We should have an expression in the non-void case */
+                    if(returnStatement.hasReturnExpression())
+                    {
+                        Value returnExpressionInstr = cast(Value)popInstr();
+                        assert(returnExpressionInstr);
+                        Type returnExpressionInstrType = returnExpressionInstr.getInstrType();
+
+                        /* Ensure the expression's type matches the function's return type */
+                        if(isSameType(functionReturnType, returnExpressionInstrType))
+                        {
+                            /* Generate the instruction */
+                            returnInstr = new ReturnInstruction(returnExpressionInstr);
+                        }
+                        /* If not, then raise an error */
+                        else
+                        {
+                            throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Returning an expression of type '"~returnExpressionInstrType.toString()~"' does not match function's return type '"~functionReturnType.toString()~"'");
+                        }
+                    }
+                    /* If not then this is an error */
+                    else
+                    {
+                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Function '"~functionName~"' of has a type therefore it requires an expression in the return statement");
+                    }
                 }
                 
-
+                /** 
+                 * Codegen (continued)
+                 *
+                 * 3. Set the Context of the instruction
+                 * 4. Add this instruction back
+                 */
                 returnInstr.setContext(returnStatement.getContext());
                 addInstrB(returnInstr);
             }
