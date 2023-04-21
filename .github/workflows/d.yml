@@ -119,6 +119,9 @@ jobs:
       - name: Chmod compiler
         run: chmod +x tlang
         
+
+      - name: Simple return (expressionless)
+        run: ./tlang typecheck source/tlang/testing/return/simple_return_expressionless.t
         
       - name: Simple function call
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t
