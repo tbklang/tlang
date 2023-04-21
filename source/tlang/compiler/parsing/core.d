@@ -975,6 +975,20 @@ public final class Parser
             statements = parseBody();
 
             /* TODO: We should now run through the statements in the body and check for return */
+            for(ulong i = 0; i < statements.length; i++)
+            {
+                Statement curStatement = statements[i];
+
+                /* If we find a return statement */
+                if(cast(ReturnStmt)curStatement)
+                {
+                    /* If it is not the last statement, throw an error */
+                    if(i != statements.length-1)
+                    {
+                        expect("A return statement must be the last statement of a function's body");
+                    }
+                }
+            }
 
             nextToken();
         }
