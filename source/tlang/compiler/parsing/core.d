@@ -974,6 +974,8 @@ public final class Parser
             /* Parse the body (and it leaves ONLY when it gets the correct symbol, no expect needed) */
             statements = parseBody();
 
+            /* TODO: We should now run through the statements in the body and check for return */
+
             nextToken();
         }
         /* If no body is requested */
