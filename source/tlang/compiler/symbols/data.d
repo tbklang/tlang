@@ -648,6 +648,11 @@ public final class ReturnStmt : Statement
     {
         return returnExpression;
     }
+
+    public bool hasReturnExpression()
+    {
+        return returnExpression !is null;
+    }
 }
 
 /** 
