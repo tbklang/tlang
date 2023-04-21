@@ -1613,18 +1613,39 @@ public final class TypeChecker
             {
                 ReturnStmt returnStatement = cast(ReturnStmt)statement;
 
+                /** 
+                 * Typecheck
+                 *
+                 * TODO: Add typechecking for the return expression
+                 * we'd need context of where we are, probably our
+                 * parent could be used to check which function
+                 * we belong to and hence do the typecheck
+                 */
+                // ...
+
                 /**
                 * Codegen
                 *
+                * (1 and 2 only apply for return statements with an expression)
                 * 1. Pop the expression on the stack
                 * 2. Create a new ReturnInstruction with the expression instruction
                 * embedded in it
                 * 3. Set the Context of the instruction
                 * 4. Add this instruction back
                 */
-                Value returnExpressionInstr = cast(Value)popInstr();
-                assert(returnExpressionInstr);
-                ReturnInstruction returnInstr = new ReturnInstruction(returnExpressionInstr);
+                ReturnInstruction returnInstr;
+                if(returnStatement.hasReturnExpression())
+                {
+                    Value returnExpressionInstr = cast(Value)popInstr();
+                    assert(returnExpressionInstr);
+                    returnInstr = new ReturnInstruction(returnExpressionInstr);
+                }
+                else
+                {
+                    returnInstr = new ReturnInstruction();
+                }
+                
+
                 returnInstr.setContext(returnStatement.getContext());
                 addInstrB(returnInstr);
             }
