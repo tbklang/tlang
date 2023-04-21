@@ -341,6 +341,7 @@ public final class TypeChecker
                 same = false;
             }
         }
+        // TODO: Add it here
 
         gprintln("isSameType("~to!(string)(type1)~","~to!(string)(type2)~"): "~to!(string)(same), DebugType.ERROR);
         return same;
