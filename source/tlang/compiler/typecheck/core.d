@@ -309,6 +309,24 @@ public final class TypeChecker
         }
     }
 
+    /** 
+     * 🧠️ Feature: Universal coercion
+     * TODO: Document
+     *
+     * Params:
+     *   v1 = 
+     *   v2 = 
+     *   false = 
+     * Returns: 
+     */
+    private bool isSameType2(Value v1, Value v2, bool attemptCoercion = false)
+    {
+        // TODO: Implement me
+        return false;
+    }
+
+
+
     /**
     * There are several types and comparing them differs
     */
