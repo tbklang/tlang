@@ -316,6 +316,9 @@ public final class TypeChecker
     {
         bool same = false;
 
+        // NOTE: We compare actual types, then check which type
+        // ... the order is important due to type hierachy
+
         /* Handling for pointers */
         if(typeid(type1) == typeid(type2) && cast(Pointer)type1 !is null)
         {
@@ -341,7 +344,11 @@ public final class TypeChecker
                 same = false;
             }
         }
-        // TODO: Add it here
+        /* Handling for all other cases */
+        else if(typeid(type1) == typeid(type2))
+        {
+            return true;
+        }
 
         gprintln("isSameType("~to!(string)(type1)~","~to!(string)(type2)~"): "~to!(string)(same), DebugType.ERROR);
         return same;
