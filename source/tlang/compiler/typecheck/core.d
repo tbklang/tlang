@@ -310,17 +310,29 @@ public final class TypeChecker
     }
 
     /** 
-     * 🧠️ Feature: Universal coercion
-     * TODO: Document
+     * For: 🧠️ Feature: Universal coercion
+     *
+     * Given two `Value`-based instructions this method will extract
+     * the types of both and return true if their types are the same,
+     * however in the case their types are not the same then if coercion
+     * is allowed then an attempt at coercion will take place - if it
+     * succeeds then the type of `v2` is updated (it is coerced to the 
+     * type of `v1`) and true is returned, else false is returned.
+     *
+     * In the case that coercion is disabled then mismatched types results
+     * in false being returned.
      *
      * Params:
-     *   v1 = 
-     *   v2 = 
-     *   false = 
-     * Returns: 
+     *   v1 = Value-instruction 1 (will coerce towards if requested)
+     *   v2 = Value-instruction 2
+     *   attemptCoercion = whether or not at attempt coercion on initial type mismatch (default: `false`)
+     *
+     * Returns: true if the types match (or were coerced successfully if requested), false otherwise
      */
-    private bool isSameType2(Value v1, Value v2, bool attemptCoercion = false)
+    private bool typeEnforce(Value v1, Value v2, bool attemptCoercion = false)
     {
+        // TODO: Add a scope(exit) showing the coerced type
+
         // TODO: Implement me
         return false;
     }
