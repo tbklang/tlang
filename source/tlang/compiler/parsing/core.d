@@ -639,6 +639,8 @@ public final class Parser
         /* Move from `return` onto start of expression */
         nextToken();
 
+        // TODO: Check if semicolon here (no expression) else expect expression
+
         /* Parse the expression till termination */
         Expression returnExpression = parseExpression();
 
