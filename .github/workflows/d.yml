@@ -122,6 +122,11 @@ jobs:
 
       - name: Simple return (expressionless)
         run: ./tlang typecheck source/tlang/testing/return/simple_return_expressionless.t
+
+      - name: Simple return (with expression)
+        run: ./tlang typecheck source/tlang/testing/return/simple_return_type.t
+
+      
         
       - name: Simple function call
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t
