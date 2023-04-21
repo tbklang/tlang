@@ -635,6 +635,11 @@ public final class ReturnStmt : Statement
     {
         this.returnExpression = returnExpression;
 
+        this();
+    }
+
+    this()
+    {
         /* Statement level weighting is 2 */
         weight = 2;
     }

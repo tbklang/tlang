@@ -101,6 +101,10 @@ jobs:
       - name: Simple string
         run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_string.t
 
+
+      - name: Simple return (expressionless)
+        run: ./tlang syntaxcheck source/tlang/testing/return/simple_return_expressionless.t
+
   typecheck:
     needs: [build, unittests]
     name: Typechecking tests
