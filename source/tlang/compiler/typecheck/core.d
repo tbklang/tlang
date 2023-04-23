@@ -447,7 +447,7 @@ public final class TypeChecker
             tc.typeEnforce(funcReturnType, varFetch, true);
             assert(false);
         }
-        catch(TypeMismatchException e)
+        catch(CoercionException e)
         {
             assert(true);
         }
