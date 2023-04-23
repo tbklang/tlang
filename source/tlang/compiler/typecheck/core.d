@@ -441,11 +441,70 @@ public final class TypeChecker
         Function returnStmtContainer = cast(Function)retStmt.parentOf();
         Type funcReturnType = tc.getType(testModule, returnStmtContainer.getType());
 
+        // 2) The enforcement will fail as coercion of non-literals is NOT allowed
+        try
+        {
+            tc.typeEnforce(funcReturnType, varFetch, true);
+            assert(false);
+        }
+        catch(TypeMismatchException e)
+        {
+            assert(true);
+        }
+        
+
+        // 3) The types should not be the same
+        assert(!tc.isSameType(funcReturnType, varFetch.getInstrType()));
+    }
+
+    unittest
+    {
+        /** 
+         * Create a simple program with
+         * a function that returns an uint
+         * and an expression of type ubyte
+         */
+        Module testModule = new Module("myModule");
+        TypeChecker tc = new TypeChecker(testModule);
+
+
+        /* Add the function with a return expression */
+        NumberLiteral retExp = new IntegerLiteral("21", IntegerLiteralEncoding.UNSIGNED_INTEGER);
+        ReturnStmt retStmt = new ReturnStmt(retExp);
+        Function myFunc = new Function("function", "uint", [retStmt], []);
+        retStmt.parentTo(myFunc);
+        testModule.addStatement(myFunc);
+        myFunc.parentTo(testModule);
+
+
+        /* Now let's play with this as if the code-queue processor was present */
+
+
+        /* Create a new LiteralValue instruction with our literal and of type `ubyte` */
+        Type literalType = tc.getType(testModule, "ubyte");
+        Value literalValue = new LiteralValue(retExp.getNumber(), literalType);
+    
+        /** 
+         * Create a ReturnInstruction now based on `function`'s return type
+         *
+         * 1) The ay we did this when we only have the `ReturnStmt` on the code-queue
+         * is by finding the ReturnStmt's parent (the Function) and getting its type.
+         *
+         * 2) We must now "pop" the `literalValue` instruction from the stack and compare types.
+         *
+         * 3) If the type enforcement is fine, then let's check that they are equal
+         *
+         */
+
+        // 1)
+        Function returnStmtContainer = cast(Function)retStmt.parentOf();
+        Type funcReturnType = tc.getType(testModule, returnStmtContainer.getType());
+
         // 2)
-        tc.typeEnforce(funcReturnType, varFetch, true);
+        tc.typeEnforce(funcReturnType, literalValue, true);
 
         // 3) 
-        assert(tc.isSameType(funcReturnType, varFetch.getInstrType()));
+        assert(tc.isSameType(funcReturnType, literalValue.getInstrType()));
     }
 
     /** 
@@ -895,19 +954,7 @@ public final class TypeChecker
         }
         else
         {
-            // FIXME: Once done, we will probably need to actually change the placement of the UnaryOp checks
-            // ... (as an example), to use our general coercion rules BUT we still will need to handle literal
-            // ... instructions as a special case due to them being coercible irrespective or their type IF
-            // ... the value range is within the range of `variableType`
-
-
-            // TODO: Add support for more coercion here
-            // TODO: Add coercion rules in this case (as this is non-literal instruction related)
-            gprintln("#115 🧠️ Feature: Universal coercion: This is where the main work is");
-            // throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
-
-            // FIXME: Remove this, do coercion rule checking first - this is just a test for now
-            // assignmentInstruction.setInstrType(variableType);
+            throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible");
         }
     }
 
