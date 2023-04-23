@@ -69,6 +69,33 @@ public final class TypeMismatchException : TypeCheckerException
     }
 }
 
+public final class CoercionException : TypeCheckerException
+{
+    private Type toType, fromType;
+
+    this(TypeChecker typeChecker, Type toType, Type fromType, string msgIn = "")
+    {
+        super(typeChecker);
+
+        msg = "Cannot coerce from type '"~fromType.getName()~"' to type '"~toType.getName()~"'";
+
+        msg ~= msgIn.length > 0 ? ": "~msgIn : "";
+
+        this.toType = toType;
+        this.fromType = fromType;
+    }
+
+    public Type getToType()
+    {
+        return toType;
+    }
+
+    public Type getFromType()
+    {
+        return fromType;
+    }
+}
+
 public final class CollidingNameException : TypeCheckerException
 {
     /**
