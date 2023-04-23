@@ -444,8 +444,7 @@ public final class TypeChecker
             {
                 // TODO: We should be moving all coercion code into this below method
 
-                // NOTE: The `attemptCoercion(Type, Value)` method throws an exception
-                // ... on failure to coerce
+                /* If coerion fails, it would throw an exception */
                 attemptCoercion(t1, v2);
             }
             /* If coercion is not allowed, then we failed */
@@ -455,8 +454,6 @@ public final class TypeChecker
             }
         }
     }
-
-
 
     /**
     * There are several types and comparing them differs
