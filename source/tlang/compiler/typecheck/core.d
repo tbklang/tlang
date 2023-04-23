@@ -565,8 +565,6 @@ public final class TypeChecker
             /* If coercion is allowed */
             if(allowCoercion)
             {
-                // TODO: We should be moving all coercion code into this below method
-
                 /* If coerion fails, it would throw an exception */
                 attemptCoercion(t1, v2);
             }
