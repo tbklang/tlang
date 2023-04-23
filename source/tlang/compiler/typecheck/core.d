@@ -310,7 +310,12 @@ public final class TypeChecker
     }
 
     /** 
-     * Testing for: 🧠️ Feature: Universal coercion
+     * 🧠️ Feature: Universal coercion
+     *
+     * This tests two DIFFERENT types to see if they are:
+     * 
+     * 1. The same type (and if not, don't attempt coercion)
+     * 2. The same type (and if not, ATTEMPT coercion)
      */
     unittest
     {
@@ -355,6 +360,37 @@ public final class TypeChecker
         // This should have updated `v2`'s type to type `t1`
         t2 = v2.getInstrType();
         assert(tc.isSameType(t1, t2));
+    }
+
+    /** 
+     * 🧠️ Feature: Universal coercion
+     *
+     * This tests two EQUAL/SAME types to see if they are:
+     * 
+     * 1. The same type
+     */
+    unittest
+    {
+        import tlang.compiler.symbols.typing.core;
+
+        TypeChecker tc = new TypeChecker(null);
+
+        /* To type is `t1` */
+        Type t1 = getBuiltInType(tc, "uint");
+        assert(t1);
+
+        /* We will comapre `t2` to `t1` */
+        Type t2 = getBuiltInType(tc, "uint");
+        assert(t2);
+        Value v2 = new LiteralValue("25", t2);
+        
+        // Ensure instruction v2's type is `uint`
+        assert(tc.isSameType(t2, v2.getInstrType()));
+
+
+        // This should not fail (no coercion needed in either)
+        tc.typeEnforce(t1, v2, false);
+        tc.typeEnforce(t1, v2, true);
     }
 
     /** 
