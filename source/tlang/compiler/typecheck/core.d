@@ -546,9 +546,6 @@ public final class TypeChecker
         {
             gprintln(dbgHeader~"Leaving");
         }
-        
-        /* Whether the enforcement succeeeded or not */
-        bool typeStatus;
 
         /* Extract the original types of `v2` */
         Type t2 = v2.getInstrType();
@@ -557,7 +554,7 @@ public final class TypeChecker
         /* Check if the types are equal */
         if(isSameType(t1, t2))
         {
-            typeStatus = true;
+            // Do nothing
         }
         /* If the types are NOT the same */
         else
