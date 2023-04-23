@@ -627,9 +627,8 @@ public final class TypeChecker
      * is within the range whereby it may be coerced
      *
      * Params:
-     *   variableType = the type to try coercing towards
-     *   assignmentInstruction = the literal to apply a range
-     *                           check to
+     *   toType = the type to try coercing towards
+     *   literalInstr = the literal to apply a range check to
      */
     private bool isCoercibleRange(Type toType, Value literalInstr)
     {
@@ -849,61 +848,61 @@ public final class TypeChecker
 
     /** 
      * Attempts to perform coercion of the provided Value-instruction
-     * with respect to the provided variable type.
+     * with respect to the provided to-type.
      * 
      * This should only be called if the types do not match.
      * This will update the provided instruction's type-field
      *
      * Params:
-     *   variableType = the type to attempt coercing the instruction to
-     *   assignmentInstruction = instruction to coerce
+     *   toType = the type to attempt coercing the instruction to
+     *   providedInstruction = instruction to coerce
      */
-    private void attemptCoercion(Type variableType, Value assignmentInstruction)
+    private void attemptCoercion(Type toType, Value providedInstruction)
     {
         gprintln("VibeCheck?");
 
-        /* Extract the type of the assignment instruction */
-        Type assignmentType = assignmentInstruction.getInstrType();
+        /* Extract the type of the provided instruction */
+        Type providedType = providedInstruction.getInstrType();
 
         // If it is a LiteralValue (integer literal) (support for issue #94)
-        if(cast(LiteralValue)assignmentInstruction)
+        if(cast(LiteralValue)providedInstruction)
         {
             // TODO: Add a check for if these types are both atleast integral (as in the Variable's type)
             // ... THEN (TODO): Check if range makes sense
-            bool isIntegral = !(cast(Integer)variableType is null); // Integrality check
+            bool isIntegral = !(cast(Integer)toType is null); // Integrality check
 
             if(isIntegral)
             {
-                bool isCoercible = isCoercibleRange(variableType, assignmentInstruction); // TODO: Range check
+                bool isCoercible = isCoercibleRange(toType, providedInstruction); // TODO: Range check
 
                 if(isCoercible)
                 {
                     // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
                     // ... as during code emit that is what will be hoisted out and checked regarding its type
                     // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
-                    assignmentInstruction.setInstrType(variableType);
+                    providedInstruction.setInstrType(toType);
                 }
                 else
                 {
-                    throw new CoercionException(this, variableType, assignmentType, "Not coercible (range violation)");
+                    throw new CoercionException(this, toType, providedType, "Not coercible (range violation)");
                 }
             }
             else
             {
-                throw new CoercionException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+                throw new CoercionException(this, toType, providedType, "Not coercible (lacking integral var type)");
             }
             
         }
         // If it is a LiteralValueFloat (support for issue #94)
-        else if(cast(LiteralValueFloat)assignmentInstruction)
+        else if(cast(LiteralValueFloat)providedInstruction)
         {
             gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
             assert(false);
         }
         // Unary operator (specifically with a minus)
-        else if(cast(UnaryOpInstr)assignmentInstruction)
+        else if(cast(UnaryOpInstr)providedInstruction)
         {
-            UnaryOpInstr unaryOpInstr = cast(UnaryOpInstr)assignmentInstruction;
+            UnaryOpInstr unaryOpInstr = cast(UnaryOpInstr)providedInstruction;
 
             if(unaryOpInstr.getOperator() == SymbolType.SUB)
             {
@@ -912,7 +911,7 @@ public final class TypeChecker
                 // If it is a negative LiteralValue (integer literal)
                 if(cast(LiteralValue)operandInstr)
                 {
-                    bool isIntegral = !(cast(Integer)variableType is null);
+                    bool isIntegral = !(cast(Integer)toType is null);
 
                     if(isIntegral)
                     {
@@ -920,18 +919,18 @@ public final class TypeChecker
 
                         
 
-                        bool isCoercible = isCoercibleRange(variableType, assignmentInstruction); // TODO: Range check
+                        bool isCoercible = isCoercibleRange(toType, providedInstruction); // TODO: Range check
 
                         if(isCoercible)
                         {
                             // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
                             // ... as during code emit that is what will be hoisted out and checked regarding its type
                             // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
-                            assignmentInstruction.setInstrType(variableType);
+                            providedInstruction.setInstrType(toType);
                         }
                         else
                         {
-                            throw new CoercionException(this, variableType, assignmentType, "Not coercible (range violation)");
+                            throw new CoercionException(this, toType, providedType, "Not coercible (range violation)");
                         }
 
 
@@ -950,17 +949,17 @@ public final class TypeChecker
                 // If anything else is embedded
                 else
                 {
-                    throw new CoercionException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+                    throw new CoercionException(this, toType, providedType, "Not coercible (lacking integral var type)");
                 }
             }
             else
             {
-                throw new CoercionException(this, variableType, assignmentType, "Cannot coerce a non minus unary operation");
+                throw new CoercionException(this, toType, providedType, "Cannot coerce a non minus unary operation");
             }
         }
         else
         {
-            throw new CoercionException(this, variableType, assignmentType);
+            throw new CoercionException(this, toType, providedType);
         }
     }
 
