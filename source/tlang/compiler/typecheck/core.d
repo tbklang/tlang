@@ -879,12 +879,12 @@ public final class TypeChecker
                 }
                 else
                 {
-                    throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (range violation)");
+                    throw new CoercionException(this, variableType, assignmentType, "Not coercible (range violation)");
                 }
             }
             else
             {
-                throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+                throw new CoercionException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
             }
             
         }
@@ -925,7 +925,7 @@ public final class TypeChecker
                         }
                         else
                         {
-                            throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (range violation)");
+                            throw new CoercionException(this, variableType, assignmentType, "Not coercible (range violation)");
                         }
 
 
@@ -944,17 +944,17 @@ public final class TypeChecker
                 // If anything else is embedded
                 else
                 {
-                    throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+                    throw new CoercionException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
                 }
             }
             else
             {
-                throw new TypeMismatchException(this, variableType, assignmentType, "Cannot coerce a non minus unary operation");
+                throw new CoercionException(this, variableType, assignmentType, "Cannot coerce a non minus unary operation");
             }
         }
         else
         {
-            throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible");
+            throw new CoercionException(this, variableType, assignmentType);
         }
     }
 
