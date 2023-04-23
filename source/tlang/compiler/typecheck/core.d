@@ -433,8 +433,7 @@ public final class TypeChecker
          *
          * 2) We must now "pop" the `varFetch` instruction from the stack and compare types.
          *
-         * Once we have the type, we can then create a ReturnInstruction with,
-         * in this case 
+         * 3) If the type enforcement is fine, then let's check that they are equal
          *
          */
 
@@ -445,8 +444,8 @@ public final class TypeChecker
         // 2)
         tc.typeEnforce(funcReturnType, varFetch, true);
 
-        // ReturnInstruction retInstruction = new ReturnInstruction()
-
+        // 3) 
+        assert(tc.isSameType(funcReturnType, varFetch.getInstrType()));
     }
 
     /** 
@@ -896,10 +895,19 @@ public final class TypeChecker
         }
         else
         {
+            // FIXME: Once done, we will probably need to actually change the placement of the UnaryOp checks
+            // ... (as an example), to use our general coercion rules BUT we still will need to handle literal
+            // ... instructions as a special case due to them being coercible irrespective or their type IF
+            // ... the value range is within the range of `variableType`
+
+
             // TODO: Add support for more coercion here
             // TODO: Add coercion rules in this case (as this is non-literal instruction related)
             gprintln("#115 🧠️ Feature: Universal coercion: This is where the main work is");
-            throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+            // throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+
+            // FIXME: Remove this, do coercion rule checking first - this is just a test for now
+            // assignmentInstruction.setInstrType(variableType);
         }
     }
 
