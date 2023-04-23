@@ -393,6 +393,62 @@ public final class TypeChecker
         tc.typeEnforce(t1, v2, true);
     }
 
+
+    unittest
+    {
+        /** 
+         * Create a simple program with
+         * a function that returns an uint
+         * and a variable of type ubyte
+         */
+        Module testModule = new Module("myModule");
+        TypeChecker tc = new TypeChecker(testModule);
+
+        /* Add the variable */
+        Variable myVar = new Variable("ubyte", "myVar");
+        myVar.parentTo(testModule);
+        testModule.addStatement(myVar);
+
+        /* Add the function with a return expression */
+        VariableExpression retExp = new VariableExpression("myVar");
+        ReturnStmt retStmt = new ReturnStmt(retExp);
+        Function myFunc = new Function("function", "uint", [retStmt], []);
+        retStmt.parentTo(myFunc);
+        testModule.addStatement(myFunc);
+        myFunc.parentTo(testModule);
+
+
+        /* Now let's play with this as if the code-queue processor was present */
+
+
+        /* Create a variable fetch instruction for the `myVar` variable */
+        Value varFetch = new FetchValueVar("myVar", 1);
+        varFetch.setInstrType(tc.getType(testModule, myVar.getType()));
+    
+        /** 
+         * Create a ReturnInstruction now based on `function`'s return type
+         *
+         * 1) The ay we did this when we only have the `ReturnStmt` on the code-queue
+         * is by finding the ReturnStmt's parent (the Function) and getting its type.
+         *
+         * 2) We must now "pop" the `varFetch` instruction from the stack and compare types.
+         *
+         * Once we have the type, we can then create a ReturnInstruction with,
+         * in this case 
+         *
+         */
+
+        // 1)
+        Function returnStmtContainer = cast(Function)retStmt.parentOf();
+        Type funcReturnType = tc.getType(testModule, returnStmtContainer.getType());
+
+        // 2)
+        tc.typeEnforce(funcReturnType, varFetch, true);
+
+        // ReturnInstruction retInstruction = new ReturnInstruction()
+
+    }
+
     /** 
      * For: 🧠️ Feature: Universal coercion
      *
@@ -840,6 +896,9 @@ public final class TypeChecker
         }
         else
         {
+            // TODO: Add support for more coercion here
+            // TODO: Add coercion rules in this case (as this is non-literal instruction related)
+            gprintln("#115 🧠️ Feature: Universal coercion: This is where the main work is");
             throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
         }
     }
