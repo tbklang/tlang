@@ -310,7 +310,7 @@ public final class TypeChecker
     }
 
     /** 
-     * 🧠️ Feature: Universal coercion
+     * 🧠️ Feature: Universal coercion and type enforcer
      *
      * This tests two DIFFERENT types to see if they are:
      * 
@@ -363,7 +363,7 @@ public final class TypeChecker
     }
 
     /** 
-     * 🧠️ Feature: Universal coercion
+     * 🧠️ Feature: Universal coercion and type enforcer
      *
      * This tests two EQUAL/SAME types to see if they are:
      * 
@@ -393,7 +393,11 @@ public final class TypeChecker
         tc.typeEnforce(t1, v2, true);
     }
 
-
+    /** 
+     * 🧠️ Feature: Universal coercion and type enforcer
+     *
+     * This tests a failing case (read for details)
+     */
     unittest
     {
         /** 
@@ -457,6 +461,11 @@ public final class TypeChecker
         assert(!tc.isSameType(funcReturnType, varFetch.getInstrType()));
     }
 
+    /** 
+     * 🧠️ Feature: Universal coercion and type enforcer
+     *
+     * This tests a passing case (read for details)
+     */
     unittest
     {
         /** 
