@@ -569,9 +569,15 @@ public final class TypeChecker
         }
     }
 
-    /**
-    * There are several types and comparing them differs
-    */
+    /** 
+     * Compares the two types for equality
+     *
+     * Params:
+     *   type1 = the first type
+     *   type2 = the second type
+     *
+     * Returns: true if the types are equal, false otherwise
+     */
     private bool isSameType(Type type1, Type type2)
     {
         bool same = false;
