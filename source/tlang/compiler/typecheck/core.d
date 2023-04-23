@@ -310,31 +310,114 @@ public final class TypeChecker
     }
 
     /** 
+     * Testing for: 🧠️ Feature: Universal coercion
+     */
+    unittest
+    {
+        import tlang.compiler.symbols.typing.core;
+
+        TypeChecker tc = new TypeChecker(null);
+
+        /* To type is `t1` */
+        Type t1 = getBuiltInType(tc, "uint");
+        assert(t1);
+
+        /* We will comapre `t2` to `t1` */
+        Type t2 = getBuiltInType(tc, "ubyte");
+        assert(t2);
+        Value v2 = new LiteralValue("25", t2);
+        
+        // Ensure instruction v2's type is `ubyte`
+        assert(tc.isSameType(t2, v2.getInstrType()));
+
+
+        try
+        {
+            // Try type match them, if initially fails then try coercion
+            // ... (This should FAIL due to type mismatch and coercion disallowed)
+            tc.typeEnforce(t1, v2, false);
+            assert(false);
+        }
+        catch(TypeMismatchException mismatch)
+        {
+            Type expectedType = mismatch.getExpectedType();
+            Type attemptedType = mismatch.getAttemptedType();
+            assert(tc.isSameType(expectedType, getBuiltInType(tc, "uint")));
+            assert(tc.isSameType(attemptedType, getBuiltInType(tc, "ubyte")));
+        }
+
+
+
+        // Try type match them, if initially fails then try coercion
+        // ... (This should pass due to its coercibility)
+        tc.typeEnforce(t1, v2, true);
+
+        // This should have updated `v2`'s type to type `t1`
+        t2 = v2.getInstrType();
+        assert(tc.isSameType(t1, t2));
+    }
+
+    /** 
      * For: 🧠️ Feature: Universal coercion
      *
-     * Given two `Value`-based instructions this method will extract
-     * the types of both and return true if their types are the same,
-     * however in the case their types are not the same then if coercion
-     * is allowed then an attempt at coercion will take place - if it
-     * succeeds then the type of `v2` is updated (it is coerced to the 
-     * type of `v1`) and true is returned, else false is returned.
+     * Given a Type `t1` and a `Value`-based instruction, this method
+     * will extract the type of the instruction and return true if
+     * their types are the same, however in the case their types are
+     * not the same then if coercion is allowed then an attempt at
+     * coercion will take place - if it succeeds then the type of `v2`
+     * is updated (it is coerced to type `t1`) and true is returned,
+     * else false is returned.
      *
      * In the case that coercion is disabled then mismatched types results
      * in false being returned.
      *
      * Params:
-     *   v1 = Value-instruction 1 (will coerce towards if requested)
-     *   v2 = Value-instruction 2
-     *   attemptCoercion = whether or not at attempt coercion on initial type mismatch (default: `false`)
+     *   t1 = To-type (will coerce towards if requested)
+     *   v2 = the `Value`-instruction
+     *   allowCoercion = whether or not at attempt coercion on initial type mismatch (default: `false`)
      *
      * Returns: true if the types match (or were coerced successfully if requested), false otherwise
      */
-    private bool typeEnforce(Value v1, Value v2, bool attemptCoercion = false)
+    private void typeEnforce(Type t1, Value v2, bool allowCoercion = false)
     {
-        // TODO: Add a scope(exit) showing the coerced type
+        /* Debugging */
+        string dbgHeader = "typeEnforce(t1="~t1.toString()~", v2="~v2.toString()~", attemptCoerce="~to!(string)(allowCoercion)~"): ";
+        gprintln(dbgHeader~"Entering");
+        scope(exit)
+        {
+            gprintln(dbgHeader~"Leaving");
+        }
+        
+        /* Whether the enforcement succeeeded or not */
+        bool typeStatus;
 
-        // TODO: Implement me
-        return false;
+        /* Extract the original types of `v2` */
+        Type t2 = v2.getInstrType();
+        
+
+        /* Check if the types are equal */
+        if(isSameType(t1, t2))
+        {
+            typeStatus = true;
+        }
+        /* If the types are NOT the same */
+        else
+        {
+            /* If coercion is allowed */
+            if(allowCoercion)
+            {
+                // TODO: We should be moving all coercion code into this below method
+
+                // NOTE: The `attemptCoercion(Type, Value)` method throws an exception
+                // ... on failure to coerce
+                attemptCoercion(t1, v2);
+            }
+            /* If coercion is not allowed, then we failed */
+            else
+            {
+                throw new TypeMismatchException(this, t1, t2);
+            }
+        }
     }
 
 
