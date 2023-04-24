@@ -14,6 +14,7 @@ import tlang.compiler.typecheck.dependency.core;
 import tlang.compiler.codegen.instruction;
 import std.container.slist;
 import std.algorithm : reverse;
+import tlang.compiler.typecheck.meta;
 
 /**
 * The Parser only makes sure syntax
@@ -29,6 +30,11 @@ public final class TypeChecker
     /* The name resolver */
     private Resolver resolver;
 
+    /** 
+     * The meta-programming processor
+     */
+    private MetaProcessor meta;
+
     public Module getModule()
     {
         return modulle;
@@ -37,7 +43,8 @@ public final class TypeChecker
     this(Module modulle)
     {
         this.modulle = modulle;
-        resolver = new Resolver(this);
+        this.resolver = new Resolver(this);
+        this.meta = new MetaProcessor(modulle, this);
         /* TODO: Module check?!?!? */
     }
 
@@ -2089,6 +2096,9 @@ public final class TypeChecker
     */
     public void beginCheck()
     {
+        /* Run the meta-processor on the AST tree */
+        meta.process();
+
         /* Process all pseudo entities of the given module */
         processPseudoEntities(modulle);
 
