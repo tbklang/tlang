@@ -44,7 +44,7 @@ public final class TypeChecker
     {
         this.modulle = modulle;
         this.resolver = new Resolver(this);
-        this.meta = new MetaProcessor(modulle, this);
+        this.meta = new MetaProcessor(this);
         /* TODO: Module check?!?!? */
     }
 
@@ -2096,8 +2096,8 @@ public final class TypeChecker
     */
     public void beginCheck()
     {
-        /* Run the meta-processor on the AST tree */
-        meta.process();
+        /* Run the meta-processor on the AST tree (starting from the Module) */
+        meta.process(modulle);
 
         /* Process all pseudo entities of the given module */
         processPseudoEntities(modulle);

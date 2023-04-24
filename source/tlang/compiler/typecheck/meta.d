@@ -1,6 +1,6 @@
 module tlang.compiler.typecheck.meta;
 
-import tlang.compiler.symbols.data : Statement, TypedEntity;
+import tlang.compiler.symbols.data : Statement, TypedEntity, Function;
 import tlang.compiler.symbols.containers : Container;
 import tlang.compiler.symbols.mcro;
 // import tlang.compiler.typecheck.resolution;
@@ -14,11 +14,9 @@ import gogga;
 public class MetaProcessor
 {
     private TypeChecker tc;
-    private Container container;
 
-    this(Container container, TypeChecker tc)
+    this(TypeChecker tc)
     {
-        this.container = container;
         this.tc = tc;
     }
 
@@ -26,7 +24,7 @@ public class MetaProcessor
      * Analyzes the provided `Container` and searches for any `Macro`-like
      * parse-nodes to process
      */
-    public void process()
+    public void process(Container container)
     {
         /* Get all statements */
         Statement[] stmts = container.getStatements();
@@ -35,10 +33,25 @@ public class MetaProcessor
         {
             gprintln("MetaProcessor: Examining AST node '"~curStmt.toString()~"'...");
 
-            // TODO: Check for any TypedEntity and look for what their type is, if sizet then replace
+            /**
+             * Apply type-rewriting to any TypedEntity
+             */
             if(cast(TypedEntity)curStmt)
             {
                 typeRewrite(cast(TypedEntity)curStmt);
+            }
+
+            /** 
+             * If the current statement is a Container then recurse
+             * 
+             * This will help us do the following:
+             *
+             * 1. Type re-writing of
+             *      a. Functions (Parameters and Body as both make up its Statement[])
+             */
+            if(cast(Container)curStmt)
+            {
+                process(cast(Container)curStmt);
             }
         }
     }
@@ -51,14 +64,17 @@ public class MetaProcessor
      */
     private void typeRewrite(TypedEntity statement)
     {
-        import std.string : cmp;
-
+        /* Applies re-write to Variable's declared type and Function's return type */
         string type = statement.getType();
         if(type == "size_t")
         {
             // FIXME: This is an example re-write, it should actually look up the compiler
             // ... config and choose the largest unsigned type from there
             statement.setType("ulong");
+        }
+        else if(type == "ssize_t")
+        {
+            statement.setType("long");
         }
     }
 }
