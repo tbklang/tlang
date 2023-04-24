@@ -230,6 +230,11 @@ public class TypedEntity : Entity
     {
         return type;
     }
+
+    public void setType(string type)
+    {
+        this.type = type;
+    }
 }
 
 public import tlang.compiler.symbols.containers;
