@@ -93,7 +93,7 @@ public enum IntegerLiteralEncoding
     UNSIGNED_LONG
 }
 
-public final class IntegerLiteral : NumberLiteral
+public class IntegerLiteral : NumberLiteral
 {
     private IntegerLiteralEncoding encoding;
 
@@ -142,6 +142,11 @@ public abstract class NumberLiteral : Expression
     public final string getNumber()
     {
         return numberLiteral;
+    }
+
+    public final void setNumber(string numberLiteral)
+    {
+        this.numberLiteral = numberLiteral;
     }
 }
 

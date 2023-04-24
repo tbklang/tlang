@@ -215,7 +215,8 @@ public class Entity : Statement
 }
 
 /* TODO: DO we need intermediary class, TypedEntity */
-public class TypedEntity : Entity
+import tlang.compiler.symbols.mcro : MTypeRewritable;
+public class TypedEntity : Entity, MTypeRewritable
 {
     private string type;
 
