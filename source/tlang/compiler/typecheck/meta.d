@@ -74,6 +74,8 @@ public class MetaProcessor
         }
         else if(type == "ssize_t")
         {
+            // FIXME: This is an example re-write, it should actually look up the compiler
+            // ... config and choose the largest unsigned type from there
             statement.setType("long");
         }
     }
