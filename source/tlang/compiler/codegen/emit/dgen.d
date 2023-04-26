@@ -293,6 +293,12 @@ public final class DCodeEmitter : CodeEmitter
 
             emit ~= ")";
 
+            // If this is a statement-level function call then tack on a `;`
+            if(funcCallInstr.isStatementLevel())
+            {
+                emit ~= ";";
+            }
+
             return emit;
         }
         /* ReturnInstruction */
