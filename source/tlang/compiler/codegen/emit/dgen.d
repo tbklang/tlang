@@ -972,6 +972,22 @@ int main()
     return 0;
 }`);
         }
+        // Test for `simple_function_recursion_factorial.t` (recursive function call testing)
+        if(cmp(typeChecker.getModule().getName(), "simple_function_recursion_factorial") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = factorial(3);
+    assert(result == 6);
+    printf("factorial: %u\n", result);
+    
+    return 0;
+}`);
+        }
+        // TODO: Insert an example for simple_direct_func_call.t
         else if(cmp(typeChecker.getModule().getName(), "simple_while") == 0)
         {
             file.writeln(`

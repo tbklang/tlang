@@ -334,7 +334,10 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_direct_func_call.t
           ./tlang.out
-
+      - name: Simple functions (recursive)
+        run: |
+          ./tlang compile source/tlang/testing/simple_function_recursion_factorial.t
+          ./tlang.out
 
 
 
