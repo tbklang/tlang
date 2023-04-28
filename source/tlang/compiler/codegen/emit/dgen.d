@@ -987,7 +987,26 @@ int main()
     return 0;
 }`);
         }
-        // TODO: Insert an example for simple_direct_func_call.t
+        // Test for `simple_direct_func_call.t` (statement-level function call)
+        else if(cmp(typeChecker.getModule().getName(), "simple_direct_func_call") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    // Before it should be 0
+    assert(t_de44aff5a74865c97c4f8701d329f28d == 0);
+
+    // Call the function
+    function();
+
+    // After it it should be 69
+    assert(t_de44aff5a74865c97c4f8701d329f28d == 69);
+    
+    return 0;
+}`);
+        }
         else if(cmp(typeChecker.getModule().getName(), "simple_while") == 0)
         {
             file.writeln(`
