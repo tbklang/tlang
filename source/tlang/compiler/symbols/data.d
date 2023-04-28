@@ -604,7 +604,15 @@ public class Call : IdentExpression
 
 public final class FunctionCall : Call
 {
-    
+    /* Whether this is statement-level function call or not */
+
+    /** 
+     * Function calls either appear as part of an expression
+     * (i.e. from `parseExpression()`) or directly as a statement
+     * in the body of a `Container`. This affects how code generation
+     * works and hence one needs to disambiguate between the two.
+     */
+    private bool isStatementLevel = false;
 
     /* Argument list */
     private Expression[] arguments;
@@ -623,6 +631,24 @@ public final class FunctionCall : Call
     public Expression[] getCallArguments()
     {
         return arguments;
+    }
+
+    /** 
+     * Mark this function call as statement-level
+     */
+    public void makeStatementLevel()
+    {
+        this.isStatementLevel = true;
+    }
+
+    /** 
+     * Determines if this function call is statement-level
+     *
+     * Returns: true if so, false otherwise
+     */
+    public bool isStatementLevelFuncCall()
+    {
+        return isStatementLevel;
     }
 }
 

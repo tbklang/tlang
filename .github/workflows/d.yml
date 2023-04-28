@@ -330,6 +330,17 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_functions.t
           ./tlang.out
+      - name: Simple functions (statement-level)
+        run: |
+          ./tlang compile source/tlang/testing/simple_direct_func_call.t
+          ./tlang.out
+      - name: Simple functions (recursive)
+        run: |
+          ./tlang compile source/tlang/testing/simple_function_recursion_factorial.t
+          ./tlang.out
+
+
+
       # TODO: Re-enable when we support the `discard` keyword again
       #- name: Simple variables
       #  run: |
