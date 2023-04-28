@@ -442,9 +442,12 @@ public final class Parser
         /* If we have `(` then function call */
         if(type == SymbolType.LBRACE)
         {
-            /* TODO: Collect and return */
             previousToken();
-            parseFuncCall();
+            FunctionCall funcCall = parseFuncCall();
+            ret = funcCall;
+
+            /* Set the flag to say this is a statement-level function call */
+            funcCall.makeStatementLevel();
 
              /* Expect a semi-colon */
             expect(SymbolType.SEMICOLON, getCurrentToken());
