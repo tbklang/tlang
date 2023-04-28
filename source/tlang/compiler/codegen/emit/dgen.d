@@ -973,7 +973,7 @@ int main()
 }`);
         }
         // Test for `simple_function_recursion_factorial.t` (recursive function call testing)
-        if(cmp(typeChecker.getModule().getName(), "simple_function_recursion_factorial") == 0)
+        else if(cmp(typeChecker.getModule().getName(), "simple_function_recursion_factorial") == 0)
         {
             file.writeln(`
 #include<stdio.h>
