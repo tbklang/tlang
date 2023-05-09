@@ -20,6 +20,15 @@ public interface MTypeRewritable
  */
 public interface MStatementSearchable
 {
+    /** 
+     * Searches for all objects of the given type
+     * and returns an array of them. Only if the given
+     * type is equal to or sub-of `Statement`
+     *
+     * Params:
+     *   clazzType = the type to search for
+     * Returns: an array of `Statement` (a `Statement[]`)
+     */
     public Statement[] search(TypeInfo_Class clazzType);
 }
 
