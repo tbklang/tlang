@@ -20,7 +20,7 @@ public interface MTypeRewritable
  */
 public interface MStatementSearchable
 {
-    
+    public Statement[] search(TypeInfo_Class clazzType);
 }
 
 /** 
