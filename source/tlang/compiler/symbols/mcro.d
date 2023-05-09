@@ -30,7 +30,14 @@ public interface MStatementSearchable
  */
 public interface MStatementReplaceable
 {
-
+    /**
+     * Replace a given `Statement` with another `Statement`
+     *
+     * Params:
+     *   thiz = the `Statement` to replace
+     *   that = the `Statement` to insert in-place
+     */
+    public void replace(Statement thiz, Statement that);
 }
 
 public class Repr : Expression
