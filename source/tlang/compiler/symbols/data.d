@@ -962,7 +962,9 @@ public final class Branch : Entity, Container
     }
 }
 
-public final class DiscardStatement : Statement
+import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable;
+
+public final class DiscardStatement : Statement, MStatementSearchable, MStatementReplaceable
 {
     private Expression expression;
 
@@ -982,6 +984,32 @@ public final class DiscardStatement : Statement
     public override string toString()
     {
         return "[DiscardStatement: (Exp: "~expression.toString()~")]";
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on our `Expression` (if possible) */
+        MStatementSearchable innerStmt = cast(MStatementSearchable)expression;
+        if(innerStmt)
+        {
+            matches ~= innerStmt.search(clazzType); 
+        }
+
+        return matches;
+    }
+
+    public override void replace(Statement thiz, Statement that)
+    {
+
     }
 }
 
