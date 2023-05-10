@@ -45,8 +45,9 @@ public interface MStatementReplaceable
      * Params:
      *   thiz = the `Statement` to replace
      *   that = the `Statement` to insert in-place
+     * Returns: `true` if the replacement succeeded, `false` otherwise
      */
-    public void replace(Statement thiz, Statement that);
+    public bool replace(Statement thiz, Statement that);
 }
 
 /** 
