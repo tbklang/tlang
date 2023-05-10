@@ -49,11 +49,39 @@ public interface MStatementReplaceable
     public void replace(Statement thiz, Statement that);
 }
 
-public class Repr : Expression
+/** 
+ * Anything which implements this can make a full
+ * deep clone of itself
+ */
+public interface MCloneable
+{
+    /** 
+     * Returns a `Statement` which is a clone of this one
+     * itself
+     *
+     * Returns: the cloned `Statement`
+     */
+    public Statement clone();
+}
+
+public class Repr : Expression, MStatementSearchable
 {
     /** 
      * TODO: Add a MStatementSearchable implementation
      */
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+        
+        return matches;
+    }
 }
 
 
