@@ -44,7 +44,7 @@ public final class TypeChecker
     {
         this.modulle = modulle;
         this.resolver = new Resolver(this);
-        this.meta = new MetaProcessor(this);
+        this.meta = new MetaProcessor(this, true);
         /* TODO: Module check?!?!? */
     }
 

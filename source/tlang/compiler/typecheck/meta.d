@@ -16,10 +16,12 @@ import std.conv : to;
 public class MetaProcessor
 {
     private TypeChecker tc;
+    private bool isMetaEnabled;
 
-    this(TypeChecker tc)
+    this(TypeChecker tc, bool isMetaEnabled)
     {
         this.tc = tc;
+        this.isMetaEnabled = isMetaEnabled;
 
         // TODO: Extract the `CompilerConfig` from the `TypeChecker` (which in turn must take it in)
     }
@@ -30,6 +32,12 @@ public class MetaProcessor
      */
     public void process(Container container)
     {
+        /* Only apply meta-processing if enabled */
+        if(!isMetaEnabled)
+        {
+            return;
+        }
+
         /* Get all statements */
         Statement[] stmts = container.getStatements();
 
@@ -46,7 +54,17 @@ public class MetaProcessor
                 typeRewrite(cast(MTypeRewritable)curStmt);
             }
 
-            // TODO: Add sizeof number set here
+            /**
+             * Search for any `sizeof(<ident_type>)` expressions
+             * and replace them with a `NumberLiteral`
+             */
+            if(cast(MStatementSearchable)curStmt && cast(MStatementReplaceable)curStmt)
+            {
+                MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
+                Statement[] foundStmts = searchableStmt.search(Repr.classinfo);
+            }
+
+
             /**
              * TODO: Add support for `sizeof` statement too
              *
