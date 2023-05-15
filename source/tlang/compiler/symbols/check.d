@@ -64,6 +64,17 @@ public enum SymbolType
     EXTERN,
     EXTERN_EFUNC,
     EXTERN_EVAR,
+
+    /** 
+     * `generic`
+     */
+    GENERIC_TYPE_DECLARE,
+
+    /**
+     * REPR for `🧠 Feature: Meta-programming engine` testing
+     */
+    REPR,
+
     UNKNOWN
 }
 
@@ -379,6 +390,16 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "discard") == 0)
     {
         return SymbolType.DISCARD;
+    }
+    /* generic keyword */
+    else if(cmp(token, "generic") == 0)
+    {
+        return SymbolType.GENERIC_TYPE_DECLARE;
+    }
+    /* generic keyword (for `🧠 Feature: Meta-programming engine` testing) */
+    else if(cmp(token, "repr") == 0)
+    {
+        return SymbolType.REPR;
     }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))

@@ -20,6 +20,8 @@ public class MetaProcessor
     this(TypeChecker tc)
     {
         this.tc = tc;
+
+        // TODO: Extract the `CompilerConfig` from the `TypeChecker` (which in turn must take it in)
     }
 
     /** 
@@ -38,8 +40,6 @@ public class MetaProcessor
             /**
              * Apply type-rewriting to any `MTypeRewritable` AST node
              * (a.k.a. a node which contains a type and can have it set)
-             *
-             * TODO: Add support for `sizeof` statement too
              */
             if(cast(MTypeRewritable)curStmt)
             {
@@ -47,6 +47,36 @@ public class MetaProcessor
             }
 
             // TODO: Add sizeof number set here
+            /**
+             * TODO: Add support for `sizeof` statement too
+             *
+             * To do this we must consider where `Expression` can occur:
+             * Function arguments, Variable assignments
+             *
+             * Such that we can apply fixups there
+             */
+            // expressionSearch();
+            if(cast(MStatementSearchable)curStmt && cast(MStatementReplaceable)curStmt)
+            {
+                // TOOD: Add replacement here
+                gprintln("Found a searchable and replaceable '"~curStmt.toString()~"'");
+
+                /** 
+                 * Searching for AST nodes of a given type
+                 */
+                MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
+                Statement[] foundStmts = searchableStmt.search(Repr.classinfo);
+                gprintln("Repr Search: "~to!(string)(foundStmts));
+                gprintln("isRepr?: "~to!(string)(cast(Repr)foundStmts[0] !is null));
+
+                /** 
+                 * Replacing an AST node with another
+                 */
+                MStatementReplaceable replStmt = cast(MStatementReplaceable)curStmt;
+                import tlang.compiler.symbols.expressions : IntegerLiteral, IntegerLiteralEncoding;
+                bool replStatus = replStmt.replace(foundStmts[0], new IntegerLiteral("69420", IntegerLiteralEncoding.SIGNED_INTEGER));
+                gprintln("Replacement worked?: "~to!(string)(replStatus));
+            }
 
             /** 
              * If the current statement is a Container then recurse
@@ -85,6 +115,11 @@ public class MetaProcessor
             // ... config and choose the largest unsigned type from there
             statement.setType("long");
         }
+    }
+
+    private void replace(MStatementSearchable from, TypeInfo_Class searchType, Statement replaceWith)
+    {
+
     }
 
     private void sizeOf_Literalize(Sizeof sizeofNumber)

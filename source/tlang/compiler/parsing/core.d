@@ -1359,6 +1359,15 @@ public final class Parser
                 ArrayIndex arrayIndexExpr = new ArrayIndex(indexTo, index);
                 addRetExp(arrayIndexExpr);
             }
+            /* TODO: For `🧠 Feature: Meta-programming engine` (testing replaceability) */
+            else if(symbol == SymbolType.REPR)
+            {
+                import tlang.compiler.symbols.mcro : Repr;
+
+                Repr repr = new Repr();
+                addRetExp(repr);
+                nextToken();
+            }
             /* If it is an identifier */
             else if (symbol == SymbolType.IDENT_TYPE)
             {

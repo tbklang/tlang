@@ -1007,9 +1007,28 @@ public final class DiscardStatement : Statement, MStatementSearchable, MStatemen
         return matches;
     }
 
-    public override void replace(Statement thiz, Statement that)
+    public override bool replace(Statement thiz, Statement that)
     {
+        import std.stdio;
+        writeln("Replace() enter discard");
 
+        /* Check if our `Expression` matches, then replace */
+        if(expression == thiz)
+        {
+            expression = cast(Expression)that;
+            return true;
+        }
+        /* If not direct match, then recurse and replace (if possible) */
+        else if(cast(MStatementReplaceable)expression)
+        {
+            MStatementReplaceable replStmt = cast(MStatementReplaceable)expression;
+            return replStmt.replace(thiz, that);
+        }
+        /* If not direct match and not replaceable */
+        else
+        {
+            return false;
+        }
     }
 }
 
