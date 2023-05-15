@@ -1,6 +1,7 @@
 module tlang.compiler.typecheck.meta;
 
-import tlang.compiler.symbols.data : Statement, TypedEntity, Function, FunctionCall;
+import tlang.compiler.symbols.data : Statement, TypedEntity, Function, FunctionCall, IdentExpression;
+import tlang.compiler.symbols.expressions : Expression, IntegerLiteral, IntegerLiteralEncoding;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.containers : Container;
 import tlang.compiler.symbols.mcro;
@@ -48,6 +49,13 @@ public class MetaProcessor
             /**
              * Apply type-rewriting to any `MTypeRewritable` AST node
              * (a.k.a. a node which contains a type and can have it set)
+             *
+             * NOTE: This is just for the "type" fields in AST nodes,
+             * we should have some full recursive re-writer.
+             *
+             * An example of why is for supporting something like:
+             *
+             *      `sizeof(size_t)` <- currently is not supported by this
              */
             if(cast(MTypeRewritable)curStmt)
             {
@@ -62,38 +70,50 @@ public class MetaProcessor
             {
                 MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
                 Statement[] foundStmts = searchableStmt.search(FunctionCall.classinfo);
-            }
+                gprintln("Nah fr");
 
+                foreach(Statement curFoundStmt; foundStmts)
+                {
+                    FunctionCall curFuncCall = cast(FunctionCall)curFoundStmt;
 
-            /**
-             * TODO: Add support for `sizeof` statement too
-             *
-             * To do this we must consider where `Expression` can occur:
-             * Function arguments, Variable assignments
-             *
-             * Such that we can apply fixups there
-             */
-            // expressionSearch();
-            if(cast(MStatementSearchable)curStmt && cast(MStatementReplaceable)curStmt)
-            {
-                // TOOD: Add replacement here
-                gprintln("Found a searchable and replaceable '"~curStmt.toString()~"'");
+                    if(curFuncCall.getName() == "sizeof")
+                    {
+                        gprintln("Elo");
+                        Expression[] arguments = curFuncCall.getCallArguments();
+                        if(arguments.length == 1)
+                        {
+                            IdentExpression potentialIdentExp = cast(IdentExpression)arguments[0];
+                            if(potentialIdentExp)
+                            {
+                                string typeName = potentialIdentExp.getName();
+                                IntegerLiteral replacementStmt = sizeOf_Literalize(typeName);
+                                gprintln("sizeof: Replace '"~curFoundStmt.toString()~"' with '"~replacementStmt.toString()~"'");
 
-                /** 
-                 * Searching for AST nodes of a given type
-                 */
-                MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
-                Statement[] foundStmts = searchableStmt.search(Repr.classinfo);
-                gprintln("Repr Search: "~to!(string)(foundStmts));
-                gprintln("isRepr?: "~to!(string)(cast(Repr)foundStmts[0] !is null));
+                                // FIXME: When `Container` becomes `MStatementSearchable` and `MStatementReplaveable`
+                                // ... we can then remove this check
+                                if(cast(MStatementReplaceable)container)
+                                {
+                                    MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
+                                    containerRepl.replace(curFoundStmt, replacementStmt);
+                                }
 
-                /** 
-                 * Replacing an AST node with another
-                 */
-                MStatementReplaceable replStmt = cast(MStatementReplaceable)curStmt;
-                import tlang.compiler.symbols.expressions : IntegerLiteral, IntegerLiteralEncoding;
-                bool replStatus = replStmt.replace(foundStmts[0], new IntegerLiteral("69420", IntegerLiteralEncoding.SIGNED_INTEGER));
-                gprintln("Replacement worked?: "~to!(string)(replStatus));
+                                // TODO: Call the replace on the expression itself? Nah, should
+                                // ... call it on `container` probably as we are examining directly
+                                break;
+                            }
+                            else
+                            {
+                                // TODO: Throw an exception here that an ident_type should be present as the argument
+                                gprintln("The argument to `sizeof` should be an ident", DebugType.ERROR);
+                            }
+                        }
+                        else
+                        {
+                            // TODO: Throw an exception here as only 1 argument is allowed
+                            gprintln("To use the `sizeof` macro you require a single argument to be passed to it", DebugType.ERROR);
+                        }
+                    }
+                }
             }
 
             /** 
@@ -135,43 +155,57 @@ public class MetaProcessor
         }
     }
 
-    // private void sizeOf_Literalize(Sizeof sizeofNumber)
-    // {
-    //     // TODO: Via typechecker determine size with a lookup
-    //     Type type = tc.getType(tc.getModule(), sizeofNumber.getType());
+    private IntegerLiteral sizeOf_Literalize(string typeName)
+    {
+        IntegerLiteral literal = new IntegerLiteral("TODO_LITERAL_GOES_HERESIZEOF_REPLACEMENT", IntegerLiteralEncoding.UNSIGNED_INTEGER);
 
-    //     /* Calculated type size */
-    //     ulong typeSize = 0;
+        // TODO: Via typechecker determine size with a lookup
+        Type type = tc.getType(tc.getModule(), typeName);
 
-    //     /**
-    //      * Calculate stack array size
-    //      *
-    //      * Algo: `<componentType>.size * stackArraySize`
-    //      */
-    //     if(cast(StackArray)type)
-    //     {
-    //         StackArray stackArrayType = cast(StackArray)type;
-    //         ulong arrayLength = stackArrayType.getAllocatedSize();
-    //         Type componentType = stackArrayType.getComponentType();
-    //         ulong componentTypeSize = 0;
+        /* Calculated type size */
+        ulong typeSize = 0;
+
+        /**
+         * Calculate stack array size
+         *
+         * Algo: `<componentType>.size * stackArraySize`
+         */
+        if(cast(StackArray)type)
+        {
+            StackArray stackArrayType = cast(StackArray)type;
+            ulong arrayLength = stackArrayType.getAllocatedSize();
+            Type componentType = stackArrayType.getComponentType();
+            ulong componentTypeSize = 0;
             
-    //         // FIXME: Later, when the Dependency Genrator supports more advanced component types,
-    //         // ... we will need to support this - for now assume that `componentType` is primitive
-    //         if(cast(Number)componentType)
-    //         {
-    //             Number numberType = cast(Number)componentType;
-    //             componentTypeSize = numberType.getSize();
-    //         }
+            // FIXME: Later, when the Dependency Genrator supports more advanced component types,
+            // ... we will need to support this - for now assume that `componentType` is primitive
+            if(cast(Number)componentType)
+            {
+                Number numberType = cast(Number)componentType;
+                componentTypeSize = numberType.getSize();
+            }
 
-    //         typeSize = componentTypeSize*arrayLength;
-    //     }
+            typeSize = componentTypeSize*arrayLength;
+        }
+        /**
+         * Calculate the size of `Number`-based types
+         */
+        else if(cast(Number)type)
+        {
+            Number numberType = cast(Number)type;
+            typeSize = numberType.getSize();
+        }
 
-    //     // TODO: We may eed toupdate Type so have bitwidth or only do this
-    //     // for basic types - in which case I guess we should throw an exception
-    //     // here.
-    //     // ulong typeSize = 
+        // TODO: We may eed toupdate Type so have bitwidth or only do this
+        // for basic types - in which case I guess we should throw an exception
+        // here.
+        // ulong typeSize = 
 
-    //     /* Update the `Sizeof` kind-of-`IntegerLiteral` with the new size */
-    //     sizeofNumber.setNumber(to!(string)(typeSize));
-    // }
+        
+
+        /* Update the `Sizeof` kind-of-`IntegerLiteral` with the new size */
+        literal.setNumber(to!(string)(typeSize));
+
+        return literal;
+    }
 }

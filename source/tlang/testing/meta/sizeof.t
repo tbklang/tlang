@@ -1,3 +1,3 @@
 module meta_sizeof;
 
-size_t myVar = sizeof(size_t);
+size_t myVar = sizeof(uint);

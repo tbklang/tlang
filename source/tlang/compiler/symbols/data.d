@@ -360,7 +360,7 @@ public class Function : TypedEntity, Container
     }
 }
 
-public class Variable : TypedEntity
+public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
 {
     /* TODO: Just make this an Expression */
     private VariableAssignment assignment;
@@ -388,6 +388,49 @@ public class Variable : TypedEntity
     {
         return "Variable (Ident: "~name~", Type: "~type~")";
     }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /**
+         * Recurse on the `VariableAssignment`
+         */
+        MStatementSearchable innerStmt = cast(MStatementSearchable)assignment;
+        if(innerStmt)
+        {
+            matches ~= innerStmt.search(clazzType); 
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we, the `Variable`, are the `thiz` then we cannot perform replacement */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* Check if we should replace the `VariableAssignment` */
+        else if(thiz == assignment)
+        {
+            assignment = cast(VariableAssignment)thiz;
+            return true;
+        }
+        /* Recurse on the variable assignment */
+        else
+        {
+            return assignment.replace(thiz, that);
+        }
+    }
 }
 
 
@@ -400,7 +443,7 @@ public import tlang.compiler.symbols.expressions;
 /**
 * TODO: Rename to `VariableDeclarationAssignment`
 */
-public class VariableAssignment : Statement
+public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable
 {
     private Expression expression;
     private Variable variable;
@@ -420,6 +463,8 @@ public class VariableAssignment : Statement
         return variable;
     }
 
+    // NOTE-to-self: Very interesting method we have here, is this just for debugging?
+    // (15th May 2023, whilst working on Meta)
     public void setVariable(Variable variable)
     {
         this.variable = variable;
@@ -428,6 +473,54 @@ public class VariableAssignment : Statement
     public override string toString()
     {
         return "[varAssignDec'd: To: "~variable.toString()~"]";
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on our `Expression` (if possible) */
+        MStatementSearchable innerStmt = cast(MStatementSearchable)expression;
+        if(innerStmt)
+        {
+            matches ~= innerStmt.search(clazzType); 
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* We cannot replace ourselves directly */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* Is the `Expression` the `thiz`, then swap out the expression */
+        else if(expression == thiz)
+        {
+            // TODO: Any reparenting needed?
+            expression = cast(Expression)that;
+            return true;
+        }
+        /* Recurse on the `Expression` being assigned (if possible) */
+        else if(cast(MStatementReplaceable)expression)
+        {
+            MStatementReplaceable replStmt = cast(MStatementReplaceable)expression;
+            return replStmt.replace(thiz, that);
+        }
+        /* If not matched */
+        else
+        {
+            return false;
+        }
     }
 }
 
@@ -602,7 +695,8 @@ public class Call : IdentExpression
     }
 }
 
-public final class FunctionCall : Call
+// FIXME: Finish adding proper `MStatementSearchable` and `MStatementReplaceable` to `FunctionCall`
+public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable
 {
     /* Whether this is statement-level function call or not */
 
@@ -649,6 +743,61 @@ public final class FunctionCall : Call
     public bool isStatementLevelFuncCall()
     {
         return isStatementLevel;
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        // TODO: Implement me
+
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /**
+         * Recurse on each `Expression` (if possible)
+         */
+        foreach(Expression callExp; arguments)
+        {
+            MStatementSearchable innerStmt = cast(MStatementSearchable)callExp;
+            if(innerStmt)
+            {
+                matches ~= innerStmt.search(clazzType); 
+            }
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        // TODO: Implement me
+
+        // /* Check if our `Expression` matches, then replace */
+        // if(expression == thiz)
+        // {
+        //     // NOTE: This legit makes no sense and won't do anything, we could remove this
+        //     // and honestly should probably make this return false
+        //     // FIXME: Make this return `false` (see above)
+        //     expression = cast(Expression)that;
+        //     return true;
+        // }
+        // /* If not direct match, then recurse and replace (if possible) */
+        // else if(cast(MStatementReplaceable)expression)
+        // {
+        //     MStatementReplaceable replStmt = cast(MStatementReplaceable)expression;
+        //     return replStmt.replace(thiz, that);
+        // }
+        // /* If not direct match and not replaceable */
+        // else
+        // {
+        //     return false;
+        // }
+        return true;
     }
 }
 
@@ -1015,6 +1164,9 @@ public final class DiscardStatement : Statement, MStatementSearchable, MStatemen
         /* Check if our `Expression` matches, then replace */
         if(expression == thiz)
         {
+            // NOTE: This legit makes no sense and won't do anything, we could remove this
+            // and honestly should probably make this return false
+            // FIXME: Make this return `false` (see above)
             expression = cast(Expression)that;
             return true;
         }
