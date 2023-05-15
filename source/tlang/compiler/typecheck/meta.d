@@ -117,11 +117,6 @@ public class MetaProcessor
         }
     }
 
-    private void replace(MStatementSearchable from, TypeInfo_Class searchType, Statement replaceWith)
-    {
-
-    }
-
     private void sizeOf_Literalize(Sizeof sizeofNumber)
     {
         // TODO: Via typechecker determine size with a lookup
