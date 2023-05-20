@@ -62,6 +62,13 @@ public class MetaProcessor
                 typeRewrite(cast(MTypeRewritable)curStmt);
             }
 
+            /** 
+             * Here we will also search for any `IdentExpression`
+             * which contains `size_t`, `ssize_t` etc. and replace
+             * them
+             */
+            // TODO: Implement me
+
             /**
              * Search for any `sizeof(<ident_type>)` expressions
              * and replace them with a `NumberLiteral`
@@ -89,16 +96,10 @@ public class MetaProcessor
                                 IntegerLiteral replacementStmt = sizeOf_Literalize(typeName);
                                 gprintln("sizeof: Replace '"~curFoundStmt.toString()~"' with '"~replacementStmt.toString()~"'");
 
-                                // FIXME: When `Container` becomes `MStatementSearchable` and `MStatementReplaveable`
-                                // ... we can then remove this check
-                                if(cast(MStatementReplaceable)container)
-                                {
-                                    MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
-                                    containerRepl.replace(curFoundStmt, replacementStmt);
-                                }
-
-                                // TODO: Call the replace on the expression itself? Nah, should
-                                // ... call it on `container` probably as we are examining directly
+                                /* Traverse down from the `Container` we are process()'ing and apply the replacement */
+                                MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
+                                containerRepl.replace(curFoundStmt, replacementStmt);
+                                
                                 break;
                             }
                             else
