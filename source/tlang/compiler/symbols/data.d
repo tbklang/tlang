@@ -767,12 +767,8 @@ public class PointerDereferenceAssignment : Statement
     }
 }
 
-
-public class IdentExpression : Expression
+public class IdentExpression : Expression, MStatementSearchable, MStatementReplaceable
 {
-    
-
-
     /* name */
     private string name;
 
@@ -789,6 +785,27 @@ public class IdentExpression : Expression
     public void updateName(string newName)
     {
         name = newName;
+    }
+
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        // Nothing to replace within us
+        return false;
     }
 }
 

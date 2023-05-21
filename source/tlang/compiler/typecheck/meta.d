@@ -46,28 +46,13 @@ public class MetaProcessor
         {
             gprintln("MetaProcessor: Examining AST node '"~curStmt.toString()~"'...");
 
-            /**
-             * Apply type-rewriting to any `MTypeRewritable` AST node
-             * (a.k.a. a node which contains a type and can have it set)
-             *
-             * NOTE: This is just for the "type" fields in AST nodes,
-             * we should have some full recursive re-writer.
-             *
-             * An example of why is for supporting something like:
-             *
-             *      `sizeof(size_t)` <- currently is not supported by this
-             */
-            if(cast(MTypeRewritable)curStmt)
-            {
-                typeRewrite(cast(MTypeRewritable)curStmt);
-            }
+            // Perform replacement of `size_t` with concrete type
+            doTypeAlias(container, curStmt);
 
-            /** 
-             * Here we will also search for any `IdentExpression`
-             * which contains `size_t`, `ssize_t` etc. and replace
-             * them
-             */
-            // TODO: Implement me
+            
+            
+
+            // TODO: Put the two above into one function that does both `size_t` changes (`MTypeRewritable` and `identExpression`-based)
 
             /**
              * Search for any `sizeof(<ident_type>)` expressions
@@ -99,8 +84,6 @@ public class MetaProcessor
                                 /* Traverse down from the `Container` we are process()'ing and apply the replacement */
                                 MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
                                 containerRepl.replace(curFoundStmt, replacementStmt);
-                                
-                                break;
                             }
                             else
                             {
@@ -153,6 +136,59 @@ public class MetaProcessor
             // FIXME: This is an example re-write, it should actually look up the compiler
             // ... config and choose the largest unsigned type from there
             statement.setType("long");
+        }
+    }
+
+    /** 
+     * Performs the replacement of type alieses such as `size_t`, `ssize_t`
+     * and so forth with their concrete type
+     *
+     * Params:
+     *   container = the current `Container` being processsed
+     *   curStmt = the current `Statement` to consider
+     */
+    private void doTypeAlias(Container container, Statement curStmt)
+    {
+        /**
+         * Apply type-rewriting to any `MTypeRewritable` AST node
+         * (a.k.a. a node which contains a type and can have it set)
+         *
+         * NOTE: This is just for the "type" fields in AST nodes,
+         * we should have some full recursive re-writer.
+         *
+         * An example of why is for supporting something like:
+         *
+         *      `sizeof(size_t)` <- currently is not supported by this
+         */
+        if(cast(MTypeRewritable)curStmt)
+        {
+            typeRewrite(cast(MTypeRewritable)curStmt);
+        }
+
+        /** 
+         * Here we will also search for any `IdentExpression`
+         * which contains `size_t`, `ssize_t` etc. and replace
+         * them
+         */
+        if(cast(MStatementSearchable)curStmt && cast(MStatementReplaceable)curStmt)
+        {
+            MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
+            IdentExpression[] foundStmts = cast(IdentExpression[])searchableStmt.search(IdentExpression.classinfo);
+
+            // TODO: Implement me
+            // gprintln("IdentExpressions found: "~to!(string)(foundStmts));
+            foreach(IdentExpression identExp; foundStmts)
+            {
+                gprintln(identExp);
+                if(identExp.getName() == "size_t")
+                {
+                    gprintln("Found type alias");
+
+                    // TODO: Testing code below
+                    // TODO: Replace with correct compiler configured type
+                    container.replace(identExp, new IdentExpression("uint"));
+                }
+            }
         }
     }
 
