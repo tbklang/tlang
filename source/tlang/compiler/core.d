@@ -129,6 +129,21 @@ public class Compiler
 
         /* Set the mapping to hashing of entity names (TODO: This should be changed before release) */
         config.addConfig(ConfigEntry("emit:mapper", "hashmapper"));
+
+        /**
+         * Configure, at compile time, the system type aliases
+         */
+        version(X86)
+        {
+            /* Set maximum width to 4 bytes (32-bits) */
+            config.addConfig(ConfigEntry("types:max_width", 4));
+        }
+        else version(X86_64)
+        {
+            /* Set maximum width to 8 bytes (64-bits) */
+            config.addConfig(ConfigEntry("types:max_width", 8));
+        }
+        
     }
 
     public CompilerConfiguration getConfig()
@@ -207,7 +222,7 @@ public class Compiler
             throw new CompilerException(CompilerError.PARSE_NOT_YET_PERFORMED);
         }
 
-        this.typeChecker = new TypeChecker(modulle);
+        this.typeChecker = new TypeChecker(modulle, this);
 
         /* Perform typechecking/codegen */
         this.typeChecker.beginCheck();

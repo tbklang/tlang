@@ -15,6 +15,7 @@ import tlang.compiler.codegen.instruction;
 import std.container.slist;
 import std.algorithm : reverse;
 import tlang.compiler.typecheck.meta;
+import tlang.compiler.core : Compiler;
 
 /**
 * The Parser only makes sure syntax
@@ -40,12 +41,33 @@ public final class TypeChecker
         return modulle;
     }
 
-    this(Module modulle)
+    private Compiler compiler;
+
+    // TODO: We could take in just the CompilerConfiguration
+    // ... as it is a class-based type and it is all we really
+    // ... need
+    this(Module modulle, Compiler compiler)
     {
         this.modulle = modulle;
+        this.compiler = compiler;
+        
         this.resolver = new Resolver(this);
         this.meta = new MetaProcessor(this, true);
+        
         /* TODO: Module check?!?!? */
+    }
+
+    // Ditto but `Compiler` is `null`, just to make other things
+    // ... compile (namely tests), we don't yet make use of the
+    // ... `Compiler` at this level here only in `MetaProcessor`
+    this(Module modulle)
+    {
+        this(modulle, null);
+    }
+
+    public Compiler getCompiler()
+    {
+        return compiler;
     }
 
     /**
