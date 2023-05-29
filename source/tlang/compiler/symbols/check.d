@@ -70,11 +70,6 @@ public enum SymbolType
      */
     GENERIC_TYPE_DECLARE,
 
-    /**
-     * REPR for `🧠 Feature: Meta-programming engine` testing
-     */
-    REPR,
-
     UNKNOWN
 }
 
