@@ -263,6 +263,27 @@ public class MetaProcessor
         return literal;
     }
 
+    /** 
+     * Determines if the given type is a system type alias
+     *
+     * Params:
+     *   typeAlias = the type to check
+     * Returns: `true` if system type alias, `false` otherwise
+     */
+    private bool isSystemType(string typeAlias)
+    {
+        /* `size_t`/`ssize_t` system type aliases */
+        if(typeAlias == "size_t" || typeAlias == "ssize_t")
+        {
+            return true;
+        }
+        /* Else, not a system type alias */
+        else
+        {
+            return false;
+        }
+    }
+
 
     /** 
      * Given a type alias (think `size_t`/`ssize_t` for example) this will
