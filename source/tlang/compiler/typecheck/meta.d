@@ -55,7 +55,7 @@ public class MetaProcessor
         {
             gprintln("MetaProcessor: Examining AST node '"~curStmt.toString()~"'...");
 
-            // Perform replacement of `size_t` with concrete type
+            // Perform replacement of all type alises to concrete types, such as `size_t`
             doTypeAlias(container, curStmt);
 
             /**
