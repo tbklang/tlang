@@ -26,6 +26,13 @@ import tlang.compiler.configuration;
 */
 public final class TypeChecker
 {
+    /** 
+     * The compiler configuration
+     */
+    private CompilerConfiguration config;
+
+
+
     private Module modulle;
 
     /* The name resolver */
@@ -60,11 +67,6 @@ public final class TypeChecker
         
         /* TODO: Module check?!?!? */
     }
-
-    /** 
-     * The compiler configuration
-     */
-    private CompilerConfiguration config;
 
     /** 
      * Returns the compiler configuration
