@@ -58,11 +58,6 @@ public class MetaProcessor
             // Perform replacement of `size_t` with concrete type
             doTypeAlias(container, curStmt);
 
-            
-            
-
-            // TODO: Put the two above into one function that does both `size_t` changes (`MTypeRewritable` and `identExpression`-based)
-
             /**
              * Search for any `sizeof(<ident_type>)` expressions
              * and replace them with a `NumberLiteral`
