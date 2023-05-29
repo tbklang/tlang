@@ -14,6 +14,8 @@ import tlang.compiler.typecheck.dependency.core;
 import tlang.compiler.codegen.instruction;
 import std.container.slist;
 import std.algorithm : reverse;
+import tlang.compiler.typecheck.meta;
+import tlang.compiler.configuration;
 
 /**
 * The Parser only makes sure syntax
@@ -24,21 +26,56 @@ import std.algorithm : reverse;
 */
 public final class TypeChecker
 {
+    /** 
+     * The compiler configuration
+     */
+    private CompilerConfiguration config;
+
+
+
     private Module modulle;
 
     /* The name resolver */
     private Resolver resolver;
+
+    /** 
+     * The meta-programming processor
+     */
+    private MetaProcessor meta;
 
     public Module getModule()
     {
         return modulle;
     }
 
-    this(Module modulle)
+    /** 
+     * Constructs a new `TypeChecker` based on the provided `Module`
+     * of which to typecheck its members and using the default
+     * compiler configuration
+     *
+     * Params:
+     *   modulle = the `Module` to check
+     *   config = the `CompilerConfiguration` (default if not specified)
+     */
+    this(Module modulle, CompilerConfiguration config = CompilerConfiguration.defaultConfig())
     {
         this.modulle = modulle;
-        resolver = new Resolver(this);
+        this.config = config;
+
+        this.resolver = new Resolver(this);
+        this.meta = new MetaProcessor(this, true);
+        
         /* TODO: Module check?!?!? */
+    }
+
+    /** 
+     * Returns the compiler configuration
+     *
+     * Returns: the `CompilerConfguration`
+     */
+    public CompilerConfiguration getConfig()
+    {
+        return config;
     }
 
     /**
@@ -2106,6 +2143,9 @@ public final class TypeChecker
     */
     public void beginCheck()
     {
+        /* Run the meta-processor on the AST tree (starting from the Module) */
+        meta.process(modulle);
+
         /* Process all pseudo entities of the given module */
         processPseudoEntities(modulle);
 
