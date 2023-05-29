@@ -292,7 +292,6 @@ public class MetaProcessor
         }
     }
 
-
     /** 
      * Determines if the given type is a type alias.
      *
@@ -335,7 +334,6 @@ public class MetaProcessor
             return false;
         }
     }
-
 
     /** 
      * Given a type alias (think `size_t`/`ssize_t` for example) this will
