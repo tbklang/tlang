@@ -29,7 +29,9 @@ public Statement[] weightReorder(Statement[] statements)
     return stmntsRed;
 }
 
-public interface Container
+// TODO: Honestly all contains should be a kind-of `MStatementSearchable` and `MStatementReplaceable`
+import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MStatementReplaceable;
+public interface Container : MStatementSearchable, MStatementReplaceable
 {
     public void addStatement(Statement statement);
 
@@ -37,6 +39,7 @@ public interface Container
 
     public Statement[] getStatements();
 }
+
 
 public class Module : Entity, Container
 {
@@ -61,6 +64,79 @@ public class Module : Entity, Container
     public Statement[] getStatements()
     {
         return weightReorder(statements);
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on each `Statement` making up our body */
+        // NOTE: Using weight-reordered? Is that fine?
+        foreach(Statement curStmt; getStatements())
+        {
+            MStatementSearchable curStmtCasted = cast(MStatementSearchable)curStmt;
+            if(curStmtCasted)
+            {
+                matches ~= curStmtCasted.search(clazzType);
+            }
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we (`this`) are `thiz`, then we cannot replace */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* If not ourself, then check the body statements */
+        else
+        {
+            /**
+             * First check each `Statement` that make sup our
+             * body and see if we can replace that, else see
+             * if we can recurse on each of the body statements
+             * and apply replacement therein
+             */
+            // NOTE: Using weight-reordered? Is that fine?
+            Statement[] bodyStmts = getStatements();
+            for(ulong idx = 0; idx < bodyStmts.length; idx++)
+            {
+                Statement curBodyStmt = bodyStmts[idx];
+
+                /* Should we directly replace the Statement in the body? */
+                if(curBodyStmt == thiz)
+                {
+                    // Replace the statement in the body
+                    statements[idx] = that;
+
+                    // Re-parent `that` to us
+                    that.parentTo(this);
+
+                    return true;
+                }
+                /* If we cannot, then recurse (try) on it */
+                else if(cast(MStatementReplaceable)curBodyStmt)
+                {
+                    MStatementReplaceable curBodyStmtRepl = cast(MStatementReplaceable)curBodyStmt;
+                    if(curBodyStmtRepl.replace(thiz, that))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }
 
@@ -93,6 +169,79 @@ public class Struct : Type, Container
     this(string name)
     {
         super(name);
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on each `Statement` making up our body */
+        // NOTE: Using weight-reordered? Is that fine?
+        foreach(Statement curStmt; getStatements())
+        {
+            MStatementSearchable curStmtCasted = cast(MStatementSearchable)curStmt;
+            if(curStmtCasted)
+            {
+                matches ~= curStmtCasted.search(clazzType);
+            }
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we (`this`) are `thiz`, then we cannot replace */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* If not ourself, then check the body statements */
+        else
+        {
+            /**
+             * First check each `Statement` that make sup our
+             * body and see if we can replace that, else see
+             * if we can recurse on each of the body statements
+             * and apply replacement therein
+             */
+            // NOTE: Using weight-reordered? Is that fine?
+            Statement[] bodyStmts = getStatements();
+            for(ulong idx = 0; idx < bodyStmts.length; idx++)
+            {
+                Statement curBodyStmt = bodyStmts[idx];
+
+                /* Should we directly replace the Statement in the body? */
+                if(curBodyStmt == thiz)
+                {
+                    // Replace the statement in the body
+                    statements[idx] = that;
+
+                    // Re-parent `that` to us
+                    that.parentTo(this);
+
+                    return true;
+                }
+                /* If we cannot, then recurse (try) on it */
+                else if(cast(MStatementReplaceable)curBodyStmt)
+                {
+                    MStatementReplaceable curBodyStmtRepl = cast(MStatementReplaceable)curBodyStmt;
+                    if(curBodyStmtRepl.replace(thiz, that))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }
 
@@ -138,6 +287,79 @@ public class Clazz : Type, Container
     public Statement[] getStatements()
     {
         return weightReorder(statements);
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on each `Statement` making up our body */
+        // NOTE: Using weight-reordered? Is that fine?
+        foreach(Statement curStmt; getStatements())
+        {
+            MStatementSearchable curStmtCasted = cast(MStatementSearchable)curStmt;
+            if(curStmtCasted)
+            {
+                matches ~= curStmtCasted.search(clazzType);
+            }
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we (`this`) are `thiz`, then we cannot replace */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* If not ourself, then check the body statements */
+        else
+        {
+            /**
+             * First check each `Statement` that make sup our
+             * body and see if we can replace that, else see
+             * if we can recurse on each of the body statements
+             * and apply replacement therein
+             */
+            // NOTE: Using weight-reordered? Is that fine?
+            Statement[] bodyStmts = getStatements();
+            for(ulong idx = 0; idx < bodyStmts.length; idx++)
+            {
+                Statement curBodyStmt = bodyStmts[idx];
+
+                /* Should we directly replace the Statement in the body? */
+                if(curBodyStmt == thiz)
+                {
+                    // Replace the statement in the body
+                    statements[idx] = that;
+
+                    // Re-parent `that` to us
+                    that.parentTo(this);
+
+                    return true;
+                }
+                /* If we cannot, then recurse (try) on it */
+                else if(cast(MStatementReplaceable)curBodyStmt)
+                {
+                    MStatementReplaceable curBodyStmtRepl = cast(MStatementReplaceable)curBodyStmt;
+                    if(curBodyStmtRepl.replace(thiz, that))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
     }
     
 }

@@ -56,7 +56,9 @@ public class UnaryOperatorExpression : OperatorExpression
     }
 }
 
-public class BinaryOperatorExpression : OperatorExpression
+import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable;
+
+public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable, MStatementReplaceable
 {
     private Expression lhs, rhs;
 
@@ -83,6 +85,72 @@ public class BinaryOperatorExpression : OperatorExpression
         /* TODO: FIll in */
         return "[BinOpExp: Op: "~to!(string)(operator)~", Lhs: "~lhs.toString()~", Rhs: "~rhs.toString()~"]";
     }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on our left-hand side `Expression` (if possible) */
+        MStatementSearchable lhsCasted = cast(MStatementSearchable)lhs;
+        if(lhsCasted)
+        {
+            matches ~= lhsCasted.search(clazzType); 
+        }
+
+        /* Recurse on our right-hand side `Expression` (if possible) */
+        MStatementSearchable rhsCasted = cast(MStatementSearchable)rhs;
+        if(rhsCasted)
+        {
+            matches ~= rhsCasted.search(clazzType); 
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* We cannot directly replace ourselves */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* Is the left-hand side `Expression` to be replaced? */
+        else if(thiz == lhs)
+        {
+            lhs = cast(Expression)that;
+            return true;
+        }
+        /* Is the right-hand side `Expression` to be replaced? */
+        else if(thiz == rhs)
+        {
+            rhs = cast(Expression)that;
+            return true;
+        }
+        /* If not direct match, then recurse and replace on left-hand side `Expression` (if possible) */
+        else if(cast(MStatementReplaceable)lhs)
+        {
+            MStatementReplaceable lhsCasted = cast(MStatementReplaceable)lhs;
+            return lhsCasted.replace(thiz, that);
+        }
+        /* If not direct match, then recurse and replace on right-hand side `Expression` (if possible) */
+        else if(cast(MStatementReplaceable)rhs)
+        {
+            MStatementReplaceable rhsCasted = cast(MStatementReplaceable)rhs;
+            return rhsCasted.replace(thiz, that);
+        }
+        /* If not direct match and not replaceable */
+        else
+        {
+            return false;
+        }
+    }
 }
 
 public enum IntegerLiteralEncoding
@@ -93,7 +161,7 @@ public enum IntegerLiteralEncoding
     UNSIGNED_LONG
 }
 
-public final class IntegerLiteral : NumberLiteral
+public class IntegerLiteral : NumberLiteral
 {
     private IntegerLiteralEncoding encoding;
 
@@ -142,6 +210,11 @@ public abstract class NumberLiteral : Expression
     public final string getNumber()
     {
         return numberLiteral;
+    }
+
+    public final void setNumber(string numberLiteral)
+    {
+        this.numberLiteral = numberLiteral;
     }
 }
 

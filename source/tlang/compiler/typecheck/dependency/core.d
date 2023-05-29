@@ -1680,6 +1680,23 @@ public class DNodeGenerator
             /* NOTE: If anything we ought to remove these ExternSTmt nodes during such a process */
             return null;
         }
+        /** 
+         * Function call (statement-level)
+         */
+        else if(cast(FunctionCall)entity)
+        {
+            FunctionCall funcCall = cast(FunctionCall)entity;
+            funcCall.setContext(context);
+            
+            // It MUST be if we are processing it in `generalPass()`
+            assert(funcCall.isStatementLevelFuncCall());
+            gprintln("Function calls (at statement level)", DebugType.INFO);
+
+            // The FunctionCall is an expression, so to get a DNode from it `expressionPass()` it
+            DNode funcCallDNode = expressionPass(funcCall, context);
+
+            return funcCallDNode;
+        }
 
         return null;
     }
