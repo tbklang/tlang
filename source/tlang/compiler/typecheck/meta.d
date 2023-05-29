@@ -137,10 +137,10 @@ public class MetaProcessor
         string type = statement.getType();
 
         /* Only re-write if type alias */
-        if(type == "size_t" || type == "ssize_t")
+        if(isTypeAlias(type))
         {
             /* Get the concrete type of `type` */
-            string concreteType = getSystemType(type);
+            string concreteType = getConcreteType(type);
 
             /* Rewrite the type */
             statement.setType(concreteType);
