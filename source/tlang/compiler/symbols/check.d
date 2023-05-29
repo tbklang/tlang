@@ -391,11 +391,6 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.GENERIC_TYPE_DECLARE;
     }
-    /* generic keyword (for `🧠 Feature: Meta-programming engine` testing) */
-    else if(cmp(token, "repr") == 0)
-    {
-        return SymbolType.REPR;
-    }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))
     {
