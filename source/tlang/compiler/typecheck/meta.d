@@ -195,11 +195,11 @@ public class MetaProcessor
             {
                 string identName = identExp.getName();
 
-                /* System types */
-                if(identName == "size_t" || identName == "ssize_t")
+                /* Determine if this is a type alias? */
+                if(isTypeAlias(identName))
                 {
                     // Determine the concrete type
-                    string concereteType = getSystemType(identName);
+                    string concereteType = getConcreteType(identName);
                     gprintln("Found type alias '"~identName~"' which concretely is '"~concereteType~"'");
 
                     // Replace with concrete type
