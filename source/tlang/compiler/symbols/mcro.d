@@ -64,23 +64,3 @@ public interface MCloneable
      */
     public Statement clone();
 }
-
-public class Repr : Expression, MStatementSearchable
-{
-    /** 
-     * TODO: Add a MStatementSearchable implementation
-     */
-    public override Statement[] search(TypeInfo_Class clazzType)
-    {
-        /* List of returned matches */
-        Statement[] matches;
-
-        /* Are we (ourselves) of this type? */
-        if(clazzType.isBaseOf(this.classinfo))
-        {
-            matches ~= [this];
-        }
-        
-        return matches;
-    }
-}
