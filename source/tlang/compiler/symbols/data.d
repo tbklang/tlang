@@ -410,7 +410,6 @@ public class Function : TypedEntity, Container
                 if(curBodyStmt == thiz)
                 {
                     // Replace the statement in the body
-                    // FIXME: Apply parenting? Yes we should
                     // NOTE: The respective Variable Param must be swapped out too if need be
                     // (varParams[] subsetOf Statements[])
                     for(ulong varParamIdx = 0; varParamIdx < params.length; varParamIdx++)
@@ -423,6 +422,10 @@ public class Function : TypedEntity, Container
                         }
                     }
                     bodyStatements[idx] = that;
+
+                    // Re-parent `that` to us
+                    that.parentTo(this);
+
                     return true;
                 }
                 /* If we cannot, then recurse (try) on it */

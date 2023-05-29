@@ -117,8 +117,11 @@ public class Module : Entity, Container
                 if(curBodyStmt == thiz)
                 {
                     // Replace the statement in the body
-                    // FIXME: Apply parenting? Yes we should
                     statements[idx] = that;
+
+                    // Re-parent `that` to us
+                    that.parentTo(this);
+
                     return true;
                 }
                 /* If we cannot, then recurse (try) on it */
@@ -219,8 +222,11 @@ public class Struct : Type, Container
                 if(curBodyStmt == thiz)
                 {
                     // Replace the statement in the body
-                    // FIXME: Apply parenting? Yes we should
                     statements[idx] = that;
+
+                    // Re-parent `that` to us
+                    that.parentTo(this);
+
                     return true;
                 }
                 /* If we cannot, then recurse (try) on it */
@@ -334,8 +340,11 @@ public class Clazz : Type, Container
                 if(curBodyStmt == thiz)
                 {
                     // Replace the statement in the body
-                    // FIXME: Apply parenting? Yes we should
                     statements[idx] = that;
+
+                    // Re-parent `that` to us
+                    that.parentTo(this);
+
                     return true;
                 }
                 /* If we cannot, then recurse (try) on it */
