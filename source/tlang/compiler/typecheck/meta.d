@@ -21,11 +21,20 @@ public class MetaProcessor
     private bool isMetaEnabled;
     private CompilerConfiguration compilerConfig;
 
+    /** 
+     * Constructs a new `MetaProcessor` for the purposes of
+     * modifying the AST tree before the typechecker traverses
+     * it
+     *
+     * Params:
+     *   tc = the `TypeChecker` instance to process
+     *   isMetaEnabled = `true` if to perform meta processing, otherwise `false`
+     */
     this(TypeChecker tc, bool isMetaEnabled)
     {
         this.tc = tc;
         this.isMetaEnabled = isMetaEnabled;
-        this.compilerConfig = tc.getCompiler().getConfig();
+        this.compilerConfig = tc.getConfig();
     }
 
     /** 
@@ -126,17 +135,15 @@ public class MetaProcessor
     {
         /* Applies re-write to Variable's declared type and Function's return type */
         string type = statement.getType();
-        if(type == "size_t")
+
+        /* Only re-write if type alias */
+        if(type == "size_t" || type == "ssize_t")
         {
-            // FIXME: This is an example re-write, it should actually look up the compiler
-            // ... config and choose the largest unsigned type from there
-            statement.setType("ulong");
-        }
-        else if(type == "ssize_t")
-        {
-            // FIXME: This is an example re-write, it should actually look up the compiler
-            // ... config and choose the largest unsigned type from there
-            statement.setType("long");
+            /* Get the concrete type of `type` */
+            string concreteType = getSystemType(type);
+
+            /* Rewrite the type */
+            statement.setType(concreteType);
         }
     }
 
@@ -178,16 +185,25 @@ public class MetaProcessor
 
             // TODO: Implement me
             // gprintln("IdentExpressions found: "~to!(string)(foundStmts));
+
+            /** 
+             * Loop through all `IdentExpression`s and find any
+             * occurence of `size_t`/`ssize_t` and replace those
+             * with the concrete type
+             */
             foreach(IdentExpression identExp; foundStmts)
             {
-                gprintln(identExp);
-                if(identExp.getName() == "size_t")
-                {
-                    gprintln("Found type alias '"~identExp.getName()~"' which concretely is '"~getSystemType(identExp.getName())~"'");
+                string identName = identExp.getName();
 
-                    // TODO: Testing code below
-                    // TODO: Replace with correct compiler configured type
-                    container.replace(identExp, new IdentExpression("uint"));
+                /* System types */
+                if(identName == "size_t" || identName == "ssize_t")
+                {
+                    // Determine the concrete type
+                    string concereteType = getSystemType(identName);
+                    gprintln("Found type alias '"~identName~"' which concretely is '"~concereteType~"'");
+
+                    // Replace with concrete type
+                    container.replace(identExp, new IdentExpression(concereteType));
                 }
             }
         }

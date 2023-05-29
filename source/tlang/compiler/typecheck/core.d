@@ -15,7 +15,7 @@ import tlang.compiler.codegen.instruction;
 import std.container.slist;
 import std.algorithm : reverse;
 import tlang.compiler.typecheck.meta;
-import tlang.compiler.core : Compiler;
+import tlang.compiler.configuration;
 
 /**
 * The Parser only makes sure syntax
@@ -41,33 +41,39 @@ public final class TypeChecker
         return modulle;
     }
 
-    private Compiler compiler;
-
-    // TODO: We could take in just the CompilerConfiguration
-    // ... as it is a class-based type and it is all we really
-    // ... need
-    this(Module modulle, Compiler compiler)
+    /** 
+     * Constructs a new `TypeChecker` based on the provided `Module`
+     * of which to typecheck its members and using the default
+     * compiler configuration
+     *
+     * Params:
+     *   modulle = the `Module` to check
+     *   config = the `CompilerConfiguration` (default if not specified)
+     */
+    this(Module modulle, CompilerConfiguration config = CompilerConfiguration.defaultConfig())
     {
         this.modulle = modulle;
-        this.compiler = compiler;
-        
+        this.config = config;
+
         this.resolver = new Resolver(this);
         this.meta = new MetaProcessor(this, true);
         
         /* TODO: Module check?!?!? */
     }
 
-    // Ditto but `Compiler` is `null`, just to make other things
-    // ... compile (namely tests), we don't yet make use of the
-    // ... `Compiler` at this level here only in `MetaProcessor`
-    this(Module modulle)
-    {
-        this(modulle, null);
-    }
+    /** 
+     * The compiler configuration
+     */
+    private CompilerConfiguration config;
 
-    public Compiler getCompiler()
+    /** 
+     * Returns the compiler configuration
+     *
+     * Returns: the `CompilerConfguration`
+     */
+    public CompilerConfiguration getConfig()
     {
-        return compiler;
+        return config;
     }
 
     /**
