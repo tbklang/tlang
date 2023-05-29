@@ -264,6 +264,58 @@ public class MetaProcessor
     }
 
     /** 
+     * Transforms the type alias into its concrete type.
+     *
+     * This method incorporates defensive programming in
+     * that it will only apply the transformation IF
+     * the provided type alias is infact a type alias,
+     * otherwise it performs an identity transformation
+     * and returns the "alias" untouched.
+     *
+     * Params:
+     *   typeAlias = the potential type alias
+     * Returns: the concrete type, or `typeAlias` if
+     * not an alias
+     */
+    private string getConcreteType(string typeAlias)
+    {
+        /* Check if this is a system type alias? If so, transform */
+        if(isSystemType(typeAlias))
+        {
+            return getSystemType(typeAlias);
+        }
+        // TODO: Add user-defined type alias support here
+        /* Else, return the "alias" untouched */
+        else
+        {
+            return typeAlias;
+        }
+    }
+
+
+    /** 
+     * Determines if the given type is a type alias.
+     *
+     * Params:
+     *   typeAlias = the type to check
+     * Returns: `true` if it is an alias, `false` otherwise
+     */
+    private bool isTypeAlias(string typeAlias)
+    {
+        /* If this a system type alias? */
+        if(isSystemType(typeAlias))
+        {
+            return true;
+        }
+        // TODO: Support for user-defined type aliases
+        /* Otherwise, not a type alias */
+        else
+        {
+            return false;
+        }
+    }
+
+    /** 
      * Determines if the given type is a system type alias
      *
      * Params:
