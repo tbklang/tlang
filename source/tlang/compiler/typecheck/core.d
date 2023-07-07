@@ -430,73 +430,77 @@ public final class TypeChecker
         tc.typeEnforce(t1, v2, true);
     }
 
-    /** 
-     * 🧠️ Feature: Universal coercion and type enforcer
-     *
-     * This tests a failing case (read for details)
-     */
-    unittest
-    {
-        /** 
-         * Create a simple program with
-         * a function that returns an uint
-         * and a variable of type ubyte
-         */
-        Module testModule = new Module("myModule");
-        TypeChecker tc = new TypeChecker(testModule);
+    // FIXME: I should re-write the below. It is now incorrect
+    // ... as I DO ALLOW coercion of non literal-based instructions
+    // ... now - so it fails because it is using an older specification
+    // ... of TLang
+    // /** 
+    //  * 🧠️ Feature: Universal coercion and type enforcer
+    //  *
+    //  * This tests a failing case (read for details)
+    //  */
+    // unittest
+    // {
+    //     /** 
+    //      * Create a simple program with
+    //      * a function that returns an uint
+    //      * and a variable of type ubyte
+    //      */
+    //     Module testModule = new Module("myModule");
+    //     TypeChecker tc = new TypeChecker(testModule);
 
-        /* Add the variable */
-        Variable myVar = new Variable("ubyte", "myVar");
-        myVar.parentTo(testModule);
-        testModule.addStatement(myVar);
+    //     /* Add the variable */
+    //     Variable myVar = new Variable("ubyte", "myVar");
+    //     myVar.parentTo(testModule);
+    //     testModule.addStatement(myVar);
 
-        /* Add the function with a return expression */
-        VariableExpression retExp = new VariableExpression("myVar");
-        ReturnStmt retStmt = new ReturnStmt(retExp);
-        Function myFunc = new Function("function", "uint", [retStmt], []);
-        retStmt.parentTo(myFunc);
-        testModule.addStatement(myFunc);
-        myFunc.parentTo(testModule);
-
-
-        /* Now let's play with this as if the code-queue processor was present */
+    //     /* Add the function with a return expression */
+    //     VariableExpression retExp = new VariableExpression("myVar");
+    //     ReturnStmt retStmt = new ReturnStmt(retExp);
+    //     Function myFunc = new Function("function", "uint", [retStmt], []);
+    //     retStmt.parentTo(myFunc);
+    //     testModule.addStatement(myFunc);
+    //     myFunc.parentTo(testModule);
 
 
-        /* Create a variable fetch instruction for the `myVar` variable */
-        Value varFetch = new FetchValueVar("myVar", 1);
-        varFetch.setInstrType(tc.getType(testModule, myVar.getType()));
+    //     /* Now let's play with this as if the code-queue processor was present */
+
+
+    //     /* Create a variable fetch instruction for the `myVar` variable */
+    //     Value varFetch = new FetchValueVar("myVar", 1);
+    //     varFetch.setInstrType(tc.getType(testModule, myVar.getType()));
     
-        /** 
-         * Create a ReturnInstruction now based on `function`'s return type
-         *
-         * 1) The ay we did this when we only have the `ReturnStmt` on the code-queue
-         * is by finding the ReturnStmt's parent (the Function) and getting its type.
-         *
-         * 2) We must now "pop" the `varFetch` instruction from the stack and compare types.
-         *
-         * 3) If the type enforcement is fine, then let's check that they are equal
-         *
-         */
+    //     /** 
+    //      * Create a ReturnInstruction now based on `function`'s return type
+    //      *
+    //      * 1) The ay we did this when we only have the `ReturnStmt` on the code-queue
+    //      * is by finding the ReturnStmt's parent (the Function) and getting its type.
+    //      *
+    //      * 2) We must now "pop" the `varFetch` instruction from the stack and compare types.
+    //      *
+    //      * 3) If the type enforcement is fine, then let's check that they are equal
+    //      *
+    //      */
 
-        // 1)
-        Function returnStmtContainer = cast(Function)retStmt.parentOf();
-        Type funcReturnType = tc.getType(testModule, returnStmtContainer.getType());
+    //     // 1)
+    //     Function returnStmtContainer = cast(Function)retStmt.parentOf();
+    //     Type funcReturnType = tc.getType(testModule, returnStmtContainer.getType());
 
-        // 2) The enforcement will fail as coercion of non-literals is NOT allowed
-        try
-        {
-            tc.typeEnforce(funcReturnType, varFetch, true);
-            assert(false);
-        }
-        catch(CoercionException e)
-        {
-            assert(true);
-        }
+    //     // 2) The enforcement will fail as coercion of non-literals is NOT allowed
+    //     try
+    //     {
+    //         tc.typeEnforce(funcReturnType, varFetch, true);
+    //         assert(false);
+    //     }
+    //     catch(CoercionException e)
+    //     {
+    //         assert(true);
+    //     }
         
 
-        // 3) The types should not be the same
-        assert(!tc.isSameType(funcReturnType, varFetch.getInstrType()));
-    }
+    //     // 3) The types should not be the same
+    //     assert(!tc.isSameType(funcReturnType, varFetch.getInstrType()));
+    // }
 
     /** 
      * 🧠️ Feature: Universal coercion and type enforcer
