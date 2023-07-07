@@ -604,8 +604,7 @@ public final class TypeChecker
         /* Check if the types are equal */
         if(isSameType(t1, t2))
         {
-            // Do nothing (no-op, for easy of programming set coerceInstruction to v2 identitical)
-            coerceInstruction = v2;
+            // Do nothing
         }
         /* If the types are NOT the same */
         else
