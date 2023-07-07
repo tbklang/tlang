@@ -377,7 +377,7 @@ public final class TypeChecker
         {
             // Try type match them, if initially fails then try coercion
             // ... (This should FAIL due to type mismatch and coercion disallowed)
-            tc.typeEnforce(t1, v2, false);
+            tc.typeEnforce(t1, v2, v2, false);
             assert(false);
         }
         catch(TypeMismatchException mismatch)
@@ -392,7 +392,7 @@ public final class TypeChecker
 
         // Try type match them, if initially fails then try coercion
         // ... (This should pass due to its coercibility)
-        tc.typeEnforce(t1, v2, true);
+        tc.typeEnforce(t1, v2, v2, true);
 
         // This should have updated `v2`'s type to type `t1`
         t2 = v2.getInstrType();
@@ -426,8 +426,8 @@ public final class TypeChecker
 
 
         // This should not fail (no coercion needed in either)
-        tc.typeEnforce(t1, v2, false);
-        tc.typeEnforce(t1, v2, true);
+        tc.typeEnforce(t1, v2, v2, false);
+        tc.typeEnforce(t1, v2, v2, true);
     }
 
     // FIXME: I should re-write the below. It is now incorrect
@@ -551,7 +551,7 @@ public final class TypeChecker
         Type funcReturnType = tc.getType(testModule, returnStmtContainer.getType());
 
         // 2)
-        tc.typeEnforce(funcReturnType, literalValue, true);
+        tc.typeEnforce(funcReturnType, literalValue, literalValue, true);
 
         // 3) 
         assert(tc.isSameType(funcReturnType, literalValue.getInstrType()));
