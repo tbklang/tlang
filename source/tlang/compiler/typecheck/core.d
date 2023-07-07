@@ -1005,8 +1005,42 @@ public final class TypeChecker
          */
         else
         {
-            gprintln("Mashallah why are we here? BECAUSE we should just use ze-value-based genral case!: "~providedInstruction.classinfo.toString());
-            throw new CoercionException(this, toType, providedType);
+            /** 
+             * If the incoming type is `Number`
+             * and the `toType` is `Number`
+             */
+            if(cast(Number)providedType && cast(Number)toType)
+            {
+                Number providedNumericType = cast(Number)providedType;
+                Number toNumericType = cast(Number)toType;
+
+                /**
+                 * If the provided type is less than or equal
+                 * in size to that of the to-type
+                 */
+                if(providedNumericType.getSize() <= toNumericType.getSize())
+                {
+                    providedInstruction.setInstrType(toType);
+                }
+                /** 
+                 * If the incoming type is bigger than the toType
+                 *
+                 * E.g.
+                 * ```
+                 * long i = 2;
+                 * byte i1 = i;
+                 * ```
+                 */
+                else
+                {
+                    throw new CoercionException(this, toType, providedType, "Loss of size would occur");
+                }
+            }
+            else
+            {
+                gprintln("Mashallah why are we here? BECAUSE we should just use ze-value-based genral case!: "~providedInstruction.classinfo.toString());
+                throw new CoercionException(this, toType, providedType);
+            }
         }
     }
 

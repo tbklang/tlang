@@ -311,6 +311,17 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/simple_literals5.t
       - name: Simple literals 6
         run: ./tlang typecheck source/tlang/testing/simple_literals6.t
+
+
+
+      # All the universal coercion tests are below
+      #
+      # Over time those above will be ported over to it and will
+      # infact make part of the test suite of typeEnforce()
+      - name: Simple Coerce Literal Good (to variable declaration)
+        run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_good.t
+      - name: Simple Coerce Literal Bad [Size loss] (to variable declaration)
+        run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t
         
   emit:
     needs: [build, unittests]
