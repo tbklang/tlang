@@ -321,7 +321,15 @@ jobs:
       - name: Simple Coerce Literal Good (to variable declaration)
         run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_good.t
       - name: Simple Coerce Literal Bad [Size loss] (to variable declaration)
-        run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
   emit:
     needs: [build, unittests]
