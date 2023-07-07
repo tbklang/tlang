@@ -998,8 +998,14 @@ public final class TypeChecker
                 throw new CoercionException(this, toType, providedType, "Cannot coerce a non minus unary operation");
             }
         }
+        /** 
+         * If we arrive at this case then it is not any special literal
+         * handling, rather we need to check promotion rules and on
+         * cast-shortening - we raise an error
+         */
         else
         {
+            gprintln("Mashallah why are we here? BECAUSE we should just use ze-value-based genral case!: "~providedInstruction.classinfo.toString());
             throw new CoercionException(this, toType, providedType);
         }
     }
@@ -1851,20 +1857,29 @@ public final class TypeChecker
                 Type assignmentType = assignmentInstr.getInstrType();
 
 
-                // TODO: We should add a typecheck here where we update the type of the valInstr if it is of
-                // ... type NumberLiteral and coerce it to the variable referred to by the VariableAssignment
-                // ... see issue #94 part on "Coercion"
-                // If the types match then everything is fine
-                if(isSameType(variableDeclarationType, assignmentType))
-                {
-                    gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
-                }
-                // If the types do not match
-                else
-                {
-                    // Then attempt coercion
-                    attemptCoercion(variableDeclarationType, assignmentInstr);
-                }
+
+                /** 
+                 * Here we can call the `typeEnforce` with the popped
+                 * `Value` instruction and the type to coerce to
+                 * (our variable's type)
+                 */
+                typeEnforce(variableDeclarationType, assignmentInstr, true);
+
+
+                // // TODO: We should add a typecheck here where we update the type of the valInstr if it is of
+                // // ... type NumberLiteral and coerce it to the variable referred to by the VariableAssignment
+                // // ... see issue #94 part on "Coercion"
+                // // If the types match then everything is fine
+                // if(isSameType(variableDeclarationType, assignmentType))
+                // {
+                //     gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
+                // }
+                // // If the types do not match
+                // else
+                // {
+                //     // Then attempt coercion
+                //     attemptCoercion(variableDeclarationType, assignmentInstr);
+                // }
             }
 
             /* Generate a variable declaration instruction and add it to the codequeue */
