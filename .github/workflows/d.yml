@@ -330,6 +330,19 @@ jobs:
           else
               exit 1
           fi
+
+      - name: Simple Coerce Literal Good (standalone variable assignment)
+        run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_good_stdalo.t
+      - name: Simple Coerce Literal Bad [Size loss] (standalone variable assignment)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_bad_stdalon.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
   emit:
     needs: [build, unittests]

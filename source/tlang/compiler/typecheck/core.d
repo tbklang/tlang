@@ -1974,16 +1974,25 @@ public final class TypeChecker
                 assert(assignmentType);
 
 
-                if(isSameType(variableDeclarationType, assignmentType))
-                {
-                    gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
-                }
-                // If the type's do not match
-                else
-                {
-                    // Then attempt coercion
-                    attemptCoercion(variableDeclarationType, assignmentInstr);
-                }
+                /**
+                 * Here we will do the enforcing of the types
+                 *
+                 * Will will allow coercion of the provided
+                 * type (the value being assigned to our variable)
+                 * to the to-type (our Variable's declared type)
+                 */
+                typeEnforce(variableDeclarationType, assignmentInstr, true);
+
+                // if(isSameType(variableDeclarationType, assignmentType))
+                // {
+                //     gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
+                // }
+                // // If the type's do not match
+                // else
+                // {
+                //     // Then attempt coercion
+                //     attemptCoercion(variableDeclarationType, assignmentInstr);
+                // }
 
                 /* Generate a variable assignment instruction and add it to the codequeue */
                 VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, assignmentInstr);
