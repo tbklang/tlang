@@ -560,13 +560,20 @@ public final class TypeChecker
     /** 
      * For: 🧠️ Feature: Universal coercion
      *
-     * Given a Type `t1` and a `Value`-based instruction, this method
-     * will extract the type of the instruction and return true if
-     * their types are the same, however in the case their types are
-     * not the same then if coercion is allowed then an attempt at
-     * coercion will take place - if it succeeds then the type of `v2`
-     * is updated (it is coerced to type `t1`) and true is returned,
-     * else false is returned.
+     * Given a Type `t1` and a `Value`-based instruction, if the
+     * type of the `Value`-based instruction is the same as that
+     * of the provided type, `t1`, then the function returns cleanly
+     * without throwing any exceptions and will not fill in the `ref`
+     * argument.
+     *
+     * If the types do NOT match then and cerocion is disallowed then
+     * an exception is thrown.
+     * 
+     * If the types do NOT match and coercion is allowed then coercion
+     * is attempted. If coercion fails an exception is thrown, else
+     * it will place a `CastInstruction` into the memory referrred
+     * to by the `ref` parameter. It is this instruction that will contain
+     * the action to cast the instruction to the coerced type.
      *
      * In the case that coercion is disabled then mismatched types results
      * in false being returned.
@@ -574,11 +581,13 @@ public final class TypeChecker
      * Params:
      *   t1 = To-type (will coerce towards if requested)
      *   v2 = the `Value`-instruction
+     *   ref coerceInstruction = the place to store the `CastedValueInstruction` in if coercion succeeds
+    *                          (this will just be `v2` itself if the types are the same exactly)
      *   allowCoercion = whether or not at attempt coercion on initial type mismatch (default: `false`)
      *
-     * Returns: true if the types match (or were coerced successfully if requested), false otherwise
+     * Returns: true if the types match (or were coerced successfully 
      */
-    private void typeEnforce(Type t1, Value v2, bool allowCoercion = false)
+    private void typeEnforce(Type t1, Value v2, ref Value coerceInstruction, bool allowCoercion = false)
     {
         /* Debugging */
         string dbgHeader = "typeEnforce(t1="~t1.toString()~", v2="~v2.toString()~", attemptCoerce="~to!(string)(allowCoercion)~"): ";
@@ -595,7 +604,8 @@ public final class TypeChecker
         /* Check if the types are equal */
         if(isSameType(t1, t2))
         {
-            // Do nothing
+            // Do nothing (no-op, for easy of programming set coerceInstruction to v2 identitical)
+            coerceInstruction = v2;
         }
         /* If the types are NOT the same */
         else
@@ -604,7 +614,8 @@ public final class TypeChecker
             if(allowCoercion)
             {
                 /* If coerion fails, it would throw an exception */
-                attemptCoercion(t1, v2);
+                CastedValueInstruction coerceCastInstr = attemptCoercion(t1, v2);
+                coerceInstruction = coerceCastInstr;
             }
             /* If coercion is not allowed, then we failed */
             else
@@ -896,13 +907,17 @@ public final class TypeChecker
      * with respect to the provided to-type.
      * 
      * This should only be called if the types do not match.
-     * This will update the provided instruction's type-field
+     * 
      *
      * Params:
      *   toType = the type to attempt coercing the instruction to
      *   providedInstruction = instruction to coerce
+     * Throws:
+     *   CoercionException if we cannot coerce to the given to-type
+     * Returns:
+     *   the `CastedValueInstruction` on success
      */
-    private void attemptCoercion(Type toType, Value providedInstruction)
+    private CastedValueInstruction attemptCoercion(Type toType, Value providedInstruction)
     {
         gprintln("VibeCheck?");
 
@@ -925,7 +940,10 @@ public final class TypeChecker
                     // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
                     // ... as during code emit that is what will be hoisted out and checked regarding its type
                     // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
-                    providedInstruction.setInstrType(toType);
+                    // providedInstruction.setInstrType(toType);
+
+                    // Return a cast instruction to the to-type
+                    return new CastedValueInstruction(providedInstruction, toType);
                 }
                 else
                 {
@@ -971,7 +989,10 @@ public final class TypeChecker
                             // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
                             // ... as during code emit that is what will be hoisted out and checked regarding its type
                             // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
-                            providedInstruction.setInstrType(toType);
+                            // providedInstruction.setInstrType(toType);
+
+                            // Return a cast instruction to the to-type
+                            return new CastedValueInstruction(providedInstruction, toType);
                         }
                         else
                         {
@@ -983,6 +1004,11 @@ public final class TypeChecker
                         // TODO: Implement things here
                         // gprintln("Please implement coercing checking for negative integer literals", DebugType.ERROR);
                         // assert(false);
+                    }
+                    else
+                    {
+                        gprintln("Yo, 'fix me', just throw an exception thing ain't integral, too lazy to write it now", DebugType.ERROR);
+                        assert(false);
                     }
                 }
                 // If it is a negative LiteralValueFloat (floating-point literal)
@@ -1024,7 +1050,9 @@ public final class TypeChecker
                  */
                 if(providedNumericType.getSize() <= toNumericType.getSize())
                 {
-                    providedInstruction.setInstrType(toType);
+                    // providedInstruction.setInstrType(toType);
+                    // Return a cast instruction to the to-type
+                    return new CastedValueInstruction(providedInstruction, toType);
                 }
                 /** 
                  * If the incoming type is bigger than the toType
@@ -1901,7 +1929,8 @@ public final class TypeChecker
                  * `Value` instruction and the type to coerce to
                  * (our variable's type)
                  */
-                typeEnforce(variableDeclarationType, assignmentInstr, true);
+                typeEnforce(variableDeclarationType, assignmentInstr, assignmentInstr, true);
+                assert(isSameType(variableDeclarationType, assignmentInstr.getInstrType())); // Sanity check
 
 
                 // // TODO: We should add a typecheck here where we update the type of the valInstr if it is of
@@ -1981,7 +2010,8 @@ public final class TypeChecker
                  * type (the value being assigned to our variable)
                  * to the to-type (our Variable's declared type)
                  */
-                typeEnforce(variableDeclarationType, assignmentInstr, true);
+                typeEnforce(variableDeclarationType, assignmentInstr, assignmentInstr, true);
+                assert(isSameType(variableDeclarationType, assignmentInstr.getInstrType())); // Sanity check
 
                 // if(isSameType(variableDeclarationType, assignmentType))
                 // {
