@@ -571,7 +571,7 @@ public final class TypeChecker
      * 
      * If the types do NOT match and coercion is allowed then coercion
      * is attempted. If coercion fails an exception is thrown, else
-     * it will place a `CastInstruction` into the memory referrred
+     * it will place a `CastedValueInstruction` into the memory referrred
      * to by the `ref` parameter. It is this instruction that will contain
      * the action to cast the instruction to the coerced type.
      *
@@ -582,10 +582,14 @@ public final class TypeChecker
      *   t1 = To-type (will coerce towards if requested)
      *   v2 = the `Value`-instruction
      *   ref coerceInstruction = the place to store the `CastedValueInstruction` in if coercion succeeds
-    *                          (this will just be `v2` itself if the types are the same exactly)
+     *                          (this will just be `v2` itself if the types are the same exactly)
      *   allowCoercion = whether or not at attempt coercion on initial type mismatch (default: `false`)
      *
-     * Returns: true if the types match (or were coerced successfully 
+     * Throws:
+     *   TypeMismatchException if coercion is disallowed and the types are not equal
+     * Throws:
+     *   CoercionException if the types were not equal to begin with, coercion was allowed
+     * but failed to coerce
      */
     private void typeEnforce(Type t1, Value v2, ref Value coerceInstruction, bool allowCoercion = false)
     {
