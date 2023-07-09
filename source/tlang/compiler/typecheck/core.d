@@ -2982,13 +2982,20 @@ public final class TypeChecker
 
 }
 
-/* Test name colliding with container name (1/3) [module] */
-unittest
+
+version(unittest)
 {
     import std.file;
     import std.stdio;
     import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.kinds.basic : BasicLexer;
     import tlang.compiler.parsing.core;
+}
+
+/* Test name colliding with container name (1/3) [module] */
+unittest
+{
+    
 
     string sourceFile = "source/tlang/testing/collide_container_module1.t";
 
@@ -3001,10 +3008,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -3032,11 +3039,6 @@ unittest
 /* Test name colliding with container name (2/3) [module, nested collider] */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/collide_container_module2.t";
 
     File sourceFileFile;
@@ -3048,10 +3050,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -3077,11 +3079,6 @@ unittest
 /* Test name colliding with container name (3/3) [container (non-module), nested collider] */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/collide_container_non_module.t";
 
     File sourceFileFile;
@@ -3093,10 +3090,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -3122,11 +3119,6 @@ unittest
 /* Test name colliding with member */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/collide_member.t";
 
     File sourceFileFile;
@@ -3138,10 +3130,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -3166,11 +3158,6 @@ unittest
 /* Test name colliding with member (check that the member defined is class (precendence test)) */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/precedence_collision_test.t";
 
     File sourceFileFile;
@@ -3182,10 +3169,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -3212,11 +3199,6 @@ unittest
 /* Test name colliding with container name (1/2) */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/collide_container.t";
 
     File sourceFileFile;
@@ -3228,10 +3210,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -3297,11 +3279,6 @@ unittest
  */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/typecheck/simple_function_call.t";
 
     File sourceFileFile;
@@ -3313,10 +3290,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 

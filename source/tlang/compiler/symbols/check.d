@@ -1,68 +1,288 @@
+/** 
+ * Token-to-symbol mappings (and vice-versa),
+ * facilities for performing tests on what sort
+ * of tokens are of certain classes (operators, etc.)
+ * and detection of different types of identifiers
+ */
 module tlang.compiler.symbols.check;
 
-import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.core.tokens : Token;
 import std.conv : to;
 import std.string : isNumeric, cmp;
+import std.algorithm.searching : canFind;
 import misc.utils;
 import gogga;
 
 /**
-    * All allowed symbols
-    * TODO: There should be a symbol class with sub-types
-    */
+ * All allowed symbols
+ */
 public enum SymbolType
 {
+    /**
+     * Default symbol (TODO: idk why this exists)
+     */
     LE_SYMBOL,
+
+    /**
+     * Any sort of identifier
+     *
+     * Must start with a letter,
+     * can contain numbers and
+     * may contain periods.
+     *
+     * It may also contain underscores.
+     */
     IDENT_TYPE,
+
+    /**
+     * Any sort of number, this can
+     * be `8` or `8.5`
+     */
     NUMBER_LITERAL,
+
+    /**
+     * A character constant like `'a'`
+     */
     CHARACTER_LITERAL,
+
+    /**
+     * A string constant like `"FELLA"`
+     */
     STRING_LITERAL,
+
+    /**
+     * Semicolon `;`
+     */
     SEMICOLON,
+
+    /**
+     * Left smooth brace $(LPAREN)
+     */
     LBRACE,
+
+    /**
+     * Right smooth brace $(RPAREN)
+     */
     RBRACE,
+
+    /**
+     * Assigmment symbol `=`
+     */
     ASSIGN,
+
+    /**
+     * Comma `,`
+     */
     COMMA,
+
+    /**
+     * Left curly brace `{`
+     */
     OCURLY,
+
+    /**
+     * Right curly brace `}`
+     */
     CCURLY,
+
+    /**
+     * Module keyword `module`
+     */
     MODULE,
+
+    /**
+     * New keyword `new`
+     */
     NEW,
+
+    /**
+     * If keyword `if`
+     */
     IF,
+
+    /**
+     * Else keyword `else`
+     */
     ELSE,
+
+    /**
+     * Discard keyword `discard`
+     */
     DISCARD,
+
+    /**
+     * While keyword `while`
+     */
     WHILE,
+
+    /**
+     * Class keyword `class`
+     */
     CLASS,
+
+    /**
+     * Inherit keyword `:`
+     */
     INHERIT_OPP,
+
+    /**
+     * Tilde `~`
+     */
     TILDE,
+
+    /**
+     * For keyword `for`
+     */
     FOR,
+
+    /**
+     * Super keyword `super`
+     */
     SUPER,
+
+    /**
+     * This keyword `this`
+     */
     THIS,
+
+    /**
+     * Switch keyword `switch`
+     */
     SWITCH,
+
+    /**
+     * Return keyword `return`
+     */
     RETURN,
+
+    /**
+     * Public keyword `public`
+     */
     PUBLIC,
+
+    /**
+     * Private keyword `private`
+     */
     PRIVATE,
+
+    /**
+     * Protected keyword `protected`
+     */
     PROTECTED,
+
+    /**
+     * Static keyword `static`
+     */
     STATIC,
+
+    /**
+     * Case keyword `case`
+     */
     CASE,
+
+    /**
+     * Goto keyword `goto`
+     */
     GOTO,
+
+    /**
+     * Do keyword `do`
+     */
     DO,
+
+    /**
+     * Dot operator `.`
+     */
     DOT,
+
+    /**
+     * Delete keyword `delete`
+     */
     DELETE,
+
+    /**
+     * Struct keyword `struct`
+     */
     STRUCT,
+
+    /**
+     * Subtraction operator `-`
+     */
     SUB,
+
+    /**
+     * Addition operator `+`
+     */
     ADD,
+
+    /**
+     * Division operator `/`
+     */
     DIVIDE,
+
+    /**
+     * Star operator `*`
+     */
     STAR,
+
+    /**
+     * Ampersand (reffer) operator `&`
+     */
     AMPERSAND,
+
+    /**
+     * Equality operator `==`
+     */
     EQUALS,
+
+    /**
+     * Greater than operator `>`
+     */
     GREATER_THAN,
+
+    /**
+     * Smaller than operator `<`
+     */
     SMALLER_THAN,
+
+    /**
+     * Greater than or equals to operator `>=`
+     */
     GREATER_THAN_OR_EQUALS,
+
+    /**
+     * Smaller than or equals to operator `<=`
+     */
     SMALLER_THAN_OR_EQUALS,
+
+    /**
+     * Opening bracket `[`
+     */
     OBRACKET,
+
+    /**
+     * Closing bracket `]`
+     */
     CBRACKET,
+
+    /**
+     * Cast keyword `cast`
+     */
     CAST,
+
+    /**
+     * Extern keyword `extern`
+     */
     EXTERN,
+
+    /**
+     * Extern-function keyword `efunc`
+     */
     EXTERN_EFUNC,
+
+    /**
+     * Extern-variable keyword `evar`
+     */
     EXTERN_EVAR,
 
     /** 
@@ -70,13 +290,23 @@ public enum SymbolType
      */
     GENERIC_TYPE_DECLARE,
 
+    /** 
+     * Unknown symbol
+     */
     UNKNOWN
 }
 
-
-
-
 /* TODO: Later build classes specific to symbol */
+/* TODO: Check if below is even used */
+/** 
+ * Checks if the given token string is that of
+ * a built-in type
+ *
+ * Params:
+ *   tokenStr = the string to check
+ * Returns: `true` if one of the built-in types,
+ * `false` otherwise
+ */
 public bool isType(string tokenStr)
 {
     return cmp(tokenStr, "byte") == 0 || cmp(tokenStr, "ubyte") == 0
@@ -85,6 +315,18 @@ public bool isType(string tokenStr)
                 "long") == 0 || cmp(tokenStr, "ulong") == 0 || cmp(tokenStr, "void") == 0;
 }
 
+/** 
+ * Checks if the given token string is a path
+ * identifier. This means that it is something
+ * which contains dots inbetween it like `a.b`
+ * but does not appear as a floating point literal
+ * such as `7.5`. It may also contain udnerscores `_`.
+ *
+ * Params:
+ *   token = the token string to check
+ * Returns: `true` if it is a path identifier,
+ * `false` otherwise
+ */
 public bool isPathIdentifier(string token)
 {
     /* This is used to prevent the first character from not being number */
@@ -138,6 +380,17 @@ public bool isPathIdentifier(string token)
     return isDot;
 }
 
+/** 
+ * Checks if the given token string is an identifier
+ * which means it can contains letters and umbers
+ * but MUST start with a letter. It may also
+ * contain udnerscores `_`.
+ *
+ * Params:
+ *   token = the token string to check
+ * Returns: `true` if an identifier, `flase`
+ * otherwise
+ */
 public bool isIdentifier(string token)
 {
     /* This is used to prevent the first character from not being number */
@@ -175,6 +428,13 @@ public bool isIdentifier(string token)
     return true;
 }
 
+/** 
+ * Checks if the given `Token` is an accessor
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
 public bool isAccessor(Token token)
 {
     return getSymbolType(token) == SymbolType.PUBLIC ||
@@ -182,11 +442,26 @@ public bool isAccessor(Token token)
             getSymbolType(token) == SymbolType.PROTECTED;
 }
 
+/** 
+ * Checks if the given `Token` is a modifier
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
 public bool isModifier(Token token)
 {
     return getSymbolType(token) == SymbolType.STATIC;
 }
 
+/** 
+ * Checks if the given `Token` is a normal
+ * identifier (with no dots/periods)
+ *
+ * Params:
+ *   tokenIn = the `Token` to test
+ * Returns: `true` if so, `false` otherwise
+ */
 public bool isIdentifier_NoDot(Token tokenIn)
 {
     /* Make sure it isn't any other type of symbol */
@@ -200,6 +475,15 @@ public bool isIdentifier_NoDot(Token tokenIn)
     }
 }
 
+/** 
+ * Checks if the given `Token` is a dotted-identifier
+ * meaning it contains `.`/periods in it - a so-called
+ * path identifier.
+ *
+ * Params:
+ *   tokenIn = the `Token` to test
+ * Returns: `true` if so, `false` otherwise
+ */
 public bool isIdentifier_Dot(Token tokenIn)
 {
     /* Make sure it isn't any other type of symbol */
@@ -213,10 +497,19 @@ public bool isIdentifier_Dot(Token tokenIn)
     }
 }
 
+/** 
+ * Checks if the given token string
+ * as a numeric literal. It has support
+ * for checking if it has a size specifier
+ * as well.
+ *
+ * Params:
+ *   token = the string token to check
+ * Returns: `true` if it is a numeric literal,
+ * `false` otherwise
+ */
 private bool isNumericLiteral(string token)
 {
-    import std.algorithm.searching : canFind;
-    import tlang.compiler.lexer.core :Lexer;
     if(canFind(token, "UL") || canFind(token, "UI"))
     {
         return isNumeric(token[0..$-2]);
@@ -235,6 +528,17 @@ private bool isNumericLiteral(string token)
     }
 }
 
+/** 
+ * Maps a given `Token` to its `SymbolType` such
+ * that you can determine the type of symbol it
+ * is.
+ *
+ * Params:
+ *   tokenIn = the `Token` to check
+ * Returns: the `SymbolType` of this token, if
+ * unrecgnizable then `SymbolType.UNKNOWN` is
+ * returned
+ */
 public SymbolType getSymbolType(Token tokenIn)
 {
     string token = tokenIn.getToken();
@@ -511,6 +815,15 @@ public SymbolType getSymbolType(Token tokenIn)
     return SymbolType.UNKNOWN;
 }
 
+/** 
+ * Determines whether the given token is
+ * a mathematical operator
+ *
+ * Params:
+ *   token = the `Token` to test
+ * Returns: `true` if it is a mathematical
+ * operator, `false` otherwise
+ */
 public bool isMathOp(Token token)
 {
     string tokenStr = token.getToken();
@@ -519,6 +832,17 @@ public bool isMathOp(Token token)
             tokenStr[0] == '*' || tokenStr[0] == '/';
 }
 
+/** 
+ * Determines whether the given token is
+ * a binary operator, meaning one which
+ * would be infixed/flanked by two operands
+ * (one to the left and one to the right)
+ *
+ * Params:
+ *   token = the `Token` to test
+ * Returns: `true` if it is a binary
+ * operator, `false` otherwise
+ */
 public bool isBinaryOp(Token token)
 {
     string tokenStr = token.getToken();

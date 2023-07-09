@@ -3,7 +3,7 @@ module tlang.compiler.core;
 import gogga;
 import std.conv : to;
 import tlang.compiler.lexer.core;
-import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.kinds.basic : BasicLexer;
 import std.stdio : File;
 import tlang.compiler.parsing.core;
 import tlang.compiler.symbols.check;
@@ -96,7 +96,7 @@ public class Compiler
     private string inputSource;
 
     /* The lexer */
-    private Lexer lexer;
+    private LexerInterface lexer;
 
     /* The lexed tokens */
     private Token[] tokens;
@@ -140,8 +140,8 @@ public class Compiler
     public void doLex()
     {
         /* Setup the lexer and begin lexing */
-        this.lexer = new Lexer(inputSource);
-        this.lexer.performLex();
+        this.lexer = new BasicLexer(inputSource);
+        (cast(BasicLexer)(this.lexer)).performLex();
 
         this.tokens = this.lexer.getTokens();
     }
@@ -168,7 +168,7 @@ public class Compiler
         else
         {
             /* Spawn a new parser with the provided tokens */
-            this.parser = new Parser(lexedTokens);
+            this.parser = new Parser(lexer);
 
             modulle = parser.parse();
         }
