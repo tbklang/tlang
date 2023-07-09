@@ -12,7 +12,7 @@ import gogga;
 public enum SymbolType
 {
     /**
-     * <= (less-than or equal-to)
+     * Default symbol (TODO: idk why this exists)
      */
     LE_SYMBOL,
 
@@ -110,23 +110,95 @@ public enum SymbolType
      * Class keyword `class`
      */
     CLASS,
+
+    /**
+     * Inherit keyword `:`
+     */
     INHERIT_OPP,
+
+    /**
+     * Tilde `~`
+     */
     TILDE,
+
+    /**
+     * For keyword `for`
+     */
     FOR,
+
+    /**
+     * Super keyword `super`
+     */
     SUPER,
+
+    /**
+     * This keyword `this`
+     */
     THIS,
+
+    /**
+     * Switch keyword `switch`
+     */
     SWITCH,
+
+    /**
+     * Return keyword `return`
+     */
     RETURN,
+
+    /**
+     * Public keyword `public`
+     */
     PUBLIC,
+
+    /**
+     * Private keyword `private`
+     */
     PRIVATE,
+
+    /**
+     * Protected keyword `protected`
+     */
     PROTECTED,
+
+    /**
+     * Static keyword `static`
+     */
     STATIC,
+
+    /**
+     * Case keyword `case`
+     */
     CASE,
+
+    /**
+     * Goto keyword `goto`
+     */
     GOTO,
+
+    /**
+     * Do keyword `do`
+     */
     DO,
+
+    /**
+     * Dot operator `.`
+     */
     DOT,
+
+    /**
+     * Delete keyword `delete`
+     */
     DELETE,
+
+    /**
+     * Struct keyword `struct`
+     */
     STRUCT,
+
+    /**
+     * Subtraction operator `-`
+     */
     SUB,
     ADD,
     DIVIDE,
