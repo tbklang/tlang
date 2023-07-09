@@ -56,12 +56,12 @@ public enum SymbolType
     SEMICOLON,
 
     /**
-     * Left smooth brace `(`
+     * Left smooth brace $(LPAREN)
      */
     LBRACE,
 
     /**
-     * Right smooth brace `)`
+     * Right smooth brace $(RPAREN)
      */
     RBRACE,
 
