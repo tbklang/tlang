@@ -19,9 +19,6 @@ import tlang.compiler.lexer.core;
  */
 public final class BasicLexer : LexerInterface
 {
-    // TODO: We must provide the parser a LexerInterface and NOT Token[]
-    // ... such that it can call us to do its work
-
     /** 
      * Post-perform lex() data
      *
@@ -92,6 +89,36 @@ public final class BasicLexer : LexerInterface
         return tokenPtr < tokens.length;
     }
 
+    /** 
+     * Get the line position of the lexer in the source text
+     *
+     * Returns: the position
+     */
+    public override ulong getLine()
+    {
+        return this.line;
+    }
+
+    /** 
+     * Get the column position of the lexer in the source text
+     *
+     * Returns: the position
+     */
+    public override ulong getColumn()
+    {
+        return this.column;
+    }
+
+    /** 
+     * Exhaustively provide a list of all tokens
+     *
+     * Returns: a `Token[]` containing all tokens
+     */
+    public override Token[] getTokens()
+    {
+        return tokens;
+    }
+
 
     /**
     * Lexer state data
@@ -105,18 +132,6 @@ public final class BasicLexer : LexerInterface
     private char currentChar; /* Current character */
     private bool stringMode; /* Whether we are in a string "we are here" or not */
     private bool floatMode; /* Whether or not we are building a floating point constant */
-
-
-    // TODO: Move these all to end, I don't like em here
-    public ulong getLine()
-    {
-        return this.line;
-    }
-
-    public ulong getColumn()
-    {
-        return this.column;
-    }
 
 
     /* The tokens */
@@ -685,13 +700,6 @@ public final class BasicLexer : LexerInterface
         }
 
         return true;
-    }
-
-
-    /* Return the tokens */
-    public Token[] getTokens()
-    {
-        return tokens;
     }
 
     private bool isSpliter(char character)
