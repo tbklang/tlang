@@ -61,7 +61,7 @@ public final class BasicLexer : LexerInterface
      * Sets the position of the cursor
      *
      * Params:
-     *   cursor = the new position
+     *   newPosition = the new position
      */
     public override void setCursor(ulong newPosition)
     {
