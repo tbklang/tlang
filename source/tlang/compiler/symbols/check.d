@@ -1,3 +1,9 @@
+/** 
+ * Token-to-symbol mappings (and vice-versa),
+ * facilities for performing tests on what sort
+ * of tokens are of certain classes (operators, etc.)
+ * and detection of different types of identifiers
+ */
 module tlang.compiler.symbols.check;
 
 import tlang.compiler.lexer.core.tokens : Token;
