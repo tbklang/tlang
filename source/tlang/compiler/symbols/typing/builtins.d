@@ -1,3 +1,8 @@
+/**
+ * Routines for determining, based on an input strung,
+ * the built-in type that is associated with that
+ * identifier/name
+ */
 module tlang.compiler.symbols.typing.builtins;
 
 import tlang.compiler.symbols.typing.core;
