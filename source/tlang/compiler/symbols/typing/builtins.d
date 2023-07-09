@@ -11,6 +11,18 @@ import std.conv : to;
 * no machine is good if int is not 4, as in imagine short being max addressable unit
 * like no, fuck that (and then short=int=long, no , that is shit AND is NOT WHAT TLANG aims for)
 */
+/** 
+ * Creates a new instance of the type that is detected via
+ * the given string. Only for built-in types.
+ *
+ * Example, if given `"int"` then you will get an instance
+ * of `new Integer("int", 4, true)`
+ *
+ * Params:
+ *   tc = the associated `TypeChecker` required for lookups
+ *   typeString = the type string to test
+ * Returns: the `Type` found, if not found then `null`
+ */
 public Type getBuiltInType(TypeChecker tc, string typeString)
 {
     gprintln("getBuiltInType("~typeString~")");
