@@ -1,6 +1,6 @@
 module tlang.compiler.symbols.check;
 
-import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.core.tokens : Token;
 import std.conv : to;
 import std.string : isNumeric, cmp;
 import misc.utils;
@@ -216,7 +216,7 @@ public bool isIdentifier_Dot(Token tokenIn)
 private bool isNumericLiteral(string token)
 {
     import std.algorithm.searching : canFind;
-    import tlang.compiler.lexer.core :Lexer;
+    import tlang.compiler.lexer.kinds.basic : BasicLexer;
     if(canFind(token, "UL") || canFind(token, "UI"))
     {
         return isNumeric(token[0..$-2]);

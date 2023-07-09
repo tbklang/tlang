@@ -1,8 +1,15 @@
-module tlang.compiler.lexer.tokens;
+/** 
+ * Token definition
+ */
+module tlang.compiler.lexer.core.tokens;
 
 import std.string : cmp;
 import std.conv : to;
 
+/** 
+ * Defines a `Token` that a lexer
+ * would be able to produce
+ */
 public final class Token
 {
     /* The token */
