@@ -1,3 +1,8 @@
+/**
+ * Data structures which represent kind-of `Entity`(s),
+ * starting with the base-`Entity`, `Type`, which represents
+ * a name that describes a data type
+ */
 module tlang.compiler.symbols.typing.core;
 
 import tlang.compiler.symbols.data;
@@ -6,6 +11,10 @@ import std.conv : to;
 
 public import tlang.compiler.symbols.typing.builtins;
 
+/**
+ * The base entity from which all types are derived
+ * from
+ */
 public class Type : Entity
 {
     /* TODO: Add width here */
@@ -25,6 +34,10 @@ public class Type : Entity
     // ... where referene equality was used, hence I stear clear of that
 }
 
+/** 
+ * Represents a void type, a type
+ * which has no return value for it
+ */
 public final class Void : Primitive
 {
     this()
@@ -33,6 +46,9 @@ public final class Void : Primitive
     }
 }
 
+/** 
+ * Represents all primitive data types
+ */
 public class Primitive : Type
 {
     this(string name)
@@ -42,6 +58,13 @@ public class Primitive : Type
 }
 
 /* TODO: Move width to Type class */
+/** 
+ * Represents any kind of number
+ *
+ * This means it has a width associated
+ * with it which is the number of bytes
+ * wide it is
+ */
 public class Number : Primitive
 {
     /* Number of bytes (1,2,4,8) */
@@ -63,6 +86,11 @@ public class Number : Primitive
     }
 }
 
+/** 
+ * Represents an integer, a kind-of `Number`,
+ * but with a signedness/unsignedness encoding
+ * scheme associated with it
+ */
 public class Integer : Number
 {
     /* Whether or not signed (if so, then 2's complement) */
@@ -86,6 +114,9 @@ public class Integer : Number
     }
 }
 
+/** 
+ * Represents a floating point number
+ */
 public class Float : Number
 {
     this(string name, ubyte width)
@@ -94,6 +125,19 @@ public class Float : Number
     }
 }
 
+/** 
+ * A `Pointer`, is a kind-of `Integer`
+ * which is unsigned. This represents
+ * a memory address and is CURRENTLY
+ * set to `8` bytes (TODO: Change this
+ * to be dependent on the system used
+ * basically it should actually take
+ * in a size)
+ *
+ * A pointer is a 64-bit integer
+ * that point to data in memory of
+ * another given type
+ */
 public class Pointer : Integer
 {
     /* Data type being pointed to */
