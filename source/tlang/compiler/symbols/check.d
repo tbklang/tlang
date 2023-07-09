@@ -7,29 +7,108 @@ import misc.utils;
 import gogga;
 
 /**
-    * All allowed symbols
-    * TODO: There should be a symbol class with sub-types
-    */
+ * All allowed symbols
+ */
 public enum SymbolType
 {
+    /**
+     * <= (less-than or equal-to)
+     */
     LE_SYMBOL,
+
+    /**
+     * Any sort of identifier
+     *
+     * Must start with a letter,
+     * can contain numbers and
+     * may contain periods
+     */
     IDENT_TYPE,
+
+    /**
+     * Any sort of number, this can
+     * be `8` or `8.5`
+     */
     NUMBER_LITERAL,
+
+    /**
+     * A character constant like `'a'`
+     */
     CHARACTER_LITERAL,
+
+    /**
+     * A string constant like `"FELLA"`
+     */
     STRING_LITERAL,
+
+    /**
+     * Semicolon `;`
+     */
     SEMICOLON,
+
+    /**
+     * Left smooth brace `(`
+     */
     LBRACE,
+
+    /**
+     * Right smooth brace `)`
+     */
     RBRACE,
+
+    /**
+     * Assigmment symbol `=`
+     */
     ASSIGN,
+
+    /**
+     * Comma `,`
+     */
     COMMA,
+
+    /**
+     * Left curly brace `{`
+     */
     OCURLY,
+
+    /**
+     * Right curly brace `}`
+     */
     CCURLY,
+
+    /**
+     * Module keyword `module`
+     */
     MODULE,
+
+    /**
+     * New keyword `new`
+     */
     NEW,
+
+    /**
+     * If keyword `if`
+     */
     IF,
+
+    /**
+     * Else keyword `else`
+     */
     ELSE,
+
+    /**
+     * Discard keyword `discard`
+     */
     DISCARD,
+
+    /**
+     * While keyword `while`
+     */
     WHILE,
+
+    /**
+     * Class keyword `class`
+     */
     CLASS,
     INHERIT_OPP,
     TILDE,
