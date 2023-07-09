@@ -1,7 +1,7 @@
-module tlang.compiler.lexer.exceptions;
+module tlang.compiler.lexer.core.exceptions;
 
 import misc.exceptions : TError;
-import tlang.compiler.lexer.core : Lexer;
+import tlang.compiler.lexer.core.lexer : LexerInterface;
 import std.conv : to;
 
 public enum LexerError
@@ -12,10 +12,10 @@ public enum LexerError
 
 public final class LexerException : TError
 {
-    public const Lexer offendingInstance;
+    public const LexerInterface offendingInstance;
     public const LexerError errType;
 
-    this(Lexer offendingInstance, LexerError errType = LexerError.OTHER, string msg = "")
+    this(LexerInterface offendingInstance, LexerError errType = LexerError.OTHER, string msg = "")
     {
         string positionString = "("~to!(string)(offendingInstance.getLine())~", "~to!(string)(offendingInstance.getColumn())~")";
         super("LexerException("~to!(string)(errType)~")"~(msg.length ? ": "~msg : "")~" at "~positionString);
@@ -23,7 +23,7 @@ public final class LexerException : TError
         this.errType = errType;
     }
 
-    this(Lexer offendingInstance, string msg)
+    this(LexerInterface offendingInstance, string msg)
     {
         this(offendingInstance, LexerError.OTHER, msg);
     }
