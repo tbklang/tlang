@@ -13,7 +13,7 @@ import tlang.compiler.lexer.core;
  * Represents a basic lexer which performs the whole tokenization
  * process in one short via a call to `performLex()`, only after
  * this may the `LexerInterface` methods, such as `getCurrentToken()`,
- * `* nextToken()` and so forth, actually be used.
+ * `nextToken()` and so forth, actually be used.
  *
  * This is effectively a single pass lexer.
  */
