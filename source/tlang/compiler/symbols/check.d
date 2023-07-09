@@ -287,10 +287,17 @@ public enum SymbolType
     UNKNOWN
 }
 
-
-
-
 /* TODO: Later build classes specific to symbol */
+/* TODO: Check if below is even used */
+/** 
+ * Checks if the given token string is that of
+ * a built-in type
+ *
+ * Params:
+ *   tokenStr = the string to check
+ * Returns: `true` if one of the built-in types,
+ * `false` otherwise
+ */
 public bool isType(string tokenStr)
 {
     return cmp(tokenStr, "byte") == 0 || cmp(tokenStr, "ubyte") == 0
@@ -299,6 +306,18 @@ public bool isType(string tokenStr)
                 "long") == 0 || cmp(tokenStr, "ulong") == 0 || cmp(tokenStr, "void") == 0;
 }
 
+/** 
+ * Checks if the given token string is a path
+ * identifier. This means that it is something
+ * which contains dots inbetween it like `a.b`
+ * but does not appear as a floating point literal
+ * such as `7.5`.
+ *
+ * Params:
+ *   token = the token string to check
+ * Returns: `true` if it is a path identifier,
+ * `false` otherwise
+ */
 public bool isPathIdentifier(string token)
 {
     /* This is used to prevent the first character from not being number */
