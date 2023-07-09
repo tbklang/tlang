@@ -200,20 +200,80 @@ public enum SymbolType
      * Subtraction operator `-`
      */
     SUB,
+
+    /**
+     * Addition operator `+`
+     */
     ADD,
+
+    /**
+     * Division operator `/`
+     */
     DIVIDE,
+
+    /**
+     * Star operator `*`
+     */
     STAR,
+
+    /**
+     * Ampersand (reffer) operator `&`
+     */
     AMPERSAND,
+
+    /**
+     * Equality operator `==`
+     */
     EQUALS,
+
+    /**
+     * Greater than operator `>`
+     */
     GREATER_THAN,
+
+    /**
+     * Smaller than operator `<`
+     */
     SMALLER_THAN,
+
+    /**
+     * Greater than or equals to operator `>=`
+     */
     GREATER_THAN_OR_EQUALS,
+
+    /**
+     * Smaller than or equals to operator `<=`
+     */
     SMALLER_THAN_OR_EQUALS,
+
+    /**
+     * Opening bracket `[`
+     */
     OBRACKET,
+
+    /**
+     * Closing bracket `]`
+     */
     CBRACKET,
+
+    /**
+     * Cast keyword `cast`
+     */
     CAST,
+
+    /**
+     * Extern keyword `extern`
+     */
     EXTERN,
+
+    /**
+     * Extern-function keyword `efunc`
+     */
     EXTERN_EFUNC,
+
+    /**
+     * Extern-variable keyword `evar`
+     */
     EXTERN_EVAR,
 
     /** 
@@ -221,6 +281,9 @@ public enum SymbolType
      */
     GENERIC_TYPE_DECLARE,
 
+    /** 
+     * Unknown symbol
+     */
     UNKNOWN
 }
 
