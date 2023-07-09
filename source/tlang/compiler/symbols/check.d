@@ -522,6 +522,17 @@ private bool isNumericLiteral(string token)
     }
 }
 
+/** 
+ * Maps a given `Token` to its `SymbolType` such
+ * that you can determine the type of symbol it
+ * is.
+ *
+ * Params:
+ *   tokenIn = the `Token` to check
+ * Returns: the `SymbolType` of this token, if
+ * unrecgnizable then `SymbolType.UNKNOWN` is
+ * returned
+ */
 public SymbolType getSymbolType(Token tokenIn)
 {
     string token = tokenIn.getToken();
@@ -798,6 +809,15 @@ public SymbolType getSymbolType(Token tokenIn)
     return SymbolType.UNKNOWN;
 }
 
+/** 
+ * Determines whether the given token is
+ * a mathematical operator
+ *
+ * Params:
+ *   token = the `Token` to test
+ * Returns: `true` if it is a mathematical
+ * operator, `false` otherwise
+ */
 public bool isMathOp(Token token)
 {
     string tokenStr = token.getToken();
@@ -806,6 +826,17 @@ public bool isMathOp(Token token)
             tokenStr[0] == '*' || tokenStr[0] == '/';
 }
 
+/** 
+ * Determines whether the given token is
+ * a binary operator, meaning one which
+ * would be infixed/flanked by two operands
+ * (one to the left and one to the right)
+ *
+ * Params:
+ *   token = the `Token` to test
+ * Returns: `true` if it is a binary
+ * operator, `false` otherwise
+ */
 public bool isBinaryOp(Token token)
 {
     string tokenStr = token.getToken();
