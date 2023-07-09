@@ -21,7 +21,9 @@ public enum SymbolType
      *
      * Must start with a letter,
      * can contain numbers and
-     * may contain periods
+     * may contain periods.
+     *
+     * It may also contain underscores.
      */
     IDENT_TYPE,
 
@@ -311,7 +313,7 @@ public bool isType(string tokenStr)
  * identifier. This means that it is something
  * which contains dots inbetween it like `a.b`
  * but does not appear as a floating point literal
- * such as `7.5`.
+ * such as `7.5`. It may also contain udnerscores `_`.
  *
  * Params:
  *   token = the token string to check
@@ -371,6 +373,17 @@ public bool isPathIdentifier(string token)
     return isDot;
 }
 
+/** 
+ * Checks if the given token string is an identifier
+ * which means it can contains letters and umbers
+ * but MUST start with a letter. It may also
+ * contain udnerscores `_`.
+ *
+ * Params:
+ *   token = the token string to check
+ * Returns: `true` if an identifier, `flase`
+ * otherwise
+ */
 public bool isIdentifier(string token)
 {
     /* This is used to prevent the first character from not being number */
@@ -408,6 +421,13 @@ public bool isIdentifier(string token)
     return true;
 }
 
+/** 
+ * Checks if the given `Token` is an accessor
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
 public bool isAccessor(Token token)
 {
     return getSymbolType(token) == SymbolType.PUBLIC ||
@@ -415,6 +435,13 @@ public bool isAccessor(Token token)
             getSymbolType(token) == SymbolType.PROTECTED;
 }
 
+/** 
+ * Checks if the given `Token` is a modifier
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
 public bool isModifier(Token token)
 {
     return getSymbolType(token) == SymbolType.STATIC;
