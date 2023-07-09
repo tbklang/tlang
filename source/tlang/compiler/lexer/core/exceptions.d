@@ -47,6 +47,8 @@ public final class LexerException : TError
      *
      * Params:
      *   offendingInstance = the offending `LexerInterface`
+     *   errType = the sub-error type as a `LexerError`
+     *   msg = the custom message (default is empty/`""`)
      */
     this(LexerInterface offendingInstance, LexerError errType = LexerError.OTHER, string msg = "")
     {
