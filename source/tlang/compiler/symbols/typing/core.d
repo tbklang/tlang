@@ -25,6 +25,14 @@ public class Type : Entity
     *       Actually yeah, we should, as Number types won't be entities
     * Wait lmao they will
     */
+
+    /** 
+     * Constructs a new `Type` with the
+     * given name
+     *
+     * Params:
+     *   name = the new type's name
+     */
     this(string name)
     {
         super(name);
@@ -40,6 +48,9 @@ public class Type : Entity
  */
 public final class Void : Primitive
 {
+    /** 
+     * Constructs a new `Void` type
+     */
     this()
     {
         super("void");
@@ -51,6 +62,13 @@ public final class Void : Primitive
  */
 public class Primitive : Type
 {
+    /** 
+     * Constructs a new `Primitive`
+     * type
+     *
+     * Params:
+     *   name = the new type's name
+     */
     this(string name)
     {
         super(name);
@@ -67,19 +85,31 @@ public class Primitive : Type
  */
 public class Number : Primitive
 {
-    /* Number of bytes (1,2,4,8) */
+    /** 
+     * Number of bytes (1,2,4,8)
+     */
     private ubyte width;
 
-    
-
     /* TODO: Aligbment details etc. */
-
+    /** 
+     * COnstructs a new `Number` type
+     * with the given name and width
+     *
+     * Params:
+     *   name = the new type's name
+     *   width = the bit-width (in bytes)
+     */
     this(string name, ubyte width)
     {
         super(name);
         this.width = width;
     }
 
+    /** 
+     * Returns the bit-width of this number
+     *
+     * Returns: the width in bytes
+     */
     public final ubyte getSize()
     {
         return width;
@@ -93,21 +123,47 @@ public class Number : Primitive
  */
 public class Integer : Number
 {
-    /* Whether or not signed (if so, then 2's complement) */
+    /** 
+     * Whether or not signed (if so, then 2's complement)
+     */
     private bool signed;
 
+    /** 
+     * Constructs a new `Integer` type with the given
+     * parameters
+     *
+     * Params:
+     *   name = the name of this type
+     *   width = the bit-width (in bytes)
+     *   signed = whether or not it represents a
+     * two's complement signed integer or not
+     */
     this(string name, ubyte width, bool signed = false)
     {
         super(name, width);
         this.signed = signed;
     }
 
+    /** 
+     * Determines if the type of
+     * integer being described is signed
+     * or not
+     *
+     * Returns: `true` if signed, `false`
+     * otherwise
+     */
     public final bool isSigned()
     {
         return signed;
     }
 
     /* TODO: Remove ig */
+    /** 
+     * Returns a string representation of
+     * this `Integer` type
+     *
+     * Returns: a `string`
+     */
     public override string toString()
     {
         return name;
@@ -119,6 +175,15 @@ public class Integer : Number
  */
 public class Float : Number
 {
+    /** 
+     * Constructs a new floating point
+     * type with the given name and width
+     *
+     * Params:
+     *   name = this type's name
+     *   width = the width (in bytes) of
+     * the floating point
+     */
     this(string name, ubyte width)
     {
         super(name, width);
@@ -140,9 +205,19 @@ public class Float : Number
  */
 public class Pointer : Integer
 {
-    /* Data type being pointed to */
+    /** 
+     * Data type being pointed to
+     */
     private Type dataType;
 
+    /** 
+     * Constructs a new `Pointer` to point
+     * to data of the given type
+     *
+     * Params:
+     *   dataType = the `Type` of data being
+     * pointed to
+     */
     this(Type dataType)
     {
         /* The name should be `dataType*` */
@@ -153,6 +228,12 @@ public class Pointer : Integer
         this.dataType = dataType;
     }
 
+    /** 
+     * Returns the `Type` of the data this
+     * pointer refers to
+     *
+     * Returns: the `Type`
+     */
     public Type getReferredType()
     {
         return dataType;
@@ -164,12 +245,25 @@ public class Pointer : Integer
 */
 public class StackArray : Type
 {
-    /* Size of the stack array to allocate */
+    /** 
+     * Size of the stack array to allocate
+     */
     private ulong arraySize;
 
-    /* Component type */
+    /** 
+     * Component type
+     */
     private Type elementType;
 
+    /** 
+     * Constructs a new `StackArray` type
+     * with the given type of element and
+     * the size to allocate on the stack
+     *
+     * Params:
+     *   elementType = the component `Type`
+     *   arraySize = the stack allocation size
+     */
     this(Type elementType, ulong arraySize)
     {
         /* The name should be `elementType[arraySize]` */
@@ -179,11 +273,22 @@ public class StackArray : Type
         this.arraySize = arraySize;
     }
 
+    /** 
+     * Gets the stack array's element type
+     *
+     * Returns: the `Type` of the components
+     */
     public Type getComponentType()
     {
         return elementType;
     }
 
+    /** 
+     * Gets the size to be allocated on the stack
+     * for this array
+     *
+     * Returns: the size
+     */
     public ulong getAllocatedSize()
     {
         return arraySize;
