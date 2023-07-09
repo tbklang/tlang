@@ -3,6 +3,7 @@ module tlang.compiler.symbols.check;
 import tlang.compiler.lexer.core.tokens : Token;
 import std.conv : to;
 import std.string : isNumeric, cmp;
+import std.algorithm.searching : canFind;
 import misc.utils;
 import gogga;
 
@@ -447,6 +448,14 @@ public bool isModifier(Token token)
     return getSymbolType(token) == SymbolType.STATIC;
 }
 
+/** 
+ * Checks if the given `Token` is a normal
+ * identifier (with no dots/periods)
+ *
+ * Params:
+ *   tokenIn = the `Token` to test
+ * Returns: `true` if so, `false` otherwise
+ */
 public bool isIdentifier_NoDot(Token tokenIn)
 {
     /* Make sure it isn't any other type of symbol */
@@ -460,6 +469,15 @@ public bool isIdentifier_NoDot(Token tokenIn)
     }
 }
 
+/** 
+ * Checks if the given `Token` is a dotted-identifier
+ * meaning it contains `.`/periods in it - a so-called
+ * path identifier.
+ *
+ * Params:
+ *   tokenIn = the `Token` to test
+ * Returns: `true` if so, `false` otherwise
+ */
 public bool isIdentifier_Dot(Token tokenIn)
 {
     /* Make sure it isn't any other type of symbol */
@@ -473,10 +491,19 @@ public bool isIdentifier_Dot(Token tokenIn)
     }
 }
 
+/** 
+ * Checks if the given token string
+ * as a numeric literal. It has support
+ * for checking if it has a size specifier
+ * as well.
+ *
+ * Params:
+ *   token = the string token to check
+ * Returns: `true` if it is a numeric literal,
+ * `false` otherwise
+ */
 private bool isNumericLiteral(string token)
 {
-    import std.algorithm.searching : canFind;
-    import tlang.compiler.lexer.kinds.basic : BasicLexer;
     if(canFind(token, "UL") || canFind(token, "UI"))
     {
         return isNumeric(token[0..$-2]);
