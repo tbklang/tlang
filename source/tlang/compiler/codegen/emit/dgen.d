@@ -278,11 +278,10 @@ public final class DCodeEmitter : CodeEmitter
                 CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.rhs;
                 assert(cvInstr);
 
-
                 gprintln("Da funk RIGHT ");
-                *(cast(int*)0)=0;
 
-
+                // Relax the CV-instr to prevent it from emitting explicit cast code
+                cvInstr.setRelax(true);
             }
             else if(typeChecker.isPointerType(rightHandOpType))
             {
@@ -291,7 +290,9 @@ public final class DCodeEmitter : CodeEmitter
                 assert(cvInstr);
 
                 gprintln("Da funk LEFT ");
-                *(cast(int*)0)=0;
+
+                // Relax the CV-instr to prevent it from emitting explicit cast code
+                cvInstr.setRelax(true);
             }
 
             return transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
