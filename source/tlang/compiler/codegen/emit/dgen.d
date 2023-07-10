@@ -558,6 +558,19 @@ public final class DCodeEmitter : CodeEmitter
 
             string emit;
 
+
+            /**
+             * Issue #140
+             *
+             * If relaxed then just emit the uncasted instruction
+             */
+            if(castedValueInstruction.isRelaxed())
+            {
+                /* The original expression */
+                emit ~= transform(uncastedInstruction);
+                return emit;
+            }
+
             /* Handling of primitive types */
             if(cast(Primitive)castingTo)
             {
