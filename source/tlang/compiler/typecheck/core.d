@@ -939,7 +939,10 @@ public final class TypeChecker
          */
         if(cast(Integer)providedType && cast(Pointer)toType)
         {
-            throw new CoercionException(this, toType, providedType, "Yolo baggins, we still need to implement dis");
+            // throw new CoercionException(this, toType, providedType, "Yolo baggins, we still need to implement dis");
+
+            // Return a cast instruction to the to-type
+            return new CastedValueInstruction(providedInstruction, toType);
         }
         // If it is a LiteralValue (integer literal) (support for issue #94)
         else if(cast(LiteralValue)providedInstruction)
