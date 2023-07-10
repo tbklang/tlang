@@ -356,18 +356,9 @@ jobs:
           name: tbin
         
       - name: Chmod compiler
-        run: |
-          chmod +x tlang
-          
-          # Previous compilation may have succeeded, meaning ./tlang.out
-          # never gets updated and exits fine with 0, but we only
-          # use the last commands exit status to check for a pass for
-          # a test.
-          #
-          # By setting this if COMPILATION fails then we exit with its
-          # code and the test status is set via that
-          set -e
-        
+        run: chmod +x tlang
+
+
       - name: Simple functions
         run: |
           ./tlang compile source/tlang/testing/simple_functions.t
@@ -426,9 +417,6 @@ jobs:
           ./tlang.out
       - name: Simple pointer
         run: |
-          # If compilation fails the exit with that code, don't assume code from ./tlang.out
-          # which, due to previous compilations, can run and exit with 0
-          set -e 
           ./tlang compile source/tlang/testing/simple_pointer.t
           ./tlang.out
       - name: Simple pointer cast (little endian)
