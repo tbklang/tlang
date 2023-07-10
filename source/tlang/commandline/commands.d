@@ -170,6 +170,11 @@ struct compileCommand
             writeln("Could not open source file "~sourceFile);
             exit(-2);
         }
+        catch(Exception e)
+        {
+            gprintln(t.msg, DebugType.ERROR);
+            exit(-1);
+        }
     }
 }
 
