@@ -30,7 +30,7 @@ public Statement[] weightReorder(Statement[] statements)
 }
 
 // TODO: Honestly all contains should be a kind-of `MStatementSearchable` and `MStatementReplaceable`
-import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MStatementReplaceable;
+import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable;
 public interface Container : MStatementSearchable, MStatementReplaceable
 {
     public void addStatement(Statement statement);
