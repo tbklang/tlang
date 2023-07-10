@@ -356,7 +356,17 @@ jobs:
           name: tbin
         
       - name: Chmod compiler
-        run: chmod +x tlang  
+        run: |
+          chmod +x tlang
+          
+          # Previous compilation may have succeeded, meaning ./tlang.out
+          # never gets updated and exits fine with 0, but we only
+          # use the last commands exit status to check for a pass for
+          # a test.
+          #
+          # By setting this if COMPILATION fails then we exit with its
+          # code and the test status is set via that
+          set -e
         
       - name: Simple functions
         run: |
