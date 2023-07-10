@@ -1476,6 +1476,12 @@ public final class TypeChecker
 
 
                 
+                /**
+                 * Refresh types as instructions may have changed in
+                 * the above enforcement call
+                 */
+                vRhsType = vRhsInstr.getInstrType();
+                vLhsType = vLhsInstr.getInstrType();
 
                 /** 
                  * Note: I don't mind the above changing the type of the
