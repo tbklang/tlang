@@ -1225,6 +1225,34 @@ public final class TypeChecker
         }
     }
 
+    /** 
+     * Checks if the given `Type` is a pointer-type
+     *
+     * Params:
+     *   typeIn = the `Type` to check
+     * Returns: `true` if the type is a `Pointer`,
+     * `false` otherwise
+     */
+    private bool isPointerType(Type typeIn)
+    {
+        return typeid(typeIn) == typeid(Pointer);
+    }
+
+    /** 
+     * Checks if the given `Type` is an integral type
+     * (a kind-of `Integer`) HOWEVER that it is not
+     * a `Pointer` (recall all ptrs are integers)
+     *
+     * Params:
+     *   typeIn = the `Type` to check
+     * Returns: `true` if integral (not pointer) type,
+     * `false` otherwise
+     */
+    private bool isIntegralTypeButNotPointer(Type typeIn)
+    {
+        return cast(Integer)typeIn && !isPointerType(typeIn);
+    }
+
 
     public void typeCheckThing(DNode dnode)
     {
@@ -1422,12 +1450,12 @@ public final class TypeChecker
                  * Last case is if the above two are not true.
                  */
                 // FIXME: I must disable the above attemptPointerCOercion else it won;t work
-                if(cast(Pointer)vLhsType && cast(Integer)vRhsType) // <a> is Pointer, <b> is Integer
+                if(isPointerType(vLhsType) && isIntegralTypeButNotPointer(vRhsType)) // <a> is Pointer, <b> is Integer
                 {
                     // Coerce right-hand side towards left-hand side
                     typeEnforce(vLhsType, vRhsInstr, vRhsInstr, true);
                 }
-                else if(cast(Integer)vLhsType && cast(Pointer)vRhsType) // <a> is Integer, <b> is Pointer
+                else if(isIntegralTypeButNotPointer(vLhsType) && isPointerType(vRhsType)) // <a> is Integer, <b> is Pointer
                 {
                     // Coerce the left-hand side towards the right-hand side
                     typeEnforce(vRhsType, vLhsInstr, vLhsInstr, true);
