@@ -249,6 +249,27 @@ public final class DCodeEmitter : CodeEmitter
 
             // TODO: I like having `lhs == rhs` for `==` or comparators but not spaces for `lhs+rhs`
 
+            /**
+             * C compiler's do this thing where:
+             *
+             * If `<a>` is a pointer and `<b>` is an integer then the
+             * following pointer arithmetic is allowed:
+             *
+             * int* a = (int*)2;
+             * a = a + b;
+             *
+             * But it's WRONG if you do
+             *
+             * a = a + (int*)b;
+             *
+             * Even though it makes logical sense coercion wise.
+             *
+             * Therefore we need to check such a case and yank
+             * the cast out me thinks.
+             * 
+             * See issue #140 (https://deavmi.assigned.network/git/tlang/tlang/issues/140#issuecomment-1892)
+             */
+
             return transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
         }
         /* FuncCallInstr */
