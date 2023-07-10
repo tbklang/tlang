@@ -932,12 +932,12 @@ public final class TypeChecker
          * ==== Pointer coerion check first ====
          *
          * If the to-type is a Pointer
-         * If the incoming provided-type is an Integer
+         * If the incoming provided-type is an Integer (non-pointer though)
          *
-         * This is the case where an Integer (provided-type)
+         * This is the case where an Integer [non-pointer though] (provided-type)
          * must be coerced to a Pointer (to-type)
          */
-        if(cast(Integer)providedType && cast(Pointer)toType)
+        if(isIntegralTypeButNotPointer(providedType) && isPointerType(toType))
         {
             // throw new CoercionException(this, toType, providedType, "Yolo baggins, we still need to implement dis");
 
