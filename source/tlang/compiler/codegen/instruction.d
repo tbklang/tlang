@@ -241,11 +241,11 @@ public final class StringLiteral : Value
 */
 public class BinOpInstr : Value
 {
-    public const Instruction lhs;
-    public const Instruction rhs;
+    public const Value lhs;
+    public const Value rhs;
     public const SymbolType operator;
 
-    this(Instruction lhs, Instruction rhs, SymbolType operator)
+    this(Value lhs, Value rhs, SymbolType operator)
     {
         this.lhs = lhs;
         this.rhs = rhs;
