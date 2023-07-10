@@ -172,7 +172,7 @@ struct compileCommand
         }
         catch(Exception e)
         {
-            gprintln(t.msg, DebugType.ERROR);
+            gprintln(e.msg, DebugType.ERROR);
             exit(-1);
         }
     }
