@@ -927,8 +927,22 @@ public final class TypeChecker
         /* Extract the type of the provided instruction */
         Type providedType = providedInstruction.getInstrType();
 
+
+        /** 
+         * ==== Pointer coerion check first ====
+         *
+         * If the to-type is a Pointer
+         * If the incoming provided-type is an Integer
+         *
+         * This is the case where an Integer (provided-type)
+         * must be coerced to a Pointer (to-type)
+         */
+        if(cast(Integer)providedType && cast(Pointer)toType)
+        {
+            throw new CoercionException(this, toType, providedType, "Yolo baggins, we still need to implement dis");
+        }
         // If it is a LiteralValue (integer literal) (support for issue #94)
-        if(cast(LiteralValue)providedInstruction)
+        else if(cast(LiteralValue)providedInstruction)
         {
             // TODO: Add a check for if these types are both atleast integral (as in the Variable's type)
             // ... THEN (TODO): Check if range makes sense
@@ -1039,20 +1053,10 @@ public final class TypeChecker
         else
         {
             /** 
-             * Pointer check first (as pointers are kind-of Number)
-             *
-             * This is the case where an Integer (provided-type)
-             * must be coerced to a Pointer (to-type)
-             */
-            if(cast(Integer)providedType && cast(Pointer)toType)
-            {
-                throw new CoercionException(this, toType, providedType, "Yolo baggins, we still need to implement dis");
-            }
-            /** 
              * If the incoming type is `Number`
              * and the `toType` is `Number`
              */
-            else if(cast(Number)providedType && cast(Number)toType)
+            if(cast(Number)providedType && cast(Number)toType)
             {
                 Number providedNumericType = cast(Number)providedType;
                 Number toNumericType = cast(Number)toType;
