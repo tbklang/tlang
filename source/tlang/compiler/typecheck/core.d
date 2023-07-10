@@ -1240,7 +1240,7 @@ public final class TypeChecker
      * Returns: `true` if the type is a `Pointer`,
      * `false` otherwise
      */
-    private bool isPointerType(Type typeIn)
+    public bool isPointerType(Type typeIn)
     {
         return typeid(typeIn) == typeid(Pointer);
     }
@@ -1255,7 +1255,7 @@ public final class TypeChecker
      * Returns: `true` if integral (not pointer) type,
      * `false` otherwise
      */
-    private bool isIntegralTypeButNotPointer(Type typeIn)
+    public bool isIntegralTypeButNotPointer(Type typeIn)
     {
         return cast(Integer)typeIn && !isPointerType(typeIn);
     }
