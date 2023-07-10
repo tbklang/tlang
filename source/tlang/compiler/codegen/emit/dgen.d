@@ -269,6 +269,30 @@ public final class DCodeEmitter : CodeEmitter
              * 
              * See issue #140 (https://deavmi.assigned.network/git/tlang/tlang/issues/140#issuecomment-1892)
              */
+            Type leftHandOpType = (cast(Value)binOpInstr.lhs).getInstrType();
+            Type rightHandOpType = (cast(Value)binOpInstr.rhs).getInstrType();
+
+            if(typeChecker.isPointerType(leftHandOpType))
+            {
+                // Sanity check the other side should have been coerced to CastedValueInstruction
+                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.rhs;
+                assert(cvInstr);
+
+
+                gprintln("Da funk RIGHT ");
+                *(cast(int*)0)=0;
+
+
+            }
+            else if(typeChecker.isPointerType(rightHandOpType))
+            {
+                // Sanity check the other side should have been coerced to CastedValueInstruction
+                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.lhs;
+                assert(cvInstr);
+
+                gprintln("Da funk LEFT ");
+                *(cast(int*)0)=0;
+            }
 
             return transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
         }
