@@ -1039,10 +1039,20 @@ public final class TypeChecker
         else
         {
             /** 
+             * Pointer check first (as pointers are kind-of Number)
+             *
+             * This is the case where an Integer (provided-type)
+             * must be coerced to a Pointer (to-type)
+             */
+            if(cast(Integer)providedType && cast(Pointer)toType)
+            {
+                throw new CoercionException(this, toType, providedType, "Yolo baggins, we still need to implement dis");
+            }
+            /** 
              * If the incoming type is `Number`
              * and the `toType` is `Number`
              */
-            if(cast(Number)providedType && cast(Number)toType)
+            else if(cast(Number)providedType && cast(Number)toType)
             {
                 Number providedNumericType = cast(Number)providedType;
                 Number toNumericType = cast(Number)toType;
@@ -1389,11 +1399,48 @@ public final class TypeChecker
                  * Attempt to coerce the types of both instructions if one is
                  * a pointer and another is an integer, else do nothing
                  */
-                attemptPointerAriehmeticCoercion(vLhsInstr, vRhsInstr);
+                // attemptPointerAriehmeticCoercion(vLhsInstr, vRhsInstr);
 
 
                 Type vRhsType = vRhsInstr.getInstrType();
                 Type vLhsType = vLhsInstr.getInstrType();
+
+
+                /** 
+                 * ==== Pointer coercion ====
+                 *
+                 * We now need to determine if our bianry operation:
+                 *
+                 * `a + b`
+                 *
+                 * Is a case where `a` is a Pointer and `b` is an Integer
+                 * OR if `a` is an Integer and `b` is a Pointer
+                 * But exclusive OR wise
+                 *
+                 * And only THEN must we coerce-cast the non-pointer one
+                 *
+                 * Last case is if the above two are not true.
+                 */
+                // FIXME: I must disable the above attemptPointerCOercion else it won;t work
+                if(cast(Pointer)vLhsType && cast(Integer)vRhsType) // <a> is Pointer, <b> is Integer
+                {
+                    // Coerce right-hand side towards left-hand side
+                    typeEnforce(vLhsType, vRhsInstr, vRhsInstr, true);
+                }
+                else if(cast(Integer)vLhsType && cast(Pointer)vRhsType) // <a> is Integer, <b> is Pointer
+                {
+                    // Coerce the left-hand side towards the right-hand side
+                    typeEnforce(vRhsType, vLhsInstr, vLhsInstr, true);
+                }
+                else
+                {
+                    // TODO: What would be the bets rule here?
+                    // To coerce to the bigger type of the two? Yes, that would
+                    // make sense. But we need a helper method todo that for us
+                }
+
+
+                
 
                 /** 
                  * Note: I don't mind the above changing the type of the
