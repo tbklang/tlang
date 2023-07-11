@@ -1547,7 +1547,6 @@ public final class TypeChecker
                     gprintln("FIXME: We need to add support for this, class equality, and others like floats", DebugType.ERROR);
                 }
 
-
                 
                 /**
                  * Refresh types as instructions may have changed in
@@ -1556,13 +1555,16 @@ public final class TypeChecker
                 vRhsType = vRhsInstr.getInstrType();
                 vLhsType = vLhsInstr.getInstrType();
 
-                
-
-
-                /**
-                * TODO
-                * Types must either BE THE SAME or BE COMPATIBLE
-                */
+                /** 
+                 * We now will check to make sure the types
+                 * match, if not an error is thrown.
+                 *
+                 * We will also then set the instruction's
+                 * type to one of the two (they're the same
+                 * so it isn't as if it matters). But the
+                 * resulting instruction should be of the type
+                 * of its components - that's the logic.
+                 */
                 Type chosenType;
                 if(isSameType(vLhsType, vRhsType))
                 {
