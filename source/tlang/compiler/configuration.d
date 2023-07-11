@@ -189,4 +189,43 @@ public final class CompilerConfiguration
         ConfigEntry _discard;
         return hasConfig_internal(key, _discard);
     }
+
+    /** 
+     * Generates the default compiler configuration
+     *
+     * Returns: a `CompilerConfguration`
+     */
+    public static CompilerConfiguration defaultConfig()
+    {
+        /* Generate a fresh new config */
+        CompilerConfiguration config = new CompilerConfiguration();
+
+        /* Enable Behaviour-C fixes */
+        config.addConfig(ConfigEntry("behavec:preinline_args", true));
+
+        /* Enable pretty code generation for DGen */
+        config.addConfig(ConfigEntry("dgen:pretty_code", true));
+
+        /* Enable entry point test generation for DGen */
+        config.addConfig(ConfigEntry("dgen:emit_entrypoint_test", true));
+
+        /* Set the mapping to hashing of entity names (TODO: This should be changed before release) */
+        config.addConfig(ConfigEntry("emit:mapper", "hashmapper"));
+
+        /**
+         * Configure, at compile time, the system type aliases
+         */
+        version(X86)
+        {
+            /* Set maximum width to 4 bytes (32-bits) */
+            config.addConfig(ConfigEntry("types:max_width", 4));
+        }
+        else version(X86_64)
+        {
+            /* Set maximum width to 8 bytes (64-bits) */
+            config.addConfig(ConfigEntry("types:max_width", 8));
+        }
+
+        return config;
+    }
 }

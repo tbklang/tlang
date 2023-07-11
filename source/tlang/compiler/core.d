@@ -3,7 +3,7 @@ module tlang.compiler.core;
 import gogga;
 import std.conv : to;
 import tlang.compiler.lexer.core;
-import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.kinds.basic : BasicLexer;
 import std.stdio : File;
 import tlang.compiler.parsing.core;
 import tlang.compiler.symbols.check;
@@ -96,7 +96,7 @@ public class Compiler
     private string inputSource;
 
     /* The lexer */
-    private Lexer lexer;
+    private LexerInterface lexer;
 
     /* The lexed tokens */
     private Token[] tokens;
@@ -115,21 +115,6 @@ public class Compiler
     /* The configuration */
     private CompilerConfiguration config;
 
-    /* TODO: Make the default config */
-    private void defaultConfig()
-    {
-        /* Enable Behaviour-C fixes */
-        config.addConfig(ConfigEntry("behavec:preinline_args", true));
-
-        /* Enable pretty code generation for DGen */
-        config.addConfig(ConfigEntry("dgen:pretty_code", true));
-
-        /* Enable entry point test generation for DGen */
-        config.addConfig(ConfigEntry("dgen:emit_entrypoint_test", true));
-
-        /* Set the mapping to hashing of entity names (TODO: This should be changed before release) */
-        config.addConfig(ConfigEntry("emit:mapper", "hashmapper"));
-    }
 
     public CompilerConfiguration getConfig()
     {
@@ -147,18 +132,16 @@ public class Compiler
         this.inputSource = sourceCode;
         this.emitOutFile = emitOutFile;
 
-        this.config = new CompilerConfiguration();
-
-        /* Enable the default config */
-        defaultConfig();
+        /* Get the default config */
+        this.config = CompilerConfiguration.defaultConfig();
     }
 
     /* Setup the lexer and begin lexing */
     public void doLex()
     {
         /* Setup the lexer and begin lexing */
-        this.lexer = new Lexer(inputSource);
-        this.lexer.performLex();
+        this.lexer = new BasicLexer(inputSource);
+        (cast(BasicLexer)(this.lexer)).performLex();
 
         this.tokens = this.lexer.getTokens();
     }
@@ -185,7 +168,7 @@ public class Compiler
         else
         {
             /* Spawn a new parser with the provided tokens */
-            this.parser = new Parser(lexedTokens);
+            this.parser = new Parser(lexer);
 
             modulle = parser.parse();
         }
@@ -207,7 +190,7 @@ public class Compiler
             throw new CompilerException(CompilerError.PARSE_NOT_YET_PERFORMED);
         }
 
-        this.typeChecker = new TypeChecker(modulle);
+        this.typeChecker = new TypeChecker(modulle, config);
 
         /* Perform typechecking/codegen */
         this.typeChecker.beginCheck();

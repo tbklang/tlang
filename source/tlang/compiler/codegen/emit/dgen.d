@@ -293,6 +293,12 @@ public final class DCodeEmitter : CodeEmitter
 
             emit ~= ")";
 
+            // If this is a statement-level function call then tack on a `;`
+            if(funcCallInstr.isStatementLevel())
+            {
+                emit ~= ";";
+            }
+
             return emit;
         }
         /* ReturnInstruction */
@@ -963,6 +969,41 @@ int main()
     assert(t_7b6d477c5859059f16bc9da72fc8cc3b == 72);
     printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
 
+    return 0;
+}`);
+        }
+        // Test for `simple_function_recursion_factorial.t` (recursive function call testing)
+        else if(cmp(typeChecker.getModule().getName(), "simple_function_recursion_factorial") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = factorial(3);
+    assert(result == 6);
+    printf("factorial: %u\n", result);
+    
+    return 0;
+}`);
+        }
+        // Test for `simple_direct_func_call.t` (statement-level function call)
+        else if(cmp(typeChecker.getModule().getName(), "simple_direct_func_call") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    // Before it should be 0
+    assert(t_de44aff5a74865c97c4f8701d329f28d == 0);
+
+    // Call the function
+    function();
+
+    // After it it should be 69
+    assert(t_de44aff5a74865c97c4f8701d329f28d == 69);
+    
     return 0;
 }`);
         }

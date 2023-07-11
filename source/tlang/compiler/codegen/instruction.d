@@ -241,11 +241,11 @@ public final class StringLiteral : Value
 */
 public class BinOpInstr : Value
 {
-    public const Instruction lhs;
-    public const Instruction rhs;
+    public const Value lhs;
+    public const Value rhs;
     public const SymbolType operator;
 
-    this(Instruction lhs, Instruction rhs, SymbolType operator)
+    this(Value lhs, Value rhs, SymbolType operator)
     {
         this.lhs = lhs;
         this.rhs = rhs;
@@ -297,6 +297,15 @@ public class CallInstr : Value
 
 public class FuncCallInstr : CallInstr
 {
+    /** 
+     * This is described in the corresponding AST node
+     * `FunctionCall`. See that. For short, function calls
+     * from within expressions and those as appearing as statements
+     * require a tiny different code gen but for Instructions
+     * their emit also needs a tiny difference
+     */
+    private bool statementLevel = false;
+
     /* Per-argument instrructions */
     private Value[] evaluationInstructions;
 
@@ -327,6 +336,26 @@ public class FuncCallInstr : CallInstr
     public Value[] getEvaluationInstructions()
     {
         return evaluationInstructions;
+    }
+
+    /** 
+     * Determines whether this function call instruction
+     * is within an expression or a statement itself
+     *
+     * Returns: true if statement-level, false otherwise
+     */
+    public bool isStatementLevel()
+    {
+        return statementLevel;
+    }
+
+    /** 
+     * Marks this function call instruction as statement
+     * level
+     */
+    public void markStatementLevel()
+    {
+        statementLevel = true;
     }
 }
 

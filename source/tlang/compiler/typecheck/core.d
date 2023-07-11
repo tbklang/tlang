@@ -14,6 +14,8 @@ import tlang.compiler.typecheck.dependency.core;
 import tlang.compiler.codegen.instruction;
 import std.container.slist;
 import std.algorithm : reverse;
+import tlang.compiler.typecheck.meta;
+import tlang.compiler.configuration;
 
 /**
 * The Parser only makes sure syntax
@@ -24,21 +26,56 @@ import std.algorithm : reverse;
 */
 public final class TypeChecker
 {
+    /** 
+     * The compiler configuration
+     */
+    private CompilerConfiguration config;
+
+
+
     private Module modulle;
 
     /* The name resolver */
     private Resolver resolver;
+
+    /** 
+     * The meta-programming processor
+     */
+    private MetaProcessor meta;
 
     public Module getModule()
     {
         return modulle;
     }
 
-    this(Module modulle)
+    /** 
+     * Constructs a new `TypeChecker` based on the provided `Module`
+     * of which to typecheck its members and using the default
+     * compiler configuration
+     *
+     * Params:
+     *   modulle = the `Module` to check
+     *   config = the `CompilerConfiguration` (default if not specified)
+     */
+    this(Module modulle, CompilerConfiguration config = CompilerConfiguration.defaultConfig())
     {
         this.modulle = modulle;
-        resolver = new Resolver(this);
+        this.config = config;
+
+        this.resolver = new Resolver(this);
+        this.meta = new MetaProcessor(this, true);
+        
         /* TODO: Module check?!?!? */
+    }
+
+    /** 
+     * Returns the compiler configuration
+     *
+     * Returns: the `CompilerConfguration`
+     */
+    public CompilerConfiguration getConfig()
+    {
+        return config;
     }
 
     /**
@@ -1265,17 +1302,34 @@ public final class TypeChecker
                 
 
                 /**
-                * TODO:
+                * Codegen
                 *
                 * 1. Create FuncCallInstr
                 * 2. Evaluate args and process them?! wait done elsewhere yeah!!!
-                * 3. Pop arts into here
-                * 4. AddInstr(combining those args)
-                * 5. DOne
+                * 3. Pop args into here
+                * 4. addInstr(combining those args)
+                *   4.1. If this is a statement-level function then `addInstrB()` is used
+                * 5. Done
                 */
                 funcCallInstr.setContext(funcCall.getContext());
 
-                addInstr(funcCallInstr);
+                // If not a statement-level function call then it is an expression
+                // ... and ought to be placed at the top of the stack for later consumption
+                if(!funcCall.isStatementLevelFuncCall())
+                {
+                    addInstr(funcCallInstr);
+                }
+                // If this IS a statement-level function call then it is not meant
+                // ... to be placed on the top of the stack as it won't be consumed later,
+                // ... rather it is finalised and should be added to the back of the code queue
+                else
+                {
+                    addInstrB(funcCallInstr);
+
+                    // We also, for emitter, must transfer this flag over by
+                    // ... marking this function call instruction as statement-level
+                    funcCallInstr.markStatementLevel();
+                }
 
                 /* Set the Value instruction's type */
                 Type funcCallInstrType = getType(func.parentOf(), func.getType());
@@ -2159,6 +2213,9 @@ public final class TypeChecker
     */
     public void beginCheck()
     {
+        /* Run the meta-processor on the AST tree (starting from the Module) */
+        meta.process(modulle);
+
         /* Process all pseudo entities of the given module */
         processPseudoEntities(modulle);
 
@@ -2631,13 +2688,20 @@ public final class TypeChecker
 
 }
 
-/* Test name colliding with container name (1/3) [module] */
-unittest
+
+version(unittest)
 {
     import std.file;
     import std.stdio;
     import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.kinds.basic : BasicLexer;
     import tlang.compiler.parsing.core;
+}
+
+/* Test name colliding with container name (1/3) [module] */
+unittest
+{
+    
 
     string sourceFile = "source/tlang/testing/collide_container_module1.t";
 
@@ -2650,10 +2714,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2681,11 +2745,6 @@ unittest
 /* Test name colliding with container name (2/3) [module, nested collider] */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/collide_container_module2.t";
 
     File sourceFileFile;
@@ -2697,10 +2756,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2726,11 +2785,6 @@ unittest
 /* Test name colliding with container name (3/3) [container (non-module), nested collider] */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/collide_container_non_module.t";
 
     File sourceFileFile;
@@ -2742,10 +2796,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2771,11 +2825,6 @@ unittest
 /* Test name colliding with member */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/collide_member.t";
 
     File sourceFileFile;
@@ -2787,10 +2836,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2815,11 +2864,6 @@ unittest
 /* Test name colliding with member (check that the member defined is class (precendence test)) */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/precedence_collision_test.t";
 
     File sourceFileFile;
@@ -2831,10 +2875,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2861,11 +2905,6 @@ unittest
 /* Test name colliding with container name (1/2) */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/collide_container.t";
 
     File sourceFileFile;
@@ -2877,10 +2916,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 
@@ -2946,11 +2985,6 @@ unittest
  */
 unittest
 {
-    import std.file;
-    import std.stdio;
-    import tlang.compiler.lexer.core;
-    import tlang.compiler.parsing.core;
-
     string sourceFile = "source/tlang/testing/typecheck/simple_function_call.t";
 
     File sourceFileFile;
@@ -2962,10 +2996,10 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    Lexer currentLexer = new Lexer(sourceCode);
-    currentLexer.performLex();
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    (cast(BasicLexer)currentLexer).performLex();
 
-    Parser parser = new Parser(currentLexer.getTokens());
+    Parser parser = new Parser(currentLexer);
     Module modulle = parser.parse();
     TypeChecker typeChecker = new TypeChecker(modulle);
 

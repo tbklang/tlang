@@ -10,8 +10,8 @@ import jcli;
 import std.stdio;
 import misc.exceptions : TError;
 import std.exception : ErrnoException;
-import tlang.compiler.lexer.core : Lexer;
-import tlang.compiler.lexer.tokens : Token;
+import tlang.compiler.lexer.kinds.basic : BasicLexer;
+import tlang.compiler.lexer.core;
 import tlang.compiler.parsing.core : Parser;
 import tlang.compiler.typecheck.core : TypeChecker;
 import gogga;
@@ -169,6 +169,11 @@ struct compileCommand
             /* TODO: Use gogga error */
             writeln("Could not open source file "~sourceFile);
             exit(-2);
+        }
+        catch(Exception e)
+        {
+            gprintln(e.msg, DebugType.ERROR);
+            exit(-1);
         }
     }
 }
