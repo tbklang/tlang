@@ -1819,43 +1819,15 @@ public final class TypeChecker
                             argType = valueInstr.getInstrType();
                             
 
-                            // TODO: SHould be able to remove the below if typeEnforce() is
-                            // ... working 100-percent
-                            /* Match up types */
-                            //if(argType == parmType)
-                            if(isSameType(argType, parmType))
-                            {
-                                gprintln("Match type");
+                            // Sanity check
+                            assert(isSameType(argType, parmType));
 
-                                /* Add the instruction into the FunctionCallInstr */
-                                funcCallInstr.setEvalInstr(parmCount, valueInstr);
-                                gprintln(funcCallInstr.getEvaluationInstructions());
-                            }
-                            // /* Stack-array argument to pointer parameter coercion check */
-                            // else if(canCoerceStackArray(parmType, argType, coercionScratchType))
-                            // {
-                            //     // TODO: Add stack coercion check here
-                            //     gprintln("Stack-based array has been coerced for function call");
-
-                            //     // Update the fetch-var instruction's type to the coerced 
-                            //     // TODO: Should we have applied this technically earlier then fallen through to
-                            //     // ... the branch above? That would have worked and been neater - we should do
-                            //     // ... that to avoid duplicating any code
-                            //     valueInstr.setInstrType(coercionScratchType);
-
-                            //     /* Add the instruction into the FunctionCallInstr */
-                            //     funcCallInstr.setEvalInstr(parmCount, valueInstr);
-                            //     gprintln(funcCallInstr.getEvaluationInstructions());
-                            // }
-                            else
-                            {
-                                printCodeQueue();
-                                gprintln("Wrong actual argument type for function call", DebugType.ERROR);
-                                gprintln("Cannot pass value of type '"~argType.getName()~"' to function accepting '"~parmType.getName()~"'", DebugType.ERROR);
-
-                                throw new TypeMismatchException(this, parmType, argType, "The actual argument's type does not match that of the function's parameter type");
-                            }
-
+                            
+                            /* Add the instruction into the FunctionCallInstr */
+                            funcCallInstr.setEvalInstr(parmCount, valueInstr);
+                            gprintln(funcCallInstr.getEvaluationInstructions());
+                            
+                            // TODO: Add a comment
                             parmCount--;
                         }
                         else
