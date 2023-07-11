@@ -1503,11 +1503,25 @@ public final class TypeChecker
                     // Coerce the left-hand side towards the right-hand side
                     typeEnforce(vRhsType, vLhsInstr, vLhsInstr, true);
                 }
-                else
+                // If left and right operands are integral
+                else if(isIntegralTypeButNotPointer(vLhsType) && isIntegralTypeButNotPointer(vRhsType))
                 {
                     // TODO: What would be the bets rule here?
                     // To coerce to the bigger type of the two? Yes, that would
                     // make sense. But we need a helper method todo that for us
+
+                    /** 
+                     * Determine if the type of the instruction to the left
+                     * or right, which is bigger. THEN coerce towards the
+                     * bigger one
+                     */
+                    Type toType = biggerOfTheTwo(cast(Integer)vLhsType, cast(Integer)vRhsType);
+
+                }
+                else
+                {
+                    gprintln("FIXME: We need to add support for this, class equality, and others like floats", DebugType.ERROR);
+                    throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Binary operator only supports integral types right now");
                 }
 
 
