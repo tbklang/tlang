@@ -1545,7 +1545,6 @@ public final class TypeChecker
                 else
                 {
                     gprintln("FIXME: We need to add support for this, class equality, and others like floats", DebugType.ERROR);
-                    throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Binary operator only supports integral types right now");
                 }
 
 
