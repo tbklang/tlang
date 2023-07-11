@@ -1557,14 +1557,7 @@ public final class TypeChecker
                 vRhsType = vRhsInstr.getInstrType();
                 vLhsType = vLhsInstr.getInstrType();
 
-                /** 
-                 * Note: I don't mind the above changing the type of the
-                 * instruction as it isn't really a widening. However,
-                 * actually we rpobably should as it may not be wide
-                 * enough!
-                 * Like `64-bit (int) + ptr`    | This is fine (just semantics)
-                 * But  `32-bit (int) + ptr`    | This requires widening, never mind Pointer+Pointer compatibility
-                 */
+                
 
 
                 /**
