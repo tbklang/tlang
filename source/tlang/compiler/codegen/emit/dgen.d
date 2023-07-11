@@ -278,7 +278,7 @@ public final class DCodeEmitter : CodeEmitter
                 CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.rhs;
                 assert(cvInstr);
 
-                gprintln("Da funk RIGHT ");
+                gprintln("CastedValueInstruction relax setting: Da funk RIGHT ");
 
                 // Relax the CV-instr to prevent it from emitting explicit cast code
                 cvInstr.setRelax(true);
@@ -289,7 +289,7 @@ public final class DCodeEmitter : CodeEmitter
                 CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.lhs;
                 assert(cvInstr);
 
-                gprintln("Da funk LEFT ");
+                gprintln("CastedValueInstruction relax setting: Da funk LEFT ");
 
                 // Relax the CV-instr to prevent it from emitting explicit cast code
                 cvInstr.setRelax(true);
