@@ -966,6 +966,11 @@ public final class ReturnStmt : Statement
     {
         this.returnExpression = returnExpression;
 
+        this();
+    }
+
+    this()
+    {
         /* Statement level weighting is 2 */
         weight = 2;
     }
@@ -973,6 +978,11 @@ public final class ReturnStmt : Statement
     public Expression getReturnExpression()
     {
         return returnExpression;
+    }
+
+    public bool hasReturnExpression()
+    {
+        return returnExpression !is null;
     }
 }
 

@@ -369,9 +369,19 @@ public final class ReturnInstruction : Instruction
         this.returnExprInstr = returnExprInstr;
     }
 
+    this()
+    {
+
+    }
+
     public Value getReturnExpInstr()
     {
         return returnExprInstr;
+    }
+
+    public bool hasReturnExpInstr()
+    {
+        return returnExprInstr !is null;
     }
 }
 

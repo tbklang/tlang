@@ -1462,12 +1462,16 @@ public class DNodeGenerator
 
             DNode returnStatementDNode = pool(returnStatement);
 
-            /* Process the return expression */
-            Expression returnExpression = returnStatement.getReturnExpression();
-            DNode returnExpressionDNode = expressionPass(returnExpression, context);
+            /* Check if this return statement has an expression attached */
+            if(returnStatement.hasReturnExpression())
+            {
+                /* Process the return expression */
+                Expression returnExpression = returnStatement.getReturnExpression();
+                DNode returnExpressionDNode = expressionPass(returnExpression, context);
 
-            /* Make return depend on the return expression */
-            returnStatementDNode.needs(returnExpressionDNode);
+                /* Make return depend on the return expression */
+                returnStatementDNode.needs(returnExpressionDNode);
+            }
 
             /* Make this container depend on this return statement */
             // node.needs(returnStatementDNode);
