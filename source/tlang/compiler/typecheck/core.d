@@ -1261,6 +1261,42 @@ public final class TypeChecker
     }
 
 
+    /** 
+     * Determines the biggest of the two `Integer`-based types
+     * and returns that one.
+     *
+     * If neither is bigger than the other then the first is
+     * returned.
+     *
+     * Please do not pass in `Pointer` types here - NOT the
+     * intended usage (even though allowed).
+     *
+     * Params:
+     *   integralType1 = the first `Integer`-based type to test
+     *   IntegralType2 = the second `Integer`-based type to test
+     * Returns: the biggest `Integer` type
+     */
+    private Integer biggerOfTheTwo(Integer integralType1, Integer IntegralType2)
+    {
+        // Sanity check, please don't pass Pointer types in here
+        // as that isn't the intended usage
+        assert(!isPointerType(integralType1) && !isPointerType(integralType2));
+
+        if(integralType1.getSize() > IntegralType2.getSize())
+        {
+            return integralType1;
+        }
+        else if(integralType1.getSize() < IntegralType2.getSize())
+        {
+            return IntegralType2;
+        }
+        else
+        {
+            return integralType1;
+        }
+    }
+
+
     public void typeCheckThing(DNode dnode)
     {
         gprintln("typeCheckThing(): "~dnode.toString());
