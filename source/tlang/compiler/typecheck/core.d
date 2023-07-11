@@ -1827,7 +1827,7 @@ public final class TypeChecker
                             funcCallInstr.setEvalInstr(parmCount, valueInstr);
                             gprintln(funcCallInstr.getEvaluationInstructions());
                             
-                            // TODO: Add a comment
+                            /* Decrement the parameter index (right-to-left, so move to left) */
                             parmCount--;
                         }
                         else
