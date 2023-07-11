@@ -944,11 +944,32 @@ public final class TypeChecker
          * ==== Stack-array to pointer coercion ====
          *
          * If the provided-type is a `StackArray`
-         * and the to-type is a `Pointer`
+         * and the to-type is a `Pointer`.
+         *
+         * if this is the case we must cast the `StackArray`
+         * to a new `Pointer` type of its component type
          */
         if(isStackArrayType(providedType) && isPointerType(toType))
         {
+            // Extract the pointer (to-type's)  referred type
+            Pointer toTypePointer = cast(Pointer)toType;
+            Type toTypeReferred = toTypePointer.getReferredType();
 
+            // Extract the stack array's component type
+            StackArray providedTypeStkArr = cast(StackArray)providedType;
+            Type stackArrCompType = providedTypeStkArr.getComponentType();       
+
+            // We still need the component type to match the to-type's referred type
+            if(isSameType(stackArrCompType, toTypeReferred))
+            {
+                // Return a cast instruction to the to-type
+                return new CastedValueInstruction(providedInstruction, toType);
+            }
+            // If not, error, impossible to coerce
+            else
+            {
+                throw new CoercionException(this, toType, stackArrCompType, "Cannot coerce a stack array with component type not matching the provided to-type of the pointer type trying to be coerced towards");
+            } 
         }
         /** 
          * ==== Pointer coerion check first ====
