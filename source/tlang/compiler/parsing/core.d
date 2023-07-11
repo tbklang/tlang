@@ -609,7 +609,7 @@ public final class Parser
         // TODO: Check if semicolon here (no expression) else expect expression
 
         /* If the next token after `return` is a `;` then it is an expressionless return */
-        if(getSymbolType(getCurrentToken()) == SymbolType.SEMICOLON)
+        if(getSymbolType(lexer.getCurrentToken()) == SymbolType.SEMICOLON)
         {
             /* Create the ReturnStmt (without an expression) */
             returnStatement = new ReturnStmt();
@@ -621,8 +621,8 @@ public final class Parser
             Expression returnExpression = parseExpression();
 
             /* Expect a semi-colon as the terminator */
-            gprintln(getCurrentToken());
-            expect(SymbolType.SEMICOLON, getCurrentToken());
+            gprintln(lexer.getCurrentToken());
+            expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
 
             /* Create the ReturnStmt */
             returnStatement = new ReturnStmt(returnExpression);
