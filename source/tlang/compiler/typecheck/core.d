@@ -2249,6 +2249,11 @@ public final class TypeChecker
                 */
                 Value returnExpressionInstr = cast(Value)popInstr();
                 assert(returnExpressionInstr);
+
+                // TODO: A ReturnStmt's parent -> lookup -> Function
+                // ... Function's return type -> type enforce
+
+
                 ReturnInstruction returnInstr = new ReturnInstruction(returnExpressionInstr);
                 returnInstr.setContext(returnStatement.getContext());
                 addInstrB(returnInstr);
