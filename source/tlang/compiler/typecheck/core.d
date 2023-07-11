@@ -1506,17 +1506,41 @@ public final class TypeChecker
                 // If left and right operands are integral
                 else if(isIntegralTypeButNotPointer(vLhsType) && isIntegralTypeButNotPointer(vRhsType))
                 {
-                    // TODO: What would be the bets rule here?
-                    // To coerce to the bigger type of the two? Yes, that would
-                    // make sense. But we need a helper method todo that for us
-
-                    /** 
-                     * Determine if the type of the instruction to the left
-                     * or right, which is bigger. THEN coerce towards the
-                     * bigger one
+                    /**
+                     * Now coerce the instruction which is the smaller of the two.
+                     *
+                     * If they are equal then:
+                     *
+                     *      If one is signed and the other unsigned then coerce
+                     *      signed to unsigned
                      */
-                    Type toType = biggerOfTheTwo(cast(Integer)vLhsType, cast(Integer)vRhsType);
-
+                    Integer vLhsTypeIntegral = cast(Integer)vLhsType;
+                    assert(vLhsTypeIntegral);
+                    Integer vRhsTypeIntegral = cast(Integer)vRhsType;
+                    assert(vRhsTypeIntegral);
+                    if(vLhsTypeIntegral.getSize() < vRhsTypeIntegral.getSize())
+                    {
+                        typeEnforce(vRhsTypeIntegral, vLhsInstr, vLhsInstr, true);
+                    }
+                    else if(vLhsTypeIntegral.getSize() > vRhsTypeIntegral.getSize())
+                    {
+                        typeEnforce(vLhsTypeIntegral, vRhsInstr, vRhsInstr, true);
+                    }
+                    else
+                    {
+                        if(vLhsTypeIntegral.isSigned() && !vRhsTypeIntegral.isSigned())
+                        {
+                            typeEnforce(vRhsTypeIntegral, vLhsInstr, vLhsInstr, true);
+                        }
+                        else if(!vLhsTypeIntegral.isSigned() && vRhsTypeIntegral.isSigned())
+                        {
+                            typeEnforce(vLhsTypeIntegral, vRhsInstr, vRhsInstr, true);
+                        }
+                        else
+                        {
+                            // Do nothing if they are the same type
+                        }
+                    }
                 }
                 else
                 {
