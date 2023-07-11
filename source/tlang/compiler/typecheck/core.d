@@ -1544,6 +1544,7 @@ public final class TypeChecker
                 }
                 else
                 {
+                    // See issue #141: Binary Operators support for non-Integer types (https://deavmi.assigned.network/git/tlang/tlang/issues/141)
                     gprintln("FIXME: We need to add support for this, class equality, and others like floats", DebugType.ERROR);
                 }
 
