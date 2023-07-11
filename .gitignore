@@ -17,3 +17,5 @@ dub.selections.json
 # Documentation )generated)
 docs/
 docs.json
+testing.code-workspace
+desktop_dev.code-workspace
