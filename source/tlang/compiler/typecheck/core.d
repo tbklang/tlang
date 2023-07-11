@@ -962,13 +962,15 @@ public final class TypeChecker
             // We still need the component type to match the to-type's referred type
             if(isSameType(stackArrCompType, toTypeReferred))
             {
+                gprintln("Stack-array ('"~providedInstruction.toString()~"' coercion from type '"~providedType.getName()~"' to type of '"~toType.getName()~"' allowed :)");
+
                 // Return a cast instruction to the to-type
                 return new CastedValueInstruction(providedInstruction, toType);
             }
             // If not, error, impossible to coerce
             else
             {
-                throw new CoercionException(this, toType, stackArrCompType, "Cannot coerce a stack array with component type not matching the provided to-type of the pointer type trying to be coerced towards");
+                throw new CoercionException(this, toType, providedType, "Cannot coerce a stack array with component type not matching the provided to-type of the pointer type trying to be coerced towards");
             } 
         }
         /** 
@@ -1802,6 +1804,23 @@ public final class TypeChecker
                             Type coercionScratchType;
 
 
+
+                            /**
+                             * We need to enforce the `valueInstr`'s' (the `Value`-based
+                             * instruction being passed as an argument) type to be that
+                             * of the `parmType` (the function's parameter type)
+                             */
+                            typeEnforce(parmType, valueInstr, valueInstr, true);
+
+                            /**
+                             * Refresh the `argType` as `valueInstr` may have been
+                             * updated and we need the new type
+                             */
+                            argType = valueInstr.getInstrType();
+                            
+
+                            // TODO: SHould be able to remove the below if typeEnforce() is
+                            // ... working 100-percent
                             /* Match up types */
                             //if(argType == parmType)
                             if(isSameType(argType, parmType))
@@ -1812,22 +1831,22 @@ public final class TypeChecker
                                 funcCallInstr.setEvalInstr(parmCount, valueInstr);
                                 gprintln(funcCallInstr.getEvaluationInstructions());
                             }
-                            /* Stack-array argument to pointer parameter coercion check */
-                            else if(canCoerceStackArray(parmType, argType, coercionScratchType))
-                            {
-                                // TODO: Add stack coercion check here
-                                gprintln("Stack-based array has been coerced for function call");
+                            // /* Stack-array argument to pointer parameter coercion check */
+                            // else if(canCoerceStackArray(parmType, argType, coercionScratchType))
+                            // {
+                            //     // TODO: Add stack coercion check here
+                            //     gprintln("Stack-based array has been coerced for function call");
 
-                                // Update the fetch-var instruction's type to the coerced 
-                                // TODO: Should we have applied this technically earlier then fallen through to
-                                // ... the branch above? That would have worked and been neater - we should do
-                                // ... that to avoid duplicating any code
-                                valueInstr.setInstrType(coercionScratchType);
+                            //     // Update the fetch-var instruction's type to the coerced 
+                            //     // TODO: Should we have applied this technically earlier then fallen through to
+                            //     // ... the branch above? That would have worked and been neater - we should do
+                            //     // ... that to avoid duplicating any code
+                            //     valueInstr.setInstrType(coercionScratchType);
 
-                                /* Add the instruction into the FunctionCallInstr */
-                                funcCallInstr.setEvalInstr(parmCount, valueInstr);
-                                gprintln(funcCallInstr.getEvaluationInstructions());
-                            }
+                            //     /* Add the instruction into the FunctionCallInstr */
+                            //     funcCallInstr.setEvalInstr(parmCount, valueInstr);
+                            //     gprintln(funcCallInstr.getEvaluationInstructions());
+                            // }
                             else
                             {
                                 printCodeQueue();
