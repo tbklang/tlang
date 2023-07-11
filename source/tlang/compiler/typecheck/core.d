@@ -904,6 +904,18 @@ public final class TypeChecker
         return false;
     }
 
+    /** 
+     * Checks if the provided type refers to a `StackArray`
+     *
+     * Params:
+     *   typeIn = the `Type` to test
+     * Returns: `true` if it refers to a `StackArray`,
+     * `false` otherwise
+     */
+    private bool isStackArrayType(Type typeIn)
+    {
+        return cast(StackArray)typeIn !is null;
+    }
 
     /** 
      * Attempts to perform coercion of the provided Value-instruction
@@ -928,6 +940,16 @@ public final class TypeChecker
         Type providedType = providedInstruction.getInstrType();
 
 
+        /**
+         * ==== Stack-array to pointer coercion ====
+         *
+         * If the provided-type is a `StackArray`
+         * and the to-type is a `Pointer`
+         */
+        if(isStackArrayType(providedType) && isPointerType(toType))
+        {
+
+        }
         /** 
          * ==== Pointer coerion check first ====
          *
@@ -937,7 +959,7 @@ public final class TypeChecker
          * This is the case where an Integer [non-pointer though] (provided-type)
          * must be coerced to a Pointer (to-type)
          */
-        if(isIntegralTypeButNotPointer(providedType) && isPointerType(toType))
+        else if(isIntegralTypeButNotPointer(providedType) && isPointerType(toType))
         {
             // throw new CoercionException(this, toType, providedType, "Yolo baggins, we still need to implement dis");
 
