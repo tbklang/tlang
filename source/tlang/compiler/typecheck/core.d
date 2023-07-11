@@ -1273,22 +1273,22 @@ public final class TypeChecker
      *
      * Params:
      *   integralType1 = the first `Integer`-based type to test
-     *   IntegralType2 = the second `Integer`-based type to test
+     *   integralType2 = the second `Integer`-based type to test
      * Returns: the biggest `Integer` type
      */
-    private Integer biggerOfTheTwo(Integer integralType1, Integer IntegralType2)
+    private Integer biggerOfTheTwo(Integer integralType1, Integer integralType2)
     {
         // Sanity check, please don't pass Pointer types in here
         // as that isn't the intended usage
         assert(!isPointerType(integralType1) && !isPointerType(integralType2));
 
-        if(integralType1.getSize() > IntegralType2.getSize())
+        if(integralType1.getSize() > integralType2.getSize())
         {
             return integralType1;
         }
-        else if(integralType1.getSize() < IntegralType2.getSize())
+        else if(integralType1.getSize() < integralType2.getSize())
         {
-            return IntegralType2;
+            return integralType2;
         }
         else
         {
