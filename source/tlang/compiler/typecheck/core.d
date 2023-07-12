@@ -2296,19 +2296,19 @@ public final class TypeChecker
                         assert(returnExpressionInstr);
                         Type returnExpressionInstrType = returnExpressionInstr.getInstrType();
 
-                        // FIXME: Add the typeEnforce() call here
+                        /**
+                         * Type check the return expression's type with that of the containing
+                         * function's retur type, if they don't match attempt coercion.
+                         *
+                         * On type check failure, an exception is thrown.
+                         *
+                         * On success, the `retjrnExpressionInstr` MAY be updated and then
+                         * we continue on.
+                         */
+                        typeEnforce(functionReturnType, returnExpressionInstr, returnExpressionInstr, true);
 
-                        /* Ensure the expression's type matches the function's return type */
-                        if(isSameType(functionReturnType, returnExpressionInstrType))
-                        {
-                            /* Generate the instruction */
-                            returnInstr = new ReturnInstruction(returnExpressionInstr);
-                        }
-                        /* If not, then raise an error */
-                        else
-                        {
-                            throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Returning an expression of type '"~returnExpressionInstrType.toString()~"' does not match function's return type '"~functionReturnType.toString()~"'");
-                        }
+                        /* Generate the instruction */
+                        returnInstr = new ReturnInstruction(returnExpressionInstr);
                     }
                     /* If not then this is an error */
                     else
