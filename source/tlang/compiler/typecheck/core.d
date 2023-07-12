@@ -2296,6 +2296,8 @@ public final class TypeChecker
                         assert(returnExpressionInstr);
                         Type returnExpressionInstrType = returnExpressionInstr.getInstrType();
 
+                        // FIXME: Add the typeEnforce() call here
+
                         /* Ensure the expression's type matches the function's return type */
                         if(isSameType(functionReturnType, returnExpressionInstrType))
                         {
