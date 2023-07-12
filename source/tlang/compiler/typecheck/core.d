@@ -1674,7 +1674,8 @@ public final class TypeChecker
             else if(cast(ReturnStmt)statement)
             {
                 ReturnStmt returnStatement = cast(ReturnStmt)statement;
-                Function funcContainer = cast(Function)statement.parentOf();
+                Function funcContainer = cast(Function)resolver.findContainerOfType(Function.classinfo, returnStatement);
+                assert(funcContainer);
                 string functionName = resolver.generateName(funcContainer.parentOf(), funcContainer);
 
                 /* Generated return instruction */
