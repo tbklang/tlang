@@ -396,4 +396,35 @@ public final class Resolver
 
         }
     }
+
+    /** 
+     * Given a type-of `Container` and a starting `Statement` (AST node) this will
+     * swim upwards to try and find the first matching parent of which is of the given
+     * type (exactly, not kind-of).
+     *
+     * Params:
+     *   containerType = the type-of `Container` to look for
+     *   startingNode = the starting AST node (as a `Statement`)
+     * Returns: the found `Container`, or `null` if not found
+     */
+    public Container findContainerOfType(TypeInfo_Class containerType, Statement startingNode)
+    {
+        // If the given AST objetc is null, return null
+        if(startingNode is null)
+        {
+            return null;
+        }
+        // If the given AST object's type is of the type given
+        else if(typeid(startingNode) == containerType)
+        {
+            // Sanity check: You should not be calling with a TypeInfo_Class referring to a non-`Container`
+            assert(cast(Container)startingNode);
+            return cast(Container)startingNode;
+        }
+        // If not, swim up to the parent
+        else
+        {
+            return findContainerOfType(containerType, cast(Statement)startingNode.parentOf());
+        }
+    }
 }
