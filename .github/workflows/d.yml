@@ -115,6 +115,10 @@ jobs:
               exit 1
           fi
 
+
+      - name: Simple return (expressionless)
+        run: ./tlang syntaxcheck source/tlang/testing/return/simple_return_expressionless.t
+
   typecheck:
     needs: [build, unittests]
     name: Typechecking tests
@@ -129,6 +133,14 @@ jobs:
       - name: Chmod compiler
         run: chmod +x tlang
         
+
+      - name: Simple return (expressionless)
+        run: ./tlang typecheck source/tlang/testing/return/simple_return_expressionless.t
+
+      - name: Simple return (with expression)
+        run: ./tlang typecheck source/tlang/testing/return/simple_return_type.t
+
+      
         
       - name: Simple function call
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t

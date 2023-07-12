@@ -17,5 +17,7 @@ dub.selections.json
 # Documentation )generated)
 docs/
 docs.json
-desktop_dev.code-workspace
+
+# Codium workspace files
 testing.code-workspace
+desktop_dev.code-workspace

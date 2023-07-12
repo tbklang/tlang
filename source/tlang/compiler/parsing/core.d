@@ -606,19 +606,30 @@ public final class Parser
         /* Move from `return` onto start of expression */
         lexer.nextToken();
 
-        /* Parse the expression till termination */
-        Expression returnExpression = parseExpression();
+        // TODO: Check if semicolon here (no expression) else expect expression
 
-        /* Expect a semi-colon as the terminator */
-        gprintln(lexer.getCurrentToken());
-        expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-        
+        /* If the next token after `return` is a `;` then it is an expressionless return */
+        if(getSymbolType(lexer.getCurrentToken()) == SymbolType.SEMICOLON)
+        {
+            /* Create the ReturnStmt (without an expression) */
+            returnStatement = new ReturnStmt();
+        }
+        /* Else, then look for an expression */
+        else
+        {
+            /* Parse the expression till termination */
+            Expression returnExpression = parseExpression();
+
+            /* Expect a semi-colon as the terminator */
+            gprintln(lexer.getCurrentToken());
+            expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+
+            /* Create the ReturnStmt */
+            returnStatement = new ReturnStmt(returnExpression);
+        }
 
         /* Move off of the terminator */
         lexer.nextToken();
-
-        /* Create the ReturnStmt */
-        returnStatement = new ReturnStmt(returnExpression);
 
         return returnStatement;
     }
