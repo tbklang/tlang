@@ -355,6 +355,19 @@ jobs:
           else
               exit 1
           fi
+
+      - name: Function return expression coercion (good)
+        run: ./tlang typecheck source/tlang/testing/simple_function_return_type_check_good.t
+      - name: Function return expression coercion (bad)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_function_return_type_check_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
   emit:
     needs: [build, unittests]
