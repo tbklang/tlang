@@ -1602,6 +1602,8 @@ public final class Parser
 
                 // TODO: Add a check here that the last statement must be a ReturnStmt if this
                 // ... is a non-void function (just for exietence, `parseFuncDef` will ensure ordering)
+                // FIXME: This will actualy trigger when efunc is used, so must only run this
+                // ... when wantsBody is TRUE!
                 if(type != "void")
                 {
                     bool hasReturn;
