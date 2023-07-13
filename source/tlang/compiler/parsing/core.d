@@ -1604,8 +1604,20 @@ public final class Parser
                 // ... is a non-void function (just for exietence, `parseFuncDef` will ensure ordering)
                 if(type != "void")
                 {
-                    // TODO: Add search for a `ReturnStmt` here
-                    expect("Function '"~identifier~"' declared with return type does not contain a return statement");
+                    bool hasReturn;
+                    foreach(Statement stmt; pair.bodyStatements)
+                    {
+                        if(cast(ReturnStmt)stmt)
+                        {
+                            hasReturn = true;
+                            break;
+                        }
+                    }
+
+                    if(!hasReturn)
+                    {
+                        expect("Function '"~identifier~"' declared with return type does not contain a return statement");
+                    }
                 }
 
                 generated = new Function(identifier, type, pair.bodyStatements, pair.params);
