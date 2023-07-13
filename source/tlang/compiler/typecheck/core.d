@@ -2238,26 +2238,23 @@ public final class TypeChecker
             {
                 ReturnStmt returnStatement = cast(ReturnStmt)statement;
                 Function funcContainer = cast(Function)resolver.findContainerOfType(Function.classinfo, returnStatement);
-                assert(funcContainer);
-                string functionName = resolver.generateName(funcContainer.parentOf(), funcContainer);
 
                 /* Generated return instruction */
                 ReturnInstruction returnInstr;
 
-                /** 
-                 * Typecheck
-                 *
-                 * TODO: Add typechecking for the return expression
-                 * we'd need context of where we are, probably our
-                 * parent could be used to check which function
-                 * we belong to and hence do the typecheck
+                /**
+                 * Ensure that the `ReturnStmt` is finally parented
+                 * by a `Function`
                  */
                 if(!funcContainer)
                 {
                     throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "A return statement can only appear in the body of a function");
                 }
-                
 
+                /**
+                 * Extract information about the finally-parented `Function`
+                 */
+                string functionName = resolver.generateName(funcContainer.parentOf(), funcContainer);
                 Type functionReturnType = getType(funcContainer, funcContainer.getType());
                 
 
