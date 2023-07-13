@@ -1600,6 +1600,14 @@ public final class Parser
                 /* Will consume the `}` (or `;` if wantsBody-false) */
                 funcDefPair pair = parseFuncDef(wantsBody);
 
+                // TODO: Add a check here that the last statement must be a ReturnStmt if this
+                // ... is a non-void function (just for exietence, `parseFuncDef` will ensure ordering)
+                if(type != "void")
+                {
+                    // TODO: Add search for a `ReturnStmt` here
+                    expect("Function '"~identifier~"' declared with return type does not contain a return statement");
+                }
+
                 generated = new Function(identifier, type, pair.bodyStatements, pair.params);
                 
                 import std.stdio;
