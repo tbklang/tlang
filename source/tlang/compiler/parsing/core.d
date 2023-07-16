@@ -44,7 +44,7 @@ public final class Parser
      * Params:
      *   message = the expectation message
      */
-    public static void expect(string message)
+    public void expect(string message)
     {
         gprintln(message, DebugType.ERROR);
 
