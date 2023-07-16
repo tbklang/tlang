@@ -479,6 +479,19 @@ public class DNodeGenerator
         //generate();
     }
 
+    /** 
+     * Crashes the dependency generator with an
+     * expectation message by throwing a new
+     * `DependencyException`.
+     *
+     * Params:
+     *   message = the expectation message
+     */
+    public void expect(string message)
+    {
+        throw new DependencyException(DependencyError.GENERAL_ERROR, message);
+    }
+
     public DNode root;
 
 
@@ -702,14 +715,14 @@ public class DNodeGenerator
                 }
                 else
                 {
-                    Parser.expect("Only class-type may be used with `new`");
+                    expect("Only class-type may be used with `new`");
                     assert(false);
                 }
                 gprintln("Poe naais");
             }
             else
             {
-                Parser.expect("Invalid ryp");
+                expect("Invalid ryp");
                 assert(false);
             }
             // FunctionCall 
@@ -817,7 +830,7 @@ public class DNodeGenerator
                         }
                         else
                         {
-                            Parser.expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
+                            expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
                         }
 
 
@@ -865,7 +878,7 @@ public class DNodeGenerator
                 }
                 else
                 {
-                    Parser.expect("No entity by the name "~nearestName~" exists (at all)");
+                    expect("No entity by the name "~nearestName~" exists (at all)");
                 }
 
                
@@ -960,7 +973,7 @@ public class DNodeGenerator
                     }
                     else
                     {
-                        Parser.expect("Could not acces \""~remainingSegment~"\" as it is not a container");
+                        expect("Could not acces \""~remainingSegment~"\" as it is not a container");
                     }
 
                 }
@@ -971,7 +984,7 @@ public class DNodeGenerator
                 */
                 else
                 {
-                    Parser.expect("Could not find an entity named "~remainingSegment);
+                    expect("Could not find an entity named "~remainingSegment);
                 }
             }
 
@@ -1391,7 +1404,7 @@ public class DNodeGenerator
             }
             else
             {
-                Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
+                expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
                 return null;
             }            
         }
@@ -1791,7 +1804,7 @@ public class DNodeGenerator
         /* Sanity check */
         if(clazz.getModifierType() != InitScope.STATIC)
         {
-            Parser.expect("SanityCheck: poolClassStatic(): Cannot pool a non-static class");
+            expect("SanityCheck: poolClassStatic(): Cannot pool a non-static class");
             // assert(clazz.getModifierType() == InitScope.STATIC);
         }
         
