@@ -37,15 +37,18 @@ public final class Parser
         }
     }
 
-    /**
-    * Crashes the parser with the given message
-    */
+    /** 
+     * Crashes the parser with an expectation message
+     * by throwing a new `ParserException`.
+     *
+     * Params:
+     *   message = the expectation message
+     */
     public static void expect(string message)
     {
-        //throw new TError(message);
         gprintln(message, DebugType.ERROR);
 
-        throw new TError(message);
+        throw new ParserException(this, ParserException.ParserErrorType.GENERAL_ERROR, message);
     }
 
     /** 
