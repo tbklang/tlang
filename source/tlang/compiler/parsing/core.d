@@ -2862,7 +2862,7 @@ int thing()
         Container funcThingContainer = cast(Container)funcThing;
         assert(funcThingContainer);
         Statement[] funcThingStatements = funcThingContainer.getStatements();
-        assert(funcThingStatements.length == 2);
+        assert(funcThingStatements.length == 3);
 
         // TODO: Finish this
         // TODO: Add a check for the Statement types in the bodies, the arguments and the parameters
