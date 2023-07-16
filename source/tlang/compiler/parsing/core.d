@@ -3130,13 +3130,9 @@ int wrongFunction()
 
         assert(false);
     }
-    catch(ParserException e)
-    {
-        // TODO: Try make errors specific enough to yank them out
-        assert(true);
-    }
+    // TODO: Make more specific (see https://deavmi.assigned.network/git/tlang/tlang/issues/147)
     catch(TError)
     {
-        assert(false);
+        assert(true);
     }
 }
