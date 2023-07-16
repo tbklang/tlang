@@ -10,13 +10,6 @@ import core.stdc.stdlib;
 import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
 
-// public final class ParserError : TError
-// {
-
-// }
-
-
-
 bool isUnitTest;
 
 // TODO: Technically we could make a core parser etc
