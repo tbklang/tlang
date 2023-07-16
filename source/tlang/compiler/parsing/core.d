@@ -78,6 +78,61 @@ public final class Parser
         this.lexer = lexer;
     }
 
+    /** 
+     * Given a type of `Statement` to look for and a `Container` of
+     * which to search with in. This method will recursively search
+     * down the given container and look for any statements which
+     * are a kind-of (`isBaseOf`) the requested type. it will return
+     * an array of `Statement` (`Statement[]`) of the matches.
+     *
+     * The container itself is not considered in this type check.
+     *
+     * Params:
+     *   statementType = the kind-of statement to look for
+     *   from = the `Container` to search within
+     * Returns: a `Statement[]` of matches
+     */
+    private static Statement[] findOfType(TypeInfo_Class statementType, Container from)
+    {
+        Statement[] matches;
+
+        Statement[] bodyStatements = from.getStatements();
+        foreach(Statement bodyStmt; bodyStatements)
+        {
+            if(cast(Container)bodyStmt)
+            {
+                matches ~= findOfType(statementType, cast(Container)bodyStmt);
+            }
+
+            if(statementType.isBaseOf(typeid(bodyStmt)))
+            {
+                matches ~= [bodyStmt];
+            }
+        }
+
+        return matches;
+    }
+
+    /** 
+     * Given a type of `Statement` to look for and a `Container` of
+     * which to search with in. This method will recursively search
+     * down the given container and look for any statements which
+     * are a kind-of (`isBaseOf`) the requested type. It will return
+     * `true` if any macthes are found.
+     *
+     * The container itself is not considered in this type check.
+     *
+     * Params:
+     *   statementType = the kind-of statement to look for
+     *   from = the `Container` to search within
+     * Returns: `true` if at least one match is found, `false`
+     * otherwise
+     */
+    private static bool existsWithin(TypeInfo_Class statementType, Container from)
+    {
+        return findOfType(statementType, from).length != 0;
+    }
+
     /**
     * Parses if statements
     *
@@ -1600,6 +1655,10 @@ public final class Parser
                 /* Will consume the `}` (or `;` if wantsBody-false) */
                 funcDefPair pair = parseFuncDef(wantsBody);
 
+                
+
+                generated = new Function(identifier, type, pair.bodyStatements, pair.params);
+
                 /**
                  * If this function definition has a body (i.e. `wantsBody == true`)
                  * and if the return type is non-void, THEN ensure we have a `ReturnStmt`
@@ -1607,15 +1666,8 @@ public final class Parser
                  */
                 if(wantsBody && type != "void")
                 {
-                    bool hasReturn;
-                    foreach(Statement stmt; pair.bodyStatements)
-                    {
-                        if(cast(ReturnStmt)stmt)
-                        {
-                            hasReturn = true;
-                            break;
-                        }
-                    }
+                    /* Recurse down to find a `ReturnStmt` */
+                    bool hasReturn = existsWithin(typeid(ReturnStmt), cast(Container)generated);
 
                     // Error if no return statement exists
                     if(!hasReturn)
@@ -1623,8 +1675,6 @@ public final class Parser
                         expect("Function '"~identifier~"' declared with return type does not contain a return statement");
                     }
                 }
-
-                generated = new Function(identifier, type, pair.bodyStatements, pair.params);
                 
                 import std.stdio;
                 writeln(to!(string)((cast(Function)generated).getVariables()));
