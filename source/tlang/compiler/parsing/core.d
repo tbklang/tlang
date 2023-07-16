@@ -1600,6 +1600,30 @@ public final class Parser
                 /* Will consume the `}` (or `;` if wantsBody-false) */
                 funcDefPair pair = parseFuncDef(wantsBody);
 
+                /**
+                 * If this function definition has a body (i.e. `wantsBody == true`)
+                 * and if the return type is non-void, THEN ensure we have a `ReturnStmt`
+                 * (return statement)
+                 */
+                if(wantsBody && type != "void")
+                {
+                    bool hasReturn;
+                    foreach(Statement stmt; pair.bodyStatements)
+                    {
+                        if(cast(ReturnStmt)stmt)
+                        {
+                            hasReturn = true;
+                            break;
+                        }
+                    }
+
+                    // Error if no return statement exists
+                    if(!hasReturn)
+                    {
+                        expect("Function '"~identifier~"' declared with return type does not contain a return statement");
+                    }
+                }
+
                 generated = new Function(identifier, type, pair.bodyStatements, pair.params);
                 
                 import std.stdio;
@@ -2736,6 +2760,8 @@ int thing()
 {
     int discardExpr = function(&j);
     int** l;
+
+    return 0;
 }
 `;
     LexerInterface currentLexer = new BasicLexer(sourceCode);
@@ -3012,6 +3038,54 @@ void function()
         // TODO: @Tristan Add this
     }
     catch(TError e)
+    {
+        assert(false);
+    }
+}
+
+/**
+ * Function test case
+ *
+ * Test: A function of a non-void return type
+ * must have a return statement
+ */
+unittest
+{
+    string sourceCode = `
+module myModule;
+
+int wrongFunction()
+{
+
+}
+`;
+
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        (cast(BasicLexer)currentLexer).performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    
+    Parser parser = new Parser(currentLexer);
+    
+    try
+    {
+        Module modulle = parser.parse();
+
+        assert(false);
+    }
+    catch(ParserException e)
+    {
+        // TODO: Try make errors specific enough to yank them out
+        assert(true);
+    }
+    catch(TError)
     {
         assert(false);
     }
