@@ -10,8 +10,6 @@ import core.stdc.stdlib;
 import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
 
-bool isUnitTest;
-
 // TODO: Technically we could make a core parser etc
 public final class Parser
 {
@@ -47,16 +45,7 @@ public final class Parser
         //throw new TError(message);
         gprintln(message, DebugType.ERROR);
 
-        if(isUnitTest)
-        {
-            throw new TError(message);
-            assert(false);
-        }
-        else
-        {
-            throw new TError(message);
-            //exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
-        }
+        throw new TError(message);
     }
 
     /** 
