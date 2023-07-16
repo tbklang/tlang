@@ -1608,6 +1608,8 @@ public final class Parser
                 if(wantsBody && type != "void")
                 {
                     bool hasReturn;
+
+                    // FIXME: Need a recursive search downwards
                     foreach(Statement stmt; pair.bodyStatements)
                     {
                         if(cast(ReturnStmt)stmt)
