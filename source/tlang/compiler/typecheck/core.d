@@ -78,6 +78,18 @@ public final class TypeChecker
         return config;
     }
 
+    /** 
+     * Crashes the type checker with an expectation message
+     * by throwing a new `TypeCheckerException`.
+     *
+     * Params:
+     *   message = the expectation message
+     */
+    public void expect(string message)
+    {
+        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, message);
+    }
+
     /**
     * I guess this should be called rather
     * when processing assignments but I also
@@ -2878,19 +2890,19 @@ public final class TypeChecker
                         }
                         else
                         {
-                            Parser.expect("Cannot inherit from self");
+                            expect("Cannot inherit from self");
                         }
                     }
                     /* Error */
                 else
                     {
-                        Parser.expect("Can only inherit from classes");
+                        expect("Can only inherit from classes");
                     }
                 }
                 /* If the entity doesn't exist then it is an error */
                 else
                 {
-                    Parser.expect("Could not find any entity named " ~ parent);
+                    expect("Could not find any entity named " ~ parent);
                 }
             }
         }
@@ -3155,7 +3167,7 @@ public final class TypeChecker
             */
             if (resolver.resolveUp(c, clazz.getName()) != clazz)
             {
-                Parser.expect("Cannot define class \"" ~ resolver.generateName(modulle,
+                expect("Cannot define class \"" ~ resolver.generateName(modulle,
                         clazz) ~ "\" as one with same name, \"" ~ resolver.generateName(modulle,
                         resolver.resolveUp(c, clazz.getName())) ~ "\" exists in container \"" ~ resolver.generateName(
                         modulle, containerEntity) ~ "\"");
@@ -3170,7 +3182,7 @@ public final class TypeChecker
                 // {
                 if (cmp(containerEntity.getName(), clazz.getName()) == 0)
                 {
-                    Parser.expect("Class \"" ~ resolver.generateName(modulle,
+                    expect("Class \"" ~ resolver.generateName(modulle,
                             clazz) ~ "\" cannot be defined within container with same name, \"" ~ resolver.generateName(
                             modulle, containerEntity) ~ "\"");
                 }

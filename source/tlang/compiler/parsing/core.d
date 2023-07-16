@@ -10,15 +10,6 @@ import core.stdc.stdlib;
 import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
 
-// public final class ParserError : TError
-// {
-
-// }
-
-
-
-bool isUnitTest;
-
 // TODO: Technically we could make a core parser etc
 public final class Parser
 {
@@ -46,24 +37,18 @@ public final class Parser
         }
     }
 
-    /**
-    * Crashes the parser with the given message
-    */
-    public static void expect(string message)
+    /** 
+     * Crashes the parser with an expectation message
+     * by throwing a new `ParserException`.
+     *
+     * Params:
+     *   message = the expectation message
+     */
+    public void expect(string message)
     {
-        //throw new TError(message);
         gprintln(message, DebugType.ERROR);
 
-        if(isUnitTest)
-        {
-            throw new TError(message);
-            assert(false);
-        }
-        else
-        {
-            throw new TError(message);
-            //exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
-        }
+        throw new ParserException(this, ParserException.ParserErrorType.GENERAL_ERROR, message);
     }
 
     /** 
@@ -3130,9 +3115,12 @@ int wrongFunction()
 
         assert(false);
     }
-    // TODO: Make more specific (see https://deavmi.assigned.network/git/tlang/tlang/issues/147)
-    catch(TError)
+    catch(ParserException)
     {
         assert(true);
+    }
+    catch(TError)
+    {
+        assert(false);
     }
 }
