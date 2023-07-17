@@ -401,3 +401,50 @@ public class Clazz : Type, Container
     }
     
 }
+
+
+/**
+ * Test the `MCloneable`-ity support of `Struct`
+ * which has two `Variable` members (therefore
+ * also testing the `clone()` on `Variable`)
+ */
+unittest
+{
+    Struct original = new Struct("User");
+    Variable originalVar_Name = new Variable("byte*", "name");
+    Variable originalVar_Age = new Variable("int", "age");
+    originalVar_Name.parentTo(original);
+    originalVar_Age.parentTo(original);
+    original.addStatement(originalVar_Name);
+    original.addStatement(originalVar_Age);
+    
+    // Now clone it
+    Struct cloned = cast(Struct)original.clone();
+
+    // Cloned version should differ
+    assert(cloned !is original);
+
+    // Cloned statements versus original statements
+    Statement[] clonedStmts = cloned.getStatements();
+    Statement[] originalStmts = original.getStatements();
+    assert(clonedStmts[0] !is originalStmts[0]);
+    assert(clonedStmts[1] !is originalStmts[1]);
+
+    // Compare the variables (members) of both
+    Variable origStruct_MemberOne = cast(Variable)originalStmts[0];
+    Variable origStruct_MemberTwo = cast(Variable)originalStmts[1];
+    Variable clonedStruct_MemberOne = cast(Variable)clonedStmts[0];
+    Variable clonedStruct_MemberTwo = cast(Variable)clonedStmts[1];
+    assert(origStruct_MemberOne !is clonedStruct_MemberOne);
+    assert(origStruct_MemberTwo !is clonedStruct_MemberTwo);
+    assert(originalVar_Name.getName() == clonedStruct_MemberOne.getName()); // Names should match
+    assert(origStruct_MemberTwo.getName() == clonedStruct_MemberTwo.getName()); // Names should match
+
+    assert(origStruct_MemberOne.parentOf() == original);
+    assert(origStruct_MemberTwo.parentOf() == original);
+    assert(clonedStruct_MemberOne.parentOf() == cloned);
+    assert(clonedStruct_MemberTwo.parentOf() == cloned);
+
+    // TODO: Make this more deeper this test as a few
+    // ... more things were left out that can be checked
+}
