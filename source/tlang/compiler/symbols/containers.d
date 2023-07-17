@@ -174,6 +174,11 @@ public class Struct : Type, Container, MCloneable
         super(name);
     }
 
+    public override string toString()
+    {
+        return "Struct (Name: "~name~")";
+    }
+
     public override Statement[] search(TypeInfo_Class clazzType)
     {
         /* List of returned matches */
