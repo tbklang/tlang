@@ -1304,9 +1304,9 @@ public class DNodeGenerator
             else if(cast(Struct)variableType)
             {
                 Struct structType = cast(Struct)variableType;
-                Struct structInstance = cast(Struct)structType.clone();
-                // FIXME: THis should be an argument to pass a `Container` to clone of which to parent self to
-                structInstance.parentTo(structType.parentOf());
+
+                // Make a cloned-and-reparented copy
+                Struct structInstance = cast(Struct)structType.clone(structType.parentOf());
 
                 // We need a fresh clone of this struct type
                 // such that we can treat all vardecs as unique
