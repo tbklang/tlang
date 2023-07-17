@@ -104,7 +104,7 @@ public final class DCodeEmitter : CodeEmitter
             // return "KAK TODO";
         }
 
-        gprintln("Type transform unimplemented", DebugType.ERROR);
+        gprintln("Type transform unimplemented for type '"~to!(string)(typeIn)~"'", DebugType.ERROR);
         assert(false);
         // return stringRepr;
     }
