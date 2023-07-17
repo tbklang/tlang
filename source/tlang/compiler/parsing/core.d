@@ -2008,7 +2008,6 @@ public final class Parser
         return statement;
     }
 
-    // TODO: This ic currently dead code and ought to be used/implemented
     private Statement parseStatement(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
     {
         gprintln("parseStatement(): Enter", DebugType.WARNING);
