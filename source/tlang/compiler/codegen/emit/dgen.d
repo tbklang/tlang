@@ -110,7 +110,7 @@ public final class DCodeEmitter : CodeEmitter
             gprintln("Monday left me broken");
         }
 
-        gprintln("Type transform unimplemented", DebugType.ERROR);
+        gprintln("Type transform unimplemented for type '"~to!(string)(typeIn)~"'", DebugType.ERROR);
         assert(false);
         // return stringRepr;
     }
