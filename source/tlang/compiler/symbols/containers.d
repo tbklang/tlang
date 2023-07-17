@@ -252,9 +252,13 @@ public class Struct : Type, Container, MCloneable
      * fresh copy of all its members and the struct
      * itself.
      *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
      * Returns: the cloned `Statement`
      */
-    public override Statement clone()
+    public override Statement clone(Container newParent = null)
     {
         Struct clonedStruct = new Struct(this.name);
 
