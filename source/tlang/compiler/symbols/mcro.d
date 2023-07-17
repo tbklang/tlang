@@ -60,7 +60,11 @@ public interface MCloneable
      * Returns a `Statement` which is a clone of this one
      * itself
      *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
      * Returns: the cloned `Statement`
      */
-    public Statement clone();
+    public Statement clone(Container newParent = null);
 }
