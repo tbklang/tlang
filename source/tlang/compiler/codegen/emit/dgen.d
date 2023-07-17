@@ -107,7 +107,14 @@ public final class DCodeEmitter : CodeEmitter
         /* Struct type */
         else if(cast(Struct)typeIn)
         {
-            gprintln("Monday left me broken");
+            Struct structType = cast(Struct)typeIn;
+
+            // TODO: We could make it typedef somewhere but would need to store
+            // ... declared types then to make use of it here
+            string typeString = "struct "~structType.getName();
+            // FIXME: Is the above the correct struct-type-usage syntax?
+
+            return typeString;
         }
 
         gprintln("Type transform unimplemented for type '"~to!(string)(typeIn)~"'", DebugType.ERROR);
