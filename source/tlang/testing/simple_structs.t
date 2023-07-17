@@ -6,3 +6,5 @@ struct User
     int age;
 }
 
+User u1;
+User u2;
