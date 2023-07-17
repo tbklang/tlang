@@ -37,6 +37,20 @@ public final class StructInstanceInit : DNode
         return cast(Struct)getEntity();
     }
 
+    /** 
+     * Gets the number of members of the
+     * struct being initialized.
+     *
+     * Useful for when doing the code
+     * generation pass.
+     *
+     * Returns: the number of members
+     */
+    public ulong getMemberCount()
+    {
+        return (cast(Container)entity).getStatements().length;
+    }
+
     private void initName()
     {
         name = "StructInstantiate: "~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
