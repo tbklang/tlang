@@ -18,6 +18,7 @@ import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariablePar
 import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
+import tlang.compiler.symbols.containers : Struct;
 import tlang.compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
@@ -102,6 +103,11 @@ public final class DCodeEmitter : CodeEmitter
             
             return typeTransform(stackArray.getComponentType());
             // return "KAK TODO";
+        }
+        /* Struct type */
+        else if(cast(Struct)typeIn)
+        {
+            gprintln("Monday left me broken");
         }
 
         gprintln("Type transform unimplemented", DebugType.ERROR);
