@@ -1523,13 +1523,6 @@ public final class TypeChecker
                 Value vRhsInstr = cast(Value)popInstr();
                 Value vLhsInstr = cast(Value)popInstr();
 
-                /** 
-                 * Attempt to coerce the types of both instructions if one is
-                 * a pointer and another is an integer, else do nothing
-                 */
-                // attemptPointerAriehmeticCoercion(vLhsInstr, vRhsInstr);
-
-
                 Type vRhsType = vRhsInstr.getInstrType();
                 Type vLhsType = vLhsInstr.getInstrType();
 
@@ -1549,7 +1542,6 @@ public final class TypeChecker
                  *
                  * Last case is if the above two are not true.
                  */
-                // FIXME: I must disable the above attemptPointerCOercion else it won;t work
                 if(isPointerType(vLhsType) && isIntegralTypeButNotPointer(vRhsType)) // <a> is Pointer, <b> is Integer
                 {
                     // Coerce right-hand side towards left-hand side
@@ -1581,7 +1573,7 @@ public final class TypeChecker
                     assert(vLhsTypeIntegral);
                     Integer vRhsTypeIntegral = cast(Integer)vRhsType;
                     assert(vRhsTypeIntegral);
-                    
+
                     if(cast(LiteralValue)vLhsInstr || cast(LiteralValue)vRhsInstr)
                     {
                         // Type enforce left-hand instruction to right-hand instruction
