@@ -4,7 +4,7 @@ ubyte factorial(ubyte i)
 {
     if(i == cast(ubyte)0)
     {
-        return cast(ubyte)1;
+        return 1;
     }
     else
     {
