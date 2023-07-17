@@ -440,6 +440,7 @@ unittest
     assert(originalVar_Name.getName() == clonedStruct_MemberOne.getName()); // Names should match
     assert(origStruct_MemberTwo.getName() == clonedStruct_MemberTwo.getName()); // Names should match
 
+    // Ensure re-parenting is correct
     assert(origStruct_MemberOne.parentOf() == original);
     assert(origStruct_MemberTwo.parentOf() == original);
     assert(clonedStruct_MemberOne.parentOf() == cloned);
