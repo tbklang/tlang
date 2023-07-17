@@ -1625,6 +1625,9 @@ public final class TypeChecker
 
             /* Add this static initialization to the list of global allocations required */
             addInit(clazzStaticInitAllocInstr);
+
+            // FIXME: This shouldn't be presentin here, like, ever
+            // ... in depgen we should generate it once or something
         }
         /* It will pop a bunch of shiiit */
         /* TODO: ANy statement */
