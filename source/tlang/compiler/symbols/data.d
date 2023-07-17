@@ -4,6 +4,9 @@ public import tlang.compiler.symbols.check;
 import std.conv : to;
 import tlang.compiler.typecheck.dependency.core : Context;
 
+// For debug printing
+import gogga;
+
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
 
@@ -523,8 +526,14 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
     {
         Variable clonedVarDec;
 
-        // Clone the assignment
-        VariableAssignment clonedVarAss = cast(VariableAssignment)this.assignment.clone();
+        // If there's an assignment, then clone it
+        VariableAssignment clonedVarAss = null;
+        if(this.assignment)
+        {
+            // Clone the assignment
+            clonedVarAss = cast(VariableAssignment)this.assignment.clone();
+        }
+        
 
         // Create new variable with same name and identifier
         clonedVarDec = new Variable(this.type, this.name);
