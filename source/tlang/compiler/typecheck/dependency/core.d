@@ -1714,6 +1714,16 @@ public class DNodeGenerator
 
             return funcCallDNode;
         }
+        /** 
+         * Struct declaration
+         *
+         * We ignore as not static initialization
+         * is possible.
+         */
+        else if(cast(Struct)entity)
+        {
+            gprintln("Struct type declarations are ignored and no dependency generated for return", DebugType.WARNING);
+        }
 
         return null;
     }
