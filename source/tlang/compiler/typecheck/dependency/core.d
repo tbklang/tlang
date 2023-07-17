@@ -1303,7 +1303,12 @@ public class DNodeGenerator
             /* Struct-type */
             else if(cast(Struct)variableType)
             {
+                Struct structType = cast(Struct)variableType;
 
+                // FIXME: THE POOL SHOULD BE OF A CLONE!
+                // TODO: We may need to check this for 
+                DNode structInstanceDNode = generalPass(structType, context);
+                variableDNode.needs(structInstanceDNode);
             }
             /* Stack-based array-type */
             else if(cast(StackArray)variableType)
