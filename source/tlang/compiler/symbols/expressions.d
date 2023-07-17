@@ -286,7 +286,7 @@ public final class NewExpression : Expression
     }
 }
 
-public final class CastedExpression : Expression
+public final class CastedExpression : Expression, MCloneable
 {
     private Expression uncastedExpression;
     private string toType;
@@ -305,6 +305,29 @@ public final class CastedExpression : Expression
     public Expression getEmbeddedExpression()
     {
         return uncastedExpression;
+    }
+
+    /** 
+     * Clones this casted expression recursively
+     * and returns a fresh copy of it
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone()
+    {
+        CastedExpression clonedCastedExpression;
+
+        // Clone the uncasted expression (if supported, TODO: throw an error if not)
+        Expression clonedUncastedExpression = null;
+        if(cast(MCloneable)this.uncastedExpression)
+        {
+            MCloneable cloneableExpression = cast(MCloneable)this.uncastedExpression;
+            clonedUncastedExpression = cast(Expression)cloneableExpression.clone();
+        }
+
+        clonedCastedExpression = new CastedExpression(this.toType, clonedUncastedExpression);
+
+        return clonedCastedExpression;
     }
 }
 
