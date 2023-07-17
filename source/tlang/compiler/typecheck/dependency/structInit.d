@@ -41,4 +41,9 @@ public final class StructInstanceInit : DNode
     {
         name = "StructInstantiate: "~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
     }
+
+    public override string toString()
+    {
+        return name;
+    }
 }
