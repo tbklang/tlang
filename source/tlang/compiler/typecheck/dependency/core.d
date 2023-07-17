@@ -1304,10 +1304,18 @@ public class DNodeGenerator
             else if(cast(Struct)variableType)
             {
                 Struct structType = cast(Struct)variableType;
+                Struct structInstance = cast(Struct)structType.clone();
+                // FIXME: THis should be an argument to pass a `Container` to clone of which to parent self to
+                structInstance.parentTo(structType.parentOf());
+
+                // We need a fresh clone of this struct type
+                // such that we can treat all vardecs as unique
+                // and not pool the same ones which would
+                // affect their visitation status on first run
 
                 // FIXME: THE POOL SHOULD BE OF A CLONE!
                 // TODO: We may need to check this for 
-                DNode structInstanceDNode = generalPass(structType, context);
+                DNode structInstanceDNode = generalPass(structInstance, context);
                 variableDNode.needs(structInstanceDNode);
             }
             /* Stack-based array-type */
