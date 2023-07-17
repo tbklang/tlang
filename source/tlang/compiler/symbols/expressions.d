@@ -158,9 +158,13 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
      * returning a fresh new copy of itself and its
      * left and right operands
      *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
      * Returns: the cloned `Statement`
      */
-    public override Statement clone()
+    public override Statement clone(Container newParent = null)
     {
         BinaryOperatorExpression clonedBinaryOp;
 
@@ -182,6 +186,9 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
 
         // Clone ourselves
         clonedBinaryOp = new BinaryOperatorExpression(this.operator, clonedLeftOperandExpression, clonedRightOperandExpression);
+
+        // Parent outselves to the given parent
+        clonedBinaryOp.parentTo(newParent);
 
         return clonedBinaryOp;
     }
@@ -218,13 +225,20 @@ public class IntegerLiteral : NumberLiteral, MCloneable
     /** 
      * Clones this integer literal
      *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
      * Returns: the cloned `Statement`
      */
-    public override Statement clone()
+    public override Statement clone(Container newParent = null)
     {
         IntegerLiteral clonedIntegerLiteral;
 
         clonedIntegerLiteral = new IntegerLiteral(this.numberLiteral, this.encoding);
+
+        // Parent outselves to the given parent
+        clonedIntegerLiteral.parentTo(newParent);
 
         return clonedIntegerLiteral;
     }
@@ -311,9 +325,13 @@ public final class CastedExpression : Expression, MCloneable
      * Clones this casted expression recursively
      * and returns a fresh copy of it
      *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
      * Returns: the cloned `Statement`
      */
-    public override Statement clone()
+    public override Statement clone(Container newParent = null)
     {
         CastedExpression clonedCastedExpression;
 
@@ -326,6 +344,9 @@ public final class CastedExpression : Expression, MCloneable
         }
 
         clonedCastedExpression = new CastedExpression(this.toType, clonedUncastedExpression);
+
+        // Parent outselves to the given parent
+        clonedCastedExpression.parentTo(newParent);
 
         return clonedCastedExpression;
     }
