@@ -33,6 +33,7 @@ public Statement[] weightReorder(Statement[] statements)
 }
 
 // TODO: Honestly all contains should be a kind-of `MStatementSearchable` and `MStatementReplaceable`
+// AND MCloneable
 public interface Container : MStatementSearchable, MStatementReplaceable
 {
     public void addStatement(Statement statement);
@@ -149,7 +150,7 @@ public class Module : Entity, Container
 * that are Variables (TODO: Enforce in parser)
 * TODO: Possibly enforce here too
 */
-public class Struct : Type, Container
+public class Struct : Type, Container, MCloneable
 {
     private Statement[] statements;
 
@@ -244,6 +245,41 @@ public class Struct : Type, Container
 
             return false;
         }
+    }
+
+    /** 
+     * Clones this struct recursively returning a
+     * fresh copy of all its members and the struct
+     * itself.
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone()
+    {
+        Struct clonedStruct = new Struct(this.name);
+
+        /** 
+         * Clone all the statements and re-parent them
+         * to the clone
+         */
+        Statement[] clonedStatements;
+        foreach(Statement curStmt; this.getStatements())
+        {
+            Statement clonedStmt;
+            if(cast(MCloneable)curStmt)
+            {
+                MCloneable cloneableCurStmt = cast(MCloneable)curStmt;
+                clonedStmt = cloneableCurStmt.clone();
+            }
+
+            // Re-parent to the cloned struct
+            clonedStmt.parentTo(clonedStruct);
+
+            // Add it to the cloned struct's body
+            clonedStruct.addStatement(clonedStmt);
+        }
+
+        return clonedStruct;
     }
 }
 
