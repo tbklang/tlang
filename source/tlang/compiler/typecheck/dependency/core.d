@@ -1316,7 +1316,13 @@ public class DNodeGenerator
                 // FIXME: THE POOL SHOULD BE OF A CLONE!
                 // TODO: We may need to check this for 
                 DNode structInstanceDNode = generalPass(structInstance, context);
-                variableDNode.needs(structInstanceDNode);
+
+                import tlang.compiler.typecheck.dependency.structInit : StructInstanceInit;
+                StructInstanceInit structInstantiateDNode = new StructInstanceInit(this, structInstance);
+
+                structInstantiateDNode.needs(structInstanceDNode);
+
+                variableDNode.needs(structInstantiateDNode);
             }
             /* Stack-based array-type */
             else if(cast(StackArray)variableType)
