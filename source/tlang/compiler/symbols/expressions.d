@@ -59,7 +59,7 @@ public class UnaryOperatorExpression : OperatorExpression
     }
 }
 
-public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable, MStatementReplaceable
+public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable, MStatementReplaceable, MCloneable
 {
     private Expression lhs, rhs;
 
@@ -151,6 +151,39 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
         {
             return false;
         }
+    }
+
+    /** 
+     * Clones this binery operator expression recursively
+     * returning a fresh new copy of itself and its
+     * left and right operands
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone()
+    {
+        BinaryOperatorExpression clonedBinaryOp;
+
+        // Clone the left-hand operand expression (if supported, TODO: throw an error if not)
+        Expression clonedLeftOperandExpression = null;
+        if(cast(MCloneable)this.lhs)
+        {
+            MCloneable cloneableExpression = cast(MCloneable)this.lhs;
+            clonedLeftOperandExpression = cast(Expression)cloneableExpression.clone();
+        }
+
+        // Clone the left-hand operand expression (if supported, TODO: throw an error if not)
+        Expression clonedRightOperandExpression = null;
+        if(cast(MCloneable)this.rhs)
+        {
+            MCloneable cloneableExpression = cast(MCloneable)this.rhs;
+            clonedRightOperandExpression = cast(Expression)cloneableExpression.clone();
+        }
+
+        // Clone ourselves
+        clonedBinaryOp = new BinaryOperatorExpression(this.operator, clonedLeftOperandExpression, clonedRightOperandExpression);
+
+        return clonedBinaryOp;
     }
 }
 
