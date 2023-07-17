@@ -813,18 +813,7 @@ public class VariableExpression : IdentExpression
     {
         super(identifier);
     }
-
-
-
-    import tlang.compiler.typecheck.core;
-    public override string evaluateType(TypeChecker typeChecker, Container c)
-    {
-        string type;
-
-
-        return null;
-    }
-
+    
     public override string toString()
     {
         return "[varExp: "~getName()~"]";

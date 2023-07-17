@@ -218,23 +218,9 @@ public abstract class NumberLiteral : Expression
     }
 }
 
-public class Expression : Statement
+public abstract class Expression : Statement
 {
-    import tlang.compiler.typecheck.core;
-    /* TODO: Takes in symbol table? */
-    public string evaluateType(TypeChecker typechecker, Container c)
-    {
-        /* TODO: Go through here evaluating the type */
-
-        return null;
-    }
-
-    this()
-    {
-
-    }
-
-    /* TODO: Evalute this expression's type */
+    
 }
 
 public final class NewExpression : Expression
