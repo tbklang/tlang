@@ -2162,22 +2162,6 @@ public final class TypeChecker
                  */
                 typeEnforce(variableDeclarationType, assignmentInstr, assignmentInstr, true);
                 assert(isSameType(variableDeclarationType, assignmentInstr.getInstrType())); // Sanity check
-
-
-                // // TODO: We should add a typecheck here where we update the type of the valInstr if it is of
-                // // ... type NumberLiteral and coerce it to the variable referred to by the VariableAssignment
-                // // ... see issue #94 part on "Coercion"
-                // // If the types match then everything is fine
-                // if(isSameType(variableDeclarationType, assignmentType))
-                // {
-                //     gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
-                // }
-                // // If the types do not match
-                // else
-                // {
-                //     // Then attempt coercion
-                //     attemptCoercion(variableDeclarationType, assignmentInstr);
-                // }
             }
 
             /* Generate a variable declaration instruction and add it to the codequeue */
@@ -2243,17 +2227,6 @@ public final class TypeChecker
                  */
                 typeEnforce(variableDeclarationType, assignmentInstr, assignmentInstr, true);
                 assert(isSameType(variableDeclarationType, assignmentInstr.getInstrType())); // Sanity check
-
-                // if(isSameType(variableDeclarationType, assignmentType))
-                // {
-                //     gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
-                // }
-                // // If the type's do not match
-                // else
-                // {
-                //     // Then attempt coercion
-                //     attemptCoercion(variableDeclarationType, assignmentInstr);
-                // }
 
                 /* Generate a variable assignment instruction and add it to the codequeue */
                 VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, assignmentInstr);
