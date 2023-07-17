@@ -1564,7 +1564,13 @@ public final class TypeChecker
                 else if(isIntegralTypeButNotPointer(vLhsType) && isIntegralTypeButNotPointer(vRhsType))
                 {
                     /**
-                     * Now coerce the instruction which is the smaller of the two.
+                     * If one of the instructions if a `LiteralValue` (a numeric literal)
+                     * and another is not then coerce the literal to the other instruction's
+                     * type.
+                     *
+                     * If the above is NOT true then:
+                     *
+                     * Coerce the instruction which is the smaller of the two.
                      *
                      * If they are equal then:
                      *
@@ -1575,12 +1581,7 @@ public final class TypeChecker
                     assert(vLhsTypeIntegral);
                     Integer vRhsTypeIntegral = cast(Integer)vRhsType;
                     assert(vRhsTypeIntegral);
-
-
-                    // TODO: There is a case to be made for when the instruction
-                    // with the bigger size is an IntegerLiteral - in that case
-                    // range checking would be nice
-                    // We could use isCoercibe on 
+                    
                     if(cast(LiteralValue)vLhsInstr || cast(LiteralValue)vRhsInstr)
                     {
                         // Type enforce left-hand instruction to right-hand instruction
