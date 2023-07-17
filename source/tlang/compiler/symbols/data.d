@@ -240,12 +240,6 @@ public class TypedEntity : Entity, MTypeRewritable
 
 public import tlang.compiler.symbols.containers;
 
-public class ArgumentList
-{
-
-}
-
-
 /** 
  * VariableParameter
  *
