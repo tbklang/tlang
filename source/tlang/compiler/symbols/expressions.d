@@ -3,6 +3,9 @@ module tlang.compiler.symbols.expressions;
 import tlang.compiler.symbols.data;
 import std.conv : to;
 
+// AST manipulation interfaces
+import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
+
 /* TODO: Look into arrays later */
 public class StringExpression : Expression
 {
@@ -55,8 +58,6 @@ public class UnaryOperatorExpression : OperatorExpression
         return exp;
     }
 }
-
-import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable;
 
 public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable, MStatementReplaceable
 {
