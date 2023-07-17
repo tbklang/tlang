@@ -1575,7 +1575,31 @@ public final class TypeChecker
                     assert(vLhsTypeIntegral);
                     Integer vRhsTypeIntegral = cast(Integer)vRhsType;
                     assert(vRhsTypeIntegral);
-                    if(vLhsTypeIntegral.getSize() < vRhsTypeIntegral.getSize())
+
+
+                    // TODO: There is a case to be made for when the instruction
+                    // with the bigger size is an IntegerLiteral - in that case
+                    // range checking would be nice
+                    // We could use isCoercibe on 
+                    if(cast(LiteralValue)vLhsInstr || cast(LiteralValue)vRhsInstr)
+                    {
+                        // Type enforce left-hand instruction to right-hand instruction
+                        if(cast(LiteralValue)vLhsInstr && cast(LiteralValue)vRhsInstr is null)
+                        {
+                            typeEnforce(vRhsTypeIntegral, vLhsInstr, vLhsInstr, true);
+                        }
+                        // Type enforce right-hand instruction to left-hand instruction
+                        else if(cast(LiteralValue)vLhsInstr is null && cast(LiteralValue)vRhsInstr)
+                        {
+                            typeEnforce(vLhsTypeIntegral, vRhsInstr, vRhsInstr, true);
+                        }
+                        // Both are literal values
+                        else
+                        {
+                            // Do nothing
+                        }
+                    }
+                    else if(vLhsTypeIntegral.getSize() < vRhsTypeIntegral.getSize())
                     {
                         typeEnforce(vRhsTypeIntegral, vLhsInstr, vLhsInstr, true);
                     }
