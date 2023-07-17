@@ -195,7 +195,7 @@ public enum IntegerLiteralEncoding
     UNSIGNED_LONG
 }
 
-public class IntegerLiteral : NumberLiteral
+public class IntegerLiteral : NumberLiteral, MCloneable
 {
     private IntegerLiteralEncoding encoding;
 
@@ -213,6 +213,20 @@ public class IntegerLiteral : NumberLiteral
     public override string toString()
     {
         return "[integerLiteral: "~numberLiteral~" ("~to!(string)(encoding)~")]";
+    }
+
+    /** 
+     * Clones this integer literal
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone()
+    {
+        IntegerLiteral clonedIntegerLiteral;
+
+        clonedIntegerLiteral = new IntegerLiteral(this.numberLiteral, this.encoding);
+
+        return clonedIntegerLiteral;
     }
 }
 
