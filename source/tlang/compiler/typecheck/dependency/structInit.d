@@ -39,6 +39,6 @@ public final class StructInstanceInit : DNode
 
     private void initName()
     {
-        name ="structInstantiate: "~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        name = "StructInstantiate: "~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
     }
 }
