@@ -3,6 +3,9 @@ module tlang.compiler.symbols.expressions;
 import tlang.compiler.symbols.data;
 import std.conv : to;
 
+// AST manipulation interfaces
+import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
+
 /* TODO: Look into arrays later */
 public class StringExpression : Expression
 {
@@ -56,9 +59,7 @@ public class UnaryOperatorExpression : OperatorExpression
     }
 }
 
-import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable;
-
-public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable, MStatementReplaceable
+public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable, MStatementReplaceable, MCloneable
 {
     private Expression lhs, rhs;
 
@@ -151,6 +152,39 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
             return false;
         }
     }
+
+    /** 
+     * Clones this binery operator expression recursively
+     * returning a fresh new copy of itself and its
+     * left and right operands
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone()
+    {
+        BinaryOperatorExpression clonedBinaryOp;
+
+        // Clone the left-hand operand expression (if supported, TODO: throw an error if not)
+        Expression clonedLeftOperandExpression = null;
+        if(cast(MCloneable)this.lhs)
+        {
+            MCloneable cloneableExpression = cast(MCloneable)this.lhs;
+            clonedLeftOperandExpression = cast(Expression)cloneableExpression.clone();
+        }
+
+        // Clone the left-hand operand expression (if supported, TODO: throw an error if not)
+        Expression clonedRightOperandExpression = null;
+        if(cast(MCloneable)this.rhs)
+        {
+            MCloneable cloneableExpression = cast(MCloneable)this.rhs;
+            clonedRightOperandExpression = cast(Expression)cloneableExpression.clone();
+        }
+
+        // Clone ourselves
+        clonedBinaryOp = new BinaryOperatorExpression(this.operator, clonedLeftOperandExpression, clonedRightOperandExpression);
+
+        return clonedBinaryOp;
+    }
 }
 
 public enum IntegerLiteralEncoding
@@ -161,7 +195,7 @@ public enum IntegerLiteralEncoding
     UNSIGNED_LONG
 }
 
-public class IntegerLiteral : NumberLiteral
+public class IntegerLiteral : NumberLiteral, MCloneable
 {
     private IntegerLiteralEncoding encoding;
 
@@ -179,6 +213,20 @@ public class IntegerLiteral : NumberLiteral
     public override string toString()
     {
         return "[integerLiteral: "~numberLiteral~" ("~to!(string)(encoding)~")]";
+    }
+
+    /** 
+     * Clones this integer literal
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone()
+    {
+        IntegerLiteral clonedIntegerLiteral;
+
+        clonedIntegerLiteral = new IntegerLiteral(this.numberLiteral, this.encoding);
+
+        return clonedIntegerLiteral;
     }
 }
 
@@ -218,23 +266,9 @@ public abstract class NumberLiteral : Expression
     }
 }
 
-public class Expression : Statement
+public abstract class Expression : Statement
 {
-    import tlang.compiler.typecheck.core;
-    /* TODO: Takes in symbol table? */
-    public string evaluateType(TypeChecker typechecker, Container c)
-    {
-        /* TODO: Go through here evaluating the type */
-
-        return null;
-    }
-
-    this()
-    {
-
-    }
-
-    /* TODO: Evalute this expression's type */
+    
 }
 
 public final class NewExpression : Expression
@@ -252,7 +286,7 @@ public final class NewExpression : Expression
     }
 }
 
-public final class CastedExpression : Expression
+public final class CastedExpression : Expression, MCloneable
 {
     private Expression uncastedExpression;
     private string toType;
@@ -271,6 +305,29 @@ public final class CastedExpression : Expression
     public Expression getEmbeddedExpression()
     {
         return uncastedExpression;
+    }
+
+    /** 
+     * Clones this casted expression recursively
+     * and returns a fresh copy of it
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone()
+    {
+        CastedExpression clonedCastedExpression;
+
+        // Clone the uncasted expression (if supported, TODO: throw an error if not)
+        Expression clonedUncastedExpression = null;
+        if(cast(MCloneable)this.uncastedExpression)
+        {
+            MCloneable cloneableExpression = cast(MCloneable)this.uncastedExpression;
+            clonedUncastedExpression = cast(Expression)cloneableExpression.clone();
+        }
+
+        clonedCastedExpression = new CastedExpression(this.toType, clonedUncastedExpression);
+
+        return clonedCastedExpression;
     }
 }
 
