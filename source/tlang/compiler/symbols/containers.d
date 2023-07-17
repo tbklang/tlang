@@ -283,6 +283,9 @@ public class Struct : Type, Container, MCloneable
             clonedStruct.addStatement(clonedStmt);
         }
 
+        // Parent ourselves to the given parent
+        clonedStruct.parentTo(newParent);
+
         return clonedStruct;
     }
 }
