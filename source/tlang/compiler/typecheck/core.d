@@ -1626,6 +1626,14 @@ public final class TypeChecker
             /* Add this static initialization to the list of global allocations required */
             addInit(clazzStaticInitAllocInstr);
         }
+        else if(cast(tlang.compiler.typecheck.dependency.structInit.StructInstanceInit)dnode)
+        {
+            gprintln("Shawty got me like awww my gaawd", DebugType.ERROR);
+            gprintln(dnode);
+
+            // TODO: Add backpop off for the number of things (if we can calulate)
+            assert(false);
+        }
         /* It will pop a bunch of shiiit */
         /* TODO: ANy statement */
         else if(cast(tlang.compiler.typecheck.dependency.core.DNode)dnode)
