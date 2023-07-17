@@ -520,9 +520,13 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
      * including its assigned value (`VariableAssignment`)
      * if any.
      *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
      * Returns: the cloned `Statement`
      */
-    public override Statement clone()
+    public override Statement clone(Container newParent = null)
     {
         Variable clonedVarDec;
 
@@ -531,7 +535,7 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
         if(this.assignment)
         {
             // Clone the assignment
-            clonedVarAss = cast(VariableAssignment)this.assignment.clone();
+            clonedVarAss = cast(VariableAssignment)this.assignment.clone(); // TODO: If needs be we must re-parent manually
         }
         
 
@@ -544,6 +548,8 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
         clonedVarDec.assignment = clonedVarAss;
         clonedVarDec.container = this.container;
 
+        // Parent outselves to the given parent
+        clonedVarDec.parentTo(newParent);
 
         return clonedVarDec;
     }
@@ -643,9 +649,13 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
      * Clones this variable assignment by recursively cloning
      * the fields within (TODO: finish description)
      *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
      * Returns: the cloned `Statement`
      */
-    public override Statement clone()
+    public override Statement clone(Container newParent = null)
     {
         // FIXME: Investigate if `Variable`? Must be cloned
         // ... would cuase infinite recursion and it isn't
@@ -660,10 +670,13 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
         if(cast(MCloneable)this.expression)
         {
             MCloneable cloneableExpression = cast(MCloneable)this.expression;
-            clonedExpression = cast(Expression)cloneableExpression.clone();
+            clonedExpression = cast(Expression)cloneableExpression.clone(); // NOTE: Manually re-parent if
         }
         
         VariableAssignment clonedVarAss = new VariableAssignment(clonedExpression);
+
+        // Parent outselves to the given parent
+        clonedVarAss.parentTo(newParent);
 
         return clonedVarAss;
     }
