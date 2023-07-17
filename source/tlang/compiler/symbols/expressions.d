@@ -173,7 +173,7 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
         if(cast(MCloneable)this.lhs)
         {
             MCloneable cloneableExpression = cast(MCloneable)this.lhs;
-            clonedLeftOperandExpression = cast(Expression)cloneableExpression.clone();
+            clonedLeftOperandExpression = cast(Expression)cloneableExpression.clone(); // NOTE: We must parent it if needs be
         }
 
         // Clone the left-hand operand expression (if supported, TODO: throw an error if not)
@@ -181,7 +181,7 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
         if(cast(MCloneable)this.rhs)
         {
             MCloneable cloneableExpression = cast(MCloneable)this.rhs;
-            clonedRightOperandExpression = cast(Expression)cloneableExpression.clone();
+            clonedRightOperandExpression = cast(Expression)cloneableExpression.clone(); // NOTE: We must parent it if needs be
         }
 
         // Clone ourselves
@@ -340,7 +340,7 @@ public final class CastedExpression : Expression, MCloneable
         if(cast(MCloneable)this.uncastedExpression)
         {
             MCloneable cloneableExpression = cast(MCloneable)this.uncastedExpression;
-            clonedUncastedExpression = cast(Expression)cloneableExpression.clone();
+            clonedUncastedExpression = cast(Expression)cloneableExpression.clone(); // NOTE: We must parent it if needs be
         }
 
         clonedCastedExpression = new CastedExpression(this.toType, clonedUncastedExpression);
