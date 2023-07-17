@@ -4,6 +4,11 @@ public import tlang.compiler.symbols.check;
 import std.conv : to;
 import tlang.compiler.typecheck.dependency.core : Context;
 
+// For debug printing
+import gogga;
+
+// AST manipulation interfaces
+import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
 
 /**
 * TODO: Implement the blow and use them
@@ -438,7 +443,7 @@ public class Function : TypedEntity, Container
     }
 }
 
-public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
+public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable, MCloneable
 {
     /* TODO: Just make this an Expression */
     private VariableAssignment assignment;
@@ -509,6 +514,39 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
             return assignment.replace(thiz, that);
         }
     }
+
+    /** 
+     * Clones this variable declaration recursively
+     * including its assigned value (`VariableAssignment`)
+     * if any.
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone()
+    {
+        Variable clonedVarDec;
+
+        // If there's an assignment, then clone it
+        VariableAssignment clonedVarAss = null;
+        if(this.assignment)
+        {
+            // Clone the assignment
+            clonedVarAss = cast(VariableAssignment)this.assignment.clone();
+        }
+        
+
+        // Create new variable with same name and identifier
+        clonedVarDec = new Variable(this.type, this.name);
+
+        // Copy all properties across (TODO: Make sure we didn't miss any)
+        clonedVarDec.accessorType = this.accessorType;
+        clonedVarDec.isExternalEntity = this.isExternalEntity;
+        clonedVarDec.assignment = clonedVarAss;
+        clonedVarDec.container = this.container;
+
+
+        return clonedVarDec;
+    }
 }
 
 
@@ -521,7 +559,7 @@ public import tlang.compiler.symbols.expressions;
 /**
 * TODO: Rename to `VariableDeclarationAssignment`
 */
-public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable
+public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable, MCloneable
 {
     private Expression expression;
     private Variable variable;
@@ -599,6 +637,35 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
         {
             return false;
         }
+    }
+
+    /** 
+     * Clones this variable assignment by recursively cloning
+     * the fields within (TODO: finish description)
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone()
+    {
+        // FIXME: Investigate if `Variable`? Must be cloned
+        // ... would cuase infinite recursion and it isn't
+        // ... reaslly a part of the AST (just a helper)
+        // ... hence I do not believe it needs to be cloned
+        // (If for some reason the association eneds to be)
+        // ... updted then `Variable`'s `clone()' can call
+        /// ... `setvariable(clonedVarDec)` (with itself)
+
+        // Clone the expression (if supported, TODO: throw an error if not)
+        Expression clonedExpression = null;
+        if(cast(MCloneable)this.expression)
+        {
+            MCloneable cloneableExpression = cast(MCloneable)this.expression;
+            clonedExpression = cast(Expression)cloneableExpression.clone();
+        }
+        
+        VariableAssignment clonedVarAss = new VariableAssignment(clonedExpression);
+
+        return clonedVarAss;
     }
 }
 
@@ -1507,8 +1574,6 @@ public final class Branch : Entity, Container
         }
     }
 }
-
-import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable;
 
 public final class DiscardStatement : Statement, MStatementSearchable, MStatementReplaceable
 {
