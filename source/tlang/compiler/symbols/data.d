@@ -646,8 +646,14 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
         // ... updted then `Variable`'s `clone()' can call
         /// ... `setvariable(clonedVarDec)` (with itself)
 
-        // Clone the expression
-        Expression clonedExpression = cast(Expression)expression.clone();
+        // Clone the expression (if supported, TODO: throw an error if not)
+        Expression clonedExpression = null;
+        if(cast(MCloneable)this.expression)
+        {
+            MCloneable cloneableExpression = cast(MCloneable)this.expression;
+            clonedExpression = cast(Expression)cloneableExpression.clone();
+        }
+        
         VariableAssignment clonedVarAss = new VariableAssignment(clonedExpression);
 
         return clonedVarAss;
