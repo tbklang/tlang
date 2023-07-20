@@ -197,7 +197,7 @@ public final class BasicLexer : LexerInterface
                     continue;
                 }
                 /* TODO; handle closer case and error case */
-            else
+                else
                 {
                     /* TODO: Throw erropr here */
                     if (isSplitter(currentChar))
@@ -295,11 +295,11 @@ public final class BasicLexer : LexerInterface
 
                         gprintln("Bruh");
                         /**
-                    * Now we check that we have a character infront of us
-                    * and that it is a letter
-                    *
-                    * TODO: Add _ check too as that is a valid identifier start
-                    */
+                         * Now we check that we have a character infront of us
+                         * and that it is a letter
+                         *
+                         * TODO: Add _ check too as that is a valid identifier start
+                         */
                         if (isForward() && isCharacterAlpha(sourceCode[position + 1]))
                         {
                             position++;
@@ -329,7 +329,7 @@ public final class BasicLexer : LexerInterface
                 }
                 /* Check if we need to do combinators (e.g. for ||, &&) */
                 /* TODO: Second operand in condition out of bounds */
-            else if (currentChar == '|' && (position + 1) != sourceCode.length && sourceCode[position + 1] == '|')
+                else if (currentChar == '|' && (position + 1) != sourceCode.length && sourceCode[position + 1] == '|')
                 {
                     splitterToken = "||";
                     column += 2;
@@ -380,7 +380,7 @@ public final class BasicLexer : LexerInterface
                     stringMode = true;
                 }
                 /* If we are in string mode */
-            else
+                else
                 {
                     /* Add the closing " to the token */
                     currentToken ~= '"';
@@ -412,7 +412,7 @@ public final class BasicLexer : LexerInterface
                         position += 2;
                     }
                     /* If we don't have a next character then raise error */
-                else
+                    else
                     {
                         throw new LexerException(this, "Unfinished escape sequence");
                     }
@@ -498,21 +498,21 @@ public final class BasicLexer : LexerInterface
 
                     }
                     /* We can add a size encoder */
-                else if (isNumericalEncoder_Size(currentChar))
+                    else if (isNumericalEncoder_Size(currentChar))
                     {
                         currentToken ~= currentChar;
                         column++;
                         position++;
                     }
                     /* We can add more numbers */
-                else if (isDigit(currentChar))
+                    else if (isDigit(currentChar))
                     {
                         currentToken ~= currentChar;
                         column++;
                         position++;
                     }
                     /* Splitter (TODO) */
-                else if (isSplitter(currentChar))
+                    else if (isSplitter(currentChar))
                     {
                         /* Add the numerical literal as a new token */
                         currentTokens ~= new Token(currentToken, line, column);
@@ -531,7 +531,7 @@ public final class BasicLexer : LexerInterface
                         position += 2;
                     }
                     /* Anything else is invalid */
-                else
+                    else
                     {
                         throw new LexerException(this, "Not valid TODO");
                     }
@@ -539,7 +539,7 @@ public final class BasicLexer : LexerInterface
                 /**
                 * If we have one encoder
                 */
-            else if ((encoderSegment.length == 1))
+                else if ((encoderSegment.length == 1))
                 {
                     /* Check what the encoder is */
 
@@ -567,7 +567,7 @@ public final class BasicLexer : LexerInterface
                         /**
                         * Anything else is invalid
                         */
-                    else
+                        else
                         {
                             throw new LexerException(this, "A size-encoder must follow a signage encoder");
                         }
@@ -578,7 +578,7 @@ public final class BasicLexer : LexerInterface
                     }
                 }
                 /* It is impossible to reach this as flushing means we cannot add more */
-            else
+                else
                 {
                     assert(false);
                 }
