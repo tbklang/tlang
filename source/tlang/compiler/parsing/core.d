@@ -1955,7 +1955,7 @@ public final class Parser
 
         // TODO: Do something here like placing it on some kind of stack
         gprintln("Comment is: '"~lexer.getCurrentToken().getToken()~"'");
-        nextToken(); // Move off comment
+        lexer.nextToken(); // Move off comment
 
         gprintln("parseComment(): Leave", DebugType.WARNING);
     }
