@@ -1949,15 +1949,92 @@ public final class Parser
         return statement;
     }
 
+    import std.container.slist : SList;
+    private SList!(Token) commentStack;
+    private void pushComment(Token commentToken)
+    {
+        // Sanity check
+        assert(getSymbolType(commentToken) == SymbolType.SINGLE_LINE_COMMENT ||
+               getSymbolType(commentToken) == SymbolType.MULTI_LINE_COMMENT
+              );
+
+        // Push it onto top of stack
+        commentStack.insertFront(commentToken);        
+    }
+    //TODO: Add a popToken() (also think if we want a stack-based mechanism)
+    private bool hasCommentsOnStack()
+    {
+        return getCommentCount() != 0;
+    }
+
+    private ulong getCommentCount()
+    {
+        import std.range : walkLength;
+        return walkLength(commentStack[]);
+    }
+
     private void parseComment()
     {
         gprintln("parseComment(): Enter", DebugType.WARNING);
 
+        Token curCommentToken = lexer.getCurrentToken();
+
+        pushComment(curCommentToken);
+
         // TODO: Do something here like placing it on some kind of stack
-        gprintln("Comment is: '"~lexer.getCurrentToken().getToken()~"'");
+        gprintln("Comment is: '"~curCommentToken.getToken()~"'");
         lexer.nextToken(); // Move off comment
 
         gprintln("parseComment(): Leave", DebugType.WARNING);
+    }
+
+    /** 
+     * Tests the handling of comments
+     */
+    unittest
+    {
+        import tlang.compiler.lexer.kinds.arr : ArrLexer;
+
+        Token[] tokens = [new Token("module", 0, 0),
+                          new Token("myCommentedModule", 0, 0),
+                          new Token(";", 0, 0),
+                          new Token("// Hello", 0, 0)
+                          ];
+        LexerInterface currentLexer = new ArrLexer(tokens);
+        Parser parser = new Parser(currentLexer);
+    
+        try
+        {
+            Module modulle = parser.parse();
+
+            assert(parser.hasCommentsOnStack());
+            assert(parser.getCommentCount() == 1);
+        }
+        catch(TError e)
+        {
+            assert(false);
+        }
+
+        tokens = [new Token("module", 0, 0),
+                          new Token("myCommentedModule", 0, 0),
+                          new Token(";", 0, 0),
+                          new Token("/*Hello", 0, 0),
+                          new Token("/* Hello", 0, 0)
+                          ];
+        currentLexer = new ArrLexer(tokens);
+        parser = new Parser(currentLexer);
+    
+        try
+        {
+            Module modulle = parser.parse();
+
+            assert(parser.hasCommentsOnStack());
+            assert(parser.getCommentCount() == 2);
+        }
+        catch(TError e)
+        {
+            assert(false);
+        }
     }
 
     // TODO: We need to add `parseComment()`
@@ -2263,6 +2340,12 @@ public final class Parser
                 ExternStmt externStatement = parseExtern();
 
                 modulle.addStatement(externStatement);
+            }
+            /* If it is a kind-of comment */
+            else if(symbol == SymbolType.SINGLE_LINE_COMMENT || symbol == SymbolType.MULTI_LINE_COMMENT)
+            {
+                gprintln("COMMENTS NOT YET PROPERLY SUPOORTED", DebugType.ERROR);
+                parseComment();
             }
             else
             {
