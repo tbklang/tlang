@@ -1949,6 +1949,19 @@ public final class Parser
         return statement;
     }
 
+    private void parseComment()
+    {
+        gprintln("parseComment(): Enter", DebugType.WARNING);
+
+        // TODO: Do something here like placing it on some kind of stack
+        gprintln("Comment is: '"~lexer.getCurrentToken().getToken()~"'");
+        nextToken(); // Move off comment
+
+        gprintln("parseComment(): Leave", DebugType.WARNING);
+    }
+
+    // TODO: We need to add `parseComment()`
+    // support here (see issue #84)
     // TODO: This ic currently dead code and ought to be used/implemented
     private Statement parseStatement(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
     {
@@ -2021,6 +2034,12 @@ public final class Parser
         else if(symbol == SymbolType.STAR)
         {
             statement = parseDerefAssignment();
+        }
+        /* If it is a kind-of comment */
+        else if(symbol == SymbolType.SINGLE_LINE_COMMENT || symbol == SymbolType.MULTI_LINE_COMMENT)
+        {
+            gprintln("COMMENTS NOT YET PROPERLY SUPOORTED", DebugType.ERROR);
+            parseComment();
         }
         /* Error out */
         else
