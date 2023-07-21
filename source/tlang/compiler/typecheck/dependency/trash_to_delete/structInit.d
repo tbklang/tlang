@@ -1,4 +1,4 @@
-module tlang.compiler.typecheck.dependency.structInit;
+module tlang.compiler.typecheck.dependency.trash_to_delete.structInit;
 
 import tlang.compiler.symbols.containers : Container, Struct;
 import tlang.compiler.symbols.data : Entity;
