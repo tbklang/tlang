@@ -18,7 +18,7 @@ import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariablePar
 import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
-import tlang.compiler.symbols.containers : Struct;
+import tlang.compiler.symbols.containers : Struct, Clazz;
 import tlang.compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
@@ -113,6 +113,15 @@ public final class DCodeEmitter : CodeEmitter
             // ... declared types then to make use of it here
             string typeString = "struct "~structType.getName();
             // FIXME: Is the above the correct struct-type-usage syntax?
+
+            return typeString;
+        }
+        /* Class type */
+        else if(cast(Clazz)typeIn)
+        {
+            Clazz classType = cast(Clazz)typeIn;
+
+            string typeString = classType.getName();
 
             return typeString;
         }
@@ -217,6 +226,22 @@ public final class DCodeEmitter : CodeEmitter
                 return "extern "~typeTransform(cast(Type)varDecInstr.varType)~" "~typedEntityVariable.getName()~";";
             }
 
+        }
+        /* StructInstantiateInstruction */
+        else if(cast(StructInstantiateInstruction)instruction)
+        {
+            // TODO: Implement me
+            StructInstantiateInstruction structInstntInstr = cast(StructInstantiateInstruction)instruction;
+            Context context = structInstntInstr.getContext();
+            Variable variable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), structInstntInstr.getDeclaredName());
+            string variableName = variable.getName();
+            Type variableType = structInstntInstr.getDeclaredType();
+
+            // Emit
+            string emit = typeTransform(variableType)~" "~variableName;
+            emit ~= ";";
+
+            return emit;
         }
         /* LiteralValue */
         else if(cast(LiteralValue)instruction)
@@ -716,6 +741,27 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        else if(cast(StructTypeDeclareInstruction)instruction)
+        {
+            StructTypeDeclareInstruction strctTypeDeclInstr = cast(StructTypeDeclareInstruction)instruction;
+            Struct structType = strctTypeDeclInstr.getType();
+
+            // Emit
+            string emit = typeTransform(structType);
+            emit ~= "\n";
+            emit ~= "{";
+            emit ~= "\n";
+            
+            foreach(VariableDeclaration varDecInstr; strctTypeDeclInstr.getMembers())
+            {
+                emit ~= genTabs(transformDepth)~transform(varDecInstr);
+                emit ~= "\n";
+            }
+
+            emit ~= "};";
+
+            return emit;
+        }
         // TODO: MAAAAN we don't even have this yet
         // else if(cast(StringExpression))
 
@@ -790,6 +836,16 @@ public final class DCodeEmitter : CodeEmitter
     {
         selectQueue(QueueType.ALLOC_QUEUE);
         gprintln("Static allocations needed: "~to!(string)(getQueueLength()));
+
+        while(hasInstructions())
+        {
+            Instruction curInitInstr = getCurrentInstruction();
+            gprintln("Current init instruction: "~curInitInstr.toString());
+
+            file.writeln(transform(curInitInstr));
+            nextInstruction();
+        }
+
 
         file.writeln();
     }
