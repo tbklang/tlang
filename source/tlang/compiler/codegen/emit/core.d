@@ -165,7 +165,11 @@ public abstract class CodeEmitter
      *
      * Params:
      *   instruction = The Instruction to transform/emit
+     *   customRules = an `Object` to be interpreted by
+     * the underlying emitter which can change how certain
+     * transformations are done when it is in a certain state
+     *
      * Returns: The Instruction emit as a string
      */
-    public abstract string transform(Instruction instruction);
+    public abstract string transform(Instruction instruction, Object customRules = null);
 }
