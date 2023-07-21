@@ -59,7 +59,7 @@ public class Value : Instruction
 
 public class StorageDeclaration : Instruction
 {
-
+    // NOTE: All STorageDeclaratins may as well have the type in them
 }
 
 public class ClassStaticInitAllocate : Instruction
@@ -687,5 +687,81 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
     public override string toString()
     {
         return "StackArrayASSIGN [name: "~arrayName~", index: "~index.toString()~", Assignment: "~assignment.toString()~"]";
+    }
+}
+
+public final class StructInstantiateInstruction : StorageDeclaration
+{
+    import tlang.compiler.symbols.containers : Struct;
+    private VariableDeclaration[] memberDecInstrs;
+    private Struct type;
+    private string varName;
+
+    this(string varName, Struct strucType, VariableDeclaration[] memberInstrs)
+    {
+        this.varName = varName;
+        this.type = strucType;
+        this.memberDecInstrs = memberInstrs;
+    }
+
+    public Struct getDeclaredType()
+    {
+        return this.type;
+    }
+
+    public string getDeclaredName()
+    {
+        return this.varName;
+    }
+}
+
+
+
+/** 
+ * This is currently a testing instruction type.
+ * It represents the declaration of a type. This
+ * means nothing to a CPU as they don't exist
+ * but it will mean something to it if there
+ * is any `Clazz`'s involved as they would require
+ * static initialization code to run.
+ *
+ * Currently going to use this for, atleast,
+ * emitters that require types to be declared
+ * (like C requires struct definitions to be
+ * declared)
+ *
+ * We might be able to make ClassSTatic inits
+ * use this.
+ */
+public class TypeDeclareInstruction : Instruction
+{
+
+}
+
+/** 
+ * This instruction is used to declare struct-types
+ * (NOT variable's of struct-types! - this is NOT
+ * a kind-of `StorageDeclarationInstruction`)
+ */
+public final class StructTypeDeclareInstruction : TypeDeclareInstruction
+{
+    import tlang.compiler.symbols.containers : Struct;
+    private Struct structType;
+    private VariableDeclaration[] members;
+
+    this(Struct structType, VariableDeclaration[] members)
+    {
+        this.structType = structType;
+        this.members = members;
+    }
+
+    public Struct getType()
+    {
+        return this.structType;
+    }
+
+    public VariableDeclaration[] getMembers()
+    {
+        return this.members;
     }
 }
