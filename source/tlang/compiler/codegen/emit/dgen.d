@@ -132,7 +132,7 @@ public final class DCodeEmitter : CodeEmitter
     }
 
 
-    public override string transform(const Instruction instruction, Object customRules = null)
+    public override string transform(const Instruction instruction)
     {
         writeln("\n");
         gprintln("transform(): "~to!(string)(instruction));
