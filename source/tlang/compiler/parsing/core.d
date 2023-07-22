@@ -2035,6 +2035,34 @@ public final class Parser
         {
             assert(false);
         }
+
+        tokens = [new Token("module", 0, 0),
+                          new Token("myCommentedModule", 0, 0),
+                          new Token(";", 0, 0),
+                          new Token("void", 0, 0),
+                          new Token("function", 0, 0),
+                          new Token("(", 0, 0),
+                          new Token(")", 0, 0),
+                          new Token("{", 0, 0),
+                          new Token("/*Hello", 0, 0),
+                          new Token("/* Hello", 0, 0),
+                          new Token("// Hello", 0, 0),
+                          new Token("}", 0, 0)
+                          ];
+        currentLexer = new ArrLexer(tokens);
+        parser = new Parser(currentLexer);
+    
+        try
+        {
+            Module modulle = parser.parse();
+
+            assert(parser.hasCommentsOnStack());
+            assert(parser.getCommentCount() == 3);
+        }
+        catch(TError e)
+        {
+            assert(false);
+        }
     }
 
     // TODO: We need to add `parseComment()`
