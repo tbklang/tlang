@@ -23,10 +23,35 @@ import tlang.compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
 {
+    /** 
+     * Whether or not symbol mappi g should
+     * apply to identifiers
+     */
+    private bool symbolMapping;
+
     // NOTE: In future store the mapper in the config please
     this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
         super(typeChecker, file, config, mapper);
+
+        // By default symbols will be mapped
+        enableSymbolMapping();
+    }
+
+    /** 
+     * Enables symbol mapping
+     */
+    private void enableSymbolMapping()
+    {
+     	this.symbolMapping = true;
+    }
+
+    /** 
+     * Disables symbol mapping
+     */
+    private void disableSymbolMapping()
+    {
+     	this.symbolMapping = false;
     }
 
     private ulong transformDepth = 0;
