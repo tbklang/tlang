@@ -754,6 +754,8 @@ public final class DCodeEmitter : CodeEmitter
             
             foreach(VariableDeclaration varDecInstr; strctTypeDeclInstr.getMembers())
             {
+                // FIXME: Pass in a rule of some sorts here to not symbol map
+                // ... the members of the struct (i.e. any `VariableDeclarationInstructions`)
                 emit ~= genTabs(transformDepth)~transform(varDecInstr);
                 emit ~= "\n";
             }
