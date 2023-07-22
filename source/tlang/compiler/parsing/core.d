@@ -1995,12 +1995,12 @@ public final class Parser
     {
         import tlang.compiler.lexer.kinds.arr : ArrLexer;
 
-        Token[] tokens = [new Token("module", 0, 0),
-                          new Token("myCommentedModule", 0, 0),
-                          new Token(";", 0, 0),
-                          new Token("// Hello", 0, 0)
-                          ];
-        LexerInterface currentLexer = new ArrLexer(tokens);
+        string sourceCode = `module myCommentModule;
+        // Hello`;
+
+        LexerInterface currentLexer = new BasicLexer(sourceCode);
+        (cast(BasicLexer)currentLexer).performLex();
+
         Parser parser = new Parser(currentLexer);
     
         try
@@ -2015,13 +2015,13 @@ public final class Parser
             assert(false);
         }
 
-        tokens = [new Token("module", 0, 0),
-                          new Token("myCommentedModule", 0, 0),
-                          new Token(";", 0, 0),
-                          new Token("/*Hello", 0, 0),
-                          new Token("/* Hello", 0, 0)
-                          ];
-        currentLexer = new ArrLexer(tokens);
+        sourceCode = `module myCommntedModule;
+        /*Hello */
+        
+        /* Hello*/`;
+
+        currentLexer = new BasicLexer(sourceCode);
+        (cast(BasicLexer)currentLexer).performLex();
         parser = new Parser(currentLexer);
     
         try
@@ -2036,20 +2036,19 @@ public final class Parser
             assert(false);
         }
 
-        tokens = [new Token("module", 0, 0),
-                          new Token("myCommentedModule", 0, 0),
-                          new Token(";", 0, 0),
-                          new Token("void", 0, 0),
-                          new Token("function", 0, 0),
-                          new Token("(", 0, 0),
-                          new Token(")", 0, 0),
-                          new Token("{", 0, 0),
-                          new Token("/*Hello", 0, 0),
-                          new Token("/* Hello", 0, 0),
-                          new Token("// Hello", 0, 0),
-                          new Token("}", 0, 0)
-                          ];
-        currentLexer = new ArrLexer(tokens);
+        sourceCode = `module myCommentedModule;
+
+        void function()
+        {
+            /*Hello */
+            /* Hello */
+            // Hello
+            //Hello
+        }
+        `;
+
+        currentLexer = new BasicLexer(sourceCode);
+        (cast(BasicLexer)currentLexer).performLex();
         parser = new Parser(currentLexer);
     
         try
@@ -2057,7 +2056,7 @@ public final class Parser
             Module modulle = parser.parse();
 
             assert(parser.hasCommentsOnStack());
-            assert(parser.getCommentCount() == 3);
+            assert(parser.getCommentCount() == 4);
         }
         catch(TError e)
         {
