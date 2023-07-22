@@ -1305,6 +1305,10 @@ public class DNodeGenerator
             {
                 Struct structType = cast(Struct)variableType;
 
+                import tlang.compiler.typecheck.dependency.declarables : StructTypeDeclarable;
+                StructTypeDeclarable stdDNode = declareStructType(structType);
+                variableDNode.needs(stdDNode);
+
                 // Make a cloned-and-reparented copy
                 Struct structInstance = cast(Struct)structType.clone(structType.parentOf());
 
@@ -1316,13 +1320,14 @@ public class DNodeGenerator
                 // FIXME: THE POOL SHOULD BE OF A CLONE!
                 // TODO: We may need to check this for 
                 DNode structInstanceDNode = generalPass(structInstance, context);
+                structInstanceDNode.name = "StructClone (of: "~structInstance.getName()~")"; // NOTE: Set this as it;s confusing otherwise
 
-                import tlang.compiler.typecheck.dependency.structInit : StructInstanceInit;
-                StructInstanceInit structInstantiateDNode = new StructInstanceInit(this, structInstance);
+                // import tlang.compiler.typecheck.dependency.structInit : StructInstanceInit;
+                // StructInstanceInit structInstantiateDNode = new StructInstanceInit(this, structInstance);
 
-                structInstantiateDNode.needs(structInstanceDNode);
+                // structInstantiateDNode.needs(structInstanceDNode);
 
-                variableDNode.needs(structInstantiateDNode);
+                variableDNode.needs(structInstanceDNode);
             }
             /* Stack-based array-type */
             else if(cast(StackArray)variableType)
@@ -1741,7 +1746,9 @@ public class DNodeGenerator
          */
         else if(cast(Struct)entity)
         {
-            gprintln("Struct type declarations are ignored and no dependency generated for return", DebugType.WARNING);
+            gprintln("Struct definition dependency", DebugType.ERROR);
+
+            // NOTE: This is to be discarded as we are doing here
         }
 
         return null;
@@ -1908,6 +1915,29 @@ public class DNodeGenerator
         generalPass(clazz, new Context(clazz, InitScope.STATIC));
 
         return classDNode;
+    }
+
+    import tlang.compiler.typecheck.dependency.declarables : StructTypeDeclarable;
+    import tlang.compiler.symbols.containers : Struct;
+    private StructTypeDeclarable declareStructType(Struct typeToDeclare)
+    {
+        // Pool
+        StructTypeDeclarable dnode = poolT!(StructTypeDeclarable, Struct)(typeToDeclare);
+
+        // If we have visited return us
+        if(dnode.isVisisted())
+        {
+            return dnode;
+        }
+        else
+        {
+            /* Set as visited */
+            dnode.markVisited();
+        }
+        
+        generalPass(typeToDeclare, new Context(typeToDeclare, InitScope.STATIC));
+
+        return dnode;
     }
 
 }
