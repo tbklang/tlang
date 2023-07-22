@@ -132,8 +132,6 @@ public final class BasicLexer : LexerInterface
     private string currentToken; /* Current token */
     private ulong position; /* Current character position */
     private char currentChar; /* Current character */
-    private bool stringMode; /* Whether we are in a string "we are here" or not */
-    private bool floatMode; /* Whether or not we are building a floating point constant */
 
     /* The tokens */
     private Token[] tokens;
@@ -189,7 +187,7 @@ public final class BasicLexer : LexerInterface
 
             currentChar = sourceCode[position];
 
-            if (isWhite(currentChar) && !stringMode)
+            if (isWhite(currentChar))
             {
                 /* TODO: Check if current token is fulled, then flush */
                 if (currentToken.length != 0)
@@ -206,7 +204,7 @@ public final class BasicLexer : LexerInterface
                     break;
                 }
             }
-            else if (isSplitter(currentChar) && !stringMode)
+            else if (isSplitter(currentChar))
             {
                 /* The splitter token to finally insert */
                 string splitterToken;
@@ -338,64 +336,16 @@ public final class BasicLexer : LexerInterface
             }
             else if (currentChar == LS.DOUBLE_QUOTE)
             {
-                /* If we are not in string mode */
-                if (!stringMode)
-                {
-                    /* Add the opening " to the token */
-                    currentToken ~= LS.DOUBLE_QUOTE;
-
-                    /* Enable string mode */
-                    stringMode = true;
+                if (!doString()) {
+                    break;
                 }
-                /* If we are in string mode */
-            else
-                {
-                    /* Add the closing " to the token */
-                    currentToken ~= LS.DOUBLE_QUOTE;
-
-                    /* Flush the token */
-                    currentTokens ~= new Token(currentToken, line, column);
-                    currentToken = EMPTY;
-
-                    /* Get out of string mode */
-                    stringMode = false;
-                }
-
-                column++;
-                position++;
             }
             else if (currentChar == LS.BACKSLASH)
             {
-                /* You can only use these in strings */
-                if (stringMode)
-                {
-                    /* Check if we have a next character */
-                    if (!doEscapeCode()) {
-                        //TODO 
-                        break;
-                    }
-                    // if (position + 1 != sourceCode.length && isValidEscape_String(
-                    //         sourceCode[position + 1]))
-                    // {
-                    //     /* Add to the string */
-                    //     currentToken ~= [LS.BACKSLASH, sourceCode[position + 1]];
-
-                    //     column += 2;
-                    //     position += 2;
-                    // }
-                    /* If we don't have a next character then raise error */
-                    // else
-                    //     {
-                    //         throw new LexerException(this, "Unfinished escape sequence");
-                    //     }
-                    }
-                else
-                {
-                    throw new LexerException(this, "Escape sequences can only be used within strings");
-                }
+                throw new LexerException(this, "Escape sequences can only be used within strings");
             }
             /* Character literal support */
-            else if (!stringMode && currentChar == LS.SINGLE_QUOTE)
+            else if (currentChar == LS.SINGLE_QUOTE)
             {
                 currentToken ~= LS.SINGLE_QUOTE;
 
@@ -478,7 +428,7 @@ public final class BasicLexer : LexerInterface
             } else if (currentChar == LS.NEWLINE) {
                 throw new LexerException(this, "Expected closing \", but got NEWLINE");
             } else {
-                if (!advance()) {
+                if (!buildAdvance()) {
                     throw new LexerException(this, "Expected closing \", but got EOF");
                 }
             }
@@ -771,12 +721,18 @@ unittest
 
     string sourceCode = "hello \"wo\nrld\";";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
-    currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
-    assert(currentLexer.getTokens() == [
-            new Token("hello", 0, 0), new Token("\"wo\nrld\"", 0, 0),
-            new Token(";", 0, 0)
-        ]);
+    try {
+        currentLexer.performLex();
+        gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+        assert(currentLexer.getTokens() == [
+                new Token("hello", 0, 0), new Token("\"wo\nrld\"", 0, 0),
+                new Token(";", 0, 0)
+            ]);
+        assert(false);
+    } catch (LexerException) {
+        assert(true);
+
+    }
 }
 
 /* Test input: `hello "world"|| ` */
