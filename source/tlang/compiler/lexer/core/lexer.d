@@ -74,3 +74,45 @@ public interface LexerInterface
      */
     public Token[] getTokens();
 }
+
+public enum LexerSymbols: char {
+    L_PAREN = '(',
+    R_PAREN = ')',
+    SEMI_COLON = ';',
+    COMMA = ',',
+    L_BRACK =  '[' ,
+    R_BRACK =  ']' ,
+    PLUS =  '+' ,
+    MINUS =  '-' ,
+    FORWARD_SLASH =  '/' ,
+    PERCENT =  '%' ,
+    STAR =  '*' ,
+    AMPERSAND =  '&' ,
+    L_BRACE =  '{' ,
+    R_BRACE =  '}' ,
+    EQUALS =  '=' ,
+    SHEFFER_STROKE =  '|' ,
+    CARET =  '^' ,
+    EXCLAMATION =  '!' ,
+    TILDE =  '~' ,
+    DOT =  '.' ,
+    COLON =  ':',
+    SPACE = ' ',
+    TAB = '\t',
+    NEWLINE = '\n',
+    DOUBLE_QUOTE = '"',
+    SINGLE_QUOTE =  '\'' ,
+    BACKSLASH =  '\\' ,
+
+    ESC_NOTHING =  '0' ,
+    ESC_CARRIAGE_RETURN =  'r' ,
+    ESC_TAB =  't' ,
+    ESC_NEWLINE =  'n' ,
+
+    ENC_BYTE =  'B' ,
+    ENC_INT =  'I' ,
+    ENC_LONG =  'L' ,
+    ENC_WORD =  'W' ,
+    ENC_UNSIGNED =  'U' ,
+    ENC_SIGNED =  'S' ,
+}
