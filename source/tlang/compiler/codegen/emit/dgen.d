@@ -222,7 +222,7 @@ public final class DCodeEmitter : CodeEmitter
                 //NOTE: We may need to create a symbol table actually and add to that and use that as these names
                 //could get out of hand (too long)
                 // NOTE: Best would be identity-mapping Entity's to a name
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                string renamedSymbol = symbolMapping ? mapper.symbolLookup(typedEntityVariable) : typedEntityVariable.getName();
 
 
                 // Check if the type is a stack-based array
@@ -779,9 +779,15 @@ public final class DCodeEmitter : CodeEmitter
             
             foreach(VariableDeclaration varDecInstr; strctTypeDeclInstr.getMembers())
             {
-                // FIXME: Pass in a rule of some sorts here to not symbol map
-                // ... the members of the struct (i.e. any `VariableDeclarationInstructions`)
+                /** 
+                 * We don't want to map the symbols for the definition of
+                 * a struct type. Therefore we temporarily disable symbol
+                 * mapping for the `transform(varDecInstr)` call and then
+                 * re-enable it afterwards
+                 */
+                disableSymbolMapping();
                 emit ~= genTabs(transformDepth)~transform(varDecInstr);
+                enableSymbolMapping();
                 emit ~= "\n";
             }
 
