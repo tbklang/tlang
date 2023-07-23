@@ -8,3 +8,8 @@ struct User
 
 User u1;
 User u2;
+
+void function()
+{
+    
+}
