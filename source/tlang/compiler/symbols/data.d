@@ -508,10 +508,15 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
             assignment = cast(VariableAssignment)that;
             return true;
         }
-        /* Recurse on the variable assignment */
-        else
+        /* Recurse on the variable assignment (if there is one) */
+        else if(assignment !is null)
         {
             return assignment.replace(thiz, that);
+        }
+        /* Exhausted all possibilities */
+        else
+        {
+            return false;
         }
     }
 
