@@ -556,6 +556,64 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
 }
 
 
+public final class StructVariableInstance : TypedEntity, Container
+{
+    private Variable[] members;
+
+    this(string structType, string name, Variable[] members)
+    {
+        super(name, structType);
+        this.members = members;
+
+        /* Weighted as 2 */
+        weight = 2;
+    }
+
+    /** 
+     * Returns this struct instance's members
+     *
+     * Returns: An array of `Variable[]`
+     */
+    public override Statement[] getStatements()
+    {
+        return cast(Statement[])members;
+    }
+
+    public override void addStatement(Statement stmt)
+    {
+        assert(cast(Variable)stmt);
+        members ~= cast(Variable)stmt;
+    }
+
+    public override void addStatements(Statement[] stmts)
+    {
+        // TODO: Add assert for all
+        members ~= cast(Variable[])stmts;
+    }
+
+    // TODO: Check for implementing the below
+    public Statement[] search(TypeInfo_Class clazzType)
+    {
+        int i = 1;
+        assert(2==i);
+        return [];
+    }
+
+    // TODO: Check for implementing the below
+    public bool replace(Statement thiz, Statement that)
+    {
+        int i = 1;
+        assert(2==i);
+        return false;
+    }
+
+    public override string toString()
+    {
+        return "StructVariableInstance (name: "~getName()~", type: "~getType()~")";
+    }
+}
+
+
 public import tlang.compiler.symbols.expressions;
 
 
