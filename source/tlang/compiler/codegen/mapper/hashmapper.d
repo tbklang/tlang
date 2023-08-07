@@ -4,6 +4,7 @@ import tlang.compiler.codegen.mapper.core : SymbolMapper;
 import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.data;
 import std.array : split, join;
+import gogga;
 
 public final class HashMapper : SymbolMapper
 {
@@ -33,9 +34,16 @@ public final class HashMapper : SymbolMapper
 
         scope(exit)
         {
-            import gogga;
             gprintln("symbolLookup: absPath '"~absoluteFullPath~"'");
             gprintln("symbolLookup: mappedPath '"~symbolName~"'");
+        }
+
+
+        string newStructVarPath;
+        if(containsStructVarInstanceRefAlongTheWay(absoluteFullPath, newStructVarPath))
+        {
+            gprintln("containsStructVarInstanceRefAlongTheWay: true");
+            gprintln("containsStructVarInstanceRefAlongTheWay: xpath is '"~newStructVarPath~"'");
         }
 
         // Hash the absolute path name
