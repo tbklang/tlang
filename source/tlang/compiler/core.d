@@ -204,6 +204,8 @@ public class Compiler
             throw new CompilerException(CompilerError.TYPECHECK_NOT_YET_PERFORMED);
         }
 
+        // TODO: Emitter should be emit_c as 
+        // ... it's really controlling that actually
         if(!config.hasConfig("emit:mapper"))
         {
             throw new CompilerException(CompilerError.CONFIG_ERROR, "Missing a symbol mapper");
