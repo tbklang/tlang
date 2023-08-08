@@ -2210,11 +2210,42 @@ public final class TypeChecker
             /**
              * Struct type declaration
              */
-            else if(cast(Struct)statement)
+            else if(cast(StructVariableInstance)statement)
             {
-                Struct structDecl = cast(Struct)statement;
+                StructVariableInstance structDecl = cast(StructVariableInstance)statement;
+                assert(structDecl.getContext());
+                Struct structType = cast(Struct)getType(statement.getContext().container, structDecl.getType());
 
-                // TODO: Not needed
+                /**
+                 * Determine the number of members this struct
+                 * contained (as per its definition) and then
+                 * back-pop the declaration instructions
+                 */
+                ulong structMemberCount = structType.getStatements().length;
+                VariableDeclaration[] memberDeclInstrs;
+                ulong i = 0;
+                while(i < structMemberCount)
+                {
+                    VariableDeclaration tailPoppedInstr = cast(VariableDeclaration)tailPopInstr();
+                    assert(tailPoppedInstr);
+                    memberDeclInstrs ~= tailPoppedInstr;
+                    i++;
+                }
+                memberDeclInstrs = reverse(memberDeclInstrs);
+                gprintln("Collected struct member decls: "~to!(string)(memberDeclInstrs));
+
+                StructInstantiateInstruction structVarDecInstr = new StructInstantiateInstruction(structDecl.getName(), structType, memberDeclInstrs);
+                structVarDecInstr.setContext(structDecl.context); // TODO: Check this context
+                
+
+                // TODO: add it instrb
+                addInstrB(structVarDecInstr);
+
+
+
+                // TODO: Implement me 
+                gprintln("Mr blueskyyyyyyyy!");
+                // assert(false);
             }
             /* Case of no matches */
             else
