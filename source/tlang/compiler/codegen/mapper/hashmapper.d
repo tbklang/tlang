@@ -50,9 +50,12 @@ public final class HashMapper : SymbolMapper
             // Hash the xpath
             symbolName = generateHashed(newStructVarPath);
 
-            // Tack on the remaining segments
-            symbolName ~= "."~remPath;
-
+            // Tack on the remaining path (if any)
+            if(remPath.length)
+            {
+                symbolName ~= "."~remPath;
+            }
+            
             return symbolName;
         }
 
