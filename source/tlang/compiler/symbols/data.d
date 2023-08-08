@@ -607,8 +607,13 @@ public final class StructVariableInstance : TypedEntity, Container
     // TODO: Check for implementing the below
     public bool replace(Statement thiz, Statement that)
     {
-        int i = 1;
-        assert(2==i);
+        gprintln("replace(): gvn: "~to!(string)(thiz));
+        gprintln("replace(): that: "~to!(string)(that));
+
+        // FIXME: Allow replacing
+
+        // int i = 1;
+        // assert(2==i);
         return false;
     }
 
