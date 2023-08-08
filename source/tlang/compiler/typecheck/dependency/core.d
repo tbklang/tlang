@@ -1433,6 +1433,21 @@ public class DNodeGenerator
             }            
         }
         /**
+        * Struct-typed variable declarations
+        */
+        else if(cast(StructVariableInstance)entity)
+        {
+            StructVariableInstance structVarDec = cast(StructVariableInstance)entity;
+            structVarDec.setContext(context);
+            DNode structVariableDNode = generalPass(structVarDec, context);
+
+            
+
+            gprintln("Hello daddy, I'm your cherry bomb (https://youtu.be/Kt-tLuszKBA?t=2543)");
+            
+            return structVariableDNode;
+        }
+        /**
         * Array assignments
         */
         else if(cast(ArrayAssignment)entity)
@@ -1739,16 +1754,19 @@ public class DNodeGenerator
             return funcCallDNode;
         }
         /** 
-         * Struct declaration
-         *
-         * We ignore as not static initialization
-         * is possible.
+         * Struct type declaration
          */
         else if(cast(Struct)entity)
         {
-            gprintln("Struct definition dependency", DebugType.ERROR);
+            gprintln("Struct type dependency generation", DebugType.ERROR);
+            Struct structType = cast(Struct)entity;
 
-            // NOTE: This is to be discarded as we are doing here
+            /** 
+             * Pass the 
+             */
+            import tlang.compiler.typecheck.dependency.declarables : StructTypeDeclarable;
+            StructTypeDeclarable stdDNode = declareStructType(structType);
+            return stdDNode;
         }
 
         return null;
