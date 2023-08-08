@@ -14,7 +14,7 @@ import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
 import tlang.compiler.codegen.mapper.core : SymbolMapper;
-import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
+import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter, StructVariableInstance;
 import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
@@ -255,15 +255,17 @@ public final class DCodeEmitter : CodeEmitter
         /* StructInstantiateInstruction */
         else if(cast(StructInstantiateInstruction)instruction)
         {
+            gprintln("You knows its true, everything i do, i do it for you");
+            
             // TODO: Implement me
             StructInstantiateInstruction structInstntInstr = cast(StructInstantiateInstruction)instruction;
             Context context = structInstntInstr.getContext();
-            Variable variable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), structInstntInstr.getDeclaredName());
+            StructVariableInstance variable = cast(StructVariableInstance)typeChecker.getResolver().resolveBest(context.getContainer(), structInstntInstr.getDeclaredName());
             string variableName = variable.getName();
             Type variableType = structInstntInstr.getDeclaredType();
 
             // Emit
-            string emit = typeTransform(variableType)~" "~variableName;
+            string emit = typeTransform(variableType)~" "~mapper.symbolLookup(variable);
             emit ~= ";";
 
             return emit;
@@ -766,6 +768,9 @@ public final class DCodeEmitter : CodeEmitter
 
             return emit;
         }
+        /** 
+         * Struct-type declaration
+         */
         else if(cast(StructTypeDeclareInstruction)instruction)
         {
             StructTypeDeclareInstruction strctTypeDeclInstr = cast(StructTypeDeclareInstruction)instruction;
