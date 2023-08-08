@@ -40,41 +40,74 @@ public final class HashMapper : SymbolMapper
 
 
         string newStructVarPath;
-        if(containsStructVarInstanceRefAlongTheWay(absoluteFullPath, newStructVarPath))
+        string remPath;
+        if(containsStructVarInstanceRefAlongTheWay(absoluteFullPath, newStructVarPath, remPath))
         {
             gprintln("containsStructVarInstanceRefAlongTheWay: true");
             gprintln("containsStructVarInstanceRefAlongTheWay: xpath is '"~newStructVarPath~"'");
+            gprintln("containsStructVarInstanceRefAlongTheWay: rem path is '"~remPath~"'");
+
+            // Hash the xpath
+            symbolName = generateHashed(newStructVarPath);
+
+            // Tack on the remaining segments
+            symbolName ~= "."~remPath;
+
+            return symbolName;
         }
 
         // Hash the absolute path name
+        
+
+        // Generate the name as `_<hexOfAbsPath>`
+        symbolName = generateHashed(absoluteFullPath);
+
+        return symbolName;
+    }
+
+    /** 
+     * Generates a hashed version of the provided name
+     * in the form of `t_<hash>`
+     *
+     * Params:
+     *   input = the name to hash
+     * Returns: the hashed name
+     */
+    private static string generateHashed(string input)
+    {
         // FIXME: Ensure these hashes are unique (use the smbyol table!)
         import std.digest : toHexString, LetterCase;
         import std.digest.md : md5Of;
 
         // Generate the name as `_<hexOfAbsPath>`
-        symbolName = toHexString!(LetterCase.lower)(md5Of(absoluteFullPath));
-        symbolName="t_"~symbolName;
+        string hashedName = toHexString!(LetterCase.lower)(md5Of(input));
+        hashedName="t_"~hashedName;
 
-        return symbolName;
+        return hashedName;
     }
 
     /** 
      * Given the absolute path this will scan each segment
      * of said path until it finds (if any) a `StructInstanceVariable`
      * upon which point it will return `true` and also set the `pathToIt`
-     * parameter to the path up till (and including) that point
+     * parameter to the path up till (and including) that point.
+     *
+     * The segments remaining AFTER the occurence of the `StructVariableInstance``
+     * in the path are placed in the third parameter.
      *
      * Params:
      *   absPath = the absolute path to scan
      *   pathToIt = this is set to the path of the found `StructVariableInstance`
      * on the occasion one is foundm else left untouched
+     *   remPath = remaining path
      * Returns: `true` if found, `false` otherwise
      */
-    private bool containsStructVarInstanceRefAlongTheWay(string absPath, ref string pathToIt)
+    private bool containsStructVarInstanceRefAlongTheWay(string absPath, ref string pathToIt, ref string remPath)
     {
         string[] segments = split(absPath, ".");
         string curPath;
         string[] segBuild;
+        ulong segIdx = 0;
         foreach(string segment; segments)
         {
             segBuild ~= segment;
@@ -84,8 +117,11 @@ public final class HashMapper : SymbolMapper
             if(cast(StructVariableInstance)segmentEntity)
             {
                 pathToIt = curPath;
+                remPath = join(segments[segIdx+1..$], ".");
                 return true;
             }
+
+            segIdx++;
         }
 
         // TODO: Implement me
