@@ -14,7 +14,7 @@ import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
 import tlang.compiler.codegen.mapper.core : SymbolMapper;
-import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter, StructVariableInstance;
+import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter, StructVariableInstance, Entity;
 import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
@@ -287,22 +287,27 @@ public final class DCodeEmitter : CodeEmitter
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
 
-            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName); //TODO: Remove `auto`
+            // TODO: Add StructSupport ongod? . syntax needs help out here
+
+            Entity fetchedEntity = cast(Entity)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName);
+
+            // Sanity check: Should only be a `Variable` or `StructVariableInstance`
+            assert(cast(Variable)fetchedEntity || cast(StructVariableInstance)fetchedEntity);
 
             /* If it is not external */
-            if(!typedEntityVariable.isExternal())
+            if(!fetchedEntity.isExternal())
             {
                 //TODO: THis is giving me kak (see issue #54), it's generating name but trying to do it for the given container, relative to it
                 //TODO: We might need a version of generateName that is like generatenamebest (currently it acts like generatename, within)
 
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                string renamedSymbol = mapper.symbolLookup(fetchedEntity);
 
                 return renamedSymbol;
             }
             /* If it is external */
             else
             {
-                return typedEntityVariable.getName();
+                return fetchedEntity.getName();
             }
         }
         /* BinOpInstr */

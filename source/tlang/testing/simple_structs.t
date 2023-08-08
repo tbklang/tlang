@@ -14,4 +14,6 @@ void function()
     int i = u1.age+1;
 
     u1.age = 1;
+
+    User* ptr = &u1;
 }
