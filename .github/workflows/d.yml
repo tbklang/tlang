@@ -323,6 +323,51 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/simple_literals5.t
       - name: Simple literals 6
         run: ./tlang typecheck source/tlang/testing/simple_literals6.t
+
+
+
+      # All the universal coercion tests are below
+      #
+      # Over time those above will be ported over to it and will
+      # infact make part of the test suite of typeEnforce()
+      - name: Simple Coerce Literal Good (to variable declaration)
+        run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_good.t
+      - name: Simple Coerce Literal Bad [Size loss] (to variable declaration)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Simple Coerce Literal Good (standalone variable assignment)
+        run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_good_stdalo.t
+      - name: Simple Coerce Literal Bad [Size loss] (standalone variable assignment)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_bad_stdalon.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Function return expression coercion (good)
+        run: ./tlang typecheck source/tlang/testing/simple_function_return_type_check_good.t
+      - name: Function return expression coercion (bad)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_function_return_type_check_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
   emit:
     needs: [build, unittests]
@@ -336,8 +381,9 @@ jobs:
           name: tbin
         
       - name: Chmod compiler
-        run: chmod +x tlang  
-        
+        run: chmod +x tlang
+
+
       - name: Simple functions
         run: |
           ./tlang compile source/tlang/testing/simple_functions.t
