@@ -535,10 +535,22 @@ public final class CastedValueInstruction : Value
     /* The uncasted original instruction that must be executed-then-trimmed (casted) */
     private Value uncastedValue;
 
+    /** 
+     * Used in code emitting, this is related to
+     * #140. Really just a C+DGen thing.
+     *
+     * Signals that we shouldn't emit any special
+     * casting syntax in the underlying emitter.
+     */
+    private bool relax;
+
     this(Value uncastedValue, Type castToType)
     {
         this.uncastedValue = uncastedValue;
         this.type = castToType;
+
+        // Relaxing is disabled by default
+        this.relax = false;
     }
 
     public Value getEmbeddedInstruction()
@@ -549,6 +561,16 @@ public final class CastedValueInstruction : Value
     public Type getCastToType()
     {
         return type;
+    }
+
+    public bool isRelaxed()
+    {
+        return relax;
+    }
+
+    public void setRelax(bool relax)
+    {
+        this.relax = relax;
     }
 }
 

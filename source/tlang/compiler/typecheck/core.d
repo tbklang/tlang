@@ -356,9 +356,297 @@ public final class TypeChecker
         }
     }
 
-    /**
-    * There are several types and comparing them differs
-    */
+    /** 
+     * 🧠️ Feature: Universal coercion and type enforcer
+     *
+     * This tests two DIFFERENT types to see if they are:
+     * 
+     * 1. The same type (and if not, don't attempt coercion)
+     * 2. The same type (and if not, ATTEMPT coercion)
+     */
+    unittest
+    {
+        import tlang.compiler.symbols.typing.core;
+
+        TypeChecker tc = new TypeChecker(null);
+
+        /* To type is `t1` */
+        Type t1 = getBuiltInType(tc, "uint");
+        assert(t1);
+
+        /* We will comapre `t2` to `t1` */
+        Type t2 = getBuiltInType(tc, "ubyte");
+        assert(t2);
+        Value v2 = new LiteralValue("25", t2);
+        
+        // Ensure instruction v2's type is `ubyte`
+        assert(tc.isSameType(t2, v2.getInstrType()));
+
+
+        try
+        {
+            // Try type match them, if initially fails then try coercion
+            // ... (This should FAIL due to type mismatch and coercion disallowed)
+            tc.typeEnforce(t1, v2, v2, false);
+            assert(false);
+        }
+        catch(TypeMismatchException mismatch)
+        {
+            Type expectedType = mismatch.getExpectedType();
+            Type attemptedType = mismatch.getAttemptedType();
+            assert(tc.isSameType(expectedType, getBuiltInType(tc, "uint")));
+            assert(tc.isSameType(attemptedType, getBuiltInType(tc, "ubyte")));
+        }
+
+
+
+        // Try type match them, if initially fails then try coercion
+        // ... (This should pass due to its coercibility)
+        tc.typeEnforce(t1, v2, v2, true);
+
+        // This should have updated `v2`'s type to type `t1`
+        t2 = v2.getInstrType();
+        assert(tc.isSameType(t1, t2));
+    }
+
+    /** 
+     * 🧠️ Feature: Universal coercion and type enforcer
+     *
+     * This tests two EQUAL/SAME types to see if they are:
+     * 
+     * 1. The same type
+     */
+    unittest
+    {
+        import tlang.compiler.symbols.typing.core;
+
+        TypeChecker tc = new TypeChecker(null);
+
+        /* To type is `t1` */
+        Type t1 = getBuiltInType(tc, "uint");
+        assert(t1);
+
+        /* We will comapre `t2` to `t1` */
+        Type t2 = getBuiltInType(tc, "uint");
+        assert(t2);
+        Value v2 = new LiteralValue("25", t2);
+        
+        // Ensure instruction v2's type is `uint`
+        assert(tc.isSameType(t2, v2.getInstrType()));
+
+
+        // This should not fail (no coercion needed in either)
+        tc.typeEnforce(t1, v2, v2, false);
+        tc.typeEnforce(t1, v2, v2, true);
+    }
+
+    // FIXME: I should re-write the below. It is now incorrect
+    // ... as I DO ALLOW coercion of non literal-based instructions
+    // ... now - so it fails because it is using an older specification
+    // ... of TLang
+    // /** 
+    //  * 🧠️ Feature: Universal coercion and type enforcer
+    //  *
+    //  * This tests a failing case (read for details)
+    //  */
+    // unittest
+    // {
+    //     /** 
+    //      * Create a simple program with
+    //      * a function that returns an uint
+    //      * and a variable of type ubyte
+    //      */
+    //     Module testModule = new Module("myModule");
+    //     TypeChecker tc = new TypeChecker(testModule);
+
+    //     /* Add the variable */
+    //     Variable myVar = new Variable("ubyte", "myVar");
+    //     myVar.parentTo(testModule);
+    //     testModule.addStatement(myVar);
+
+    //     /* Add the function with a return expression */
+    //     VariableExpression retExp = new VariableExpression("myVar");
+    //     ReturnStmt retStmt = new ReturnStmt(retExp);
+    //     Function myFunc = new Function("function", "uint", [retStmt], []);
+    //     retStmt.parentTo(myFunc);
+    //     testModule.addStatement(myFunc);
+    //     myFunc.parentTo(testModule);
+
+
+    //     /* Now let's play with this as if the code-queue processor was present */
+
+
+    //     /* Create a variable fetch instruction for the `myVar` variable */
+    //     Value varFetch = new FetchValueVar("myVar", 1);
+    //     varFetch.setInstrType(tc.getType(testModule, myVar.getType()));
+    
+    //     /** 
+    //      * Create a ReturnInstruction now based on `function`'s return type
+    //      *
+    //      * 1) The ay we did this when we only have the `ReturnStmt` on the code-queue
+    //      * is by finding the ReturnStmt's parent (the Function) and getting its type.
+    //      *
+    //      * 2) We must now "pop" the `varFetch` instruction from the stack and compare types.
+    //      *
+    //      * 3) If the type enforcement is fine, then let's check that they are equal
+    //      *
+    //      */
+
+    //     // 1)
+    //     Function returnStmtContainer = cast(Function)retStmt.parentOf();
+    //     Type funcReturnType = tc.getType(testModule, returnStmtContainer.getType());
+
+    //     // 2) The enforcement will fail as coercion of non-literals is NOT allowed
+    //     try
+    //     {
+    //         tc.typeEnforce(funcReturnType, varFetch, true);
+    //         assert(false);
+    //     }
+    //     catch(CoercionException e)
+    //     {
+    //         assert(true);
+    //     }
+        
+
+    //     // 3) The types should not be the same
+    //     assert(!tc.isSameType(funcReturnType, varFetch.getInstrType()));
+    // }
+
+    /** 
+     * 🧠️ Feature: Universal coercion and type enforcer
+     *
+     * This tests a passing case (read for details)
+     */
+    unittest
+    {
+        /** 
+         * Create a simple program with
+         * a function that returns an uint
+         * and an expression of type ubyte
+         */
+        Module testModule = new Module("myModule");
+        TypeChecker tc = new TypeChecker(testModule);
+
+
+        /* Add the function with a return expression */
+        NumberLiteral retExp = new IntegerLiteral("21", IntegerLiteralEncoding.UNSIGNED_INTEGER);
+        ReturnStmt retStmt = new ReturnStmt(retExp);
+        Function myFunc = new Function("function", "uint", [retStmt], []);
+        retStmt.parentTo(myFunc);
+        testModule.addStatement(myFunc);
+        myFunc.parentTo(testModule);
+
+
+        /* Now let's play with this as if the code-queue processor was present */
+
+
+        /* Create a new LiteralValue instruction with our literal and of type `ubyte` */
+        Type literalType = tc.getType(testModule, "ubyte");
+        Value literalValue = new LiteralValue(retExp.getNumber(), literalType);
+    
+        /** 
+         * Create a ReturnInstruction now based on `function`'s return type
+         *
+         * 1) The ay we did this when we only have the `ReturnStmt` on the code-queue
+         * is by finding the ReturnStmt's parent (the Function) and getting its type.
+         *
+         * 2) We must now "pop" the `literalValue` instruction from the stack and compare types.
+         *
+         * 3) If the type enforcement is fine, then let's check that they are equal
+         *
+         */
+
+        // 1)
+        Function returnStmtContainer = cast(Function)retStmt.parentOf();
+        Type funcReturnType = tc.getType(testModule, returnStmtContainer.getType());
+
+        // 2)
+        tc.typeEnforce(funcReturnType, literalValue, literalValue, true);
+
+        // 3) 
+        assert(tc.isSameType(funcReturnType, literalValue.getInstrType()));
+    }
+
+    /** 
+     * For: 🧠️ Feature: Universal coercion
+     *
+     * Given a Type `t1` and a `Value`-based instruction, if the
+     * type of the `Value`-based instruction is the same as that
+     * of the provided type, `t1`, then the function returns cleanly
+     * without throwing any exceptions and will not fill in the `ref`
+     * argument.
+     *
+     * If the types do NOT match then and cerocion is disallowed then
+     * an exception is thrown.
+     * 
+     * If the types do NOT match and coercion is allowed then coercion
+     * is attempted. If coercion fails an exception is thrown, else
+     * it will place a `CastedValueInstruction` into the memory referrred
+     * to by the `ref` parameter. It is this instruction that will contain
+     * the action to cast the instruction to the coerced type.
+     *
+     * In the case that coercion is disabled then mismatched types results
+     * in false being returned.
+     *
+     * Params:
+     *   t1 = To-type (will coerce towards if requested)
+     *   v2 = the `Value`-instruction
+     *   ref coerceInstruction = the place to store the `CastedValueInstruction` in if coercion succeeds
+     *                          (this will just be `v2` itself if the types are the same exactly)
+     *   allowCoercion = whether or not at attempt coercion on initial type mismatch (default: `false`)
+     *
+     * Throws:
+     *   TypeMismatchException if coercion is disallowed and the types are not equal
+     * Throws:
+     *   CoercionException if the types were not equal to begin with, coercion was allowed
+     * but failed to coerce
+     */
+    private void typeEnforce(Type t1, Value v2, ref Value coerceInstruction, bool allowCoercion = false)
+    {
+        /* Debugging */
+        string dbgHeader = "typeEnforce(t1="~t1.toString()~", v2="~v2.toString()~", attemptCoerce="~to!(string)(allowCoercion)~"): ";
+        gprintln(dbgHeader~"Entering");
+        scope(exit)
+        {
+            gprintln(dbgHeader~"Leaving");
+        }
+
+        /* Extract the original types of `v2` */
+        Type t2 = v2.getInstrType();
+        
+
+        /* Check if the types are equal */
+        if(isSameType(t1, t2))
+        {
+            // Do nothing
+        }
+        /* If the types are NOT the same */
+        else
+        {
+            /* If coercion is allowed */
+            if(allowCoercion)
+            {
+                /* If coerion fails, it would throw an exception */
+                CastedValueInstruction coerceCastInstr = attemptCoercion(t1, v2);
+                coerceInstruction = coerceCastInstr;
+            }
+            /* If coercion is not allowed, then we failed */
+            else
+            {
+                throw new TypeMismatchException(this, t1, t2);
+            }
+        }
+    }
+
+    /** 
+     * Compares the two types for equality
+     *
+     * Params:
+     *   type1 = the first type
+     *   type2 = the second type
+     *
+     * Returns: true if the types are equal, false otherwise
+     */
     private bool isSameType(Type type1, Type type2)
     {
         bool same = false;
@@ -408,9 +696,8 @@ public final class TypeChecker
      * is within the range whereby it may be coerced
      *
      * Params:
-     *   variableType = the type to try coercing towards
-     *   assignmentInstruction = the literal to apply a range
-     *                           check to
+     *   toType = the type to try coercing towards
+     *   literalInstr = the literal to apply a range check to
      */
     private bool isCoercibleRange(Type toType, Value literalInstr)
     {
@@ -627,64 +914,133 @@ public final class TypeChecker
         return false;
     }
 
+    /** 
+     * Checks if the provided type refers to a `StackArray`
+     *
+     * Params:
+     *   typeIn = the `Type` to test
+     * Returns: `true` if it refers to a `StackArray`,
+     * `false` otherwise
+     */
+    private bool isStackArrayType(Type typeIn)
+    {
+        return cast(StackArray)typeIn !is null;
+    }
 
     /** 
      * Attempts to perform coercion of the provided Value-instruction
-     * with respect to the provided variable type.
+     * with respect to the provided to-type.
      * 
      * This should only be called if the types do not match.
-     * This will update the provided instruction's type-field
+     * 
      *
      * Params:
-     *   variableType = the type to attempt coercing the instruction to
-     *   assignmentInstruction = instruction to coerce
+     *   toType = the type to attempt coercing the instruction to
+     *   providedInstruction = instruction to coerce
+     * Throws:
+     *   CoercionException if we cannot coerce to the given to-type
+     * Returns:
+     *   the `CastedValueInstruction` on success
      */
-    private void attemptCoercion(Type variableType, Value assignmentInstruction)
+    private CastedValueInstruction attemptCoercion(Type toType, Value providedInstruction)
     {
         gprintln("VibeCheck?");
 
-        /* Extract the type of the assignment instruction */
-        Type assignmentType = assignmentInstruction.getInstrType();
+        /* Extract the type of the provided instruction */
+        Type providedType = providedInstruction.getInstrType();
 
+
+        /**
+         * ==== Stack-array to pointer coercion ====
+         *
+         * If the provided-type is a `StackArray`
+         * and the to-type is a `Pointer`.
+         *
+         * if this is the case we must cast the `StackArray`
+         * to a new `Pointer` type of its component type
+         */
+        if(isStackArrayType(providedType) && isPointerType(toType))
+        {
+            // Extract the pointer (to-type's)  referred type
+            Pointer toTypePointer = cast(Pointer)toType;
+            Type toTypeReferred = toTypePointer.getReferredType();
+
+            // Extract the stack array's component type
+            StackArray providedTypeStkArr = cast(StackArray)providedType;
+            Type stackArrCompType = providedTypeStkArr.getComponentType();       
+
+            // We still need the component type to match the to-type's referred type
+            if(isSameType(stackArrCompType, toTypeReferred))
+            {
+                gprintln("Stack-array ('"~providedInstruction.toString()~"' coercion from type '"~providedType.getName()~"' to type of '"~toType.getName()~"' allowed :)");
+
+                // Return a cast instruction to the to-type
+                return new CastedValueInstruction(providedInstruction, toType);
+            }
+            // If not, error, impossible to coerce
+            else
+            {
+                throw new CoercionException(this, toType, providedType, "Cannot coerce a stack array with component type not matching the provided to-type of the pointer type trying to be coerced towards");
+            } 
+        }
+        /** 
+         * ==== Pointer coerion check first ====
+         *
+         * If the to-type is a Pointer
+         * If the incoming provided-type is an Integer (non-pointer though)
+         *
+         * This is the case where an Integer [non-pointer though] (provided-type)
+         * must be coerced to a Pointer (to-type)
+         */
+        else if(isIntegralTypeButNotPointer(providedType) && isPointerType(toType))
+        {
+            // throw new CoercionException(this, toType, providedType, "Yolo baggins, we still need to implement dis");
+
+            // Return a cast instruction to the to-type
+            return new CastedValueInstruction(providedInstruction, toType);
+        }
         // If it is a LiteralValue (integer literal) (support for issue #94)
-        if(cast(LiteralValue)assignmentInstruction)
+        else if(cast(LiteralValue)providedInstruction)
         {
             // TODO: Add a check for if these types are both atleast integral (as in the Variable's type)
             // ... THEN (TODO): Check if range makes sense
-            bool isIntegral = !(cast(Integer)variableType is null); // Integrality check
+            bool isIntegral = !(cast(Integer)toType is null); // Integrality check
 
             if(isIntegral)
             {
-                bool isCoercible = isCoercibleRange(variableType, assignmentInstruction); // TODO: Range check
+                bool isCoercible = isCoercibleRange(toType, providedInstruction); // TODO: Range check
 
                 if(isCoercible)
                 {
                     // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
                     // ... as during code emit that is what will be hoisted out and checked regarding its type
                     // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
-                    assignmentInstruction.setInstrType(variableType);
+                    // providedInstruction.setInstrType(toType);
+
+                    // Return a cast instruction to the to-type
+                    return new CastedValueInstruction(providedInstruction, toType);
                 }
                 else
                 {
-                    throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (range violation)");
+                    throw new CoercionException(this, toType, providedType, "Not coercible (range violation)");
                 }
             }
             else
             {
-                throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+                throw new CoercionException(this, toType, providedType, "Not coercible (lacking integral var type)");
             }
             
         }
         // If it is a LiteralValueFloat (support for issue #94)
-        else if(cast(LiteralValueFloat)assignmentInstruction)
+        else if(cast(LiteralValueFloat)providedInstruction)
         {
             gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
             assert(false);
         }
         // Unary operator (specifically with a minus)
-        else if(cast(UnaryOpInstr)assignmentInstruction)
+        else if(cast(UnaryOpInstr)providedInstruction)
         {
-            UnaryOpInstr unaryOpInstr = cast(UnaryOpInstr)assignmentInstruction;
+            UnaryOpInstr unaryOpInstr = cast(UnaryOpInstr)providedInstruction;
 
             if(unaryOpInstr.getOperator() == SymbolType.SUB)
             {
@@ -693,7 +1049,7 @@ public final class TypeChecker
                 // If it is a negative LiteralValue (integer literal)
                 if(cast(LiteralValue)operandInstr)
                 {
-                    bool isIntegral = !(cast(Integer)variableType is null);
+                    bool isIntegral = !(cast(Integer)toType is null);
 
                     if(isIntegral)
                     {
@@ -701,18 +1057,21 @@ public final class TypeChecker
 
                         
 
-                        bool isCoercible = isCoercibleRange(variableType, assignmentInstruction); // TODO: Range check
+                        bool isCoercible = isCoercibleRange(toType, providedInstruction); // TODO: Range check
 
                         if(isCoercible)
                         {
                             // TODO: Coerce here by changing the embedded instruction's type (I think this makes sense)
                             // ... as during code emit that is what will be hoisted out and checked regarding its type
                             // NOTE: Referrring to same type should not be a problem (see #96 Question 1)
-                            assignmentInstruction.setInstrType(variableType);
+                            // providedInstruction.setInstrType(toType);
+
+                            // Return a cast instruction to the to-type
+                            return new CastedValueInstruction(providedInstruction, toType);
                         }
                         else
                         {
-                            throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (range violation)");
+                            throw new CoercionException(this, toType, providedType, "Not coercible (range violation)");
                         }
 
 
@@ -720,6 +1079,11 @@ public final class TypeChecker
                         // TODO: Implement things here
                         // gprintln("Please implement coercing checking for negative integer literals", DebugType.ERROR);
                         // assert(false);
+                    }
+                    else
+                    {
+                        gprintln("Yo, 'fix me', just throw an exception thing ain't integral, too lazy to write it now", DebugType.ERROR);
+                        assert(false);
                     }
                 }
                 // If it is a negative LiteralValueFloat (floating-point literal)
@@ -731,17 +1095,59 @@ public final class TypeChecker
                 // If anything else is embedded
                 else
                 {
-                    throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+                    throw new CoercionException(this, toType, providedType, "Not coercible (lacking integral var type)");
                 }
             }
             else
             {
-                throw new TypeMismatchException(this, variableType, assignmentType, "Cannot coerce a non minus unary operation");
+                throw new CoercionException(this, toType, providedType, "Cannot coerce a non minus unary operation");
             }
         }
+        /** 
+         * If we arrive at this case then it is not any special literal
+         * handling, rather we need to check promotion rules and on
+         * cast-shortening - we raise an error
+         */
         else
         {
-            throw new TypeMismatchException(this, variableType, assignmentType, "Not coercible (lacking integral var type)");
+            /** 
+             * If the incoming type is `Number`
+             * and the `toType` is `Number`
+             */
+            if(cast(Number)providedType && cast(Number)toType)
+            {
+                Number providedNumericType = cast(Number)providedType;
+                Number toNumericType = cast(Number)toType;
+
+                /**
+                 * If the provided type is less than or equal
+                 * in size to that of the to-type
+                 */
+                if(providedNumericType.getSize() <= toNumericType.getSize())
+                {
+                    // providedInstruction.setInstrType(toType);
+                    // Return a cast instruction to the to-type
+                    return new CastedValueInstruction(providedInstruction, toType);
+                }
+                /** 
+                 * If the incoming type is bigger than the toType
+                 *
+                 * E.g.
+                 * ```
+                 * long i = 2;
+                 * byte i1 = i;
+                 * ```
+                 */
+                else
+                {
+                    throw new CoercionException(this, toType, providedType, "Loss of size would occur");
+                }
+            }
+            else
+            {
+                gprintln("Mashallah why are we here? BECAUSE we should just use ze-value-based genral case!: "~providedInstruction.classinfo.toString());
+                throw new CoercionException(this, toType, providedType);
+            }
         }
     }
 
@@ -882,6 +1288,70 @@ public final class TypeChecker
     }
 
     import tlang.compiler.typecheck.dependency.declarables : StructTypeDeclarable;
+    /** 
+     * Checks if the given `Type` is a pointer-type
+     *
+     * Params:
+     *   typeIn = the `Type` to check
+     * Returns: `true` if the type is a `Pointer`,
+     * `false` otherwise
+     */
+    public bool isPointerType(Type typeIn)
+    {
+        return typeid(typeIn) == typeid(Pointer);
+    }
+
+    /** 
+     * Checks if the given `Type` is an integral type
+     * (a kind-of `Integer`) HOWEVER that it is not
+     * a `Pointer` (recall all ptrs are integers)
+     *
+     * Params:
+     *   typeIn = the `Type` to check
+     * Returns: `true` if integral (not pointer) type,
+     * `false` otherwise
+     */
+    public bool isIntegralTypeButNotPointer(Type typeIn)
+    {
+        return cast(Integer)typeIn && !isPointerType(typeIn);
+    }
+
+
+    /** 
+     * Determines the biggest of the two `Integer`-based types
+     * and returns that one.
+     *
+     * If neither is bigger than the other then the first is
+     * returned.
+     *
+     * Please do not pass in `Pointer` types here - NOT the
+     * intended usage (even though allowed).
+     *
+     * Params:
+     *   integralType1 = the first `Integer`-based type to test
+     *   integralType2 = the second `Integer`-based type to test
+     * Returns: the biggest `Integer` type
+     */
+    private Integer biggerOfTheTwo(Integer integralType1, Integer integralType2)
+    {
+        // Sanity check, please don't pass Pointer types in here
+        // as that isn't the intended usage
+        assert(!isPointerType(integralType1) && !isPointerType(integralType2));
+
+        if(integralType1.getSize() > integralType2.getSize())
+        {
+            return integralType1;
+        }
+        else if(integralType1.getSize() < integralType2.getSize())
+        {
+            return integralType2;
+        }
+        else
+        {
+            return integralType1;
+        }
+    }
+
 
     public void typeCheckThing(DNode dnode)
     {
@@ -1052,22 +1522,123 @@ public final class TypeChecker
                 Value vRhsInstr = cast(Value)popInstr();
                 Value vLhsInstr = cast(Value)popInstr();
 
-                /** 
-                 * Attempt to coerce the types of both instructions if one is
-                 * a pointer and another is an integer, else do nothing
-                 */
-                attemptPointerAriehmeticCoercion(vLhsInstr, vRhsInstr);
-
-
                 Type vRhsType = vRhsInstr.getInstrType();
                 Type vLhsType = vLhsInstr.getInstrType();
 
 
+                /** 
+                 * ==== Pointer coercion ====
+                 *
+                 * We now need to determine if our bianry operation:
+                 *
+                 * `a + b`
+                 *
+                 * Is a case where `a` is a Pointer and `b` is an Integer
+                 * OR if `a` is an Integer and `b` is a Pointer
+                 * But exclusive OR wise
+                 *
+                 * And only THEN must we coerce-cast the non-pointer one
+                 *
+                 * Last case is if the above two are not true.
+                 */
+                if(isPointerType(vLhsType) && isIntegralTypeButNotPointer(vRhsType)) // <a> is Pointer, <b> is Integer
+                {
+                    // Coerce right-hand side towards left-hand side
+                    typeEnforce(vLhsType, vRhsInstr, vRhsInstr, true);
+                }
+                else if(isIntegralTypeButNotPointer(vLhsType) && isPointerType(vRhsType)) // <a> is Integer, <b> is Pointer
+                {
+                    // Coerce the left-hand side towards the right-hand side
+                    typeEnforce(vRhsType, vLhsInstr, vLhsInstr, true);
+                }
+                // If left and right operands are integral
+                else if(isIntegralTypeButNotPointer(vLhsType) && isIntegralTypeButNotPointer(vRhsType))
+                {
+                    /**
+                     * If one of the instructions if a `LiteralValue` (a numeric literal)
+                     * and another is not then coerce the literal to the other instruction's
+                     * type.
+                     *
+                     * If the above is NOT true then:
+                     *
+                     * Coerce the instruction which is the smaller of the two.
+                     *
+                     * If they are equal then:
+                     *
+                     *      If one is signed and the other unsigned then coerce
+                     *      signed to unsigned
+                     */
+                    Integer vLhsTypeIntegral = cast(Integer)vLhsType;
+                    assert(vLhsTypeIntegral);
+                    Integer vRhsTypeIntegral = cast(Integer)vRhsType;
+                    assert(vRhsTypeIntegral);
 
+                    if(cast(LiteralValue)vLhsInstr || cast(LiteralValue)vRhsInstr)
+                    {
+                        // Type enforce left-hand instruction to right-hand instruction
+                        if(cast(LiteralValue)vLhsInstr && cast(LiteralValue)vRhsInstr is null)
+                        {
+                            typeEnforce(vRhsTypeIntegral, vLhsInstr, vLhsInstr, true);
+                        }
+                        // Type enforce right-hand instruction to left-hand instruction
+                        else if(cast(LiteralValue)vLhsInstr is null && cast(LiteralValue)vRhsInstr)
+                        {
+                            typeEnforce(vLhsTypeIntegral, vRhsInstr, vRhsInstr, true);
+                        }
+                        // Both are literal values
+                        else
+                        {
+                            // Do nothing
+                        }
+                    }
+                    else if(vLhsTypeIntegral.getSize() < vRhsTypeIntegral.getSize())
+                    {
+                        typeEnforce(vRhsTypeIntegral, vLhsInstr, vLhsInstr, true);
+                    }
+                    else if(vLhsTypeIntegral.getSize() > vRhsTypeIntegral.getSize())
+                    {
+                        typeEnforce(vLhsTypeIntegral, vRhsInstr, vRhsInstr, true);
+                    }
+                    else
+                    {
+                        if(vLhsTypeIntegral.isSigned() && !vRhsTypeIntegral.isSigned())
+                        {
+                            typeEnforce(vRhsTypeIntegral, vLhsInstr, vLhsInstr, true);
+                        }
+                        else if(!vLhsTypeIntegral.isSigned() && vRhsTypeIntegral.isSigned())
+                        {
+                            typeEnforce(vLhsTypeIntegral, vRhsInstr, vRhsInstr, true);
+                        }
+                        else
+                        {
+                            // Do nothing if they are the same type
+                        }
+                    }
+                }
+                else
+                {
+                    // See issue #141: Binary Operators support for non-Integer types (https://deavmi.assigned.network/git/tlang/tlang/issues/141)
+                    gprintln("FIXME: We need to add support for this, class equality, and others like floats", DebugType.ERROR);
+                }
+
+                
                 /**
-                * TODO
-                * Types must either BE THE SAME or BE COMPATIBLE
-                */
+                 * Refresh types as instructions may have changed in
+                 * the above enforcement call
+                 */
+                vRhsType = vRhsInstr.getInstrType();
+                vLhsType = vLhsInstr.getInstrType();
+
+                /** 
+                 * We now will check to make sure the types
+                 * match, if not an error is thrown.
+                 *
+                 * We will also then set the instruction's
+                 * type to one of the two (they're the same
+                 * so it isn't as if it matters). But the
+                 * resulting instruction should be of the type
+                 * of its components - that's the logic.
+                 */
                 Type chosenType;
                 if(isSameType(vLhsType, vRhsType))
                 {
@@ -1261,41 +1832,30 @@ public final class TypeChecker
                             Type coercionScratchType;
 
 
-                            /* Match up types */
-                            //if(argType == parmType)
-                            if(isSameType(argType, parmType))
-                            {
-                                gprintln("Match type");
 
-                                /* Add the instruction into the FunctionCallInstr */
-                                funcCallInstr.setEvalInstr(parmCount, valueInstr);
-                                gprintln(funcCallInstr.getEvaluationInstructions());
-                            }
-                            /* Stack-array argument to pointer parameter coercion check */
-                            else if(canCoerceStackArray(parmType, argType, coercionScratchType))
-                            {
-                                // TODO: Add stack coercion check here
-                                gprintln("Stack-based array has been coerced for function call");
+                            /**
+                             * We need to enforce the `valueInstr`'s' (the `Value`-based
+                             * instruction being passed as an argument) type to be that
+                             * of the `parmType` (the function's parameter type)
+                             */
+                            typeEnforce(parmType, valueInstr, valueInstr, true);
 
-                                // Update the fetch-var instruction's type to the coerced 
-                                // TODO: Should we have applied this technically earlier then fallen through to
-                                // ... the branch above? That would have worked and been neater - we should do
-                                // ... that to avoid duplicating any code
-                                valueInstr.setInstrType(coercionScratchType);
+                            /**
+                             * Refresh the `argType` as `valueInstr` may have been
+                             * updated and we need the new type
+                             */
+                            argType = valueInstr.getInstrType();
+                            
 
-                                /* Add the instruction into the FunctionCallInstr */
-                                funcCallInstr.setEvalInstr(parmCount, valueInstr);
-                                gprintln(funcCallInstr.getEvaluationInstructions());
-                            }
-                            else
-                            {
-                                printCodeQueue();
-                                gprintln("Wrong actual argument type for function call", DebugType.ERROR);
-                                gprintln("Cannot pass value of type '"~argType.getName()~"' to function accepting '"~parmType.getName()~"'", DebugType.ERROR);
+                            // Sanity check
+                            assert(isSameType(argType, parmType));
 
-                                throw new TypeMismatchException(this, parmType, argType, "The actual argument's type does not match that of the function's parameter type");
-                            }
-
+                            
+                            /* Add the instruction into the FunctionCallInstr */
+                            funcCallInstr.setEvalInstr(parmCount, valueInstr);
+                            gprintln(funcCallInstr.getEvaluationInstructions());
+                            
+                            /* Decrement the parameter index (right-to-left, so move to left) */
                             parmCount--;
                         }
                         else
@@ -1641,20 +2201,14 @@ public final class TypeChecker
                 Type assignmentType = assignmentInstr.getInstrType();
 
 
-                // TODO: We should add a typecheck here where we update the type of the valInstr if it is of
-                // ... type NumberLiteral and coerce it to the variable referred to by the VariableAssignment
-                // ... see issue #94 part on "Coercion"
-                // If the types match then everything is fine
-                if(isSameType(variableDeclarationType, assignmentType))
-                {
-                    gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
-                }
-                // If the types do not match
-                else
-                {
-                    // Then attempt coercion
-                    attemptCoercion(variableDeclarationType, assignmentInstr);
-                }
+
+                /** 
+                 * Here we can call the `typeEnforce` with the popped
+                 * `Value` instruction and the type to coerce to
+                 * (our variable's type)
+                 */
+                typeEnforce(variableDeclarationType, assignmentInstr, assignmentInstr, true);
+                assert(isSameType(variableDeclarationType, assignmentInstr.getInstrType())); // Sanity check
             }
 
             /* Generate a variable declaration instruction and add it to the codequeue */
@@ -1742,16 +2296,15 @@ public final class TypeChecker
                 assert(assignmentType);
 
 
-                if(isSameType(variableDeclarationType, assignmentType))
-                {
-                    gprintln("Variable's declared type ('"~to!(string)(variableDeclarationType)~"') matches that of assignment expression's type ('"~to!(string)(assignmentType)~"')");
-                }
-                // If the type's do not match
-                else
-                {
-                    // Then attempt coercion
-                    attemptCoercion(variableDeclarationType, assignmentInstr);
-                }
+                /**
+                 * Here we will do the enforcing of the types
+                 *
+                 * Will will allow coercion of the provided
+                 * type (the value being assigned to our variable)
+                 * to the to-type (our Variable's declared type)
+                 */
+                typeEnforce(variableDeclarationType, assignmentInstr, assignmentInstr, true);
+                assert(isSameType(variableDeclarationType, assignmentInstr.getInstrType())); // Sanity check
 
                 /* Generate a variable assignment instruction and add it to the codequeue */
                 VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, assignmentInstr);
@@ -1765,26 +2318,23 @@ public final class TypeChecker
             {
                 ReturnStmt returnStatement = cast(ReturnStmt)statement;
                 Function funcContainer = cast(Function)resolver.findContainerOfType(Function.classinfo, returnStatement);
-                assert(funcContainer);
-                string functionName = resolver.generateName(funcContainer.parentOf(), funcContainer);
 
                 /* Generated return instruction */
                 ReturnInstruction returnInstr;
 
-                /** 
-                 * Typecheck
-                 *
-                 * TODO: Add typechecking for the return expression
-                 * we'd need context of where we are, probably our
-                 * parent could be used to check which function
-                 * we belong to and hence do the typecheck
+                /**
+                 * Ensure that the `ReturnStmt` is finally parented
+                 * by a `Function`
                  */
                 if(!funcContainer)
                 {
                     throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "A return statement can only appear in the body of a function");
                 }
-                
 
+                /**
+                 * Extract information about the finally-parented `Function`
+                 */
+                string functionName = resolver.generateName(funcContainer.parentOf(), funcContainer);
                 Type functionReturnType = getType(funcContainer, funcContainer.getType());
                 
 
@@ -1823,17 +2373,19 @@ public final class TypeChecker
                         assert(returnExpressionInstr);
                         Type returnExpressionInstrType = returnExpressionInstr.getInstrType();
 
-                        /* Ensure the expression's type matches the function's return type */
-                        if(isSameType(functionReturnType, returnExpressionInstrType))
-                        {
-                            /* Generate the instruction */
-                            returnInstr = new ReturnInstruction(returnExpressionInstr);
-                        }
-                        /* If not, then raise an error */
-                        else
-                        {
-                            throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Returning an expression of type '"~returnExpressionInstrType.toString()~"' does not match function's return type '"~functionReturnType.toString()~"'");
-                        }
+                        /**
+                         * Type check the return expression's type with that of the containing
+                         * function's retur type, if they don't match attempt coercion.
+                         *
+                         * On type check failure, an exception is thrown.
+                         *
+                         * On success, the `retjrnExpressionInstr` MAY be updated and then
+                         * we continue on.
+                         */
+                        typeEnforce(functionReturnType, returnExpressionInstr, returnExpressionInstr, true);
+
+                        /* Generate the instruction */
+                        returnInstr = new ReturnInstruction(returnExpressionInstr);
                     }
                     /* If not then this is an error */
                     else
