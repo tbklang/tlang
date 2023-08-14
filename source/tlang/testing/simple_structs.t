@@ -17,7 +17,7 @@ void function()
 
     User* ptr = &u1;
     byte** namePtr = &u1.name;
-    int* agePtr = &u1.age;
+    int* agePtr = (&u1.age)+1;
 
     
 
