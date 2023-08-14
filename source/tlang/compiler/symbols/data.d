@@ -4,6 +4,11 @@ public import tlang.compiler.symbols.check;
 import std.conv : to;
 import tlang.compiler.typecheck.dependency.core : Context;
 
+// For debug printing
+import gogga;
+
+// AST manipulation interfaces
+import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
 
 /**
 * TODO: Implement the blow and use them
@@ -215,7 +220,8 @@ public class Entity : Statement
 }
 
 /* TODO: DO we need intermediary class, TypedEntity */
-public class TypedEntity : Entity
+import tlang.compiler.symbols.mcro : MTypeRewritable;
+public class TypedEntity : Entity, MTypeRewritable
 {
     private string type;
 
@@ -230,15 +236,14 @@ public class TypedEntity : Entity
     {
         return type;
     }
+
+    public void setType(string type)
+    {
+        this.type = type;
+    }
 }
 
 public import tlang.compiler.symbols.containers;
-
-public class ArgumentList
-{
-
-}
-
 
 /** 
  * VariableParameter
@@ -352,9 +357,93 @@ public class Function : TypedEntity, Container
         
         return "Function (Name: "~name~", ReturnType: "~type~", Args: "~argTypes~")";
     }
+    
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on each `Statement` making up our body */
+        // NOTE: Using weight-reordered? Is that fine?
+        foreach(Statement curStmt; getStatements())
+        {
+            MStatementSearchable curStmtCasted = cast(MStatementSearchable)curStmt;
+            if(curStmtCasted)
+            {
+                matches ~= curStmtCasted.search(clazzType);
+            }
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we (`this`) are `thiz`, then we cannot replace */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* If not ourself, then check the body statements */
+        else
+        {
+            /**
+             * First check each `Statement` that make sup our
+             * body and see if we can replace that, else see
+             * if we can recurse on each of the body statements
+             * and apply replacement therein
+             */
+            // NOTE: Using weight-reordered? Is that fine?
+            Statement[] bodyStmts = getStatements();
+            for(ulong idx = 0; idx < bodyStmts.length; idx++)
+            {
+                Statement curBodyStmt = bodyStmts[idx];
+
+                /* Should we directly replace the Statement in the body? */
+                if(curBodyStmt == thiz)
+                {
+                    // Replace the statement in the body
+                    // NOTE: The respective Variable Param must be swapped out too if need be
+                    // (varParams[] subsetOf Statements[])
+                    for(ulong varParamIdx = 0; varParamIdx < params.length; varParamIdx++)
+                    {
+                        VariableParameter curVarParam = params[varParamIdx];
+                        if(curVarParam == thiz)
+                        {
+                            params[varParamIdx] = cast(VariableParameter)that;
+                            break;
+                        }
+                    }
+                    bodyStatements[idx] = that;
+
+                    // Re-parent `that` to us
+                    that.parentTo(this);
+
+                    return true;
+                }
+                /* If we cannot, then recurse (try) on it */
+                else if(cast(MStatementReplaceable)curBodyStmt)
+                {
+                    MStatementReplaceable curBodyStmtRepl = cast(MStatementReplaceable)curBodyStmt;
+                    if(curBodyStmtRepl.replace(thiz, that))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+    }
 }
 
-public class Variable : TypedEntity
+public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable, MCloneable
 {
     /* TODO: Just make this an Expression */
     private VariableAssignment assignment;
@@ -382,6 +471,93 @@ public class Variable : TypedEntity
     {
         return "Variable (Ident: "~name~", Type: "~type~")";
     }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /**
+         * Recurse on the `VariableAssignment`
+         */
+        MStatementSearchable innerStmt = cast(MStatementSearchable)assignment;
+        if(innerStmt)
+        {
+            matches ~= innerStmt.search(clazzType); 
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we, the `Variable`, are the `thiz` then we cannot perform replacement */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* Check if we should replace the `VariableAssignment` */
+        else if(thiz == assignment)
+        {
+            assignment = cast(VariableAssignment)that;
+            return true;
+        }
+        /* Recurse on the variable assignment (if there is one) */
+        else if(assignment !is null)
+        {
+            return assignment.replace(thiz, that);
+        }
+        /* Exhausted all possibilities */
+        else
+        {
+            return false;
+        }
+    }
+
+    /** 
+     * Clones this variable declaration recursively
+     * including its assigned value (`VariableAssignment`)
+     * if any.
+     *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone(Container newParent = null)
+    {
+        Variable clonedVarDec;
+
+        // If there's an assignment, then clone it
+        VariableAssignment clonedVarAss = null;
+        if(this.assignment)
+        {
+            // Clone the assignment
+            clonedVarAss = cast(VariableAssignment)this.assignment.clone(); // TODO: If needs be we must re-parent manually
+        }
+        
+
+        // Create new variable with same name and identifier
+        clonedVarDec = new Variable(this.type, this.name);
+
+        // Copy all properties across (TODO: Make sure we didn't miss any)
+        clonedVarDec.accessorType = this.accessorType;
+        clonedVarDec.isExternalEntity = this.isExternalEntity;
+        clonedVarDec.assignment = clonedVarAss;
+        clonedVarDec.container = this.container;
+
+        // Parent outselves to the given parent
+        clonedVarDec.parentTo(newParent);
+
+        return clonedVarDec;
+    }
 }
 
 
@@ -394,7 +570,7 @@ public import tlang.compiler.symbols.expressions;
 /**
 * TODO: Rename to `VariableDeclarationAssignment`
 */
-public class VariableAssignment : Statement
+public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable, MCloneable
 {
     private Expression expression;
     private Variable variable;
@@ -414,6 +590,8 @@ public class VariableAssignment : Statement
         return variable;
     }
 
+    // NOTE-to-self: Very interesting method we have here, is this just for debugging?
+    // (15th May 2023, whilst working on Meta)
     public void setVariable(Variable variable)
     {
         this.variable = variable;
@@ -423,12 +601,96 @@ public class VariableAssignment : Statement
     {
         return "[varAssignDec'd: To: "~variable.toString()~"]";
     }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on our `Expression` (if possible) */
+        MStatementSearchable innerStmt = cast(MStatementSearchable)expression;
+        if(innerStmt)
+        {
+            matches ~= innerStmt.search(clazzType); 
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* We cannot replace ourselves directly */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* Is the `Expression` the `thiz`, then swap out the expression */
+        else if(expression == thiz)
+        {
+            // TODO: Any reparenting needed?
+            expression = cast(Expression)that;
+            return true;
+        }
+        /* Recurse on the `Expression` being assigned (if possible) */
+        else if(cast(MStatementReplaceable)expression)
+        {
+            MStatementReplaceable replStmt = cast(MStatementReplaceable)expression;
+            return replStmt.replace(thiz, that);
+        }
+        /* If not matched */
+        else
+        {
+            return false;
+        }
+    }
+
+    /** 
+     * Clones this variable assignment by recursively cloning
+     * the fields within (TODO: finish description)
+     *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone(Container newParent = null)
+    {
+        // FIXME: Investigate if `Variable`? Must be cloned
+        // ... would cuase infinite recursion and it isn't
+        // ... reaslly a part of the AST (just a helper)
+        // ... hence I do not believe it needs to be cloned
+        // (If for some reason the association eneds to be)
+        // ... updted then `Variable`'s `clone()' can call
+        /// ... `setvariable(clonedVarDec)` (with itself)
+
+        // Clone the expression (if supported, TODO: throw an error if not)
+        Expression clonedExpression = null;
+        if(cast(MCloneable)this.expression)
+        {
+            MCloneable cloneableExpression = cast(MCloneable)this.expression;
+            clonedExpression = cast(Expression)cloneableExpression.clone(); // NOTE: Manually re-parent if
+        }
+        
+        VariableAssignment clonedVarAss = new VariableAssignment(clonedExpression);
+
+        // Parent outselves to the given parent
+        clonedVarAss.parentTo(newParent);
+
+        return clonedVarAss;
+    }
 }
 
 /**
 * TODO: Rename to ``
 */
-public class VariableAssignmentStdAlone : Statement
+public class VariableAssignmentStdAlone : Statement, MStatementSearchable, MStatementReplaceable
 {
     private Expression expression;
     private string varName;
@@ -455,6 +717,55 @@ public class VariableAssignmentStdAlone : Statement
     public override string toString()
     {
         return "[varAssignStdAlone: To: "~varName~"]";
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /**
+         * Recurse on the assigned `Expression`
+         */
+        MStatementSearchable assignedStmtCasted = cast(MStatementSearchable)expression;
+        if(assignedStmtCasted)
+        {
+            matches ~= assignedStmtCasted.search(clazzType); 
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we, the `VariableAssignmentStdAlone`, are the `thiz` then we cannot perform replacement */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* Check if we should replace the `Expression` being assigned? */
+        else if(thiz == expression)
+        {
+            expression = cast(Expression)that;
+            return true;
+        }
+        /* Recurse on the assigned `Expression` (if possible) */
+        else if(cast(MStatementReplaceable)expression)
+        {
+            MStatementReplaceable expressionCasted = cast(MStatementReplaceable)expression;
+            return expressionCasted.replace(thiz, that);
+        }
+        /* None */
+        else
+        {
+            return false;
+        }
     }
 }
 
@@ -538,12 +849,8 @@ public class PointerDereferenceAssignment : Statement
     }
 }
 
-
-public class IdentExpression : Expression
+public class IdentExpression : Expression, MStatementSearchable, MStatementReplaceable
 {
-    
-
-
     /* name */
     private string name;
 
@@ -561,6 +868,27 @@ public class IdentExpression : Expression
     {
         name = newName;
     }
+
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        // Nothing to replace within us
+        return false;
+    }
 }
 
 public class VariableExpression : IdentExpression
@@ -570,18 +898,7 @@ public class VariableExpression : IdentExpression
     {
         super(identifier);
     }
-
-
-
-    import tlang.compiler.typecheck.core;
-    public override string evaluateType(TypeChecker typeChecker, Container c)
-    {
-        string type;
-
-
-        return null;
-    }
-
+    
     public override string toString()
     {
         return "[varExp: "~getName()~"]";
@@ -596,9 +913,18 @@ public class Call : IdentExpression
     }
 }
 
-public final class FunctionCall : Call
+// FIXME: Finish adding proper `MStatementSearchable` and `MStatementReplaceable` to `FunctionCall`
+public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable
 {
-    
+    /* Whether this is statement-level function call or not */
+
+    /** 
+     * Function calls either appear as part of an expression
+     * (i.e. from `parseExpression()`) or directly as a statement
+     * in the body of a `Container`. This affects how code generation
+     * works and hence one needs to disambiguate between the two.
+     */
+    private bool isStatementLevel = false;
 
     /* Argument list */
     private Expression[] arguments;
@@ -618,6 +944,79 @@ public final class FunctionCall : Call
     {
         return arguments;
     }
+
+    /** 
+     * Mark this function call as statement-level
+     */
+    public void makeStatementLevel()
+    {
+        this.isStatementLevel = true;
+    }
+
+    /** 
+     * Determines if this function call is statement-level
+     *
+     * Returns: true if so, false otherwise
+     */
+    public bool isStatementLevelFuncCall()
+    {
+        return isStatementLevel;
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        // TODO: Implement me
+
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /**
+         * Recurse on each `Expression` (if possible)
+         */
+        foreach(Expression callExp; arguments)
+        {
+            MStatementSearchable innerStmt = cast(MStatementSearchable)callExp;
+            if(innerStmt)
+            {
+                matches ~= innerStmt.search(clazzType); 
+            }
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        // TODO: Implement me
+
+        // /* Check if our `Expression` matches, then replace */
+        // if(expression == thiz)
+        // {
+        //     // NOTE: This legit makes no sense and won't do anything, we could remove this
+        //     // and honestly should probably make this return false
+        //     // FIXME: Make this return `false` (see above)
+        //     expression = cast(Expression)that;
+        //     return true;
+        // }
+        // /* If not direct match, then recurse and replace (if possible) */
+        // else if(cast(MStatementReplaceable)expression)
+        // {
+        //     MStatementReplaceable replStmt = cast(MStatementReplaceable)expression;
+        //     return replStmt.replace(thiz, that);
+        // }
+        // /* If not direct match and not replaceable */
+        // else
+        // {
+        //     return false;
+        // }
+        return true;
+    }
 }
 
 /** 
@@ -635,6 +1034,11 @@ public final class ReturnStmt : Statement
     {
         this.returnExpression = returnExpression;
 
+        this();
+    }
+
+    this()
+    {
         /* Statement level weighting is 2 */
         weight = 2;
     }
@@ -642,6 +1046,11 @@ public final class ReturnStmt : Statement
     public Expression getReturnExpression()
     {
         return returnExpression;
+    }
+
+    public bool hasReturnExpression()
+    {
+        return returnExpression !is null;
     }
 }
 
@@ -690,6 +1099,70 @@ public final class IfStatement : Entity, Container
     public override string toString()
     {
         return "IfStmt";
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Loop through each `Branch` and recurse on them */
+        foreach(Branch curBranch; branches)
+        {
+            matches ~= curBranch.search(clazzType);
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we (`this`) are `thiz`, then we cannot replace */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* If not ourself, then check each `Branch` or recurse on them */
+        else
+        {
+            /**
+             * First check each `Branch` that makes up our
+             * branches array and see if we can replace that,
+             * else see if we can recurse on each of the branche
+             * and apply replacement therein
+             */
+            Statement[] bodyStmts = getStatements();
+            for(ulong idx = 0; idx < bodyStmts.length; idx++)
+            {
+                Statement curBodyStmt = bodyStmts[idx];
+
+                /* Should we directly replace the Statement in the body? */
+                if(curBodyStmt == thiz)
+                {
+                    // Replace the statement in the body
+                    // FIXME: Apply parenting? Yes we should
+                    branches[idx] = cast(Branch)that;
+                    return true;
+                }
+                /* If we cannot, then recurse (try) on it */
+                else if(cast(MStatementReplaceable)curBodyStmt)
+                {
+                    MStatementReplaceable curBodyStmtRepl = cast(MStatementReplaceable)curBodyStmt;
+                    if(curBodyStmtRepl.replace(thiz, that))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }
 
@@ -758,6 +1231,50 @@ public final class WhileLoop : Entity, Container
     public override string toString()
     {
         return "WhileLoop";
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on the the `Branch` */
+        if(cast(MStatementSearchable)branch)
+        {
+            MStatementSearchable branchCasted = cast(MStatementSearchable)branch;
+            if(branchCasted)
+            {
+                matches ~= branchCasted.search(clazzType);
+            }
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we (`this`) are `thiz`, then we cannot replace */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* If the `Branch` is to be replaced */
+        else if(branch == thiz)
+        {
+            branch = cast(Branch)that;
+            return true;
+        }
+        /* If not ourself, then recurse on the `Branch` */
+        else
+        {
+            return branch.replace(thiz, that);
+        }
     }
 }
 
@@ -846,6 +1363,66 @@ public final class ForLoop : Entity, Container
     {
         return "ForLoop";
     }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on the pre-loop `Statement` */
+        if(cast(MStatementSearchable)preLoopStatement)
+        {
+            MStatementSearchable preLoopStatementCasted = cast(MStatementSearchable)preLoopStatement;
+            if(preLoopStatementCasted)
+            {
+                matches ~= preLoopStatementCasted.search(clazzType);
+            }
+        }
+
+        /* Recurse on the the `Branch` */
+        if(cast(MStatementSearchable)branch)
+        {
+            MStatementSearchable branchCasted = cast(MStatementSearchable)branch;
+            if(branchCasted)
+            {
+                matches ~= branchCasted.search(clazzType);
+            }
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we (`this`) are `thiz`, then we cannot replace */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* If the `Branch` is to be replaced */
+        else if(branch == thiz)
+        {
+            branch = cast(Branch)that;
+            return true;
+        }
+        /* If the pre-loop `Statement` is to be replaced */
+        else if(preLoopStatement == thiz)
+        {
+            preLoopStatement = cast(Statement)that;
+            return true;
+        }
+        /* If not ourself, then recurse on the `Branch` */
+        else
+        {
+            return branch.replace(thiz, that);
+        }
+    }
 }
 
 /** 
@@ -928,9 +1505,95 @@ public final class Branch : Entity, Container
     {
         return "Branch";
     }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on the branch condition `Expression` */
+        if(cast(MStatementSearchable)branchCondition)
+        {
+            MStatementSearchable branchConditionCasted = cast(MStatementSearchable)branchCondition;
+            if(branchConditionCasted)
+            {
+                matches ~= branchConditionCasted.search(clazzType);
+            }
+        }
+
+        /* Recurse on each `Statement` making up our body */
+        // NOTE: Using weight-reordered? Is that fine?
+        foreach(Statement curStmt; getStatements())
+        {
+            MStatementSearchable curStmtCasted = cast(MStatementSearchable)curStmt;
+            if(curStmtCasted)
+            {
+                matches ~= curStmtCasted.search(clazzType);
+            }
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we (`this`) are `thiz`, then we cannot replace */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* If the branch condition `Expression` is matching */
+        else if(branchCondition == thiz)
+        {
+            branchCondition = cast(Expression)that;
+            return true;
+        }
+        /* If not ourself, then check the body statements */
+        else
+        {
+            /**
+             * First check each `Statement` that make sup our
+             * body and see if we can replace that, else see
+             * if we can recurse on each of the body statements
+             * and apply replacement therein
+             */
+            // NOTE: Using weight-reordered? Is that fine?
+            Statement[] bodyStmts = getStatements();
+            for(ulong idx = 0; idx < bodyStmts.length; idx++)
+            {
+                Statement curBodyStmt = bodyStmts[idx];
+
+                /* Should we directly replace the Statement in the body? */
+                if(curBodyStmt == thiz)
+                {
+                    // Replace the statement in the body
+                    // FIXME: Apply parenting? Yes we should
+                    branchBody[idx] = that;
+                    return true;
+                }
+                /* If we cannot, then recurse (try) on it */
+                else if(cast(MStatementReplaceable)curBodyStmt)
+                {
+                    MStatementReplaceable curBodyStmtRepl = cast(MStatementReplaceable)curBodyStmt;
+                    if(curBodyStmtRepl.replace(thiz, that))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+    }
 }
 
-public final class DiscardStatement : Statement
+public final class DiscardStatement : Statement, MStatementSearchable, MStatementReplaceable
 {
     private Expression expression;
 
@@ -950,6 +1613,54 @@ public final class DiscardStatement : Statement
     public override string toString()
     {
         return "[DiscardStatement: (Exp: "~expression.toString()~")]";
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on our `Expression` (if possible) */
+        MStatementSearchable innerStmt = cast(MStatementSearchable)expression;
+        if(innerStmt)
+        {
+            matches ~= innerStmt.search(clazzType); 
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        import std.stdio;
+        writeln("Replace() enter discard");
+
+        /* Check if our `Expression` matches, then replace */
+        if(expression == thiz)
+        {
+            // NOTE: This legit makes no sense and won't do anything, we could remove this
+            // and honestly should probably make this return false
+            // FIXME: Make this return `false` (see above)
+            expression = cast(Expression)that;
+            return true;
+        }
+        /* If not direct match, then recurse and replace (if possible) */
+        else if(cast(MStatementReplaceable)expression)
+        {
+            MStatementReplaceable replStmt = cast(MStatementReplaceable)expression;
+            return replStmt.replace(thiz, that);
+        }
+        /* If not direct match and not replaceable */
+        else
+        {
+            return false;
+        }
     }
 }
 

@@ -19,11 +19,14 @@ public class TypeCheckerException : TError
         GENERAL_ERROR
     }
 
+    private TypecheckError errType;
+
     this(TypeChecker typeChecker, TypecheckError errType, string msg = "")
     {
         /* We set it after each child class calls this constructor (which sets it to empty) */
         super("TypeCheck Error ("~to!(string)(errType)~")"~(msg.length > 0 ? ": "~msg : ""));
         this.typeChecker = typeChecker;
+        this.errType = errType;
     }
 
     // TODO: Remove this constructor and make anything that is currently using it 
@@ -32,10 +35,17 @@ public class TypeCheckerException : TError
     {
         this(typeChecker, TypecheckError.GENERAL_ERROR);
     }
+
+    public TypecheckError getError()
+    {
+        return errType;
+    }
 }
 
 public final class TypeMismatchException : TypeCheckerException
 {
+    private Type originalType, attemptedType;
+
     this(TypeChecker typeChecker, Type originalType, Type attemptedType, string msgIn = "")
     {
         super(typeChecker);
@@ -43,6 +53,46 @@ public final class TypeMismatchException : TypeCheckerException
         msg = "Type mismatch between type "~originalType.getName()~" and "~attemptedType.getName();
 
         msg ~= msgIn.length > 0 ? ": "~msgIn : "";
+
+        this.originalType = originalType;
+        this.attemptedType = attemptedType;
+    }
+
+    public Type getExpectedType()
+    {
+        return originalType;
+    }
+
+    public Type getAttemptedType()
+    {
+        return attemptedType;
+    }
+}
+
+public final class CoercionException : TypeCheckerException
+{
+    private Type toType, fromType;
+
+    this(TypeChecker typeChecker, Type toType, Type fromType, string msgIn = "")
+    {
+        super(typeChecker);
+
+        msg = "Cannot coerce from type '"~fromType.getName()~"' to type '"~toType.getName()~"'";
+
+        msg ~= msgIn.length > 0 ? ": "~msgIn : "";
+
+        this.toType = toType;
+        this.fromType = fromType;
+    }
+
+    public Type getToType()
+    {
+        return toType;
+    }
+
+    public Type getFromType()
+    {
+        return fromType;
     }
 }
 

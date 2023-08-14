@@ -21,4 +21,5 @@ int banana(int arg1)
 
     k=1+h+apple(1, apple(2, 3))+k;
     
+    return 0;
 }

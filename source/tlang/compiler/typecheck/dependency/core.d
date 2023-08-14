@@ -479,6 +479,19 @@ public class DNodeGenerator
         //generate();
     }
 
+    /** 
+     * Crashes the dependency generator with an
+     * expectation message by throwing a new
+     * `DependencyException`.
+     *
+     * Params:
+     *   message = the expectation message
+     */
+    public void expect(string message)
+    {
+        throw new DependencyException(DependencyError.GENERAL_ERROR, message);
+    }
+
     public DNode root;
 
 
@@ -702,14 +715,14 @@ public class DNodeGenerator
                 }
                 else
                 {
-                    Parser.expect("Only class-type may be used with `new`");
+                    expect("Only class-type may be used with `new`");
                     assert(false);
                 }
                 gprintln("Poe naais");
             }
             else
             {
-                Parser.expect("Invalid ryp");
+                expect("Invalid ryp");
                 assert(false);
             }
             // FunctionCall 
@@ -817,7 +830,7 @@ public class DNodeGenerator
                         }
                         else
                         {
-                            Parser.expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
+                            expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
                         }
 
 
@@ -865,7 +878,7 @@ public class DNodeGenerator
                 }
                 else
                 {
-                    Parser.expect("No entity by the name "~nearestName~" exists (at all)");
+                    expect("No entity by the name "~nearestName~" exists (at all)");
                 }
 
                
@@ -960,7 +973,7 @@ public class DNodeGenerator
                     }
                     else
                     {
-                        Parser.expect("Could not acces \""~remainingSegment~"\" as it is not a container");
+                        expect("Could not acces \""~remainingSegment~"\" as it is not a container");
                     }
 
                 }
@@ -971,7 +984,7 @@ public class DNodeGenerator
                 */
                 else
                 {
-                    Parser.expect("Could not find an entity named "~remainingSegment);
+                    expect("Could not find an entity named "~remainingSegment);
                 }
             }
 
@@ -1391,7 +1404,7 @@ public class DNodeGenerator
             }
             else
             {
-                Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
+                expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
                 return null;
             }            
         }
@@ -1462,12 +1475,16 @@ public class DNodeGenerator
 
             DNode returnStatementDNode = pool(returnStatement);
 
-            /* Process the return expression */
-            Expression returnExpression = returnStatement.getReturnExpression();
-            DNode returnExpressionDNode = expressionPass(returnExpression, context);
+            /* Check if this return statement has an expression attached */
+            if(returnStatement.hasReturnExpression())
+            {
+                /* Process the return expression */
+                Expression returnExpression = returnStatement.getReturnExpression();
+                DNode returnExpressionDNode = expressionPass(returnExpression, context);
 
-            /* Make return depend on the return expression */
-            returnStatementDNode.needs(returnExpressionDNode);
+                /* Make return depend on the return expression */
+                returnStatementDNode.needs(returnExpressionDNode);
+            }
 
             /* Make this container depend on this return statement */
             // node.needs(returnStatementDNode);
@@ -1680,6 +1697,23 @@ public class DNodeGenerator
             /* NOTE: If anything we ought to remove these ExternSTmt nodes during such a process */
             return null;
         }
+        /** 
+         * Function call (statement-level)
+         */
+        else if(cast(FunctionCall)entity)
+        {
+            FunctionCall funcCall = cast(FunctionCall)entity;
+            funcCall.setContext(context);
+            
+            // It MUST be if we are processing it in `generalPass()`
+            assert(funcCall.isStatementLevelFuncCall());
+            gprintln("Function calls (at statement level)", DebugType.INFO);
+
+            // The FunctionCall is an expression, so to get a DNode from it `expressionPass()` it
+            DNode funcCallDNode = expressionPass(funcCall, context);
+
+            return funcCallDNode;
+        }
 
         return null;
     }
@@ -1770,7 +1804,7 @@ public class DNodeGenerator
         /* Sanity check */
         if(clazz.getModifierType() != InitScope.STATIC)
         {
-            Parser.expect("SanityCheck: poolClassStatic(): Cannot pool a non-static class");
+            expect("SanityCheck: poolClassStatic(): Cannot pool a non-static class");
             // assert(clazz.getModifierType() == InitScope.STATIC);
         }
         

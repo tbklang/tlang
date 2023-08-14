@@ -22,10 +22,35 @@ import tlang.compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
 {
+    /** 
+     * Whether or not symbol mappi g should
+     * apply to identifiers
+     */
+    private bool symbolMapping;
+
     // NOTE: In future store the mapper in the config please
     this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
         super(typeChecker, file, config, mapper);
+
+        // By default symbols will be mapped
+        enableSymbolMapping();
+    }
+
+    /** 
+     * Enables symbol mapping
+     */
+    private void enableSymbolMapping()
+    {
+     	this.symbolMapping = true;
+    }
+
+    /** 
+     * Disables symbol mapping
+     */
+    private void disableSymbolMapping()
+    {
+     	this.symbolMapping = false;
     }
 
     private ulong transformDepth = 0;
@@ -104,7 +129,7 @@ public final class DCodeEmitter : CodeEmitter
             // return "KAK TODO";
         }
 
-        gprintln("Type transform unimplemented");
+        gprintln("Type transform unimplemented for type '"~to!(string)(typeIn)~"'", DebugType.ERROR);
         assert(false);
         // return stringRepr;
     }
@@ -249,6 +274,52 @@ public final class DCodeEmitter : CodeEmitter
 
             // TODO: I like having `lhs == rhs` for `==` or comparators but not spaces for `lhs+rhs`
 
+            /**
+             * C compiler's do this thing where:
+             *
+             * If `<a>` is a pointer and `<b>` is an integer then the
+             * following pointer arithmetic is allowed:
+             *
+             * int* a = (int*)2;
+             * a = a + b;
+             *
+             * But it's WRONG if you do
+             *
+             * a = a + (int*)b;
+             *
+             * Even though it makes logical sense coercion wise.
+             *
+             * Therefore we need to check such a case and yank
+             * the cast out me thinks.
+             * 
+             * See issue #140 (https://deavmi.assigned.network/git/tlang/tlang/issues/140#issuecomment-1892)
+             */
+            Type leftHandOpType = (cast(Value)binOpInstr.lhs).getInstrType();
+            Type rightHandOpType = (cast(Value)binOpInstr.rhs).getInstrType();
+
+            if(typeChecker.isPointerType(leftHandOpType))
+            {
+                // Sanity check the other side should have been coerced to CastedValueInstruction
+                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.rhs;
+                assert(cvInstr);
+
+                gprintln("CastedValueInstruction relax setting: Da funk RIGHT ");
+
+                // Relax the CV-instr to prevent it from emitting explicit cast code
+                cvInstr.setRelax(true);
+            }
+            else if(typeChecker.isPointerType(rightHandOpType))
+            {
+                // Sanity check the other side should have been coerced to CastedValueInstruction
+                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.lhs;
+                assert(cvInstr);
+
+                gprintln("CastedValueInstruction relax setting: Da funk LEFT ");
+
+                // Relax the CV-instr to prevent it from emitting explicit cast code
+                cvInstr.setRelax(true);
+            }
+
             return transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
         }
         /* FuncCallInstr */
@@ -292,6 +363,12 @@ public final class DCodeEmitter : CodeEmitter
             }
 
             emit ~= ")";
+
+            // If this is a statement-level function call then tack on a `;`
+            if(funcCallInstr.isStatementLevel())
+            {
+                emit ~= ";";
+            }
 
             return emit;
         }
@@ -505,6 +582,19 @@ public final class DCodeEmitter : CodeEmitter
 
 
             string emit;
+
+
+            /**
+             * Issue #140
+             *
+             * If relaxed then just emit the uncasted instruction
+             */
+            if(castedValueInstruction.isRelaxed())
+            {
+                /* The original expression */
+                emit ~= transform(uncastedInstruction);
+                return emit;
+            }
 
             /* Handling of primitive types */
             if(cast(Primitive)castingTo)
@@ -963,6 +1053,41 @@ int main()
     assert(t_7b6d477c5859059f16bc9da72fc8cc3b == 72);
     printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
 
+    return 0;
+}`);
+        }
+        // Test for `simple_function_recursion_factorial.t` (recursive function call testing)
+        else if(cmp(typeChecker.getModule().getName(), "simple_function_recursion_factorial") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    int result = factorial(3);
+    assert(result == 6);
+    printf("factorial: %u\n", result);
+    
+    return 0;
+}`);
+        }
+        // Test for `simple_direct_func_call.t` (statement-level function call)
+        else if(cmp(typeChecker.getModule().getName(), "simple_direct_func_call") == 0)
+        {
+            file.writeln(`
+#include<stdio.h>
+#include<assert.h>
+int main()
+{
+    // Before it should be 0
+    assert(t_de44aff5a74865c97c4f8701d329f28d == 0);
+
+    // Call the function
+    function();
+
+    // After it it should be 69
+    assert(t_de44aff5a74865c97c4f8701d329f28d == 69);
+    
     return 0;
 }`);
         }

@@ -20,9 +20,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        dc: [dmd-2.101.0]
+        dc: [dmd-latest]
         exclude:
-          - { os: macOS-latest, dc: dmd-2.085.0 }
+          - { os: macOS-latest, dc: dmd-latest }
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -100,6 +100,24 @@ jobs:
           fi
       - name: Simple string
         run: ./tlang syntaxcheck source/tlang/testing/typecheck/simple_string.t
+      
+      - name: Simple return (good)
+        run: |
+          ./tlang syntaxcheck source/tlang/testing/return/simple_return_good.t
+      - name: Simple return (bad return position)
+        run: |
+          set +e
+          ./tlang syntaxcheck source/tlang/testing/return/simple_return_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+
+      - name: Simple return (expressionless)
+        run: ./tlang syntaxcheck source/tlang/testing/return/simple_return_expressionless.t
 
   typecheck:
     needs: [build, unittests]
@@ -115,6 +133,14 @@ jobs:
       - name: Chmod compiler
         run: chmod +x tlang
         
+
+      - name: Simple return (expressionless)
+        run: ./tlang typecheck source/tlang/testing/return/simple_return_expressionless.t
+
+      - name: Simple return (with expression)
+        run: ./tlang typecheck source/tlang/testing/return/simple_return_type.t
+
+      
         
       - name: Simple function call
         run: ./tlang typecheck source/tlang/testing/typecheck/simple_function_call.t
@@ -297,6 +323,51 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/simple_literals5.t
       - name: Simple literals 6
         run: ./tlang typecheck source/tlang/testing/simple_literals6.t
+
+
+
+      # All the universal coercion tests are below
+      #
+      # Over time those above will be ported over to it and will
+      # infact make part of the test suite of typeEnforce()
+      - name: Simple Coerce Literal Good (to variable declaration)
+        run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_good.t
+      - name: Simple Coerce Literal Bad [Size loss] (to variable declaration)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Simple Coerce Literal Good (standalone variable assignment)
+        run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_good_stdalo.t
+      - name: Simple Coerce Literal Bad [Size loss] (standalone variable assignment)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_bad_stdalon.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Function return expression coercion (good)
+        run: ./tlang typecheck source/tlang/testing/simple_function_return_type_check_good.t
+      - name: Function return expression coercion (bad)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_function_return_type_check_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
   emit:
     needs: [build, unittests]
@@ -310,12 +381,24 @@ jobs:
           name: tbin
         
       - name: Chmod compiler
-        run: chmod +x tlang  
-        
+        run: chmod +x tlang
+
+
       - name: Simple functions
         run: |
           ./tlang compile source/tlang/testing/simple_functions.t
           ./tlang.out
+      - name: Simple functions (statement-level)
+        run: |
+          ./tlang compile source/tlang/testing/simple_direct_func_call.t
+          ./tlang.out
+      - name: Simple functions (recursive)
+        run: |
+          ./tlang compile source/tlang/testing/simple_function_recursion_factorial.t
+          ./tlang.out
+
+
+
       # TODO: Re-enable when we support the `discard` keyword again
       #- name: Simple variables
       #  run: |
