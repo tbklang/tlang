@@ -20,9 +20,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        dc: [dmd-2.101.0]
+        dc: [dmd-latest]
         exclude:
-          - { os: macOS-latest, dc: dmd-2.085.0 }
+          - { os: macOS-latest, dc: dmd-latest }
 
     runs-on: ${{ matrix.os }}
     steps:
