@@ -265,7 +265,8 @@ public final class DCodeEmitter : CodeEmitter
             Type variableType = structInstntInstr.getDeclaredType();
 
             // Emit
-            string emit = typeTransform(variableType)~" "~mapper.symbolLookup(variable);
+            string renamedSymbol = symbolMapping ? mapper.symbolLookup(variable) : variableName;
+            string emit = typeTransform(variableType)~" "~renamedSymbol;
             emit ~= ";";
 
             return emit;
@@ -846,16 +847,16 @@ public final class DCodeEmitter : CodeEmitter
             emit ~= "{";
             emit ~= "\n";
             
-            foreach(VariableDeclaration varDecInstr; strctTypeDeclInstr.getMembers())
+            foreach(StorageDeclaration memberDecInstr; strctTypeDeclInstr.getMembers())
             {
                 /** 
                  * We don't want to map the symbols for the definition of
                  * a struct type. Therefore we temporarily disable symbol
-                 * mapping for the `transform(varDecInstr)` call and then
+                 * mapping for the `transform(memberDecInstr)` call and then
                  * re-enable it afterwards
                  */
                 disableSymbolMapping();
-                emit ~= genTabs(transformDepth)~transform(varDecInstr);
+                emit ~= genTabs(transformDepth)~transform(memberDecInstr);
                 enableSymbolMapping();
                 emit ~= "\n";
             }
