@@ -2151,20 +2151,27 @@ public final class TypeChecker
                 ulong structMemberCount = structType.getStatements().length;
                 gprintln("Struct type '"~structTypeName~"' has "~to!(string)(structMemberCount)~" many members");
 
-                VariableDeclaration[] memberDeclInstrs;
+                StorageDeclaration[] memberDeclInstrs;
                 ulong i = 0;
                 while(i < structMemberCount)
                 {
-                    VariableDeclaration tailPoppedInstr = cast(VariableDeclaration)tailPopInstr();
+                    // Pop member
+                    StorageDeclaration tailPoppedInstr = cast(StorageDeclaration)tailPopInstr();
                     assert(tailPoppedInstr);
 
-                    // Struct members cannot have (according to a TLANG_RULE_1: because I decided so) assignments
-                    if(tailPoppedInstr.getAssignmentInstr() !is null)
+                    // Checks specific to members which are simple variables
+                    if(cast(VariableDeclaration)tailPoppedInstr)
                     {
-                        // TODO: Actually this is caught earlier by parser
-                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR,
-                                                        "Cannot assign to member '"~tailPoppedInstr.varName~"' "~
-                                                        "of struct instance '"~variableName~"'");
+                        VariableDeclaration varPopped = cast(VariableDeclaration)tailPoppedInstr;
+
+                        // Struct members cannot have (according to a TLANG_RULE_1: because I decided so) assignments
+                        if(varPopped.getAssignmentInstr() !is null)
+                        {
+                            // TODO: Actually this is caught earlier by parser
+                            throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                                                            "Cannot assign to member '"~varPopped.varName~"' "~
+                                                            "of struct instance '"~variableName~"'");
+                        }
                     }
 
 
@@ -2242,11 +2249,11 @@ public final class TypeChecker
              */
             ulong structMemberCount = structType.getStatements().length;
 
-            VariableDeclaration[] memberDeclInstrs;
+            StorageDeclaration[] memberDeclInstrs;
             ulong i = 0;
             while(i < structMemberCount)
             {
-                VariableDeclaration tailPoppedInstr = cast(VariableDeclaration)tailPopInstr();
+                StorageDeclaration tailPoppedInstr = cast(StorageDeclaration)tailPopInstr();
                 assert(tailPoppedInstr);
                 memberDeclInstrs ~= tailPoppedInstr;
                 i++;
@@ -2774,11 +2781,11 @@ public final class TypeChecker
                  * back-pop the declaration instructions
                  */
                 ulong structMemberCount = structType.getStatements().length;
-                VariableDeclaration[] memberDeclInstrs;
+                StorageDeclaration[] memberDeclInstrs;
                 ulong i = 0;
                 while(i < structMemberCount)
                 {
-                    VariableDeclaration tailPoppedInstr = cast(VariableDeclaration)tailPopInstr();
+                    StorageDeclaration tailPoppedInstr = cast(StorageDeclaration)tailPopInstr();
                     assert(tailPoppedInstr);
                     memberDeclInstrs ~= tailPoppedInstr;
                     i++;
