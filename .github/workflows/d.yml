@@ -502,6 +502,13 @@ jobs:
           ./tlang.out
 
 
+      - name: Simple structs
+        run: |
+          ./tlang compile source/tlang/testing/simple_structs.t
+          ./tlang.out
+
+
+
 
 ##################################
 ####### Deployment section #######
