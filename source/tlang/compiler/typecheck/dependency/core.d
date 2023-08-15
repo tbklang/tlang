@@ -1440,6 +1440,9 @@ public class DNodeGenerator
             StructVariableInstance structVarDec = cast(StructVariableInstance)entity;
             structVarDec.setContext(context);
             DNode structVariableDNode = generalPass(structVarDec, context);
+            
+            // Set a human-readable name other than "bruh" for the DNode
+            structVariableDNode.name = "StructVariableInstance (name: "~structVarDec.getName()~")";
 
             
 
