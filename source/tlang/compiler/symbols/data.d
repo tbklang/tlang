@@ -561,11 +561,11 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
 }
 
 
-public final class StructVariableInstance : TypedEntity, Container
+public final class StructVariableInstance : TypedEntity, Container, MCloneable
 {
-    private Variable[] members;
+    private TypedEntity[] members;
 
-    this(string structType, string name, Variable[] members)
+    this(string structType, string name, TypedEntity[] members)
     {
         super(name, structType);
         this.members = members;
@@ -586,14 +586,14 @@ public final class StructVariableInstance : TypedEntity, Container
 
     public override void addStatement(Statement stmt)
     {
-        assert(cast(Variable)stmt);
-        members ~= cast(Variable)stmt;
+        assert(cast(TypedEntity)stmt);
+        members ~= cast(TypedEntity)stmt;
     }
 
     public override void addStatements(Statement[] stmts)
     {
         // TODO: Add assert for all
-        members ~= cast(Variable[])stmts;
+        members ~= cast(TypedEntity[])stmts;
     }
 
     // TODO: Check for implementing the below
@@ -620,6 +620,48 @@ public final class StructVariableInstance : TypedEntity, Container
     public override string toString()
     {
         return "StructVariableInstance (name: "~getName()~", type: "~getType()~")";
+    }
+
+    /** 
+     * Clones this `StructVariableIndstance` declaration
+     * recursively
+     *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone(Container newParent = null)
+    {
+        StructVariableInstance clonedStructInstance;
+
+        gprintln("clone() running on StructVariableInstance: "~this.name);
+
+        // Create new struct instance with same type, name
+        // and members (none yet)
+        clonedStructInstance = new StructVariableInstance(this.type, this.name, []);
+
+        // Clone all members
+        TypedEntity[] clonedMembers;
+        foreach(TypedEntity member; this.members)
+        {
+            MCloneable cloneableMember = cast(MCloneable)member;
+            assert(cloneableMember !is null);
+            clonedMembers ~= cast(TypedEntity)cloneableMember.clone(clonedStructInstance);
+        }
+        gprintln("Cloned members: "~to!(string)(clonedMembers));
+        clonedStructInstance.members = clonedMembers;
+
+        // Copy all properties across (TODO: Make sure we didn't miss any)
+        clonedStructInstance.accessorType = this.accessorType;
+        clonedStructInstance.isExternalEntity = this.isExternalEntity;
+        clonedStructInstance.container = this.container;
+
+        // Parent outselves to the given parent
+        clonedStructInstance.parentTo(newParent);
+
+        return clonedStructInstance;
     }
 }
 
