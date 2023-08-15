@@ -715,11 +715,11 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
 public final class StructInstantiateInstruction : StorageDeclaration
 {
     import tlang.compiler.symbols.containers : Struct;
-    private VariableDeclaration[] memberDecInstrs;
+    private StorageDeclaration[] memberDecInstrs;
     private Struct type;
     private string varName;
 
-    this(string varName, Struct strucType, VariableDeclaration[] memberInstrs)
+    this(string varName, Struct strucType, StorageDeclaration[] memberInstrs)
     {
         this.varName = varName;
         this.type = strucType;
@@ -769,9 +769,9 @@ public final class StructTypeDeclareInstruction : TypeDeclareInstruction
 {
     import tlang.compiler.symbols.containers : Struct;
     private Struct structType;
-    private VariableDeclaration[] members;
+    private StorageDeclaration[] members;
 
-    this(Struct structType, VariableDeclaration[] members)
+    this(Struct structType, StorageDeclaration[] members)
     {
         this.structType = structType;
         this.members = members;
@@ -782,7 +782,7 @@ public final class StructTypeDeclareInstruction : TypeDeclareInstruction
         return this.structType;
     }
 
-    public VariableDeclaration[] getMembers()
+    public StorageDeclaration[] getMembers()
     {
         return this.members;
     }
