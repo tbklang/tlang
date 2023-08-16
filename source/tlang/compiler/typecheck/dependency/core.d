@@ -737,41 +737,21 @@ public class DNodeGenerator
         */
         else if(cast(VariableExpression)exp)
         {
-            /* TODO: Figure out where the variable lies */
-
-            /* TODO: Change this later */
-            // return new DNode(this, exp);
-
-            /**
-            * Extract the variable name
-            */
+            // Extract the variable's name
             VariableExpression varExp = cast(VariableExpression)exp;
             
             string path = varExp.getName();
             long nearestDot = indexOf(path, ".");
 
-
-            gprintln("VariableExpressionPass(): Path: "~path, DebugType.WARNING);
-            gprintln("VarExp Context set? (before): "~to!(string)(varExp.getContext()));
-
-            /* See issue #9 on Gitea */
-            /* FIXME: We only set context in some situations - we MUST fix this */
-            /* NOTE: I think THIS is wrong -   varExp.setContext(context); */
-            /* What we need to do is set the variable itself me thinks */
-            /* NOTE: But the above seems to also be needed */
-
-            /* FIXME: Remove the context sets below */
-
-            /* NOTE: Fix is below I think (it doesn't crash then) */
-            /* Set context for expression and the variable itself */
+            /** 
+             * FIXME: See issue #68 (https://deavmi.assigned.network/git/tlang/tlang/issues/68#issuecomment-2449)
+             *
+             * Set context for expression and the variable itself
+             */
             varExp.setContext(context);
             gprintln("Context (after): "~to!(string)(varExp.getContext().getContainer()));
             Entity bruh = tc.getResolver().resolveBest(context.getContainer(), path);
             bruh.setContext(context);
-          
-            /* Has two dots? */
-            bool hasTwoDots = indexOf(path, ".", nearestDot+1) == lastIndexOf(path, ".") && indexOf(path, ".", nearestDot+1) > -1;
-            gprintln(indexOf(path, ".", nearestDot+1));
 
             /**
             * Current named entity
