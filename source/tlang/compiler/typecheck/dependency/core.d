@@ -741,16 +741,10 @@ public class DNodeGenerator
             VariableExpression varExp = cast(VariableExpression)exp;
             string nearestName = varExp.getName();
 
-            /** 
-             * FIXME: See issue #68 (https://deavmi.assigned.network/git/tlang/tlang/issues/68#issuecomment-2449)
-             *
-             * Set context for expression and the variable itself
-             */
+            // Set the context of the variable expression
             varExp.setContext(context);
-            gprintln("Context (after): "~to!(string)(varExp.getContext().getContainer()));
-
            
-            /* Resolve the Entity */
+            // Resolve the entity the name refers to
             Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
 
 
@@ -787,9 +781,6 @@ public class DNodeGenerator
                     {
                         expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
                     }
-
-
-                    /* Use the Context to make a decision */
                 }
                 /** 
                  * If `namedEntity` is a `Function`
