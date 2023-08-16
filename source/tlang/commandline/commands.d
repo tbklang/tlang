@@ -59,7 +59,7 @@ mixin template EmitBase()
 {
     @ArgGroup("Emit", "Options pertaining to the code emitter")
     {
-        @ArgNamed("symbol-mapper|sm", "The symbol mapping technique to use")
+        @ArgNamed("symbol-mapper|sm", "The symbol mapping technique to use for DGen (C emitter)")
         @(ArgConfig.optional)
         SymbolMappingTechnique symbolTechnique = SymbolMappingTechnique.HASHMAPPER;
 
@@ -75,6 +75,10 @@ mixin template EmitBase()
         @(ArgConfig.optional)
         bool entrypointTestEmit = true; // TODO: Change this later to `false` of course
 
+        @ArgNamed("preinlineArguments|pia", "Whether or not to preinline function call arguments in DGen (C emitter)")
+        @(ArgConfig.optional)
+        bool preinlineArguments = false; // TODO: Change this later to `true` of course
+
         @ArgNamed("library-link|ll", "Paths to any object files to ,ink in during the linking phase")
         @(ArgConfig.optional)
         @(ArgConfig.aggregate)
@@ -84,13 +88,16 @@ mixin template EmitBase()
     void EmitBaseInit(Compiler compiler)
     {
         // Set the symbol mapper technique
-        compiler.getConfig().addConfig(ConfigEntry("emit:mapper", symbolTechnique));
+        compiler.getConfig().addConfig(ConfigEntry("dgen:mapper", symbolTechnique));
 
         // Set whether pretty-printed code should be generated
         compiler.getConfig().addConfig(ConfigEntry("dgen:pretty_code", prettyPrintCodeGen));
 
         // Set whether or not to enable the entry point testing code
         compiler.getConfig().addConfig(ConfigEntry("dgen:emit_entrypoint_test", entrypointTestEmit));
+
+        // Set whether or not to enable pre-inlining of function call arguments in DGen
+        compiler.getConfig().addConfig(ConfigEntry("dgen:preinline_args", preinlineArguments));
 
         // Set the paths to the object files to link in
         compiler.getConfig().addConfig(ConfigEntry("linker:link_files", bruh));
