@@ -351,7 +351,27 @@ public final class DCodeEmitter : CodeEmitter
                 for(ulong argIdx = 0; argIdx < argumentInstructions.length; argIdx++)
                 {
                     Value currentArgumentInstr = argumentInstructions[argIdx];
-                    argumentString~=transform(currentArgumentInstr);
+                    string transformedArgument = transform(currentArgumentInstr);
+
+                    /**
+                     * If pre-inlining of argumnets is enabled
+                     * then deduce type, declare variable
+                     * of said type and assign it the
+                     * `transformedArgument`
+                     *
+                     * Shove this to the top of the emit
+                     */
+                    if(config.getConfig("dgen:preinline_args").getBoolean() == true)
+                    {
+                        string varNameTODO = "preInLn"; // TODO: make unique
+                        // TODO: register-declaration
+                        string preinlineVarDecEmit = typeTransform(currentArgumentInstr.getInstrType())~" "~varNameTODO~" = "~transformedArgument~";";
+
+                        // Now make the argument the pre-inlined variable
+                        transformedArgument = varNameTODO;
+                    }
+
+                    argumentString~=transformedArgument;
 
                     if(argIdx != (argumentInstructions.length-1))
                     {
