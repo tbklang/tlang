@@ -760,16 +760,6 @@ public class DNodeGenerator
                 Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
 
 
-
-                 /**
-                * NEW CODE!!!! (Added 25th Oct)
-                *
-                * Update name for later typechecking resolution of var
-                * 
-                */
-                varExp.setContext(context);
-                gprintln("Kont: "~to!(string)(context));
-
                 
                 if(namedEntity)
                 {
