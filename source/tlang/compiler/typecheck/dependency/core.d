@@ -783,7 +783,7 @@ public class DNodeGenerator
             *
             * Example: `variableX`
             */
-            if(nearestDot == -1)
+            if(nearestDot == -1 || true)
             {
                 /* The name is exactly the path */
                 nearestName = path;
