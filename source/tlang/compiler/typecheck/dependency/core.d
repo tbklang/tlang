@@ -981,8 +981,6 @@ public class DNodeGenerator
         */
         else if(cast(ArrayIndex)exp)
         {
-            gprintln("Working on expressionPass'ing of ArrayIndex", DebugType.ERROR);
-
             ArrayIndex arrayIndex = cast(ArrayIndex)exp;
 
             // Set the context as we need to grab it later in the typechecker
@@ -997,9 +995,6 @@ public class DNodeGenerator
             Expression indexedExp = arrayIndex.getIndexed();
             DNode indexedExpDNode = expressionPass(indexedExp, context);
             dnode.needs(indexedExpDNode);
-
-
-            // assert(false);
         }
         else
         {
