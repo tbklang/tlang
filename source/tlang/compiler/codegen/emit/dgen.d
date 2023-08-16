@@ -179,6 +179,12 @@ public final class DCodeEmitter : CodeEmitter
         // return stringRepr;
     }
 
+    private bool isStatementLevel(Instruction instruction)
+    {
+        // TODO: Add more
+        return cast(VariableDeclaration)instruction !is null ||
+            cast(VariableAssignmentInstr)instruction !is null;
+    }
 
     public override string transform(const Instruction instruction)
     {
@@ -189,6 +195,12 @@ public final class DCodeEmitter : CodeEmitter
         // At any return decrement the depth
         scope(exit)
         {
+            if(isStatementLevel(cast(Instruction)instruction))
+            {
+                gprintln("Yanked: "~yankPreinline());
+            }
+
+
             transformDepth--;
         }
 
@@ -419,6 +431,7 @@ public final class DCodeEmitter : CodeEmitter
 
                         // Add to pre-inline emit
                         preinlineEmit~=preinlineVarDecEmit~"\n";
+                        tackonPreinline(preinlineVarDecEmit);
                         
                         // Now make the argument the pre-inlined variable
                         transformedArgument = varNameTODO;
