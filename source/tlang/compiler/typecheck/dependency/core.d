@@ -833,21 +833,12 @@ public class DNodeGenerator
                 else
                 {
                     /* TODO: Add check ? */
-                }
-                
-
-                
+                }   
             }
             else
             {
                 expect("No entity by the name "~nearestName~" exists (at all)");
             }
-
-               
-            
-
-            // TODO: Why is this debug print here?
-            gprintln("VarExp Context set? (after): "~to!(string)(varExp.getContext()));
         }
         /**
         * Binary operator
