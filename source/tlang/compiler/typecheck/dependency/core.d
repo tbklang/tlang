@@ -812,6 +812,11 @@ public class DNodeGenerator
                     */
                     Variable variable = cast(Variable)namedEntity;
 
+                    /** 
+                     * If `namedEntity` is a `Variable`
+                     *
+                     * Think of, well, a variable
+                     */
                     if(variable)
                     {
                         /* Pool the node */
@@ -836,6 +841,11 @@ public class DNodeGenerator
 
                         /* Use the Context to make a decision */
                     }
+                    /** 
+                     * If `namedEntity` is a `Function`
+                     *
+                     * Think of a function handle
+                     */
                     else if(cast(Function)namedEntity)
                     {
                         /**
