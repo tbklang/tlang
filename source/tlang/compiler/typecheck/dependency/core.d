@@ -718,7 +718,7 @@ public class DNodeGenerator
                     expect("Only class-type may be used with `new`");
                     assert(false);
                 }
-                gprintln("Poe naais");
+                gprintln("King of the castle");
             }
             else
             {
