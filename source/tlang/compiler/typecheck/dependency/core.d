@@ -767,7 +767,7 @@ public class DNodeGenerator
                 * Update name for later typechecking resolution of var
                 * 
                 */
-                // varExp.setContext(context);
+                varExp.setContext(context);
                 gprintln("Kont: "~to!(string)(context));
 
                 
