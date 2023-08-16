@@ -204,15 +204,13 @@ public class Compiler
             throw new CompilerException(CompilerError.TYPECHECK_NOT_YET_PERFORMED);
         }
 
-        // TODO: Emitter should be emit_c as 
-        // ... it's really controlling that actually
-        if(!config.hasConfig("emit:mapper"))
+        if(!config.hasConfig("dgen:mapper"))
         {
             throw new CompilerException(CompilerError.CONFIG_ERROR, "Missing a symbol mapper");
         }
         
         SymbolMapper mapper;
-        string mapperType = config.getConfig("emit:mapper").getText();
+        string mapperType = config.getConfig("dgen:mapper").getText();
 
         if(cmp(mapperType, "hashmapper") == 0)
         {

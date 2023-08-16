@@ -200,8 +200,8 @@ public final class CompilerConfiguration
         /* Generate a fresh new config */
         CompilerConfiguration config = new CompilerConfiguration();
 
-        /* Enable Behaviour-C fixes */
-        config.addConfig(ConfigEntry("behavec:preinline_args", true));
+        /* Enable Behaviour-C fixes (TODO: This should be changed to true before release) */
+        config.addConfig(ConfigEntry("dgen:preinline_args", false));
 
         /* Enable pretty code generation for DGen */
         config.addConfig(ConfigEntry("dgen:pretty_code", true));
@@ -209,8 +209,8 @@ public final class CompilerConfiguration
         /* Enable entry point test generation for DGen */
         config.addConfig(ConfigEntry("dgen:emit_entrypoint_test", true));
 
-        /* Set the mapping to hashing of entity names (TODO: This should be changed before release) */
-        config.addConfig(ConfigEntry("emit:mapper", "hashmapper"));
+        /* Set the mapping to hashing of entity names for DGen (TODO: This should be changed before release) */
+        config.addConfig(ConfigEntry("dgen:mapper", "hashmapper"));
 
         /**
          * Configure, at compile time, the system type aliases
