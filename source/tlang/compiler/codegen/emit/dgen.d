@@ -28,6 +28,23 @@ public final class DCodeEmitter : CodeEmitter
      */
     private bool symbolMapping;
 
+    /** 
+     * Pre-inliner variable counter
+     *
+     * Used for unique names for the pre-inlined
+     * variables for function arguments
+     */
+    private ulong preinlinerIdx = 0;
+
+    /** 
+     * Pre-inliner emit
+     *
+     * Holds the build-up of emits
+     * required for declaring pre-inliner
+     * variables
+     */
+    private string currentPreinlineEmit;
+
     // NOTE: In future store the mapper in the config please
     this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
@@ -51,6 +68,34 @@ public final class DCodeEmitter : CodeEmitter
     private void disableSymbolMapping()
     {
      	this.symbolMapping = false;
+    }
+
+    /** 
+     * Tacks on the given emit
+     * to the pre-inliner build-up.
+     *
+     * This automatically adds a
+     * newline to the provided emit.
+     *
+     * Params:
+     *   emit = the emit to tack on
+     */
+    private void tackonPreinline(string emit)
+    {
+        this.currentPreinlineEmit ~= emit~"\n";
+    }
+
+    /** 
+     * Yanks the current pre-inliner emit
+     * and then clears it
+     *
+     * Returns: the preinliner emit
+     */
+    private string yankPreinline()
+    {
+        string preinlinerEmitCpy = this.currentPreinlineEmit;
+        this.currentPreinlineEmit = "";
+        return preinlinerEmitCpy;
     }
 
     private ulong transformDepth = 0;
@@ -343,6 +388,9 @@ public final class DCodeEmitter : CodeEmitter
             //NOTE (Behaviour): We may want to actually have an preinliner for these arguments
             //such to enforce a certain ordering. I believe this should be done in the emitter stage,
             //so it is best placed here
+            string preinlineEmit;
+
+
             if(functionToCall.hasParams())
             {
                 Value[] argumentInstructions = funcCallInstr.getEvaluationInstructions();
@@ -363,10 +411,15 @@ public final class DCodeEmitter : CodeEmitter
                      */
                     if(config.getConfig("dgen:preinline_args").getBoolean() == true)
                     {
-                        string varNameTODO = "preInLn"; // TODO: make unique
+                        string varNameTODO = "preinliner_"~to!(string)(preinlinerIdx); // TODO: make unique
+                        preinlinerIdx++;
+                        gprintln("IIIIIIIIIINC"~transformedArgument);
                         // TODO: register-declaration
                         string preinlineVarDecEmit = typeTransform(currentArgumentInstr.getInstrType())~" "~varNameTODO~" = "~transformedArgument~";";
 
+                        // Add to pre-inline emit
+                        preinlineEmit~=preinlineVarDecEmit~"\n";
+                        
                         // Now make the argument the pre-inlined variable
                         transformedArgument = varNameTODO;
                     }
@@ -389,6 +442,9 @@ public final class DCodeEmitter : CodeEmitter
             {
                 emit ~= ";";
             }
+
+            // Tack on the preinline emit at the head
+            emit = preinlineEmit~emit;
 
             return emit;
         }
