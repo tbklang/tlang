@@ -739,9 +739,7 @@ public class DNodeGenerator
         {
             // Extract the variable's name
             VariableExpression varExp = cast(VariableExpression)exp;
-            
-            string path = varExp.getName();
-            long nearestDot = indexOf(path, ".");
+            string nearestName = varExp.getName();
 
             /** 
              * FIXME: See issue #68 (https://deavmi.assigned.network/git/tlang/tlang/issues/68#issuecomment-2449)
@@ -750,24 +748,14 @@ public class DNodeGenerator
              */
             varExp.setContext(context);
             gprintln("Context (after): "~to!(string)(varExp.getContext().getContainer()));
-            // Entity bruh = tc.getResolver().resolveBest(context.getContainer(), path);
-            // bruh.setContext(context);
-
-            /**
-            * Current named entity
-            */
-            string nearestName;
 
             /**
             * If the `path` has no dots
             *
             * Example: `variableX`
             */
-            if(nearestDot == -1 || true)
+            if(true)
             {
-                /* The name is exactly the path */
-                nearestName = path;
-
                 /* Resolve the Entity */
                 Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
 
@@ -872,110 +860,6 @@ public class DNodeGenerator
                 }
 
                
-            }
-            /**
-            * If the `path` has dots
-            *
-            * Example: `container.variableX`
-            *
-            * We want to start left to right, first look at `variableX`,
-            * take that node, then recurse on `container.` (everything
-            * without the last segment) as this results in the correct
-            * dependency sub-tree
-            *
-            * FIXME: We should stop at `x.y` and not go further as we need
-            * to know what we are acessing
-            */
-            else
-            {
-                /* Chop off the last segment */
-                long lastDot = lastIndexOf(path, ".");
-                string remainingSegment = path[0..(lastDot)];
-
-                /* TODO: Check th container passed in */
-                /* Lookup the name within the current entity's context */
-                gprintln("Now looking up: "~remainingSegment);
-                Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), remainingSegment);
-                gprintln("namedEntity: "~to!(string)(namedEntity));
-                gprintln("Context used for resolution: "~to!(string)(context.getContainer()));
-
-                /* The remaining segment must EXIST */
-                if(namedEntity)
-                {
-                    /* The remaining segment must be a CONTAINER */
-                    Container container = cast(Container)namedEntity;
-                    if(container)
-                    {
-                        /* If we have a class then it needs static init */
-                        if(cast(Clazz)container)
-                        {
-                            Clazz containerClass = cast(Clazz)container;
-                            DNode classStaticAllocate = classPassStatic(containerClass);
-                            dnode.needs(classStaticAllocate);
-                            gprintln("Hello "~remainingSegment, DebugType.ERROR);
-                        }
-
-                        /**
-                        * FIXME: Decide what requires new dep and what doesn't, instance vs class access etc
-                        *
-                        * How detailed we need to be? Will we combine these and consume later, we need to take these things
-                        * into account. I am erring on the side of one single access, the only things along the way are possible static
-                        * allocations, but that is my feeling - each path segment doesn't need something for simply existing
-                        */
-
-                        /* If we only have one dot left s(TODO: implement ) */
-                        bool hasMoreDot = indexOf(remainingSegment, ".") > -1;
-                        if(hasMoreDot)
-                        {
-                            gprintln("has mor dot");
-
-                            /**
-                            * Create a VariableExpression for the remaining segment,
-                            * run `passExpression()` on it (recurse) and make the CURRENT
-                            * DNode (`dnode`) depend on the returned DNode
-                            *
-                            * TOOD: Double check the Context passed in
-                            */
-                            // Context varExpRemContext = new Context(tc.getModule(), InitScope.STATIC);
-                            VariableExpression varExpRem = new VariableExpression(remainingSegment);
-                            DNode varExpRemDNode = expressionPass(varExpRem, context);
-
-                            /* TODO: Double check if we need this, problems lie here and when we NEED to do and and when NOT */
-                            dnode.needs(varExpRemDNode);
-                        }
-                        else
-                        {
-                            /* Do access operation here */
-                            gprintln("No more dot");
-
-                            gprintln("No mord to accevssor(): "~to!(string)(dnode));
-
-                            /* TODO: We now have `TestClass.P` so accessor op or what? */
-                        }
-
-
-                        
-
-
-                        
-
-
-                    }
-                    else
-                    {
-                        expect("Could not acces \""~remainingSegment~"\" as it is not a container");
-                    }
-
-                }
-                /**
-                * If an entity by that name doesn't exist then
-                * this is a typechecking error and we should
-                * break
-                */
-                else
-                {
-                    expect("Could not find an entity named "~remainingSegment);
-                }
             }
 
             // TODO: Why is this debug print here?
