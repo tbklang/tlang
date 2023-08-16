@@ -750,8 +750,8 @@ public class DNodeGenerator
              */
             varExp.setContext(context);
             gprintln("Context (after): "~to!(string)(varExp.getContext().getContainer()));
-            Entity bruh = tc.getResolver().resolveBest(context.getContainer(), path);
-            bruh.setContext(context);
+            // Entity bruh = tc.getResolver().resolveBest(context.getContainer(), path);
+            // bruh.setContext(context);
 
             /**
             * Current named entity
