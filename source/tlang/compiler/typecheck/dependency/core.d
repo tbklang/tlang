@@ -988,40 +988,8 @@ public class DNodeGenerator
                 }
             }
 
-            /* TODO:C lean up and mke DNode */
-
-            /* TODO: Process `nearestName` by doing a tc.resolveWithin() */
-
-
-            
-
-            /* TODO: SPlit the path up and resolve the shit */
-
-            /* TODO: gte start of path  (TODO)*/
-            /* TODO: Then check that within current context, then we shift context for another call */
-            string currentName;
-
-            /**
-            * If we can resolve anywhere (TODO: Perhaps module level was better
-            */
-            if(context.isAllowUp())
-            {
-                /* TODO: Use normal resolveBest */
-            }
-            /**
-            * Only within resolution allowed
-            */
-            else
-            {
-                gprintln("87er78fgy678fyg678g6f8gfyduhgfjfgdjkgfdhjkfgdhjfkgdhgfdjkhgfjkhgfdjkhgfdjkhgfdjkfgdhjkfgdhjkfdghjgkfdhgfdjkhgfdjkhgfdjkhfgdjkhfgd");
-                Entity entity = tc.getResolver().resolveWithin(context.getContainer(), nearestName);
-
-                /* TODO: If dots remain then make sure cast(Container)entity is non-zero, i.e. is a container, else fail, typecheck error! */
-            }
-
-
+            // TODO: Why is this debug print here?
             gprintln("VarExp Context set? (after): "~to!(string)(varExp.getContext()));
-
         }
         /**
         * Binary operator
