@@ -749,108 +749,102 @@ public class DNodeGenerator
             varExp.setContext(context);
             gprintln("Context (after): "~to!(string)(varExp.getContext().getContainer()));
 
-            /**
-            * If the `path` has no dots
-            *
-            * Example: `variableX`
-            */
-            if(true)
+           
+            /* Resolve the Entity */
+            Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
+
+
+            
+            if(namedEntity)
             {
-                /* Resolve the Entity */
-                Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
+                /* FIXME: Below assumes basic variable declarations at module level, fix later */
 
+                /**
+                * Get the Entity as a Variable
+                */
+                Variable variable = cast(Variable)namedEntity;
 
-                
-                if(namedEntity)
+                /** 
+                    * If `namedEntity` is a `Variable`
+                    *
+                    * Think of, well, a variable
+                    */
+                if(variable)
                 {
-                    /* FIXME: Below assumes basic variable declarations at module level, fix later */
+                    /* Pool the node */
+                    VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
 
                     /**
-                    * Get the Entity as a Variable
+                    * Check if the variable being referenced has been
+                    * visited (i.e. declared)
+                    *
+                    * If it has then setup dependency, if not then error
+                    * out
                     */
-                    Variable variable = cast(Variable)namedEntity;
-
-                    /** 
-                     * If `namedEntity` is a `Variable`
-                     *
-                     * Think of, well, a variable
-                     */
-                    if(variable)
+                    if(varDecNode.isVisisted())
                     {
-                        /* Pool the node */
-                        VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
-
-                        /**
-                        * Check if the variable being referenced has been
-                        * visited (i.e. declared)
-                        *
-                        * If it has then setup dependency, if not then error
-                        * out
-                        */
-                        if(varDecNode.isVisisted())
-                        {
-                            dnode.needs(varDecNode);
-                        }
-                        else
-                        {
-                            expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
-                        }
-
-
-                        /* Use the Context to make a decision */
-                    }
-                    /** 
-                     * If `namedEntity` is a `Function`
-                     *
-                     * Think of a function handle
-                     */
-                    else if(cast(Function)namedEntity)
-                    {
-                        /**
-                        * FIXME: Yes it isn't a funcall not, and it is not a variable and is probably
-                        * being returned as the lookup, so a FUnction node i guess 
-                        */
-                        Function funcHandle = cast(Function)namedEntity;
-                        
-                        /**
-                        * FIXME: Find the best place for this. Functions will always
-                        * be declared (atleast for basic examples as like now) in
-                        * the module level
-                        */
-                        Context cont = new Context(tc.getModule(), InitScope.STATIC);
-                        // cont.container = tc.getModule();
-                        // cont.
-                        funcHandle.setContext(cont);
-
-                        // funcHandle
-                        
-
-                        /**
-                        * FIXME: Do we have to visit the function, I am not sure, like maybe declaration
-                        * or surely it is already declared??!?!?
-                        *
-                        * Does pooling it make sense? Do we force a visitation?
-                        */
-                        FuncDecNode funcDecNode = poolT!(FuncDecNode, Function)(funcHandle);
-                        dnode.needs(funcDecNode);
-
-                        gprintln("Muh function handle: "~namedEntity.toString(), DebugType.WARNING);
+                        dnode.needs(varDecNode);
                     }
                     else
                     {
-                        /* TODO: Add check ? */
+                        expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
                     }
+
+
+                    /* Use the Context to make a decision */
+                }
+                /** 
+                    * If `namedEntity` is a `Function`
+                    *
+                    * Think of a function handle
+                    */
+                else if(cast(Function)namedEntity)
+                {
+                    /**
+                    * FIXME: Yes it isn't a funcall not, and it is not a variable and is probably
+                    * being returned as the lookup, so a FUnction node i guess 
+                    */
+                    Function funcHandle = cast(Function)namedEntity;
+                    
+                    /**
+                    * FIXME: Find the best place for this. Functions will always
+                    * be declared (atleast for basic examples as like now) in
+                    * the module level
+                    */
+                    Context cont = new Context(tc.getModule(), InitScope.STATIC);
+                    // cont.container = tc.getModule();
+                    // cont.
+                    funcHandle.setContext(cont);
+
+                    // funcHandle
                     
 
-                    
+                    /**
+                    * FIXME: Do we have to visit the function, I am not sure, like maybe declaration
+                    * or surely it is already declared??!?!?
+                    *
+                    * Does pooling it make sense? Do we force a visitation?
+                    */
+                    FuncDecNode funcDecNode = poolT!(FuncDecNode, Function)(funcHandle);
+                    dnode.needs(funcDecNode);
+
+                    gprintln("Muh function handle: "~namedEntity.toString(), DebugType.WARNING);
                 }
                 else
                 {
-                    expect("No entity by the name "~nearestName~" exists (at all)");
+                    /* TODO: Add check ? */
                 }
+                
+
+                
+            }
+            else
+            {
+                expect("No entity by the name "~nearestName~" exists (at all)");
+            }
 
                
-            }
+            
 
             // TODO: Why is this debug print here?
             gprintln("VarExp Context set? (after): "~to!(string)(varExp.getContext()));
