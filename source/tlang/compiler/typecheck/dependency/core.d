@@ -746,8 +746,8 @@ public class DNodeGenerator
              *
              * Set context for expression and the variable itself
              */
-            varExp.setContext(context);
-            gprintln("Context (after): "~to!(string)(varExp.getContext().getContainer()));
+            // varExp.setContext(context);
+            // gprintln("Context (after): "~to!(string)(varExp.getContext().getContainer()));
 
             /**
             * If the `path` has no dots
@@ -767,7 +767,7 @@ public class DNodeGenerator
                 * Update name for later typechecking resolution of var
                 * 
                 */
-                varExp.setContext(context);
+                // varExp.setContext(context);
                 gprintln("Kont: "~to!(string)(context));
 
                 
