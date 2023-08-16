@@ -754,33 +754,31 @@ public class DNodeGenerator
             Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
 
 
-            
+            /* If the entity was found */
             if(namedEntity)
             {
                 /* FIXME: Below assumes basic variable declarations at module level, fix later */
 
-                /**
-                * Get the Entity as a Variable
-                */
-                Variable variable = cast(Variable)namedEntity;
-
                 /** 
-                    * If `namedEntity` is a `Variable`
-                    *
-                    * Think of, well, a variable
-                    */
-                if(variable)
+                 * If `namedEntity` is a `Variable`
+                 *
+                 * Think of, well, a variable
+                 */
+                if(cast(Variable)namedEntity)
                 {
+                    /* Get the entity as a Variable */
+                    Variable variable = cast(Variable)namedEntity;
+
                     /* Pool the node */
                     VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
 
                     /**
-                    * Check if the variable being referenced has been
-                    * visited (i.e. declared)
-                    *
-                    * If it has then setup dependency, if not then error
-                    * out
-                    */
+                     * Check if the variable being referenced has been
+                     * visited (i.e. declared)
+                     *
+                     * If it has then setup dependency, if not then error
+                     * out
+                     */
                     if(varDecNode.isVisisted())
                     {
                         dnode.needs(varDecNode);
@@ -794,10 +792,10 @@ public class DNodeGenerator
                     /* Use the Context to make a decision */
                 }
                 /** 
-                    * If `namedEntity` is a `Function`
-                    *
-                    * Think of a function handle
-                    */
+                 * If `namedEntity` is a `Function`
+                 *
+                 * Think of a function handle
+                 */
                 else if(cast(Function)namedEntity)
                 {
                     /**
@@ -835,6 +833,7 @@ public class DNodeGenerator
                     /* TODO: Add check ? */
                 }   
             }
+            /* If the entity could not be found */
             else
             {
                 expect("No entity by the name "~nearestName~" exists (at all)");
