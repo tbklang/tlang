@@ -411,7 +411,7 @@ public final class DCodeEmitter : CodeEmitter
                      */
                     if(config.getConfig("dgen:preinline_args").getBoolean() == true)
                     {
-                        string varNameTODO = "preinliner_"~to!(string)(preinlinerIdx); // TODO: make unique
+                        string varNameTODO = "preinliner_"~to!(string)(preinlinerIdx)~"_"~to!(string)(transformDepth); // TODO: make unique
                         preinlinerIdx++;
                         gprintln("IIIIIIIIIINC"~transformedArgument);
                         // TODO: register-declaration
