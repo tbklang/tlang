@@ -398,9 +398,6 @@ public final class DCodeEmitter : CodeEmitter
             //NOTE (Behaviour): We may want to actually have an preinliner for these arguments
             //such to enforce a certain ordering. I believe this should be done in the emitter stage,
             //so it is best placed here
-            string preinlineEmit;
-
-
             if(functionToCall.hasParams())
             {
                 Value[] argumentInstructions = funcCallInstr.getEvaluationInstructions();
@@ -428,7 +425,6 @@ public final class DCodeEmitter : CodeEmitter
                         string preinlineVarDecEmit = typeTransform(currentArgumentInstr.getInstrType())~" "~varNameTODO~" = "~transformedArgument~";";
 
                         // Add to pre-inline emit
-                        preinlineEmit~=preinlineVarDecEmit~"\n";
                         tackonPreinline(preinlineVarDecEmit);
                         
                         // Now make the argument the pre-inlined variable
