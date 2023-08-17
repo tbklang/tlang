@@ -198,12 +198,6 @@ public final class DCodeEmitter : CodeEmitter
         // At any return decrement the depth
         scope(exit)
         {
-            if(isStatementLevel(cast(Instruction)instruction))
-            {
-                gprintln("Yanked: "~yankPreinline());
-            }
-
-
             transformDepth--;
         }
 
@@ -461,7 +455,7 @@ public final class DCodeEmitter : CodeEmitter
             }
 
             // Tack on the preinline emit at the head
-            emit = preinlineEmit~emit;
+            // emit = preinlineEmit~emit;
 
             emmmmit = emit;
         }
@@ -890,6 +884,19 @@ public final class DCodeEmitter : CodeEmitter
         else
         {
             emmmmit = "<TODO: Base emit: "~to!(string)(instruction)~">";
+        }
+
+
+        if(isStatementLevel(cast(Instruction)instruction))
+        {
+            string preinlinerEmmmmit = yankPreinline();
+            gprintln("Yanked: "~preinlinerEmmmmit);
+
+            Context ctx = (cast(Instruction)instruction).getContext();
+            gprintln("Exiting with Context: "~to!(string)(ctx));
+            gprintln("Exiting for: "~to!(string)(typeid(instruction)));
+
+            emmmmit = preinlinerEmmmmit ~ "\n" ~ emmmmit;
         }
 
         return emmmmit;
