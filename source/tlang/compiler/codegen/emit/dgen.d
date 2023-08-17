@@ -883,7 +883,7 @@ public final class DCodeEmitter : CodeEmitter
         }
 
 
-        if(isStatementLevel(cast(Instruction)instruction))
+        if(config.hasConfig("dgen:preinline_args") && config.getConfig("dgen:preinline_args").getBoolean() && isStatementLevel(cast(Instruction)instruction))
         {
             string preinlinerEmmmmit = yankPreinline();
             gprintln("Yanked: "~preinlinerEmmmmit);
@@ -892,7 +892,11 @@ public final class DCodeEmitter : CodeEmitter
             gprintln("Exiting with Context: "~to!(string)(ctx));
             gprintln("Exiting for: "~to!(string)(typeid(instruction)));
 
-            emmmmit = preinlinerEmmmmit ~ "\n" ~ emmmmit;
+            // Only emit preamble if there IS a preamble
+            if(preinlinerEmmmmit.length)
+            {
+                emmmmit = preinlinerEmmmmit ~ "\n" ~ emmmmit;
+            }
         }
 
         return emmmmit;
