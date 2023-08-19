@@ -895,6 +895,8 @@ public final class DCodeEmitter : CodeEmitter
             // Only emit preamble if there IS a preamble
             if(preinlinerEmmmmit.length)
             {
+                // TODO: We need to genTabs for preinlinerEmit or do so
+                // ... when tacking-on
                 emmmmit = preinlinerEmmmmit ~ "\n" ~ emmmmit;
             }
         }
