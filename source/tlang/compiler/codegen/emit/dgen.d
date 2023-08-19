@@ -41,9 +41,14 @@ public final class DCodeEmitter : CodeEmitter
      *
      * Holds the build-up of emits
      * required for declaring pre-inliner
-     * variables
+     * variables.
+     *
+     * It is stored as an array of code
+     * blocks such that when yanked
+     * it can be genTab()'d to appear
+     * prettily
      */
-    private string currentPreinlineEmit;
+    private string[] currentPreinlineEmit;
 
     // NOTE: In future store the mapper in the config please
     this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
@@ -82,7 +87,7 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void tackonPreinline(string emit)
     {
-        this.currentPreinlineEmit ~= emit~"\n";
+        this.currentPreinlineEmit ~= emit;
     }
 
     /** 
@@ -93,9 +98,19 @@ public final class DCodeEmitter : CodeEmitter
      */
     private string yankPreinline()
     {
-        string preinlinerEmitCpy = this.currentPreinlineEmit;
-        this.currentPreinlineEmit = "";
-        return preinlinerEmitCpy;
+        // Generate the string containing
+        // tabbified code blocks ending in
+        // newlines
+        string preinlinerEmit;
+        foreach(string preinlinerBlock; this.currentPreinlineEmit)
+        {
+            preinlinerEmit ~= genTabs(transformDepth)~preinlinerBlock~"\n";
+        }
+
+        // Clear out the preinliner blocks
+        this.currentPreinlineEmit.length = 0;
+
+        return preinlinerEmit;
     }
 
     private ulong transformDepth = 0;
@@ -420,7 +435,7 @@ public final class DCodeEmitter : CodeEmitter
                     {
                         string varNameTODO = "preinliner_"~to!(string)(preinlinerIdx)~"_"~to!(string)(transformDepth); // TODO: make unique
                         preinlinerIdx++;
-                        gprintln("IIIIIIIIIINC"~transformedArgument);
+
                         // TODO: register-declaration
                         string preinlineVarDecEmit = typeTransform(currentArgumentInstr.getInstrType())~" "~varNameTODO~" = "~transformedArgument~";";
 
