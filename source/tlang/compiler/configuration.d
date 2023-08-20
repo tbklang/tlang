@@ -212,6 +212,9 @@ public final class CompilerConfiguration
         /* Set the mapping to hashing of entity names for DGen (TODO: This should be changed before release) */
         config.addConfig(ConfigEntry("dgen:mapper", "hashmapper"));
 
+        /* Set the system C compiler for DGen to clang */
+        config.addConfig(ConfigEntry("dgen:compiler", "clang"));
+
         /**
          * Configure, at compile time, the system type aliases
          */

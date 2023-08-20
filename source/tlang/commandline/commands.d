@@ -66,6 +66,10 @@ mixin template EmitBase()
         @ArgNamed("prettygen|pg", "Generate pretty-printed code")
         @(ArgConfig.optional)
         bool prettyPrintCodeGen = true;
+
+        @ArgNamed("ccompiler|cc", "The system C compiler to use for DGne (C emitter)")
+        @(ArgConfig.optional)
+        string systemCC = "clang";
         
         @ArgNamed("output|o", "Filename of generated object file")
         @(ArgConfig.optional)
@@ -98,6 +102,9 @@ mixin template EmitBase()
 
         // Set whether or not to enable pre-inlining of function call arguments in DGen
         compiler.getConfig().addConfig(ConfigEntry("dgen:preinline_args", preinlineArguments));
+
+        // Set the C compiler to use for DGen
+        compiler.getConfig().addConfig(ConfigEntry("dgen:compiler", systemCC));
 
         // Set the paths to the object files to link in
         compiler.getConfig().addConfig(ConfigEntry("linker:link_files", bruh));
