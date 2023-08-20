@@ -1285,8 +1285,10 @@ int main()
     {
         try
         {
-            //NOTE: Change to system compiler (maybe, we need to choose a good C compiler)
-            string[] compileArgs = ["clang", "-o", "tlang.out", file.name()];
+            string systemCompiler = config.getConfig("dgen:compiler").getText();
+            gprintln("Using system C compiler '"~systemCompiler~"' for compilation");
+
+            string[] compileArgs = [systemCompiler, "-o", "tlang.out", file.name()];
 
             // Check for object files to be linked in
             string[] objectFilesLink;
