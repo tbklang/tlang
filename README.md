@@ -1,7 +1,7 @@
 tlang
 =====
 
-[![D](https://github.com/tbklang/tlang/actions/workflows/d.yml/badge.svg)](https://github.com/tbklang/tlang/actions/workflows/d.yml)
+[![D](https://github.com/tbklang/tlang/actions/workflows/d.yml/badge.svg?branch=vardec_varass_dependency)](https://github.com/tbklang/tlang/actions/workflows/d.yml) [![Coverage Status](https://coveralls.io/repos/github/tbklang/tlang/badge.svg?branch=vardec_varass_dependency)](https://coveralls.io/github/tbklang/tlang?branch=vardec_varass_dependency)
 
 Official Tristan Language project compiler
 

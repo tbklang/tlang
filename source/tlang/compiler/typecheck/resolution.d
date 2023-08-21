@@ -219,7 +219,7 @@ public final class Resolver
         /* Try find the Entity within the current Contaier */
         gprintln("resolveUp("~to!(string)(currentContainer)~", "~name~")");
         Entity entity = resolveWithin(currentContainer, name);
-        gprintln("Poes");
+        gprintln("Certified 2008 financial crisis moment");
         gprintln(entity);
 
         /* If we found it return it */

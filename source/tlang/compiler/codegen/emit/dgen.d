@@ -141,6 +141,9 @@ public final class DCodeEmitter : CodeEmitter
         gprintln("transform(): "~to!(string)(instruction));
         transformDepth++;
 
+        // The data to emit
+        string emmmmit;
+
         // At any return decrement the depth
         scope(exit)
         {
@@ -172,12 +175,12 @@ public final class DCodeEmitter : CodeEmitter
             {
                 string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
-                return renamedSymbol~" = "~transform(varAs.data)~";";
+                emmmmit = renamedSymbol~" = "~transform(varAs.data)~";";
             }
             /* If it is external */
             else
             {
-                return typedEntityVariable.getName()~" = "~transform(varAs.data)~";";
+                emmmmit = typedEntityVariable.getName()~" = "~transform(varAs.data)~";";
             }
         }
         /* VariableDeclaration */
@@ -218,17 +221,18 @@ public final class DCodeEmitter : CodeEmitter
                     gprintln("VarDec(with assignment): My assignment type is: "~varAssInstr.getInstrType().getName());
 
                     // Generate the code to emit
-                    return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
+                    emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
                 }
-
-                return typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~";";
+                else
+                {
+                    emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~";";
+                }
             }
             /* If the variable is external */
             else
             {
-                return "extern "~typeTransform(cast(Type)varDecInstr.varType)~" "~typedEntityVariable.getName()~";";
+                emmmmit = "extern "~typeTransform(cast(Type)varDecInstr.varType)~" "~typedEntityVariable.getName()~";";
             }
-
         }
         /* LiteralValue */
         else if(cast(LiteralValue)instruction)
@@ -237,7 +241,7 @@ public final class DCodeEmitter : CodeEmitter
 
             LiteralValue literalValueInstr = cast(LiteralValue)instruction;
 
-            return to!(string)(literalValueInstr.getLiteralValue());
+            emmmmit = to!(string)(literalValueInstr.getLiteralValue());
         }
         /* FetchValueVar */
         else if(cast(FetchValueVar)instruction)
@@ -257,12 +261,12 @@ public final class DCodeEmitter : CodeEmitter
 
                 string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
 
-                return renamedSymbol;
+                emmmmit = renamedSymbol;
             }
             /* If it is external */
             else
             {
-                return typedEntityVariable.getName();
+                emmmmit = typedEntityVariable.getName();
             }
         }
         /* BinOpInstr */
@@ -320,7 +324,7 @@ public final class DCodeEmitter : CodeEmitter
                 cvInstr.setRelax(true);
             }
 
-            return transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
+            emmmmit = transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
         }
         /* FuncCallInstr */
         else if(cast(FuncCallInstr)instruction)
@@ -370,7 +374,7 @@ public final class DCodeEmitter : CodeEmitter
                 emit ~= ";";
             }
 
-            return emit;
+            emmmmit = emit;
         }
         /* ReturnInstruction */
         else if(cast(ReturnInstruction)instruction)
@@ -384,7 +388,7 @@ public final class DCodeEmitter : CodeEmitter
             /* Get the return expression instruction */
             Value returnExpressionInstr = returnInstruction.getReturnExpInstr();
 
-            return "return "~transform(returnExpressionInstr)~";";
+            emmmmit = "return "~transform(returnExpressionInstr)~";";
         }
         /**
         * If statements (IfStatementInstruction)
@@ -434,7 +438,7 @@ public final class DCodeEmitter : CodeEmitter
                 }
             }
 
-            return emit;
+            emmmmit = emit;
         }
         /**
         * While loops (WhileLoopInstruction)
@@ -464,7 +468,7 @@ public final class DCodeEmitter : CodeEmitter
             /* Closing curly brace */
             emit~=genTabs(transformDepth)~"}";
 
-            return emit;
+            emmmmit = emit;
         }
         /**
         * For loops (ForLoopInstruction)
@@ -502,7 +506,7 @@ public final class DCodeEmitter : CodeEmitter
             // Close curly (body end)
             emit~=genTabs(transformDepth)~"}"; 
 
-            return emit;
+            emmmmit = emit;
         }
         /**
         * Unary operators (UnaryOpInstr)
@@ -521,7 +525,7 @@ public final class DCodeEmitter : CodeEmitter
             /* Transform the operand */
             emit ~= transform(operandInstruction);
 
-            return emit;
+            emmmmit = emit;
         }
         /**
         * Pointer dereference assignment (PointerDereferenceAssignmentInstruction)
@@ -551,7 +555,7 @@ public final class DCodeEmitter : CodeEmitter
             emit ~= transform(rhsAssExprInstr)~";";
 
 
-            return emit;
+            emmmmit = emit;
         }
         /**
         * Discard instruction (DiscardInstruction)
@@ -566,7 +570,7 @@ public final class DCodeEmitter : CodeEmitter
             /* Transform the expression */
             emit ~= transform(valueInstruction)~";";
 
-            return emit;
+            emmmmit = emit;
         }
         /**
         * Type casting instruction (CastedValueInstruction)
@@ -593,29 +597,27 @@ public final class DCodeEmitter : CodeEmitter
             {
                 /* The original expression */
                 emit ~= transform(uncastedInstruction);
-                return emit;
-            }
-
-            /* Handling of primitive types */
-            if(cast(Primitive)castingTo)
-            {
-                /* Add the actual cast */
-                emit ~= "("~typeTransform(castingTo)~")";
-
-                /* The expression being casted */
-                emit ~= transform(uncastedInstruction);
             }
             else
             {
-                // TODO: Implement this
-                gprintln("Non-primitive type casting not yet implemented", DebugType.ERROR);
-                assert(false);
+                /* Handling of primitive types */
+                if(cast(Primitive)castingTo)
+                {
+                    /* Add the actual cast */
+                    emit ~= "("~typeTransform(castingTo)~")";
+
+                    /* The expression being casted */
+                    emit ~= transform(uncastedInstruction);
+                }
+                else
+                {
+                    // TODO: Implement this
+                    gprintln("Non-primitive type casting not yet implemented", DebugType.ERROR);
+                    assert(false);
+                }
             }
 
-            
-
-
-            return emit;
+            emmmmit = emit;
         }
         /** 
          * Array indexing (pointer-based arrays)
@@ -655,7 +657,7 @@ public final class DCodeEmitter : CodeEmitter
 
 
             // return "*("~transform(indexed)~"+"~transform(index)~")";
-            return emit;
+            emmmmit = emit;
         }
         /** 
          * Array assignments (pointer-based arrays)
@@ -701,7 +703,7 @@ public final class DCodeEmitter : CodeEmitter
             emit ~= ";";
 
 
-            return emit; 
+            emmmmit = emit; 
         }
         /** 
          * Array indexing (stack-based arrays)
@@ -741,7 +743,7 @@ public final class DCodeEmitter : CodeEmitter
             
 
             // return "(TODO: Stack-array index emit)";
-            return emit;
+            emmmmit = emit;
         }
         /** 
          * Array assignments (stack-based arrays)
@@ -785,12 +787,23 @@ public final class DCodeEmitter : CodeEmitter
 
             // return "(StackArrAssignmentInstr: TODO)";
 
-            return emit;
+            emmmmit = emit;
         }
         // TODO: MAAAAN we don't even have this yet
         // else if(cast(StringExpression))
+        /** 
+         * Unsupported instruction
+         *
+         * If you get here then normally it's because
+         * you didn't implement a transformation for
+         * an instruction yet.
+         */
+        else
+        {
+            emmmmit = "<TODO: Base emit: "~to!(string)(instruction)~">";
+        }
 
-        return "<TODO: Base emit: "~to!(string)(instruction)~">";
+        return emmmmit;
     }
 
 
@@ -1272,8 +1285,10 @@ int main()
     {
         try
         {
-            //NOTE: Change to system compiler (maybe, we need to choose a good C compiler)
-            string[] compileArgs = ["clang", "-o", "tlang.out", file.name()];
+            string systemCompiler = config.getConfig("dgen:compiler").getText();
+            gprintln("Using system C compiler '"~systemCompiler~"' for compilation");
+
+            string[] compileArgs = [systemCompiler, "-o", "tlang.out", file.name()];
 
             // Check for object files to be linked in
             string[] objectFilesLink;

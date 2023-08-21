@@ -63,9 +63,22 @@ jobs:
         uses: dlang-community/setup-dlang@v1
         with:
           compiler: ${{ matrix.dc }}
+
+      - name: Install Doveralls (code coverage tool)
+        run: |
+          # wget -O doveralls "https://github.com/ColdenCullen/doveralls/releases/download/v1.1.5/doveralls_linux_travis"
+          # mv doveralls_linux_travis doveralls
+          # chmod +x doveralls
+          dub fetch doveralls
+          sudo apt install libcurl4-openssl-dev
         
       - name: DUB unit tests with coverage
         run: dub test --coverage
+
+      - name: Coverage upload
+        run: |
+          export CI_BRANCH=$(git branch --show-current)
+          dub run doveralls -- -t ${{secrets.COVERALLS_REPO_TOKEN}}
         
       - uses: actions/upload-artifact@v3
         with:
