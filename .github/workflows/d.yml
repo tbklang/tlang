@@ -70,7 +70,7 @@ jobs:
           # mv doveralls_linux_travis doveralls
           # chmod +x doveralls
           dub fetch doveralls
-          sudo apt install libcurl-devel
+          sudo apt install libcurl-dev
         
       - name: DUB unit tests with coverage
         run: dub test --coverage
