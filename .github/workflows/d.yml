@@ -76,7 +76,7 @@ jobs:
         run: dub test --coverage
 
       - name: Coverage upload
-        run: dub run doveralls -- -t $COVERALLS_REPO_TOKEN   
+        run: dub run doveralls -- -t ${{secrets.COVERALLS_REPO_TOKEN}}
         
       - uses: actions/upload-artifact@v3
         with:
