@@ -65,13 +65,15 @@ jobs:
           compiler: ${{ matrix.dc }}
 
       - name: Install Doveralls (code coverage tool)
-        run: dub fetch doveralls
+        run: |
+          wget -q -O - "http://bit.ly/Doveralls" | bash
+          chmod +x doveralls
         
       - name: DUB unit tests with coverage
         run: dub test --coverage
 
       - name: Coverage upload
-        run: dub run doveralls
+        run: ./doveralls
         
       - uses: actions/upload-artifact@v3
         with:
