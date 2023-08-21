@@ -314,3 +314,30 @@ unittest
     }
 }
 
+import misc.exceptions;
+
+// FIXME: Problem is now, if we fail we never get to clear that module state
+unittest
+{
+    // TODO: Be specific about the catches maybe
+    string[] failingTestFiles = [
+                        "source/tlang/testing/simple_function_return_type_check_bad.t"
+    ];
+
+    foreach(string testFile; failingTestFiles)
+    {
+        try
+        {
+            beginCompilation([testFile]);
+            assert(false);
+        }
+        catch(TError)
+        {
+            assert(true);
+        }
+        catch(Exception e)
+        {
+            assert(false);
+        }
+    }
+}
