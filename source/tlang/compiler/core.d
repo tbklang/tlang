@@ -247,6 +247,20 @@ public class Compiler
     }
 }
 
+
+string gibFileData(string sourceFile)
+{
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
+
+    return cast(string)fileBytes;
+}
+
 /** 
  * Performs compilation of the provided module(s)
  *
@@ -337,6 +351,125 @@ unittest
         }
         catch(Exception e)
         {
+            assert(false);
+        }
+    }
+}
+
+/**
+ * These are solely typechecking/codegen tests
+ * and therefore do not require the full pipeline
+ */
+unittest
+{
+    // TODO: Enesure we keep this up-to-date with the d.yml
+    string[] testFilesGood = [
+                        "source/tlang/testing/return/simple_return_expressionless.t",
+                        "source/tlang/testing/return/simple_return_type.t",
+                        "source/tlang/testing/typecheck/simple_function_call.t",
+                        "source/tlang/testing/simple_arrays.t",
+                        "source/tlang/testing/simple_arrays2.t",
+                        "source/tlang/testing/simple_arrays4.t",
+                        "source/tlang/testing/simple_stack_array_coerce.t",
+                        "source/tlang/testing/complex_stack_arrays1.t",
+                        "source/tlang/testing/complex_stack_array_coerce_permutation_good.t",
+                        "source/tlang/testing/simple1_module_positive.t",
+                        "source/tlang/testing/simple2_name_recognition.t",
+                        "source/tlang/testing/simple_literals.t",
+                        "source/tlang/testing/simple_literals3.t",
+                        "source/tlang/testing/simple_literals5.t",
+                        "source/tlang/testing/simple_literals6.t",
+                        "source/tlang/testing/universal_coerce/simple_coerce_literal_good.t",
+                        "source/tlang/testing/universal_coerce/simple_coerce_literal_good_stdalo.t",
+                        "source/tlang/testing/simple_function_return_type_check_good.t"
+    ];
+
+    foreach(string testFileGood; testFilesGood)
+    {
+        string sourceText = gibFileData(testFileGood);
+
+        try
+        {
+            File tmpFile;
+            tmpFile.open("/tmp/bruh", "wb");
+            Compiler compiler = new Compiler(sourceText, tmpFile);
+
+            // Lex
+            compiler.doLex();
+
+            // Parse
+            compiler.doParse();
+
+            // Dep gen/typecheck/codegen
+            compiler.doTypeCheck();
+
+            assert(true);
+        }
+        // On Error
+        catch(TError e)
+        {
+            assert(false);
+        }
+        // On Error
+        catch(Exception e)
+        {
+            gprintln("Yo, we should not be getting this but rather ONLY TErrors, this is a bug to be fixed", DebugType.ERROR);
+            assert(false);
+        }
+    }
+
+    // TODO: ENsure we keep this up to date with the d.yml
+    string[] testFilesFail = [
+                        "source/tlang/testing/typecheck/simple_function_call_1.t",
+                        "source/tlang/testing/simple_stack_array_coerce_wrong.t",
+                        "source/tlang/testing/complex_stack_array_coerce_bad1.t",
+                        "source/tlang/testing/complex_stack_array_coerce_bad2.t",
+                        "source/tlang/testing/complex_stack_array_coerce_bad3.t",
+                        "source/tlang/testing/collide_container_module1.t",
+                        "source/tlang/testing/collide_container_module2.t",
+                        "source/tlang/testing/collide_container_non_module.t",
+                        "source/tlang/testing/collide_container.t",
+                        "source/tlang/testing/collide_member.t",
+                        "source/tlang/testing/precedence_collision_test.t",
+                        "source/tlang/testing/else_if_without_if.pl",
+                        "source/tlang/testing/simple_literals2.t",
+                        "source/tlang/testing/simple_literals4.t",
+                        "source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t",
+                        "source/tlang/testing/universal_coerce/simple_coerce_literal_bad_stdalon.t",
+                        "source/tlang/testing/simple_function_return_type_check_bad.t"
+    ];
+
+    foreach(string testFileFail; testFilesFail)
+    {
+        string sourceText = gibFileData(testFileFail);
+
+        try
+        {
+            File tmpFile;
+            tmpFile.open("/tmp/bruh", "wb");
+            Compiler compiler = new Compiler(sourceText, tmpFile);
+
+            // Lex
+            compiler.doLex();
+
+            // Parse
+            compiler.doParse();
+
+            // Dep gen/typecheck/codegen
+            compiler.doTypeCheck();
+
+            // All of these checks should be failing
+            assert(false);
+        }
+        // On Error
+        catch(TError e)
+        {
+            assert(true);
+        }
+        // We should ONLY be getting TErrors
+        catch(Exception e)
+        {
+            gprintln("Got non TError, this is a bug that must be fixed", DebugType.ERROR);
             assert(false);
         }
     }
