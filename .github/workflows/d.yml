@@ -66,15 +66,17 @@ jobs:
 
       - name: Install Doveralls (code coverage tool)
         run: |
-          wget -O doveralls "https://github.com/ColdenCullen/doveralls/releases/download/v1.1.5/doveralls_linux_travis"
+          # wget -O doveralls "https://github.com/ColdenCullen/doveralls/releases/download/v1.1.5/doveralls_linux_travis"
           # mv doveralls_linux_travis doveralls
-          chmod +x doveralls
+          # chmod +x doveralls
+          dub fetch doveralls
+          apt install libcurl-devel
         
       - name: DUB unit tests with coverage
         run: dub test --coverage
 
       - name: Coverage upload
-        run: ./doveralls
+        run: dub run doveralls
         
       - uses: actions/upload-artifact@v3
         with:
