@@ -202,7 +202,8 @@ public final class TypeChecker
             gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
         }
 
-        
+        /* Clear the FunctionData map (for next compilation) */
+        clearFuncDefs();        
     }
 
 
