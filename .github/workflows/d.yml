@@ -67,7 +67,7 @@ jobs:
       - name: Install Doveralls (code coverage tool)
         run: |
           wget -O doveralls "https://github.com/ColdenCullen/doveralls/releases/download/v1.1.5/doveralls_linux_travis"
-          mv doveralls_linux_travis doveralls
+          # mv doveralls_linux_travis doveralls
           chmod +x doveralls
         
       - name: DUB unit tests with coverage
