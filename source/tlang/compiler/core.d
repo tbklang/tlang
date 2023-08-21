@@ -285,21 +285,29 @@ void beginCompilation(string[] sourceFiles)
 
 unittest
 {
-    // TODO: Add tests here for our `simple_<x>.t` tests or put them in DGen, I think here is better
-    // FIXME: Crashes and I think because too fast or actually bad state? Maybe something is not being
-    // cleared, I believe this may be what is happening
-    // ... see issue #88
-    // ... UPDATE: It seems to be any unit test..... mhhhh.
-    string[] testFiles = ["source/tlang/testing/simple_while.t"
-                        ];
+    // TODO: Add the purposefully failing test cases here too
+    string[] testFiles = [
+                        "source/tlang/testing/simple_while.t",
+                        "source/tlang/testing/simple_functions.t",
+                        "source/tlang/testing/simple_direct_func_call.t",
+                        "source/tlang/testing/simple_variables_only_decs.t",
+                        "source/tlang/testing/simple_variables_decls_ass.t",
+                        "source/tlang/testing/simple_function_decls.t",
+                        "source/tlang/testing/simple_for_loops.t",
+                        "source/tlang/testing/simple_cast.t",
+                        "source/tlang/testing/simple_conditionals.t",
+                        "source/tlang/testing/nested_conditionals.t",
+                        "source/tlang/testing/simple_pointer.t",
+                        "source/tlang/testing/simple_pointer_cast_le.t",
+                        "source/tlang/testing/simple_pointer_array_syntax.t",
+                        "source/tlang/testing/simple_function_recursion_factorial.t",
 
-                        // "source/tlang/testing/simple_functions.t",
-                        // "source/tlang/testing/simple_while.t",
-                        // "source/tlang/testing/simple_for_loops.t",
-                        // "source/tlang/testing/simple_cast.t",
-                        // "source/tlang/testing/simple_conditionals.t",
-                        // "source/tlang/testing/nested_conditionals.t",
-                        // "source/tlang/testing/simple_discard.t"
+                        "source/tlang/testing/simple_stack_arrays4.t",
+                        "source/tlang/testing/simple_stack_array_coerce.t",
+                        "source/tlang/testing/simple_stack_array_coerce_ptr_syntax.t",
+                        "source/tlang/testing/complex_stack_array_coerce.t"
+
+                        ];
     foreach(string testFile; testFiles)
     {
         beginCompilation([testFile]);
