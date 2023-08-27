@@ -95,6 +95,9 @@ public class Compiler
     /* The input source code */
     private string inputSource;
 
+    /* Input file path */
+    private string inputFilePath;
+
     /* The lexer */
     private LexerInterface lexer;
 
@@ -124,14 +127,17 @@ public class Compiler
     /** 
      * Create a new compiler instance to compile the given
      * source code
+     *
      * Params:
      *   sourceCode = the source code to compile
+
      */
-    this(string sourceCode, File emitOutFile)
+    this(string sourceCode, string inputFilePath, File emitOutFile)
     {
         this.inputSource = sourceCode;
+        this.inputFilePath = inputFilePath;
         this.emitOutFile = emitOutFile;
-
+        
         /* Get the default config */
         this.config = CompilerConfiguration.defaultConfig();
     }
@@ -170,7 +176,7 @@ public class Compiler
             /* Spawn a new parser with the provided tokens */
             this.parser = new Parser(lexer);
 
-            modulle = parser.parse();
+            modulle = parser.parse(this.inputFilePath);
         }
     }
 
@@ -299,7 +305,7 @@ void beginCompilation(string[] sourceFiles)
         outFile.open("tlangout.c", "w");
 
         /* Create a new compiler */
-        Compiler compiler = new Compiler(cast(string)fileBytes, outFile);
+        Compiler compiler = new Compiler(cast(string)fileBytes, sourceFile, outFile);
     
         /* Perform the compilation */
         compiler.compile();
