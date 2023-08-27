@@ -2245,6 +2245,9 @@ public final class Parser
         // TODO: Be able to split by `.` and lookup modules via that in FS
         gprintln("Module to import: '"~moduleName~"'");
 
+
+        string[] modulesInStartingDir = findModulesFromStartingPath(currentModulePath);
+
         
 
 
@@ -2254,6 +2257,40 @@ public final class Parser
     }
 
     import std.path;
+
+    private static string[] findModulesFromStartingPath(string startingModulePath)
+    {
+        // Get directory the mdoule path resides in
+        string startingDir = dirName(startingModulePath);
+
+        // strip(pathSplitter(currentModulePath).back(), ".t");
+
+        return findModulesInDirectory(startingDir);
+    }
+
+    import std.file;
+    import std.string : endsWith, strip;
+    private static string[] findModulesInDirectory(string directory)
+    {
+        string[] modulesFound;
+        scope(exit)
+        {
+            gprintln("findModulesInDirectory("~directory~"): "~to!(string)(modulesFound));
+        }
+
+        foreach(DirEntry entry; dirEntries!()(directory, SpanMode.shallow))
+        {
+            // gprintln(entry);
+            if(entry.isFile() && endsWith(entry.name(), ".t"))
+            {
+                string moduleName = entry.name().strip(".t");
+                modulesFound ~= moduleName;
+            }
+        }
+
+
+        return modulesFound;
+    }
 
     private static string getWorkingDirectory()
     {
