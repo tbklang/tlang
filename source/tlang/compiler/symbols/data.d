@@ -10,6 +10,10 @@ import gogga;
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
 
+/** 
+ * Represents a program made up of one or more
+ * module(s)
+ */
 public class Program
 {
     /** 
