@@ -247,6 +247,8 @@ public class Compiler
     }
 }
 
+// TODO: Move the below to utils
+// TODO: Make it do error checking on the  path provided and file-access rights
 /** 
  * Opens the source file at the given path, reads the data
  * and returns it
@@ -255,7 +257,7 @@ public class Compiler
  *   sourceFile = the path to the file to open
  * Returns: the source data
  */
-private string gibFileData(string sourceFile)
+public string gibFileData(string sourceFile)
 {
     File sourceFileFile;
     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
