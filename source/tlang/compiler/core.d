@@ -442,7 +442,7 @@ unittest
         {
             File tmpFile;
             tmpFile.open("/tmp/bruh", "wb");
-            Compiler compiler = new Compiler(sourceText, tmpFile);
+            Compiler compiler = new Compiler(sourceText, testFileGood, tmpFile);
 
             // Lex
             compiler.doLex();
@@ -502,7 +502,7 @@ unittest
         {
             File tmpFile;
             tmpFile.open("/tmp/bruh", "wb");
-            Compiler compiler = new Compiler(sourceText, tmpFile);
+            Compiler compiler = new Compiler(sourceText, testFileFail, tmpFile);
 
             // Lex
             compiler.doLex();
