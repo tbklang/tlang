@@ -356,7 +356,15 @@ unittest
 
 import misc.exceptions;
 
-// FIXME: Problem is now, if we fail we never get to clear that module state
+/**
+ * Tests the following pipeline:
+ *
+ * 1. lexing -> parsing -> typecheck/codegen -> emit (DGen)
+ *
+ * Kinds of tests:
+ * 
+ * 1. Negative tests (must fail)
+ */
 unittest
 {
     // TODO: Be specific about the catches maybe
