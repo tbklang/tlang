@@ -2366,6 +2366,9 @@ public final class Parser
         /* Parent each Statement to the container (the module) */
         parentToContainer(modulle, modulle.getStatements());
 
+
+        gprintln("Done parsing module '"~modulle.getName()~"' from file '"~modulle.getFilePath()~"'");
+
         return modulle;
     }
 }
