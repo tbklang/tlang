@@ -21,67 +21,7 @@ import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable
 
 public class Program
 {
-    private string moduleName;
-
-    private Statement[] statements;
-
-    this(string moduleName)
-    {
-        this.moduleName = moduleName;
-    }
-
-    public void addStatement(Statement statement)
-    {
-        statements ~= statement;
-    }
-
-    public static StatementType[] getAllOf(StatementType)(StatementType, Statement[] statements)
-    {
-        StatementType[] statementsMatched;
-
-        foreach(Statement statement; statements)
-        {
-            /* TODO: Remove null, this is for unimpemented */
-            if(statement !is null && cast(StatementType)statement)
-            {
-                statementsMatched ~= cast(StatementType)statement;
-            }
-        }
-
-        return statementsMatched;
-    }
-
-    public Variable[] getGlobals()
-    {
-        Variable[] variables;
-
-        foreach(Statement statement; statements)
-        {
-            if(typeid(statement) == typeid(Variable))
-            {
-                variables ~= cast(Variable)statement;
-            }
-        }
-
-        return variables;
-    }
-
-    /* TODO: Make this use weights */
-    public Statement[] getStatements()
-    {
-        /* Re-ordered by lowest wieght first */
-        Statement[] stmntsRed;
-
-        bool wCmp(Statement lhs, Statement rhs)
-        {
-            return lhs.weight < rhs.weight;
-        }
-        import std.algorithm.sorting;
-        stmntsRed = sort!(wCmp)(statements).release;
-    
-
-        return stmntsRed;
-    }
+    // TODO: Make use of this
 }
 
 public class Statement
