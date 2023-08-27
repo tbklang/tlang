@@ -429,7 +429,7 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_function_decls.t
           ./tlang.out
-      - name: Simple function (only) decls
+      - name: Simple variables (only) decls
         run: |
           ./tlang compile source/tlang/testing/simple_variables_only_decs.t
           ./tlang.out

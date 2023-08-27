@@ -28,6 +28,28 @@ public final class DCodeEmitter : CodeEmitter
      */
     private bool symbolMapping;
 
+    /** 
+     * Pre-inliner variable counter
+     *
+     * Used for unique names for the pre-inlined
+     * variables for function arguments
+     */
+    private ulong preinlinerIdx = 0;
+
+    /** 
+     * Pre-inliner emit
+     *
+     * Holds the build-up of emits
+     * required for declaring pre-inliner
+     * variables.
+     *
+     * It is stored as an array of code
+     * blocks such that when yanked
+     * it can be genTab()'d to appear
+     * prettily
+     */
+    private string[] currentPreinlineEmit;
+
     // NOTE: In future store the mapper in the config please
     this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
@@ -51,6 +73,44 @@ public final class DCodeEmitter : CodeEmitter
     private void disableSymbolMapping()
     {
      	this.symbolMapping = false;
+    }
+
+    /** 
+     * Tacks on the given emit
+     * to the pre-inliner build-up.
+     *
+     * This automatically adds a
+     * newline to the provided emit.
+     *
+     * Params:
+     *   emit = the emit to tack on
+     */
+    private void tackonPreinline(string emit)
+    {
+        this.currentPreinlineEmit ~= emit;
+    }
+
+    /** 
+     * Yanks the current pre-inliner emit
+     * and then clears it
+     *
+     * Returns: the preinliner emit
+     */
+    private string yankPreinline()
+    {
+        // Generate the string containing
+        // tabbified code blocks ending in
+        // newlines
+        string preinlinerEmit;
+        foreach(string preinlinerBlock; this.currentPreinlineEmit)
+        {
+            preinlinerEmit ~= genTabs(transformDepth)~preinlinerBlock~"\n";
+        }
+
+        // Clear out the preinliner blocks
+        this.currentPreinlineEmit.length = 0;
+
+        return preinlinerEmit;
     }
 
     private ulong transformDepth = 0;
@@ -134,6 +194,12 @@ public final class DCodeEmitter : CodeEmitter
         // return stringRepr;
     }
 
+    private bool isStatementLevel(Instruction instruction)
+    {
+        // TODO: Add more
+        return cast(VariableDeclaration)instruction !is null ||
+            cast(VariableAssignmentInstr)instruction !is null;
+    }
 
     public override string transform(const Instruction instruction)
     {
@@ -355,7 +421,32 @@ public final class DCodeEmitter : CodeEmitter
                 for(ulong argIdx = 0; argIdx < argumentInstructions.length; argIdx++)
                 {
                     Value currentArgumentInstr = argumentInstructions[argIdx];
-                    argumentString~=transform(currentArgumentInstr);
+                    string transformedArgument = transform(currentArgumentInstr);
+
+                    /**
+                     * If pre-inlining of argumnets is enabled
+                     * then deduce type, declare variable
+                     * of said type and assign it the
+                     * `transformedArgument`
+                     *
+                     * Shove this to the top of the emit
+                     */
+                    if(config.getConfig("dgen:preinline_args").getBoolean() == true)
+                    {
+                        string varNameTODO = "preinliner_"~to!(string)(preinlinerIdx)~"_"~to!(string)(transformDepth); // TODO: make unique
+                        preinlinerIdx++;
+
+                        // TODO: register-declaration
+                        string preinlineVarDecEmit = typeTransform(currentArgumentInstr.getInstrType())~" "~varNameTODO~" = "~transformedArgument~";";
+
+                        // Add to pre-inline emit
+                        tackonPreinline(preinlineVarDecEmit);
+                        
+                        // Now make the argument the pre-inlined variable
+                        transformedArgument = varNameTODO;
+                    }
+
+                    argumentString~=transformedArgument;
 
                     if(argIdx != (argumentInstructions.length-1))
                     {
@@ -373,6 +464,9 @@ public final class DCodeEmitter : CodeEmitter
             {
                 emit ~= ";";
             }
+
+            // Tack on the preinline emit at the head
+            // emit = preinlineEmit~emit;
 
             emmmmit = emit;
         }
@@ -801,6 +895,25 @@ public final class DCodeEmitter : CodeEmitter
         else
         {
             emmmmit = "<TODO: Base emit: "~to!(string)(instruction)~">";
+        }
+
+
+        if(config.hasConfig("dgen:preinline_args") && config.getConfig("dgen:preinline_args").getBoolean() && isStatementLevel(cast(Instruction)instruction))
+        {
+            string preinlinerEmmmmit = yankPreinline();
+            gprintln("Yanked: "~preinlinerEmmmmit);
+
+            Context ctx = (cast(Instruction)instruction).getContext();
+            gprintln("Exiting with Context: "~to!(string)(ctx));
+            gprintln("Exiting for: "~to!(string)(typeid(instruction)));
+
+            // Only emit preamble if there IS a preamble
+            if(preinlinerEmmmmit.length)
+            {
+                // TODO: We need to genTabs for preinlinerEmit or do so
+                // ... when tacking-on
+                emmmmit = preinlinerEmmmmit ~ "\n" ~ emmmmit;
+            }
         }
 
         return emmmmit;
