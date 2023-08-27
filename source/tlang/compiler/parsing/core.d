@@ -2203,10 +2203,14 @@ public final class Parser
         return externStmt;
     }
 
-    /**
-     * Parses an `import <moduleName>;` statement
+    /** 
+     * Parses module import statements
+     *
+     * Params:
+     *   currentModulePath = the path to the current module
+     * being parsed
      */
-    private void parseImport()
+    private void parseImport(string currentModulePath)
     {
         gprintln("parseImport(): Enter", DebugType.WARNING);
 
@@ -2226,10 +2230,22 @@ public final class Parser
         // TODO: Add support for multi-imports on one line (i.e. `import <module1>, <module2>;`)
 
         import tlang.compiler.core : gibFileData;
+        import std.string : strip;
 
         // TODO: Read in here
         string workDir = getWorkingDirectory();
         gprintln("Current working directory is: '"~workDir~"'");
+        gprintln("Current module's path: '"~currentModulePath~"'");
+        string moduleDir = dirName(currentModulePath);
+        gprintln("Working directory based on current module's path: '"~moduleDir~"'");
+        string curModuleName = strip(pathSplitter(currentModulePath).back(), ".t");
+        gprintln("Current module name: '"~curModuleName~"'");
+
+
+        // TODO: Be able to split by `.` and lookup modules via that in FS
+        gprintln("Module to import: '"~moduleName~"'");
+
+        
 
 
         
@@ -2353,7 +2369,7 @@ public final class Parser
             else if(symbol == SymbolType.IMPORT)
             {
                 // TODO: Figure out exactly what to do
-                parseImport();
+                parseImport(moduleFilePath);
             }
             else
             {
