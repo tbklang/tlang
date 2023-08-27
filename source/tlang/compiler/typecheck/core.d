@@ -107,6 +107,13 @@ public final class TypeChecker
         /* TODO: Implement me */
         checkClassInherit(modulle);
 
+        // TODO: Issue 88: Don't use static state
+        scope(exit)
+        {
+            /* Clear the FunctionData map (for next compilation) */
+            clearFuncDefs(); 
+        }
+
 
         /**
         * Dependency tree generation
@@ -201,6 +208,8 @@ public final class TypeChecker
 
             gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
         }
+
+        // NOTE: Check scope guard for "exit routines" which run here
     }
 
 

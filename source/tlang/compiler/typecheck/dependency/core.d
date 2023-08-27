@@ -98,11 +98,28 @@ private FunctionData[string] functions;
 
 
 /**
-* Returns the declared functions
-*/
+ * Returns the declared functions
+ */
 public FunctionData[string] grabFunctionDefs()
 {
     return functions;
+}
+
+/** 
+ * Clars the `FunctionData[string]` map
+ *
+ * This is called normally after the
+ * typechecking and code generation such
+ * that the module-static field inside
+ * this module can be cleared and not
+ * persist across compilations
+ */
+public void clearFuncDefs()
+{
+    foreach(string key; functions.keys())
+    {
+        functions.remove(key);
+    }
 }
 
 /**
