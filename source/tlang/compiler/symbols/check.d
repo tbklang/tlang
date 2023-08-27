@@ -290,6 +290,11 @@ public enum SymbolType
      */
     GENERIC_TYPE_DECLARE,
 
+    /**
+     * `import` keyword
+     */
+    IMPORT,
+
     /** 
      * Unknown symbol
      */
@@ -694,6 +699,11 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "generic") == 0)
     {
         return SymbolType.GENERIC_TYPE_DECLARE;
+    }
+    /* import keyword */
+    else if(cmp(token, "import") == 0)
+    {
+        return SymbolType.IMPORT;
     }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))
