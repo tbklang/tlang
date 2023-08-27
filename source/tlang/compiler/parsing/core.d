@@ -2251,10 +2251,9 @@ public final class Parser
         // TODO: We need to do proper lookups for non-relative module names used
         // ... in import statements
         bool found = false;
-        foreach(string cmnPath; modulesInStartingDir)
+        foreach(string cmn; modulesInStartingDir)
         {
-            string cmn = pathSplitter(cmnPath).back();
-            if(cmp(cmn, moduleName) == 0)
+            if(endsWith(cmn, moduleName))
             {
                 found = true;
                 break;
@@ -2263,7 +2262,7 @@ public final class Parser
 
         if(found)
         {
-            
+            // TODO: Implement this
         }
         else
         {
@@ -2293,6 +2292,8 @@ public final class Parser
 
     import std.file;
     import std.string : endsWith, strip;
+    // TODO: Probably replavce the slashes with `.`
+    // ... such that `niks/c.t` becomes `niks.c`
     private static string[] findModulesInDirectory(string directory)
     {
         string[] modulesFound;
@@ -2311,8 +2312,19 @@ public final class Parser
             }
         }
 
+        // Replace all `/`'s with `.`s
+        import std.algorithm.iteration : map;
+        import std.array : array;
+        modulesFound = map!(slashToDot)(modulesFound).array();
+
 
         return modulesFound;
+    }
+
+    import std.string : replace;
+    private static string slashToDot(string strIn)
+    {
+        return replace(strIn, "/", ".");
     }
 
     private static string getWorkingDirectory()
