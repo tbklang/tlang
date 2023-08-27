@@ -2208,6 +2208,8 @@ public final class Parser
      */
     private void parseImport()
     {
+        gprintln("parseImport(): Enter", DebugType.WARNING);
+
         /* Consume the `import` keyword */
         lexer.nextToken();
 
@@ -2223,6 +2225,8 @@ public final class Parser
         lexer.nextToken();
 
         // TODO: Add support for multi-imports on one line (i.e. `import <module1>, <module2>;`)
+
+        gprintln("parseImport(): Leave", DebugType.WARNING);
     }
 
 
