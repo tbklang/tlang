@@ -13,7 +13,7 @@ import tlang.compiler.typecheck.exceptions;
 import core.stdc.stdlib;
 import tlang.compiler.codegen.emit.core;
 import tlang.compiler.codegen.emit.dgen;
-import misc.exceptions : TError;
+import misc.exceptions;
 import tlang.compiler.codegen.mapper.core : SymbolMapper;
 import tlang.compiler.codegen.mapper.hashmapper : HashMapper;
 import tlang.compiler.codegen.mapper.lebanese : LebaneseMapper;
@@ -248,6 +248,27 @@ public class Compiler
 }
 
 /** 
+ * Opens the source file at the given path, reads the data
+ * and returns it
+ *
+ * Params:
+ *   sourceFile = the path to the file to open
+ * Returns: the source data
+ */
+private string gibFileData(string sourceFile)
+{
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
+
+    return cast(string)fileBytes;
+}
+
+/** 
  * Performs compilation of the provided module(s)
  *
  * Params:
@@ -283,26 +304,220 @@ void beginCompilation(string[] sourceFiles)
     }
 }
 
+/**
+ * Tests the following pipeline:
+ *
+ * 1. lexing -> parsing -> typecheck/codegen -> emit (DGen)
+ *
+ * Kinds of tests:
+ * 
+ * 1. Positive tests (must pass)
+ */
 unittest
 {
-    // TODO: Add tests here for our `simple_<x>.t` tests or put them in DGen, I think here is better
-    // FIXME: Crashes and I think because too fast or actually bad state? Maybe something is not being
-    // cleared, I believe this may be what is happening
-    // ... see issue #88
-    // ... UPDATE: It seems to be any unit test..... mhhhh.
-    // string[] testFiles = ["source/tlang/testing/simple_while.t"
-    //                     ];
+    // TODO: Ensure up to date with d.yml
+    string[] testFiles = [
+                        "source/tlang/testing/simple_functions.t",
+                        "source/tlang/testing/simple_direct_func_call.t",
+                        "source/tlang/testing/simple_function_recursion_factorial.t",
 
-    //                     // "source/tlang/testing/simple_functions.t",
-    //                     // "source/tlang/testing/simple_while.t",
-    //                     // "source/tlang/testing/simple_for_loops.t",
-    //                     // "source/tlang/testing/simple_cast.t",
-    //                     // "source/tlang/testing/simple_conditionals.t",
-    //                     // "source/tlang/testing/nested_conditionals.t",
-    //                     // "source/tlang/testing/simple_discard.t"
-    // foreach(string testFile; testFiles)
-    // {
-    //     beginCompilation([testFile]);
-    // }
+                        "source/tlang/testing/simple_conditionals.t",
+                        "source/tlang/testing/nested_conditionals.t",
+                        "source/tlang/testing/simple_function_decls.t",
+                        "source/tlang/testing/simple_variables_only_decs.t",
+                        "source/tlang/testing/simple_variables_decls_ass.t",
+                        "source/tlang/testing/simple_while.t",
+                        
+                        "source/tlang/testing/simple_for_loops.t",
+                        "source/tlang/testing/simple_cast.t",
+                        
+                        "source/tlang/testing/simple_pointer.t",
+                        "source/tlang/testing/simple_pointer_cast_le.t",
+
+                        "source/tlang/testing/simple_stack_arrays4.t",
+                        "source/tlang/testing/simple_stack_array_coerce.t",
+                        "source/tlang/testing/simple_stack_array_coerce_ptr_syntax.t",
+                        "source/tlang/testing/complex_stack_array_coerce.t",
+
+
+                        "source/tlang/testing/complex_stack_arrays1.t",
+                        "source/tlang/testing/simple_arrays.t",
+                        "source/tlang/testing/simple_arrays2.t",
+                        "source/tlang/testing/simple_arrays4.t",
+
+
+                        "source/tlang/testing/simple_pointer_array_syntax.t",
+                        ];
+    foreach(string testFile; testFiles)
+    {
+        beginCompilation([testFile]);
+    }
 }
 
+/**
+ * Tests the following pipeline:
+ *
+ * 1. lexing -> parsing -> typecheck/codegen -> emit (DGen)
+ *
+ * Kinds of tests:
+ * 
+ * 1. Negative tests (must fail)
+ */
+unittest
+{
+    // TODO: Be specific about the catches maybe
+    string[] failingTestFiles = [
+                        "source/tlang/testing/simple_function_return_type_check_bad.t"
+    ];
+
+    foreach(string testFile; failingTestFiles)
+    {
+        try
+        {
+            beginCompilation([testFile]);
+            assert(false);
+        }
+        catch(TError)
+        {
+            assert(true);
+        }
+        catch(Exception e)
+        {
+            assert(false);
+        }
+    }
+}
+
+/**
+ * Tests the following pipeline:
+ *
+ * 1. lexing -> parsing -> typecheck/codegen
+ *
+ * Kinds of tests:
+ * 
+ * 1. Positive tests (must pass)
+ * 2. Negative tests (must fail)
+ */
+unittest
+{
+    // TODO: Enesure we keep this up-to-date with the d.yml
+    string[] testFilesGood = [
+                        "source/tlang/testing/return/simple_return_expressionless.t",
+                        "source/tlang/testing/return/simple_return_type.t",
+                        "source/tlang/testing/typecheck/simple_function_call.t",
+
+                        "source/tlang/testing/simple_arrays.t",
+                        "source/tlang/testing/simple_arrays2.t",
+                        "source/tlang/testing/simple_arrays4.t",
+
+                        "source/tlang/testing/simple_stack_array_coerce.t",
+                        "source/tlang/testing/complex_stack_arrays1.t",
+
+                        "source/tlang/testing/complex_stack_array_coerce_permutation_good.t",
+                        "source/tlang/testing/simple1_module_positive.t",
+                        "source/tlang/testing/simple2_name_recognition.t",
+
+                        "source/tlang/testing/simple_literals.t",
+                        "source/tlang/testing/simple_literals3.t",
+                        "source/tlang/testing/simple_literals5.t",
+                        "source/tlang/testing/simple_literals6.t",
+                        "source/tlang/testing/universal_coerce/simple_coerce_literal_good.t",
+                        "source/tlang/testing/universal_coerce/simple_coerce_literal_good_stdalo.t",
+                        "source/tlang/testing/simple_function_return_type_check_good.t"
+    ];
+
+    foreach(string testFileGood; testFilesGood)
+    {
+        string sourceText = gibFileData(testFileGood);
+
+        try
+        {
+            File tmpFile;
+            tmpFile.open("/tmp/bruh", "wb");
+            Compiler compiler = new Compiler(sourceText, tmpFile);
+
+            // Lex
+            compiler.doLex();
+
+            // Parse
+            compiler.doParse();
+
+            // Dep gen/typecheck/codegen
+            compiler.doTypeCheck();
+
+            assert(true);
+        }
+        // On Error
+        catch(TError e)
+        {
+            assert(false);
+        }
+        // On Error
+        catch(Exception e)
+        {
+            gprintln("Yo, we should not be getting this but rather ONLY TErrors, this is a bug to be fixed", DebugType.ERROR);
+            assert(false);
+        }
+    }
+
+    // TODO: ENsure we keep this up to date with the d.yml
+    string[] testFilesFail = [
+                        "source/tlang/testing/typecheck/simple_function_call_1.t",
+
+                        "source/tlang/testing/simple_stack_array_coerce_wrong.t",
+
+                        "source/tlang/testing/complex_stack_array_coerce_bad1.t",
+                        "source/tlang/testing/complex_stack_array_coerce_bad2.t",
+                        "source/tlang/testing/complex_stack_array_coerce_bad3.t",
+
+                        "source/tlang/testing/collide_container_module1.t",
+                        "source/tlang/testing/collide_container_module2.t",
+                        "source/tlang/testing/collide_container_non_module.t",
+                        "source/tlang/testing/collide_container.t",
+                        "source/tlang/testing/collide_member.t",
+                        "source/tlang/testing/precedence_collision_test.t",
+
+                        "source/tlang/testing/else_if_without_if.pl",
+
+                        "source/tlang/testing/simple_literals2.t",
+                        "source/tlang/testing/simple_literals4.t",
+                        "source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t",
+                        "source/tlang/testing/universal_coerce/simple_coerce_literal_bad_stdalon.t",
+                        "source/tlang/testing/simple_function_return_type_check_bad.t"
+    ];
+
+    foreach(string testFileFail; testFilesFail)
+    {
+        string sourceText = gibFileData(testFileFail);
+
+        try
+        {
+            File tmpFile;
+            tmpFile.open("/tmp/bruh", "wb");
+            Compiler compiler = new Compiler(sourceText, tmpFile);
+
+            // Lex
+            compiler.doLex();
+
+            // Parse
+            compiler.doParse();
+
+            // Dep gen/typecheck/codegen
+            compiler.doTypeCheck();
+
+            // All of these checks should be failing
+            assert(false);
+        }
+        // On Error
+        catch(TError e)
+        {
+            assert(true);
+        }
+        // We should ONLY be getting TErrors
+        catch(Exception e)
+        {
+            gprintln("Got non TError, this is a bug that must be fixed", DebugType.ERROR);
+            assert(false);
+        }
+    }
+}
