@@ -315,7 +315,7 @@ void beginCompilation(string[] sourceFiles)
  */
 unittest
 {
-    // TODO: Add the purposefully failing test cases here too
+    // TODO: Ensure up to date with d.yml
     string[] testFiles = [
                         "source/tlang/testing/simple_functions.t",
                         "source/tlang/testing/simple_direct_func_call.t",
@@ -405,14 +405,18 @@ unittest
                         "source/tlang/testing/return/simple_return_expressionless.t",
                         "source/tlang/testing/return/simple_return_type.t",
                         "source/tlang/testing/typecheck/simple_function_call.t",
+
                         "source/tlang/testing/simple_arrays.t",
                         "source/tlang/testing/simple_arrays2.t",
                         "source/tlang/testing/simple_arrays4.t",
+
                         "source/tlang/testing/simple_stack_array_coerce.t",
                         "source/tlang/testing/complex_stack_arrays1.t",
+
                         "source/tlang/testing/complex_stack_array_coerce_permutation_good.t",
                         "source/tlang/testing/simple1_module_positive.t",
                         "source/tlang/testing/simple2_name_recognition.t",
+
                         "source/tlang/testing/simple_literals.t",
                         "source/tlang/testing/simple_literals3.t",
                         "source/tlang/testing/simple_literals5.t",
@@ -459,17 +463,22 @@ unittest
     // TODO: ENsure we keep this up to date with the d.yml
     string[] testFilesFail = [
                         "source/tlang/testing/typecheck/simple_function_call_1.t",
+
                         "source/tlang/testing/simple_stack_array_coerce_wrong.t",
+
                         "source/tlang/testing/complex_stack_array_coerce_bad1.t",
                         "source/tlang/testing/complex_stack_array_coerce_bad2.t",
                         "source/tlang/testing/complex_stack_array_coerce_bad3.t",
+
                         "source/tlang/testing/collide_container_module1.t",
                         "source/tlang/testing/collide_container_module2.t",
                         "source/tlang/testing/collide_container_non_module.t",
                         "source/tlang/testing/collide_container.t",
                         "source/tlang/testing/collide_member.t",
                         "source/tlang/testing/precedence_collision_test.t",
+
                         "source/tlang/testing/else_if_without_if.pl",
+
                         "source/tlang/testing/simple_literals2.t",
                         "source/tlang/testing/simple_literals4.t",
                         "source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t",
