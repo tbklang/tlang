@@ -347,6 +347,9 @@ unittest
 
 
                         "source/tlang/testing/simple_pointer_array_syntax.t",
+
+                        "source/tlang/testing/simple_structs.t",
+                        "source/tlang/testing/complex_structs.t"
                         ];
     foreach(string testFile; testFiles)
     {
