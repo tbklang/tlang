@@ -2248,6 +2248,29 @@ public final class Parser
 
         string[] modulesInStartingDir = findModulesFromStartingPath(currentModulePath);
 
+        // TODO: We need to do proper lookups for non-relative module names used
+        // ... in import statements
+        bool found = false;
+        foreach(string cmnPath; modulesInStartingDir)
+        {
+            string cmn = pathSplitter(cmnPath).back();
+            if(cmp(cmn, moduleName) == 0)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if(found)
+        {
+            
+        }
+        else
+        {
+            // TODO: Make nicer error?
+            expect("Could not find module '"~moduleName~"' which was requested to be imported");
+        }
+
         
 
 
