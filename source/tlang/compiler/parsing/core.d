@@ -2203,6 +2203,20 @@ public final class Parser
         return externStmt;
     }
 
+    /**
+     * Parses an `import <moduleName>;` statement
+     */
+    private void parseImport()
+    {
+        /* Consume the `import` keyword */
+        lexer.nextToken();
+
+        /* Get the module's name */
+        expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
+        string moduleName = lexer.getCurrentToken().getToken();
+
+    }
+
 
     /* Almost like parseBody but has more */
     /**
@@ -2302,6 +2316,12 @@ public final class Parser
                 ExternStmt externStatement = parseExtern();
 
                 modulle.addStatement(externStatement);
+            }
+            /* If it is an import */
+            else if(symbol == SymbolType.IMPORT)
+            {
+                // TODO: Figure out exactly what to do
+                parseImport();
             }
             else
             {
