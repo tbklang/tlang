@@ -247,8 +247,15 @@ public class Compiler
     }
 }
 
-
-string gibFileData(string sourceFile)
+/** 
+ * Opens the source file at the given path, reads the data
+ * and returns it
+ *
+ * Params:
+ *   sourceFile = the path to the file to open
+ * Returns: the source data
+ */
+private string gibFileData(string sourceFile)
 {
     File sourceFileFile;
     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
