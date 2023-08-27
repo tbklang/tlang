@@ -10,15 +10,6 @@ import gogga;
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
 
-/**
-* TODO: Implement the blow and use them
-*
-* These are just to use for keeping track of what
-* valid identifiers are.
-*
-* Actually it might be, yeah it will
-*/
-
 public class Program
 {
     // TODO: Make use of this
