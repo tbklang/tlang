@@ -2223,10 +2223,27 @@ public final class Parser
         /* Expect a semi-colon and consume it */
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
-
         // TODO: Add support for multi-imports on one line (i.e. `import <module1>, <module2>;`)
 
+        import tlang.compiler.core : gibFileData;
+
+        // TODO: Read in here
+        string workDir = getWorkingDirectory();
+        gprintln("Current working directory is: '"~workDir~"'");
+
+
+        
+
         gprintln("parseImport(): Leave", DebugType.WARNING);
+    }
+
+    import std.path;
+
+    private static string getWorkingDirectory()
+    {
+        // TOOD: look at lazy, seems cool
+        string workDir = absolutePath(".");
+        return workDir;
     }
 
 
@@ -2237,7 +2254,7 @@ public final class Parser
     * one to define classes within functions
     */
     /* TODO: Variables should be allowed to have letters in them and underscores */
-    public Module parse()
+    public Module parse(string moduleFilePath = "")
     {
         gprintln("parse(): Enter", DebugType.WARNING);
 
@@ -2257,6 +2274,9 @@ public final class Parser
 
         /* Initialize Module */
         modulle = new Module(programName);
+
+        /* Set the file system path of this module */
+        modulle.setFilePath(moduleFilePath);
 
         /* TODO: do `lexer.hasTokens()` check */
         /* TODO: We should add `lexer.hasTokens()` to the `lexer.nextToken()` */
