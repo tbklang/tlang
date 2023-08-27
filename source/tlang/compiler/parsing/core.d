@@ -2215,6 +2215,14 @@ public final class Parser
         expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
         string moduleName = lexer.getCurrentToken().getToken();
 
+        /* Consume the token */
+        lexer.nextToken();
+
+        /* Expect a semi-colon and consume it */
+        expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+        lexer.nextToken();
+
+        // TODO: Add support for multi-imports on one line (i.e. `import <module1>, <module2>;`)
     }
 
 
