@@ -297,30 +297,49 @@ void beginCompilation(string[] sourceFiles)
     }
 }
 
+/**
+ * Tests the following pipeline:
+ *
+ * 1. lexing -> parsing -> typecheck/codegen -> emit (DGen)
+ *
+ * Kinds of tests:
+ * 
+ * 1. Positive tests (must pass)
+ */
 unittest
 {
     // TODO: Add the purposefully failing test cases here too
     string[] testFiles = [
-                        "source/tlang/testing/simple_while.t",
                         "source/tlang/testing/simple_functions.t",
                         "source/tlang/testing/simple_direct_func_call.t",
-                        "source/tlang/testing/simple_variables_only_decs.t",
-                        "source/tlang/testing/simple_variables_decls_ass.t",
-                        "source/tlang/testing/simple_function_decls.t",
-                        "source/tlang/testing/simple_for_loops.t",
-                        "source/tlang/testing/simple_cast.t",
+                        "source/tlang/testing/simple_function_recursion_factorial.t",
+
                         "source/tlang/testing/simple_conditionals.t",
                         "source/tlang/testing/nested_conditionals.t",
+                        "source/tlang/testing/simple_function_decls.t",
+                        "source/tlang/testing/simple_variables_only_decs.t",
+                        "source/tlang/testing/simple_variables_decls_ass.t",
+                        "source/tlang/testing/simple_while.t",
+                        
+                        "source/tlang/testing/simple_for_loops.t",
+                        "source/tlang/testing/simple_cast.t",
+                        
                         "source/tlang/testing/simple_pointer.t",
                         "source/tlang/testing/simple_pointer_cast_le.t",
-                        "source/tlang/testing/simple_pointer_array_syntax.t",
-                        "source/tlang/testing/simple_function_recursion_factorial.t",
 
                         "source/tlang/testing/simple_stack_arrays4.t",
                         "source/tlang/testing/simple_stack_array_coerce.t",
                         "source/tlang/testing/simple_stack_array_coerce_ptr_syntax.t",
-                        "source/tlang/testing/complex_stack_array_coerce.t"
+                        "source/tlang/testing/complex_stack_array_coerce.t",
 
+
+                        "source/tlang/testing/complex_stack_arrays1.t",
+                        "source/tlang/testing/simple_arrays.t",
+                        "source/tlang/testing/simple_arrays2.t",
+                        "source/tlang/testing/simple_arrays4.t",
+
+
+                        "source/tlang/testing/simple_pointer_array_syntax.t",
                         ];
     foreach(string testFile; testFiles)
     {
@@ -357,8 +376,14 @@ unittest
 }
 
 /**
- * These are solely typechecking/codegen tests
- * and therefore do not require the full pipeline
+ * Tests the following pipeline:
+ *
+ * 1. lexing -> parsing -> typecheck/codegen
+ *
+ * Kinds of tests:
+ * 
+ * 1. Positive tests (must pass)
+ * 2. Negative tests (must fail)
  */
 unittest
 {
