@@ -12,7 +12,26 @@ import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable
 
 public class Program
 {
-    // TODO: Make use of this
+    /** 
+     * Modules this program is made up of
+     */
+    private Module[] modules;
+
+    this()
+    {
+
+    }
+
+    /** 
+     * Adds a new `Module` to this program
+     *
+     * Params:
+     *   newModule = the new `Module` to add
+     */
+    public void addModule(Module newModule)
+    {
+        this.modules ~= newModule;
+    }
 }
 
 public class Statement
