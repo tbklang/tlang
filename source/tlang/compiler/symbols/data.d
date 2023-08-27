@@ -22,7 +22,6 @@ import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable
 public class Program
 {
     private string moduleName;
-    private Program[] importedModules;
 
     private Statement[] statements;
 
