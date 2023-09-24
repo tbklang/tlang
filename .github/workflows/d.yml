@@ -6,9 +6,9 @@ name: D
 
 on:
   push:
-    branches: [ "vardec_varass_dependency" ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ "vardec_varass_dependency" ]
+    branches: [ "**" ]
   workflow_dispatch:
 
 permissions:
