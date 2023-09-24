@@ -6,7 +6,8 @@ name: D
 
 on:
   push
-  pull_request
+  pull_request:
+    branches: [ "vardec_varass_dependency" ]
 
 # on:
   # push:
