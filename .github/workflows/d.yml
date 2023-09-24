@@ -5,11 +5,15 @@
 name: D
 
 on:
-  push:
-    branches: [ "vardec_varass_dependency" ]
-  pull_request:
-    branches: [ "vardec_varass_dependency" ]
-  workflow_dispatch:
+  push
+  pull_request
+
+# on:
+  # push:
+    # branches: [ "vardec_varass_dependency" ]
+  # pull_request:
+    # branches: [ "vardec_varass_dependency" ]
+  # workflow_dispatch:
 
 permissions:
   contents: read
