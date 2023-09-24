@@ -4,11 +4,6 @@
 # documentation.
 name: D
 
-# on:
-  # push
-  # pull_request:
-    # branches: [ "vardec_varass_dependency" ]
-
 on:
   push:
     branches: [ "**" ]
