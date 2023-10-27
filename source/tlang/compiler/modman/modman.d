@@ -97,7 +97,10 @@ public final class ModuleManager
 
         scope(exit)
         {
-            gprintln("getModulesInDirectory("~directory~"): "~to!(string)(entries));
+            version(DBG_MODMAN)
+            {
+                gprintln("getModulesInDirectory("~directory~"): "~to!(string)(entries));
+            }
         }
 
         foreach(DirEntry entry; dirEntries!()(directory, SpanMode.shallow))
@@ -125,9 +128,29 @@ public final class ModuleManager
             else if(entry.isDir() && recurse)
             {
                 // New base path
-                gprintln("Recursing on "~to!(string)(entry)~"...");
-                entries ~= getModulesInDirectory(entry.name(), recurse);
-                gprintln("Recursing on "~to!(string)(entry)~"... [done]");
+                version(DBG_MODMAN)
+                {
+                    gprintln("Recursing on "~to!(string)(entry)~"...");
+                }
+
+                
+                ModuleEntry[] nestedMods = getModulesInDirectory(entry.name(), recurse);
+
+                // Name must be relative to current directory/path
+                foreach(ModuleEntry modEnt; nestedMods)
+                {
+                    modEnt.moduleName = pathSplitter(entry.name()).back()~"."~modEnt.moduleName;
+                    gprintln(modEnt.moduleName);
+                    // *(cast(char*)0) = 2;
+                }
+
+
+                entries ~= nestedMods;
+
+                version(DBG_MODMAN)
+                {
+                    gprintln("Recursing on "~to!(string)(entry)~"... [done]");
+                }
             }
         }
 
