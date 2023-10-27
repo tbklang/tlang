@@ -49,6 +49,37 @@ public final class ModuleManager
         this.searchPaths = searchPaths;
     }
 
+
+    // Example, given curModDir of `files/`
+    // ... then a declared Name of `a`
+    // ... and file name `a.t`
+    // should return true
+    public bool isValidModuleDeclaration(string declaredName, string fileName, string curModDir)
+    {
+        // Firstly filename must not be empty
+        if(fileName.length == 0)
+        {
+            return false;
+        }
+        // Filename should end in `.t`
+        else if(!endsWith(fileName, ".t"))
+        {
+            return false;
+        }
+        else
+        {
+            // Chop the `.t` off 
+            string moduleEsqueFilename = strip(fileName, ".t");
+            gprintln("Module-esque name: "~moduleEsqueFilename);
+
+            gprintln("Module name (declared): "~declaredName);
+
+            // TODO: We need to do backtracking matching here
+
+            return false;
+        }
+    }
+
     // Searches the given current directory 
     // ... and then all configured paths
     // ... returning `true` and setting `found`
@@ -157,11 +188,11 @@ public final class ModuleManager
         return entries;
     }
 
-    // import std.string : replace;
-    // private static string slashToDot(string strIn)
-    // {
-    //     return replace(strIn, "/", ".");
-    // }
+
+    private static string slashToDot(string strIn)
+    {
+        return replace(strIn, "/", ".");
+    }
 
 
     /** 

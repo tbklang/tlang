@@ -2285,59 +2285,20 @@ public final class Parser
 
     import std.path;
 
-    private static string[] findModulesFromStartingPath(string startingModulePath)
-    {
-        // Get directory the mdoule path resides in
-        string startingDir = dirName(startingModulePath);
-
-        // strip(pathSplitter(currentModulePath).back(), ".t");
-
-        return findModulesInDirectory(startingDir);
-    }
 
     import std.file;
-    import std.string : endsWith, strip;
-    // TODO: Probably replavce the slashes with `.`
-    // ... such that `niks/c.t` becomes `niks.c`
-    private static string[] findModulesInDirectory(string directory)
-    {
-        string[] modulesFound;
-        scope(exit)
-        {
-            gprintln("findModulesInDirectory("~directory~"): "~to!(string)(modulesFound));
-        }
-
-        foreach(DirEntry entry; dirEntries!()(directory, SpanMode.shallow))
-        {
-            // gprintln(entry);
-            if(entry.isFile() && endsWith(entry.name(), ".t"))
-            {
-                string moduleName = entry.name().strip(".t");
-                modulesFound ~= moduleName;
-            }
-        }
-
-        // Replace all `/`'s with `.`s
-        import std.algorithm.iteration : map;
-        import std.array : array;
-        modulesFound = map!(slashToDot)(modulesFound).array();
-
-
-        return modulesFound;
-    }
-
-    import std.string : replace;
-    private static string slashToDot(string strIn)
-    {
-        return replace(strIn, "/", ".");
-    }
-
+   
     private static string getWorkingDirectory()
     {
         // TOOD: look at lazy, seems cool
         string workDir = absolutePath(".");
         return workDir;
     }
+
+
+    // Whilst we're building it, we may
+    // ... as well have a handle on it
+    private Module curModule;
 
 
     /* Almost like parseBody but has more */
@@ -2359,17 +2320,33 @@ public final class Parser
 
         /* Module name may NOT be dotted (TODO: Maybe it should be yeah) */
         expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
-        string programName = lexer.getCurrentToken().getToken();
+        string moduleName = lexer.getCurrentToken().getToken();
         lexer.nextToken();
 
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
 
+        // Ensure that the module's file name and name are a valid combination
+        // ... (NOTE: This is bound to break a lot of test cases ill-ly named)
+        if(!this.compiler.getModMan().isValidModuleDeclaration(moduleName, moduleFilePath, getcwd()))
+        {
+            // TODO: Add code here
+            gprintln("Invalid module name '"~moduleName~"' for module file at "~moduleFilePath, DebugType.ERROR);
+
+            // TODO: Throw exception
+            return null;
+        }
+        
+
+
         /* Initialize Module */
-        modulle = new Module(programName);
+        modulle = new Module(moduleName);
 
         /* Set the file system path of this module */
         modulle.setFilePath(moduleFilePath);
+
+        /* Store it globally */
+        this.curModule = modulle;
 
         /* TODO: do `lexer.hasTokens()` check */
         /* TODO: We should add `lexer.hasTokens()` to the `lexer.nextToken()` */
