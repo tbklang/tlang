@@ -125,6 +125,14 @@ public class Compiler
         return config;
     }
 
+    /* The program */
+    private Program program;
+
+    public Program getProgram()
+    {
+        return this.program;
+    }
+
     /* The module manager */
     private ModuleManager modMan;
 
@@ -147,6 +155,9 @@ public class Compiler
         
         /* Get the default config */
         this.config = CompilerConfiguration.defaultConfig();
+
+        /* Create the base program */
+        this.program = new Program();
 
         /* Create a module manager */
         this.modMan = new ModuleManager(this.config.getConfig("modman:path").getArray());
@@ -184,7 +195,7 @@ public class Compiler
         else
         {
             /* Spawn a new parser with the provided tokens */
-            this.parser = new Parser(lexer);
+            this.parser = new Parser(lexer, this);
 
             modulle = parser.parse(this.inputFilePath);
         }

@@ -9,6 +9,7 @@ import tlang.compiler.lexer.core;
 import core.stdc.stdlib;
 import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
+import tlang.compiler.core : Compiler;
 
 // TODO: Technically we could make a core parser etc
 public final class Parser
@@ -19,10 +20,9 @@ public final class Parser
     private LexerInterface lexer;
 
     /** 
-     * The program that the module currently
-     * being parsed, is a part of
+     * The associated compiler
      */
-    private Program program;
+    private Compiler compiler;
 
     /**
     * Crashes the program if the given token is not a symbol
@@ -63,15 +63,14 @@ public final class Parser
      *
      * Params:
      *   lexer = the token source
-     *   program = the program to use when
-     * modules are being considered
+     *   compiler = the compiler to be using
      *
-     * FIXME: Remove null for `program`
+     * FIXME: Remove null for `compiler`
      */
-    this(LexerInterface lexer, Program program = null)
+    this(LexerInterface lexer, Compiler compiler = null)
     {
         this.lexer = lexer;
-        this.program = program;
+        this.compiler = compiler;
     }
 
     /** 
@@ -2239,6 +2238,9 @@ public final class Parser
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
         // TODO: Add support for multi-imports on one line (i.e. `import <module1>, <module2>;`)
+
+        // Print out some information about the currebt program
+        gprintln("Program currently: '"~compiler.getProgram().toString()~"'");
 
         import tlang.compiler.core : gibFileData;
         import std.string : strip;
