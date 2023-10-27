@@ -136,6 +136,11 @@ public class Compiler
     /* The module manager */
     private ModuleManager modMan;
 
+    public ModuleManager getModMan()
+    {
+        return this.modMan;
+    }
+
     /** 
      * Create a new compiler instance to compile the given
      * source code
