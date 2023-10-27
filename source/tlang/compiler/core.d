@@ -19,6 +19,7 @@ import tlang.compiler.codegen.mapper.hashmapper : HashMapper;
 import tlang.compiler.codegen.mapper.lebanese : LebaneseMapper;
 import std.string : cmp;
 import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
+import tlang.compiler.modman;
 
 // TODO: Add configentry unittests
 
@@ -124,13 +125,19 @@ public class Compiler
         return config;
     }
 
+    /* The module manager */
+    private ModuleManager modMan;
+
     /** 
      * Create a new compiler instance to compile the given
      * source code
      *
      * Params:
      *   sourceCode = the source code to compile
-
+     * Throws:
+     *   ModuleManagerError = if the provided search
+     * paths are not all valid
+     *
      */
     this(string sourceCode, string inputFilePath, File emitOutFile)
     {
@@ -140,6 +147,9 @@ public class Compiler
         
         /* Get the default config */
         this.config = CompilerConfiguration.defaultConfig();
+
+        /* Create a module manager */
+        this.modMan = new ModuleManager(this.config.getConfig("modman:path").getArray());
     }
 
     /* Setup the lexer and begin lexing */
