@@ -1,10 +1,14 @@
 module tlang.compiler.modman.modman;
 
 import gogga;
+import std.file : isDir;
 
 // TODO: We may want to throw an exception whilst searching
 // ... as to which path is invalid
 import tlang.compiler.modman.exceptions;
+
+// TODO: Rename to PathFinder or Searcher
+// ... which is a more valid name
 
 /** 
  * Manager for searching for modules etc.
@@ -78,8 +82,6 @@ public final class ModuleManager
         {
             return false;
         }
-
-        import std.file : isDir;
 
         // It should be a valid directory
         return isDir(searchPath);
