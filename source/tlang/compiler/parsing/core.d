@@ -18,6 +18,12 @@ public final class Parser
      */
     private LexerInterface lexer;
 
+    /** 
+     * The program that the module currently
+     * being parsed, is a part of
+     */
+    private Program program;
+
     /**
     * Crashes the program if the given token is not a symbol
     * the same as the givne expected one
@@ -57,10 +63,15 @@ public final class Parser
      *
      * Params:
      *   lexer = the token source
+     *   program = the program to use when
+     * modules are being considered
+     *
+     * FIXME: Remove null for `program`
      */
-    this(LexerInterface lexer)
+    this(LexerInterface lexer, Program program = null)
     {
         this.lexer = lexer;
+        this.program = program;
     }
 
     /** 
