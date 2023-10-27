@@ -90,3 +90,21 @@ unittest
     bool res = ModuleManager.validate(goodPaths);
     assert(res);
 }
+
+/**
+ * Tests the static methods of the `ModuleManager`
+ *
+ * In this case negative verdict is expected
+ */
+unittest
+{
+    string[] badPaths = [
+        "source/tlang/testing",
+        "source/tlang/testing/modules",
+        "README.md",
+    ];
+
+    bool res = ModuleManager.validate(badPaths);
+    assert(!res);
+}
+
