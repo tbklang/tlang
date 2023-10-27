@@ -1,4 +1,4 @@
-module tlang.compiler.parsing.modman;
+module tlang.compiler.modman.modman;
 
 import gogga;
 
@@ -20,6 +20,8 @@ public final class ModuleManager
      *
      * Params:
      *   searchPaths = the search paths
+     * Throws:
+     *   
      */
     this(string[] searchPaths)
     {
