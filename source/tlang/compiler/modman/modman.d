@@ -2,6 +2,10 @@ module tlang.compiler.modman.modman;
 
 import gogga;
 
+// TODO: We may want to throw an exception whilst searching
+// ... as to which path is invalid
+import tlang.compiler.modman.exceptions;
+
 /** 
  * Manager for searching for modules etc.
  */
@@ -21,11 +25,16 @@ public final class ModuleManager
      * Params:
      *   searchPaths = the search paths
      * Throws:
-     *   
+     *   ModuleManagerError = if the
+     * provided search paths are incorrect
      */
     this(string[] searchPaths)
     {
-        validate(searchPaths);
+        if(!validate(searchPaths))
+        {
+            throw new ModuleManagerError(this, "An invalid path exists within the provided search paths");
+        }
+
         this.searchPaths = searchPaths;
     }
 
