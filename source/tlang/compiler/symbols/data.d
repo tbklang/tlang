@@ -36,6 +36,18 @@ public class Program
     {
         this.modules ~= newModule;
     }
+
+    /** 
+     * Returns an informative string about the
+     * program's details along with the modules
+     * it is made up of
+     *
+     * Returns: a string
+     */
+    public override string toString()
+    {
+        return "Program [name: TODO, modules: "~to!(string)(this.modules)~"]";
+    }
 }
 
 public class Statement
