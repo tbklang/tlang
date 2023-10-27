@@ -2242,6 +2242,9 @@ public final class Parser
         // Print out some information about the currebt program
         gprintln("Program currently: '"~compiler.getProgram().toString()~"'");
 
+       
+
+
         import tlang.compiler.core : gibFileData;
         import std.string : strip;
 
@@ -2255,38 +2258,27 @@ public final class Parser
         gprintln("Current module name: '"~curModuleName~"'");
 
 
+        import tlang.compiler.modman;
+        ModuleManager modMan = compiler.getModMan();
+        ModuleEntry[] modulesFound = modMan.getModulesInDirectory(moduleDir, true);
+        gprintln("Modules found: ", DebugType.WARNING);
+        foreach(ModuleEntry foundEntry; modulesFound)
+        {
+            gprintln(foundEntry);
+        }
+
+
         // TODO: Be able to split by `.` and lookup modules via that in FS
         gprintln("Module to import: '"~moduleName~"'");
 
-
-        string[] modulesInStartingDir = findModulesFromStartingPath(currentModulePath);
-
-        // TODO: We need to do proper lookups for non-relative module names used
-        // ... in import statements
-        bool found = false;
-        foreach(string cmn; modulesInStartingDir)
+        ModuleEntry foundModEntry;
+        bool status = modMan.search(moduleDir, moduleName, foundModEntry);
+        if(status)
         {
-            if(endsWith(cmn, moduleName))
-            {
-                found = true;
-                break;
-            }
+            gprintln("We found '"~moduleName~"' as '"~to!(string)(foundModEntry)~"'");
         }
 
-        if(found)
-        {
-            // TODO: Implement this
-        }
-        else
-        {
-            // TODO: Make nicer error?
-            expect("Could not find module '"~moduleName~"' which was requested to be imported");
-        }
-
-        
-
-
-        
+        // TODO: Add parsing here
 
         gprintln("parseImport(): Leave", DebugType.WARNING);
     }
