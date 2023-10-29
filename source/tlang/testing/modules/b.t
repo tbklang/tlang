@@ -1,1 +1,3 @@
 module b;
+
+import ap;
