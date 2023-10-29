@@ -236,6 +236,7 @@ public final class CompilerConfiguration
          */
         import std.file;
         string[] searchPaths = [getcwd()];
+        searchPaths = []; // TODO: Disabling for now
         config.addConfig(ConfigEntry("modman:path", searchPaths));
 
         return config;
