@@ -168,6 +168,17 @@ public class Module : Entity, Container
             return false;
         }
     }
+
+    /** 
+     * Provides a string representation of
+     * this module
+     *
+     * Returns: a string
+     */
+    public override string toString()
+    {
+        return "Module [name: "~getName()~"]";
+    }
 }
 
 /**
