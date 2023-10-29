@@ -2271,12 +2271,8 @@ public final class Parser
         // TODO: Add parsing here
 
         // TODO: Testing (Search for a module)
-        ModuleEntry foundEnt;
-        bool status = modMan.searchFrom(moduleName, currentModulePath, foundEnt);
-        if(status)
-        {
-            gprintln("Search for '"~moduleName~"' result: "~to!(string)(foundEnt));
-        }
+        ModuleEntry foundEnt = modMan.searchFrom_throwable(moduleName, currentModulePath);
+
 
         gprintln("parseImport(): Leave", DebugType.WARNING);
     }
