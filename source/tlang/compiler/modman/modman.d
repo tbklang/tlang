@@ -259,113 +259,11 @@ public final class ModuleManager
         }
     }
 
-    // Searches the given current directory 
-    // ... and then all configured paths
-    // ... returning `true` and setting `found`
-    // ... in that case. Otherwise, nothing is
-    // ... set and `false` is returned
-    public bool search(string curModDir, string name, ref ModuleEntry found)
-    {
-        // Search given directory (recurse too)
-        foreach(ModuleEntry mod; getModulesInDirectory(curModDir, true))
-        {
-            if(mod.moduleName == name)
-            {
-                found = mod;
-                return true;
-            }
-        }
-
-        // Search each of the search paths (on each, recurse)
-        foreach(string path; this.searchPaths)
-        {
-            foreach(ModuleEntry mod; getModulesInDirectory(path, true))
-            {
-                if(mod.moduleName == name)
-                {
-                    found = mod;
-                    return true;
-                }
-            }
-        }
-
-
-        return false;
-    }
-
-
     import std.path;
     import std.file : dirEntries, DirEntry, SpanMode;
     import std.conv : to;
     import std.string : endsWith, strip, replace;
-    // Use this to find all module entries from a given
-    // module's own directory (like the directory
-    // of the module doing the import)
-    public ModuleEntry[] getModulesInDirectory(string directory, bool recurse = false)
-    {
-        ModuleEntry[] entries;
-
-        scope(exit)
-        {
-            version(DBG_MODMAN)
-            {
-                gprintln("getModulesInDirectory("~directory~"): "~to!(string)(entries));
-            }
-        }
-
-        foreach(DirEntry entry; dirEntries!()(directory, SpanMode.shallow))
-        {
-            // gprintln(entry);
-            if(entry.isFile() && endsWith(entry.name(), ".t"))
-            {
-                string modulePath = absolutePath(entry.name());
-
-                /** 
-                 * If we have dir/
-                 *     dir/a.t
-                 *     dir/b.t
-                 *
-                 * Then we want just the last part of the path
-                 * and without the file extension `.t`, therefpre
-                 * we want:
-                 * [a, b]
-                 *
-                 */
-                string moduleName = pathSplitter(strip(entry.name(), ".t")).back();
-                entries ~= ModuleEntry(modulePath, moduleName);
-            }
-            // If recursion is enabled
-            else if(entry.isDir() && recurse)
-            {
-                // New base path
-                version(DBG_MODMAN)
-                {
-                    gprintln("Recursing on "~to!(string)(entry)~"...");
-                }
-
-                
-                ModuleEntry[] nestedMods = getModulesInDirectory(entry.name(), recurse);
-
-                // Name must be relative to current directory/path
-                foreach(ModuleEntry modEnt; nestedMods)
-                {
-                    modEnt.moduleName = pathSplitter(entry.name()).back()~"."~modEnt.moduleName;
-                    gprintln(modEnt.moduleName);
-                    // *(cast(char*)0) = 2;
-                }
-
-
-                entries ~= nestedMods;
-
-                version(DBG_MODMAN)
-                {
-                    gprintln("Recursing on "~to!(string)(entry)~"... [done]");
-                }
-            }
-        }
-
-        return entries;
-    }
+    
 
 
     private static string slashToDot(string strIn)
