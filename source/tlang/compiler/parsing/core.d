@@ -2316,19 +2316,6 @@ public final class Parser
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
 
-        // Ensure that the module's file name and name are a valid combination
-        // ... (NOTE: This is bound to break a lot of test cases ill-ly named)
-        if(!this.compiler.getModMan().isValidModuleDeclaration(moduleName, moduleFilePath, getcwd()))
-        {
-            // TODO: Add code here
-            gprintln("Invalid module name '"~moduleName~"' for module file at "~moduleFilePath, DebugType.ERROR);
-
-            // TODO: Throw exception
-            return null;
-        }
-        
-
-
         /* Initialize Module */
         modulle = new Module(moduleName);
 
