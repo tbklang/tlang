@@ -313,6 +313,14 @@ public final class ModuleManager
     {
         File modFile;
 
+        scope(exit)
+        {
+            if(modFile.isOpen())
+            {
+                modFile.close();
+            }
+        }
+
         try
         {
             modFile.open(ent.filename, "rb");
