@@ -165,7 +165,7 @@ public class Compiler
         this.program = new Program();
 
         /* Create a module manager */
-        this.modMan = new ModuleManager(this.config.getConfig("modman:path").getArray());
+        this.modMan = new ModuleManager(this);
     }
 
     /* Setup the lexer and begin lexing */
