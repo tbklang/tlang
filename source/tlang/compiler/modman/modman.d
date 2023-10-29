@@ -112,6 +112,20 @@ public final class ModuleManager
     }
 
 
+    public ModuleEntry searchFrom_throwable(string searchQuery, string initialModulePath)
+    {
+        ModuleEntry foundEntry;
+
+        if(searchFrom(searchQuery, initialModulePath, foundEntry))
+        {
+            return foundEntry;
+        }
+        else
+        {
+            throw new ModuleManagerError(this, "Could not find module '"~searchQuery~"'");
+        }
+    }
+
     public bool searchFrom(string searchQuery, string initialModulePath, ref ModuleEntry foundEntry)
     {
         // Get the directory name
