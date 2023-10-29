@@ -70,6 +70,16 @@ public final class ModuleManager
         this.compiler = compiler;
     }
 
+    public void addSearchPaths(string[] paths)
+    {
+        // Add each path
+        foreach(string curCandidate; paths)
+        {
+            addSearchPath(curCandidate);
+        }
+    }
+
+
     public void addSearchPath(string path)
     {
         // Obtain absolute path
