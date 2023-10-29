@@ -229,43 +229,11 @@ public final class ModuleManager
         }
     }
 
-    // Example, given curModDir of `files/`
-    // ... then a declared Name of `a`
-    // ... and file name `a.t`
-    // should return true
-    public bool isValidModuleDeclaration(string declaredName, string fileName, string curModDir)
-    {
-        // Firstly filename must not be empty
-        if(fileName.length == 0)
-        {
-            return false;
-        }
-        // Filename should end in `.t`
-        else if(!endsWith(fileName, ".t"))
-        {
-            return false;
-        }
-        else
-        {
-            // Chop the `.t` off 
-            string moduleEsqueFilename = strip(fileName, ".t");
-            gprintln("Module-esque name: "~moduleEsqueFilename);
-
-            gprintln("Module name (declared): "~declaredName);
-
-            // TODO: We need to do backtracking matching here
-
-            return true;
-        }
-    }
-
     import std.path;
     import std.file : dirEntries, DirEntry, SpanMode;
     import std.conv : to;
     import std.string : endsWith, strip, replace;
     
-
-
     private static string slashToDot(string strIn)
     {
         return replace(strIn, "/", ".");
