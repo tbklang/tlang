@@ -2268,10 +2268,18 @@ public final class Parser
         }
         gprintln("<<<< End discovered >>>>>");
 
-        // TODO: Add parsing here
+        
 
         // TODO: Testing (Search for a module)
         ModuleEntry foundEnt = modMan.searchFrom_throwable(moduleName, currentModulePath);
+        gprintln("Module wanting to be imported: "~moduleName);
+        gprintln("Found module entry: "~to!(string)(foundEnt));
+
+        // Read in the module's contents
+        string moduleSource = modMan.readModuleData_throwable(foundEnt);
+        gprintln("Module has "~to!(string)(moduleSource.length)~" many bytes");
+
+        // TODO: Add parsing here
 
 
         gprintln("parseImport(): Leave", DebugType.WARNING);
