@@ -12,9 +12,20 @@ import tlang.compiler.modman.exceptions;
 
 import tlang.compiler.core;
 
+/** 
+ * Represents the module-name to
+ * file path mapping
+ */
 public struct ModuleEntry
 {
+    /** 
+     * Absolute path to the module's file
+     */
     string filename;
+
+    /** 
+     * The module's name
+     */
     string moduleName;
 }
 
