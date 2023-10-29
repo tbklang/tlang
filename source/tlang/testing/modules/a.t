@@ -1,4 +1,4 @@
-module a;
+module ap;
 
 import b;
-import niks.c;
+import bruh.c;
