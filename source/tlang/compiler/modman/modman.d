@@ -70,6 +70,23 @@ public final class ModuleManager
         this.compiler = compiler;
     }
 
+    public void addSearchPath(string path)
+    {
+        // Obtain absolute path
+        string absPath = absolutePath(path);
+
+        // Only add if not present
+        foreach(string curPath; this.searchPaths)
+        {
+            if(curPath == path)
+            {
+                return;
+            }
+        }
+
+        // Add path
+        this.searchPaths ~= absPath;
+    }
 
 
     public ModuleEntry[] entries()
