@@ -111,6 +111,31 @@ public final class ModuleManager
         return entries(searchPathsConcrete);
     }
 
+
+    public bool searchFrom(string searchQuery, string initialModulePath, ref ModuleEntry foundEntry)
+    {
+        // Get the directory name
+        string initialModuleContainingDirectory = dirName(initialModulePath);
+
+        // Grab all module entry's reachable from that path
+        // and also the default search paths
+        string[] considerPaths = this.searchPaths~[initialModuleContainingDirectory];
+        ModuleEntry[] contDirMods = entries(considerPaths);
+
+        // Now try to match by module name
+        foreach(ModuleEntry curModEnt; contDirMods)
+        {
+            if(curModEnt.moduleName == searchQuery)
+            {
+                foundEntry = curModEnt;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
     // TODO: In future, allow adding a search path,
     // then just call it normally
 
@@ -130,10 +155,19 @@ public final class ModuleManager
         import std.range : array;
         import std.string : join;
         string initialModuleDirectory = join(array(splitterino), "/");
-        gprintln("Initial module directory: "~initialModuleDirectory);
+
+        // TODO: Enable
+        // version(DBG_MODMAN)
+        // {
+            gprintln("Initial module directory: "~initialModuleDirectory);
+        // }
         searchPathsConcrete ~= [initialModuleDirectory];
 
-        gprintln("Using search paths: "~to!(string)(searchPathsConcrete));
+        // TODO: Enab;e
+        // version(DBG_MODMAN)
+        // {
+            gprintln("Using search paths: "~to!(string)(searchPathsConcrete));
+        // }
 
         return entries(searchPathsConcrete);
     }
@@ -167,7 +201,11 @@ public final class ModuleManager
                         throw new ModuleManagerError(this, "Error parsing module header for '"~modulePath~"'");
                     }
 
-                    gprintln("Skimmed '"~to!(string)(modulePath)~"' to '"~moduleName~"'");
+                    // TODO: Enable
+                    // version(DBG_MODMAN)
+                    // {
+                        gprintln("Skimmed '"~to!(string)(modulePath)~"' to '"~moduleName~"'");
+                    // }
 
                     // Create and add entry
                     ModuleEntry modEnt = ModuleEntry(modulePath, moduleName);
