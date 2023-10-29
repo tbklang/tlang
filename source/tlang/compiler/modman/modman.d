@@ -81,6 +81,9 @@ public final class ModuleManager
         return entries(searchPathsConcrete);
     }
 
+    // TODO: In future, allow adding a search path,
+    // then just call it normally
+
     // TODO: I am using this for testing but it may be useful
     // ... as an entry point.
     // 
@@ -119,23 +122,14 @@ public final class ModuleManager
                 // If it is a file and ends with `.t` file extension
                 if(entry.isFile() && endsWith(entry.name(), ".t"))
                 {
+                    // Obtain the absolute path to the file
                     string modulePath = absolutePath(entry.name());
 
-                    /** 
-                    * If we have dir/
-                    *     dir/a.t
-                    *     dir/b.t
-                    *
-                    * Then we want just the last part of the path
-                    * and without the file extension `.t`, therefpre
-                    * we want:
-                    * [a, b]
-                    *
-                    */
-                    string moduleName = pathSplitter(strip(entry.name(), ".t")).back();
+                    // The module's name (will be parsed off the module's
+                    // ... header)
+                    string moduleName;
 
-                    // TODO (Testing): We use the module name present in the
-                    // ... module's header rather
+                    // Parse module's header
                     if(!skimModuleDeclaredName(modulePath, moduleName))
                     {
                         // TODO: Handle this error
@@ -145,11 +139,9 @@ public final class ModuleManager
 
                     gprintln("Skimmed '"~to!(string)(modulePath)~"' to '"~moduleName~"'");
 
-
+                    // Create and add entry
                     ModuleEntry modEnt = ModuleEntry(modulePath, moduleName);
                     foundEntries ~= modEnt;
-
-                    
                 }
                 // If it is a directory, recusrse
                 else if(entry.isDir())
@@ -157,14 +149,7 @@ public final class ModuleManager
                     // Recurse and discover
                     ModuleEntry[] nestedMods = entries([entry.name()]);
 
-                    // Name must be relative to current directory/path
-                    foreach(ref ModuleEntry modEnt; nestedMods) // ref as struct copy is bad, we want ref to struct in array (update IT, not local-loop copy)
-                    {
-                        // TODO: Recursion branch above would have skimmed the correct name 
-                        // ... for us, hence we no longer base it on the path
-                        // modEnt.moduleName = pathSplitter(entry.name()).back()~"."~modEnt.moduleName;
-                    }
-                    
+                    // Add all discovered entries
                     foundEntries ~= nestedMods;
                 }
             }
