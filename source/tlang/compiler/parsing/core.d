@@ -2260,6 +2260,17 @@ public final class Parser
 
         import tlang.compiler.modman;
         ModuleManager modMan = compiler.getModMan();
+        ModuleEntry[] testing = modMan.entriesWithInitial(currentModulePath); // TODO: This is just for testing this ModMan method (not required here)
+        gprintln("<<<< Discovered >>>>>");
+        foreach(ModuleEntry curModEnt; testing)
+        {
+            gprintln(curModEnt);
+        }
+        gprintln("<<<< End discovered >>>>>");
+
+        *(cast(char*)0) = 2;
+
+
         ModuleEntry[] modulesFound = modMan.getModulesInDirectory(moduleDir, true);
         gprintln("Modules found: ", DebugType.WARNING);
         foreach(ModuleEntry foundEntry; modulesFound)
