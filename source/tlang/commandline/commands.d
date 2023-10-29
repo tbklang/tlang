@@ -38,7 +38,7 @@ public enum VerbosityLevel
 mixin template BaseCommand()
 {
     @ArgPositional("source file", "The source file to compile")
-    string sourceFile;
+    string sourceFile; // TODO: Should accept a list in the future maybe
 
     @ArgNamed("verbose|v", "Verbosity level")
     @(ArgConfig.optional)
