@@ -91,6 +91,12 @@ public final class ModuleManager
             }
         }
 
+        // Check that the path is valid
+        if(!validate(path))
+        {
+            throw new ModuleManagerError(this, "The provided search path '"~path~"' is invalid");
+        }
+
         // Add path
         this.searchPaths ~= absPath;
     }
