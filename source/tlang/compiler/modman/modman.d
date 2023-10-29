@@ -60,13 +60,10 @@ public final class ModuleManager
      */
     this(Compiler compiler)
     {
-        string[] searchPaths = compiler.getConfig().getConfig("modman:path").getArray();
-        if(!validate(searchPaths))
-        {
-            throw new ModuleManagerError(this, "An invalid path exists within the provided search paths");
-        }
-
-        this.searchPaths = searchPaths;
+        // Add all command-line search paths
+        string[] cmdLinePaths = compiler.getConfig().getConfig("modman:path").getArray();
+        addSearchPaths(cmdLinePaths);
+        
         this.compiler = compiler;
     }
 
