@@ -307,6 +307,30 @@ public final class ModuleManager
         }
     }
 
+    import std.stdio;
+    import std.exception : ErrnoException;
+    public static bool readModuleData(ModuleEntry ent, ref string source)
+    {
+        File modFile;
+
+        try
+        {
+            modFile.open(ent.filename, "rb");
+
+            byte[] data;
+            data.length = modFile.size();
+            data = modFile.rawRead(data);
+
+            source = cast(string)data;
+
+            return true;
+        }
+        catch(ErrnoException e)
+        {
+            return false;
+        }
+    }
+
     import std.path;
     import std.file : dirEntries, DirEntry, SpanMode;
     import std.conv : to;
