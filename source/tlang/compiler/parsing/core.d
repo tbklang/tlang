@@ -2270,25 +2270,6 @@ public final class Parser
 
         *(cast(char*)0) = 2;
 
-
-        ModuleEntry[] modulesFound = modMan.getModulesInDirectory(moduleDir, true);
-        gprintln("Modules found: ", DebugType.WARNING);
-        foreach(ModuleEntry foundEntry; modulesFound)
-        {
-            gprintln(foundEntry);
-        }
-
-
-        // TODO: Be able to split by `.` and lookup modules via that in FS
-        gprintln("Module to import: '"~moduleName~"'");
-
-        ModuleEntry foundModEntry;
-        bool status = modMan.search(moduleDir, moduleName, foundModEntry);
-        if(status)
-        {
-            gprintln("We found '"~moduleName~"' as '"~to!(string)(foundModEntry)~"'");
-        }
-
         // TODO: Add parsing here
 
         gprintln("parseImport(): Leave", DebugType.WARNING);
