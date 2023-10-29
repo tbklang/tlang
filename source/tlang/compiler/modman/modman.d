@@ -307,6 +307,21 @@ public final class ModuleManager
         }
     }
 
+
+    public string readModuleData_throwable(ModuleEntry ent)
+    {
+        string source;
+
+        if(readModuleData(ent, source))
+        {
+            return source;
+        }
+        else
+        {
+            throw new ModuleManagerError(this, "Could not open module '"~ent.moduleName~"' at '"~ent.filename~"' for reading");
+        }
+    }
+
     import std.stdio;
     import std.exception : ErrnoException;
     public static bool readModuleData(ModuleEntry ent, ref string source)
