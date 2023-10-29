@@ -2268,8 +2268,6 @@ public final class Parser
         }
         gprintln("<<<< End discovered >>>>>");
 
-        *(cast(char*)0) = 2;
-
         // TODO: Add parsing here
 
         gprintln("parseImport(): Leave", DebugType.WARNING);
