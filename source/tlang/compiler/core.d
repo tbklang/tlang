@@ -166,6 +166,13 @@ public class Compiler
 
         /* Create a module manager */
         this.modMan = new ModuleManager(this);
+
+        /**
+         * Add all the containing directories of
+         * the modules specified on the command-line
+         */
+        import std.path : dirName;
+        this.modMan.addSearchPath(dirName(inputFilePath));
     }
 
     /* Setup the lexer and begin lexing */
@@ -204,6 +211,11 @@ public class Compiler
 
             modulle = parser.parse(this.inputFilePath);
         }
+
+        // Print out module tree
+        gprintln("Module tree: "~to!(string)(this.program.getMods()));
+        // gprintln("Module ongod: "~to!(string)(this.program.getOMods()));
+        this.program.debugDump();
     }
 
     public Module getModule()
