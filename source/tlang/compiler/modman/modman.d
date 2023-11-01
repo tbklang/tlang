@@ -162,11 +162,6 @@ public final class ModuleManager
         string[] considerPaths = this.searchPaths~[initialModuleContainingDirectory];
         ModuleEntry[] contDirMods = entries(considerPaths);
 
-        import gogga;
-        import niknaks.debugging : dumpArray;
-        gprintln("searchFrom(dsicoevered): \n"~dumpArray(contDirMods));
-
-
         // Now try to match by module name
         foreach(ModuleEntry curModEnt; contDirMods)
         {
