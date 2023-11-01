@@ -21,12 +21,34 @@ public struct ModuleEntry
     /** 
      * Absolute path to the module's file
      */
-    string filename;
+    private string filename;
 
     /** 
      * The module's name
      */
-    string moduleName;
+    private string moduleName;
+
+    this(string filename, string moduleName)
+    {
+        this.filename = filename;
+        this.moduleName = moduleName;
+    }
+    
+    public bool isValid()
+    {
+        import std.path : isAbsolute;
+        return moduleName.length && filename.length && isAbsolute(filename);
+    }
+
+    public string getPath()
+    {
+        return this.filename;
+    }
+
+    public string getName()
+    {
+        return this.moduleName;
+    }
 
     /** 
      * Checks if the current module entry
