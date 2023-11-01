@@ -27,6 +27,21 @@ public struct ModuleEntry
      * The module's name
      */
     string moduleName;
+
+    /** 
+     * Checks if the current module entry
+     * is equal to the other by means of
+     * comparison of their file paths
+     *
+     * Params:
+     *   rhs = the module to compare to
+     * Returns: `true` if equal, otherwise
+     * `false`
+     */
+    public bool opEquals(ModuleEntry rhs)
+    {
+        return this.filename == rhs.filename;
+    }
 }
 
 
@@ -136,6 +151,11 @@ public final class ModuleManager
         string[] considerPaths = this.searchPaths~[initialModuleContainingDirectory];
         ModuleEntry[] contDirMods = entries(considerPaths);
 
+        import gogga;
+        import niknaks.debugging : dumpArray;
+        gprintln("searchFrom(dsicoevered): \n"~dumpArray(contDirMods));
+
+
         // Now try to match by module name
         foreach(ModuleEntry curModEnt; contDirMods)
         {
@@ -221,9 +241,13 @@ public final class ModuleManager
                         gprintln("Skimmed '"~to!(string)(modulePath)~"' to '"~moduleName~"'");
                     // }
 
-                    // Create and add entry
+                    // Create and add entry (only if not present)
+                    import niknaks.arrays : isPresent; // TODO: sue our own implementation
                     ModuleEntry modEnt = ModuleEntry(modulePath, moduleName);
-                    foundEntries ~= modEnt;
+                    if(!isPresent(foundEntries, modEnt))
+                    {
+                        foundEntries ~= modEnt;
+                    }   
                 }
                 // If it is a directory, recusrse
                 else if(entry.isDir())
@@ -231,8 +255,15 @@ public final class ModuleManager
                     // Recurse and discover
                     ModuleEntry[] nestedMods = entries([entry.name()]);
 
-                    // Add all discovered entries
-                    foundEntries ~= nestedMods;
+                    // Add all discovered entries (which were not already added)
+                    foreach(ModuleEntry nestedMod; nestedMods)
+                    {
+                        import niknaks.arrays : isPresent; // TODO: sue our own implementation
+                        if(!isPresent(foundEntries, nestedMod))
+                        {
+                            foundEntries ~= nestedMods;
+                        }
+                    }
                 }
             }
             
