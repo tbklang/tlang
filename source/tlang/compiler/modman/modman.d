@@ -138,17 +138,6 @@ public final class ModuleManager
         this.searchPaths ~= absPath;
     }
 
-
-    public ModuleEntry[] entries()
-    {
-        // TODO: Now now do searchPath+cwd (but it should be path to command-line modules: Compiler must be updated for that)
-        import std.file : getcwd;
-        string[] searchPathsConcrete = this.searchPaths~[getcwd()];
-
-        return entries(searchPathsConcrete);
-    }
-
-
     public ModuleEntry searchFrom_throwable(string searchQuery, string initialModulePath)
     {
         ModuleEntry foundEntry;
@@ -181,7 +170,7 @@ public final class ModuleManager
         // Now try to match by module name
         foreach(ModuleEntry curModEnt; contDirMods)
         {
-            if(curModEnt.moduleName == searchQuery)
+            if(curModEnt.getName() == searchQuery)
             {
                 foundEntry = curModEnt;
                 return true;
@@ -266,6 +255,7 @@ public final class ModuleManager
                     // Create and add entry (only if not present)
                     import niknaks.arrays : isPresent; // TODO: sue our own implementation
                     ModuleEntry modEnt = ModuleEntry(modulePath, moduleName);
+                    assert(modEnt.isValid());
                     if(!isPresent(foundEntries, modEnt))
                     {
                         foundEntries ~= modEnt;
