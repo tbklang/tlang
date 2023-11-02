@@ -212,6 +212,49 @@ public final class ModuleManager
         return entries(searchPathsConcrete);
     }
 
+    public bool find(string modName, ref ModuleEntry found)
+    {
+        return find(this.searchPaths, modName, found);
+    }
+
+    public static string[] findAllTFiles(string directory)
+    {
+        string[] allTFiles;
+
+
+        // Enumrate all directory entries in `directory`
+        foreach(DirEntry entry; dirEntries!()(directory, SpanMode.depth))
+        {
+            // If it is a file and ends with .t
+            if(entry.isFile() && endsWith(entry.name(), ".t"))
+            {
+                // Obtain the absolute path to the file and save it
+                allTFiles~=absolutePath(entry.name());
+            }
+        }
+
+        return allTFiles;
+    }
+
+    public bool find(string[] directories, string modName, ref ModuleEntry found)
+    {
+        // Discover all files ending in .t in all search paths
+        string[] tFiles;
+        foreach(string directory; directories)
+        {
+            tFiles ~= findAllTFiles(directory);
+        }
+
+        gprintln("All tfiles:");
+        import niknaks.debugging : dumpArray;
+        // gprintln(dumpArray(tFiles));
+        foreach(string tFile; tFiles)
+        {
+            gprintln(tFile);
+        }
+
+        return false;
+    }
 
     public ModuleEntry[] entries(string[] directories)
     {
