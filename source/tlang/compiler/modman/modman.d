@@ -212,6 +212,20 @@ public final class ModuleManager
         return entries(searchPathsConcrete);
     }
 
+    public ModuleEntry find(string modName)
+    {
+        ModuleEntry foundEntry;
+
+        if(find(modName, foundEntry))
+        {
+            return foundEntry;
+        }
+        else
+        {
+            throw new ModuleManagerError(this, "Could not find module '"~modName~"'");
+        }
+    }
+
     public bool find(string modName, ref ModuleEntry found)
     {
         return find(this.searchPaths, modName, found);
