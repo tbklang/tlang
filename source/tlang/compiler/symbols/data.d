@@ -37,6 +37,58 @@ public class Program
         this.modules ~= newModule;
     }
 
+
+
+    // TODO: Clean up
+    import tlang.compiler.modman : ModuleEntry;
+    public bool isModulePresent(ModuleEntry ent)
+    {
+        foreach(string key; this.modsMap.keys())
+        {
+            if(key == ent.getName())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // TODO: Clean up
+    private Module[string] modsMap;
+    public void markAsVisited(ModuleEntry ent)
+    {
+        this.modsMap[ent.getName()] = null; // TODO: You should then call set when done
+    }
+
+    // TODO: Clean up
+    public void setModule(ModuleEntry ent, Module mod)
+    {
+        // TODO: Sanit check for already present?
+        this.modsMap[ent.getName()] = mod;
+        this.insertOrds ~= mod;
+    }
+
+    // TODO: Clean up
+    public Module[] getMods()
+    {
+        return this.modsMap.values();
+    }
+
+    // TODO: Remove (this is just for testing the order of insertion)
+    private Module[] insertOrds;
+    public Module[] getOMods()
+    {
+        return this.insertOrds;
+    }
+
+    public void debugDump()
+    {
+        import niknaks.debugging : dumpArray;
+        import std.stdio : writeln;
+        writeln(dumpArray(this.insertOrds));
+    }
+
     /** 
      * Returns an informative string about the
      * program's details along with the modules
