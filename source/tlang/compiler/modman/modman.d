@@ -188,6 +188,12 @@ public final class ModuleManager
             tFiles ~= findAllTFilesShallow(directory);
         }
 
+        version(DBG_MODMAN)
+        {
+            import niknaks.debugging : dumpArray;
+            gprintln("Files ending in `.t`:\n\n"~dumpArray(tFiles, 0, tFiles.length, 1));
+        }
+
 
         /**
          * Try to see if we can find our module immediately
