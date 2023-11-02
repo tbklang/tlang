@@ -2258,8 +2258,24 @@ public final class Parser
         gprintln("Current module name: '"~curModuleName~"'");
 
 
+        // Get the module manager
         import tlang.compiler.modman;
         ModuleManager modMan = compiler.getModMan();
+
+        // Try search for the module
+        ModuleEntry fent;
+
+        if(modMan.find(moduleName, fent))
+        {
+            gprintln("Found entry for module '"~moduleName~"': "~to!(string)(fent));
+        }
+
+
+
+        // Panic
+        *(cast(char*)0) = 0;
+
+        
         ModuleEntry[] testing = modMan.entriesWithInitial(currentModulePath); // TODO: This is just for testing this ModMan method (not required here)
         gprintln("<<<< Discovered >>>>>");
         foreach(ModuleEntry curModEnt; testing)
