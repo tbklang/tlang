@@ -1,3 +1,3 @@
-module bruh.c;
+module niks.c;
 
-import ap;
+import a;
