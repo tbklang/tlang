@@ -2271,16 +2271,34 @@ public final class Parser
         
 
         // TODO: Testing (Search for a module)
-        ModuleEntry foundEnt = modMan.searchFrom_throwable(moduleName, currentModulePath);
         gprintln("Module wanting to be imported: "~moduleName);
+        ModuleEntry foundEnt = modMan.searchFrom_throwable(moduleName, currentModulePath);
         gprintln("Found module entry: "~to!(string)(foundEnt));
+
+        // TODO: Check here if already present
+        Program prog = this.compiler.getProgram();
+        if(prog.isModulePresent(foundEnt))
+        {
+            // TODO: Skip?
+            return;
+        }
+
+        // Mark it as visited
+        prog.markAsVisited(foundEnt);
 
         // Read in the module's contents
         string moduleSource = modMan.readModuleData_throwable(foundEnt);
         gprintln("Module has "~to!(string)(moduleSource.length)~" many bytes");
 
         // TODO: Add parsing here
+        import tlang.compiler.lexer.kinds.basic : BasicLexer;
+        LexerInterface lexerInterface = new BasicLexer(moduleSource);
+        (cast(BasicLexer)lexerInterface).performLex();
+        Parser parser = new Parser(lexerInterface, this.compiler);
+        Module pMod = parser.parse(foundEnt.getPath()); // TODO: This SHOULD cycle soon (as we haven't added correct checks yet)
 
+        // TODO: Add entry and what else do we do?
+        prog.setModule(foundEnt, pMod);
 
         gprintln("parseImport(): Leave", DebugType.WARNING);
     }
@@ -2302,6 +2320,8 @@ public final class Parser
     // ... as well have a handle on it
     private Module curModule;
 
+
+    import tlang.compiler.modman;
 
     /* Almost like parseBody but has more */
     /**
@@ -2336,6 +2356,18 @@ public final class Parser
 
         /* Store it globally */
         this.curModule = modulle;
+
+        // // TODO: Set our module as visited
+        // ModuleEntry curModEnt = ModuleEntry(moduleFilePath, moduleName);
+        // Program prog = this.compiler.getProgram(); // THIS: Will crash in unit tests, so we better fix that
+
+        // // If another module imports us
+        // if(!prog.isModulePresent(curModEnt))
+        // {
+        //     prog.markAsVisited(curModEnt);
+        //     prog.setModule(curModEnt, modulle);
+        // }
+        
 
         /* TODO: do `lexer.hasTokens()` check */
         /* TODO: We should add `lexer.hasTokens()` to the `lexer.nextToken()` */
