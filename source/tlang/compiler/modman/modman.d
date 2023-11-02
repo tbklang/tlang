@@ -217,13 +217,13 @@ public final class ModuleManager
         return find(this.searchPaths, modName, found);
     }
 
-    public static string[] findAllTFiles(string directory)
+    public static string[] findAllTFilesShallow(string directory)
     {
         string[] allTFiles;
 
 
         // Enumrate all directory entries in `directory`
-        foreach(DirEntry entry; dirEntries!()(directory, SpanMode.depth))
+        foreach(DirEntry entry; dirEntries!()(directory, SpanMode.shallow))
         {
             // If it is a file and ends with .t
             if(entry.isFile() && endsWith(entry.name(), ".t"))
@@ -236,22 +236,106 @@ public final class ModuleManager
         return allTFiles;
     }
 
-    public bool find(string[] directories, string modName, ref ModuleEntry found)
+    public bool find(string[] directories, string modName, ref ModuleEntry found, bool isDirect = true)
     {
+        gprintln("Request to find module '"~modName~"' in directories: "~to!(string)(directories));
+
         // Discover all files ending in .t in all search paths
+        // (Doing shallow)
         string[] tFiles;
         foreach(string directory; directories)
         {
-            tFiles ~= findAllTFiles(directory);
+            tFiles ~= findAllTFilesShallow(directory);
         }
 
-        gprintln("All tfiles:");
-        import niknaks.debugging : dumpArray;
-        // gprintln(dumpArray(tFiles));
+
+        /**
+         * Try to see if we can find our module immediately
+         * in any of the search paths (directly, no recursed
+         * down)
+         */
         foreach(string tFile; tFiles)
         {
-            gprintln(tFile);
+            // Potential module name (based off of stripping `.t` file extension)
+            // ... and also removing the path trail
+            auto splitter = pathSplitter(strip(tFile, ".t"));
+            string modNamePot = splitter.back();
+
+            // If it matches directly, then return a found entry
+            if(modNamePot == modName)
+            {
+                found = ModuleEntry(tFile, modNamePot);
+                return true;
+            }
+
+            gprintln("Original path: "~tFile);
+            gprintln("Module name potetial: '"~modNamePot~"'");
         }
+
+        // Only if not tried already (else recursion)
+        if(isDirect)
+        {
+            /**
+            * Now before giving up we must consider
+            * using the module name's which have
+            * dots in them use those as relative
+            * path indicators.
+            *
+            * For this we begin the scan of all
+            * the directories BUT we tack on
+            * the relative path to each
+            */
+            string[] newPaths;
+            string newModName;
+            foreach(string directory; directories)
+            {
+                // Only consider module names with dots in them
+                import niknaks.arrays : isPresent;
+                if(isPresent(modName, '.'))
+                {
+                    // Construct relative directory (replace `.` with `/`)
+                    // and also remove the file part
+
+                    /** 
+                     * Replace `bruh.c` into `bruh/c`
+                     *
+                     * First replace all `.`'s with `/`.
+                     * 
+                     * Set new module name to `c` (`back()`)
+                     * and make relativeDir `bruh/` (`popBack()`)
+                     */
+                    import std.string : replace;
+                    auto splitter = pathSplitter(replace(modName, ".", "/"));
+
+                    newModName = splitter.back();
+                    gprintln("New module name (ultra-back): "~newModName);
+
+                    splitter.popBack();
+
+
+                    string relativeDir;
+                    foreach(string element; splitter)
+                    {
+                        relativeDir ~= element ~"/";
+                    }
+                    
+
+                    gprintln("Relative dir (generated): "~relativeDir);
+
+                    // Construct the directory to search
+                    string newSearchPath = directory~"/"~relativeDir;
+                    gprintln("New search path (consideration): "~newSearchPath);
+
+                    newPaths ~= newSearchPath;
+                }
+                
+            }
+
+            return find(newPaths, newModName, found, false);
+        }
+
+        
+
 
         return false;
     }
