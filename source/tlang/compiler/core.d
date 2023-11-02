@@ -173,6 +173,10 @@ public class Compiler
          */
         import std.path : dirName;
         this.modMan.addSearchPath(dirName(inputFilePath));
+
+        // Add the current directory to the search path
+        import std.file : getcwd;
+        this.modMan.addSearchPath(getcwd());
     }
 
     /* Setup the lexer and begin lexing */
