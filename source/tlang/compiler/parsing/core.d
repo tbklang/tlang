@@ -2262,35 +2262,11 @@ public final class Parser
         import tlang.compiler.modman;
         ModuleManager modMan = compiler.getModMan();
 
-        // Try search for the module
-        ModuleEntry fent;
-
-        if(modMan.find(moduleName, fent))
-        {
-            gprintln("Found entry for module '"~moduleName~"': "~to!(string)(fent));
-        }
-
-
-
-        // Panic
-        *(cast(char*)0) = 0;
-
-        
-        ModuleEntry[] testing = modMan.entriesWithInitial(currentModulePath); // TODO: This is just for testing this ModMan method (not required here)
-        gprintln("<<<< Discovered >>>>>");
-        foreach(ModuleEntry curModEnt; testing)
-        {
-            gprintln(curModEnt);
-        }
-        gprintln("<<<< End discovered >>>>>");
-
-        
-
         // TODO: Testing (Search for a module)
         gprintln("Module wanting to be imported: "~moduleName);
         ModuleEntry foundEnt = modMan.searchFrom_throwable(moduleName, currentModulePath);
         gprintln("Found module entry: "~to!(string)(foundEnt));
-
+        
         // TODO: Check here if already present
         Program prog = this.compiler.getProgram();
         if(prog.isModulePresent(foundEnt))
