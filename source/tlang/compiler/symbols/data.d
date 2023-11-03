@@ -86,7 +86,8 @@ public class Program
     {
         import niknaks.debugging : dumpArray;
         import std.stdio : writeln;
-        writeln(dumpArray(this.insertOrds));
+        Module[] insertOrds = this.insertOrds;
+        writeln(dumpArray!(insertOrds));
     }
 
     /** 
