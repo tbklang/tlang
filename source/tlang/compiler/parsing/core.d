@@ -2293,17 +2293,7 @@ public final class Parser
         gprintln("parseImport(): Leave", DebugType.WARNING);
     }
 
-    import std.path;
-
-
-    import std.file;
    
-    private static string getWorkingDirectory()
-    {
-        // TOOD: look at lazy, seems cool
-        string workDir = absolutePath(".");
-        return workDir;
-    }
 
 
     // Whilst we're building it, we may
