@@ -1700,4 +1700,31 @@ public class DNodeGenerator
         return classDNode;
     }
 
+
+    /** 
+     * Maps a given `Variable` to its reference
+     * count. This includes the declaration
+     * thereof.
+     */
+    private uint[Variable] varRefCounts;
+
+    /** 
+     * Increments the given variable's reference
+     * count
+     *
+     * Params:
+     *   variable = the variable
+     */
+    private void touch(Variable variable)
+    {
+        // Create entry if not existing yet
+        if(variable !in this.varRefCounts)
+        {
+            this.varRefCounts[variable] = 0;    
+        }
+
+        // Increment count
+        this.varRefCounts[variable]++;
+    }
+
 }
