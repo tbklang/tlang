@@ -2242,22 +2242,6 @@ public final class Parser
         // Print out some information about the currebt program
         gprintln("Program currently: '"~compiler.getProgram().toString()~"'");
 
-       
-
-
-        import tlang.compiler.core : gibFileData;
-        import std.string : strip;
-
-        // TODO: Read in here
-        string workDir = getWorkingDirectory();
-        gprintln("Current working directory is: '"~workDir~"'");
-        gprintln("Current module's path: '"~currentModulePath~"'");
-        string moduleDir = dirName(currentModulePath);
-        gprintln("Working directory based on current module's path: '"~moduleDir~"'");
-        string curModuleName = strip(pathSplitter(currentModulePath).back(), ".t");
-        gprintln("Current module name: '"~curModuleName~"'");
-
-
         // Get the module manager
         import tlang.compiler.modman;
         ModuleManager modMan = compiler.getModMan();
