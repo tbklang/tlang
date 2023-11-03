@@ -191,7 +191,7 @@ public final class ModuleManager
         version(DBG_MODMAN)
         {
             import niknaks.debugging : dumpArray;
-            gprintln("Files ending in `.t`:\n\n"~dumpArray(tFiles, 0, tFiles.length, 1));
+            gprintln("Files ending in `.t`:\n\n"~dumpArray!(tFiles)(0, tFiles.length, 1));
         }
 
 
