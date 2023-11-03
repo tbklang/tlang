@@ -1103,6 +1103,9 @@ public class DNodeGenerator
             writeln("Hello");
             writeln("VarType: "~to!(string)(variableType));
 
+            /* Add an entry to the reference counting map */
+            touch(variable);
+
             /* Basic type */
             if(cast(Primitive)variableType)
             {
