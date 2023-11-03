@@ -2215,12 +2215,8 @@ public final class Parser
 
     /** 
      * Parses module import statements
-     *
-     * Params:
-     *   currentModulePath = the path to the current module
-     * being parsed
      */
-    private void parseImport(string currentModulePath)
+    private void parseImport()
     {
         gprintln("parseImport(): Enter", DebugType.WARNING);
 
@@ -2254,6 +2250,8 @@ public final class Parser
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
         // TODO: Add support for multi-imports on one line (i.e. `import <module1>, <module2>;`)
+
+        // TODO: <<<< All below code should be in a `doImport()` method
 
         // Print out some information about the currebt program
         gprintln("Program currently: '"~compiler.getProgram().toString()~"'");
@@ -2436,7 +2434,7 @@ public final class Parser
             else if(symbol == SymbolType.IMPORT)
             {
                 // TODO: Figure out exactly what to do
-                parseImport(moduleFilePath);
+                parseImport();
             }
             else
             {
