@@ -2234,6 +2234,22 @@ public final class Parser
         /* Consume the token */
         lexer.nextToken();
 
+        // FIXME: Actually implement multi-module support
+        string[] collectedModuleNames;
+        while(getSymbolType(lexer.getCurrentToken()) == SymbolType.COMMA)
+        {
+            /* Consume the comma `,` */
+            lexer.nextToken();
+
+            /* Get the module's name */
+            expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
+            moduleName = lexer.getCurrentToken().getToken();
+            collectedModuleNames ~= moduleName;
+
+            /* Consume the name */
+            lexer.nextToken();
+        }
+
         /* Expect a semi-colon and consume it */
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
