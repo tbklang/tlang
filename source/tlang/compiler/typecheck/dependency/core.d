@@ -1736,4 +1736,24 @@ public class DNodeGenerator
         this.varRefCounts[variable]++;
     }
 
+    /** 
+     * Returns all variables which were declared
+     * but not used
+     *
+     * Returns: the array of variables
+     */
+    public Variable[] getUnusedVariables()
+    {
+        Variable[] unused;
+        foreach(Variable variable; this.varRefCounts.keys())
+        {
+            if(!(this.varRefCounts[variable] > 1))
+            {
+                unused ~= variable;
+            }
+        }
+
+        return unused;
+    }
+
 }
