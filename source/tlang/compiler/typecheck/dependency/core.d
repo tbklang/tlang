@@ -780,6 +780,9 @@ public class DNodeGenerator
                     /* Get the entity as a Variable */
                     Variable variable = cast(Variable)namedEntity;
 
+                    /* Variable reference count must increase */
+                    touch(variable);
+
                     /* Pool the node */
                     VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
 
