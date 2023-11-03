@@ -1205,6 +1205,9 @@ public class DNodeGenerator
             Variable variable = cast(Variable)tc.getResolver().resolveBest(c, vAsStdAl.getVariableName());
             assert(variable);
 
+            /* Assinging to a variable is usage, therefore increment the reference count */
+            touch(variable);
+
 
             /* Pool the variable */
             DNode varDecDNode = pool(variable);
