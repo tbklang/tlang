@@ -211,7 +211,17 @@ public final class TypeChecker
 
         // NOTE: Check scope guard for "exit routines" which run here
 
+        /* Collect statistics */
+        doPostChecks();
+    }
 
+    /** 
+     * These are just checks we run for the convenience
+     * of the user. They do not manipulate anything but
+     * rather provide statistics
+     */
+    private void doPostChecks()
+    {
         /** 
          * Find the variables which were declared but never used
          */
