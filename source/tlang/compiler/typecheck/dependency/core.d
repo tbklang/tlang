@@ -781,7 +781,7 @@ public class DNodeGenerator
                     Variable variable = cast(Variable)namedEntity;
 
                     /* Variable reference count must increase */
-                    touch(variable);
+                    tc.touch(variable);
 
                     /* Pool the node */
                     VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
@@ -1107,7 +1107,7 @@ public class DNodeGenerator
             writeln("VarType: "~to!(string)(variableType));
 
             /* Add an entry to the reference counting map */
-            touch(variable);
+            tc.touch(variable);
 
             /* Basic type */
             if(cast(Primitive)variableType)
@@ -1212,7 +1212,7 @@ public class DNodeGenerator
             assert(variable);
 
             /* Assinging to a variable is usage, therefore increment the reference count */
-            touch(variable);
+            tc.touch(variable);
 
 
             /* Pool the variable */
@@ -1708,52 +1708,4 @@ public class DNodeGenerator
 
         return classDNode;
     }
-
-
-    /** 
-     * Maps a given `Variable` to its reference
-     * count. This includes the declaration
-     * thereof.
-     */
-    private uint[Variable] varRefCounts;
-
-    /** 
-     * Increments the given variable's reference
-     * count
-     *
-     * Params:
-     *   variable = the variable
-     */
-    private void touch(Variable variable)
-    {
-        // Create entry if not existing yet
-        if(variable !in this.varRefCounts)
-        {
-            this.varRefCounts[variable] = 0;    
-        }
-
-        // Increment count
-        this.varRefCounts[variable]++;
-    }
-
-    /** 
-     * Returns all variables which were declared
-     * but not used
-     *
-     * Returns: the array of variables
-     */
-    public Variable[] getUnusedVariables()
-    {
-        Variable[] unused;
-        foreach(Variable variable; this.varRefCounts.keys())
-        {
-            if(!(this.varRefCounts[variable] > 1))
-            {
-                unused ~= variable;
-            }
-        }
-
-        return unused;
-    }
-
 }

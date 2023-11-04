@@ -210,6 +210,23 @@ public final class TypeChecker
         }
 
         // NOTE: Check scope guard for "exit routines" which run here
+
+
+        /** 
+         * Find the variables which were declared but never used
+         *
+         * TODO: Add compiler entry check here for whether or not
+         * these should be printed out
+         */
+        Variable[] unusedVariables = getUnusedVariables();
+        gprintln("There are "~to!(string)(unusedVariables.length)~" unused variables");
+        if(unusedVariables.length)
+        {
+            foreach(Variable unusedVariable; unusedVariables)
+            {
+                gprintln("Variable '"~to!(string)(unusedVariable)~"' is declared but never");
+            }
+        }
     }
 
 
@@ -3258,6 +3275,51 @@ public final class TypeChecker
         //assert()
     }
 
+    /** 
+     * Maps a given `Variable` to its reference
+     * count. This includes the declaration
+     * thereof.
+     */
+    private uint[Variable] varRefCounts;
+
+    /** 
+     * Increments the given variable's reference
+     * count
+     *
+     * Params:
+     *   variable = the variable
+     */
+    void touch(Variable variable)
+    {
+        // Create entry if not existing yet
+        if(variable !in this.varRefCounts)
+        {
+            this.varRefCounts[variable] = 0;    
+        }
+
+        // Increment count
+        this.varRefCounts[variable]++;
+    }
+
+    /** 
+     * Returns all variables which were declared
+     * but not used
+     *
+     * Returns: the array of variables
+     */
+    public Variable[] getUnusedVariables()
+    {
+        Variable[] unused;
+        foreach(Variable variable; this.varRefCounts.keys())
+        {
+            if(!(this.varRefCounts[variable] > 1))
+            {
+                unused ~= variable;
+            }
+        }
+
+        return unused;
+    }
 }
 
 
