@@ -214,17 +214,17 @@ public final class TypeChecker
 
         /** 
          * Find the variables which were declared but never used
-         *
-         * TODO: Add compiler entry check here for whether or not
-         * these should be printed out
          */
-        Variable[] unusedVariables = getUnusedVariables();
-        gprintln("There are "~to!(string)(unusedVariables.length)~" unused variables");
-        if(unusedVariables.length)
+        if(this.config.hasConfig("typecheck:warnUnusedVars") & this.config.getConfig("typecheck:warnUnusedVars").getBoolean())
         {
-            foreach(Variable unusedVariable; unusedVariables)
+            Variable[] unusedVariables = getUnusedVariables();
+            gprintln("There are "~to!(string)(unusedVariables.length)~" unused variables");
+            if(unusedVariables.length)
             {
-                gprintln("Variable '"~to!(string)(unusedVariable)~"' is declared but never");
+                foreach(Variable unusedVariable; unusedVariables)
+                {
+                    gprintln("Variable '"~to!(string)(unusedVariable)~"' is declared but never");
+                }
             }
         }
     }
