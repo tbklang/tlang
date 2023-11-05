@@ -233,7 +233,8 @@ public final class TypeChecker
             {
                 foreach(Variable unusedVariable; unusedVariables)
                 {
-                    gprintln("Variable '"~to!(string)(unusedVariable)~"' is declared but never");
+                    // TODO: Get a nicer name, full path-based
+                    gprintln("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never");
                 }
             }
         }
