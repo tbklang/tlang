@@ -3655,3 +3655,34 @@ unittest
 
     /* TODO: Actually test generated code queue */
 }
+
+/** 
+ * Tests the unused variable detection mechanism
+ *
+ * Case: Positive (unused variables exist)
+ * Source file: source/tlang/testing/unused_vars.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_vars.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 1 unused variable and then
+     * it should be named `j`
+     */
+    Variable[] unusedVars = tc.getUnusedVariables();
+    assert(unusedVars.length == 1);
+    Variable jVar = unusedVars[0];
+    // TODO: Add check for `j` named variable here
+}
