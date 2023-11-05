@@ -16,6 +16,7 @@ import std.container.slist;
 import std.algorithm : reverse;
 import tlang.compiler.typecheck.meta;
 import tlang.compiler.configuration;
+import tlang.compiler.core;
 
 /**
 * The Parser only makes sure syntax
@@ -66,6 +67,20 @@ public final class TypeChecker
         this.meta = new MetaProcessor(this, true);
         
         /* TODO: Module check?!?!? */
+    }
+
+    private Compiler compiler;
+    private Program program;
+
+    // TODO: Do we need the config then?
+    this(Compiler compiler)
+    {
+        this.compiler = compiler;
+        this.config = compiler.getConfig();
+        this.program = compiler.getProgram();
+
+        this.resolver = new Resolver(this);
+        this.meta = new MetaProcessor(this, true);
     }
 
     /** 
