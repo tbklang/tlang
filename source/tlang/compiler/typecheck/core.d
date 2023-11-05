@@ -3683,6 +3683,7 @@ unittest
      */
     Variable[] unusedVars = tc.getUnusedVariables();
     assert(unusedVars.length == 1);
-    Variable jVar = unusedVars[0];
-    // TODO: Add check for `j` named variable here
+    Variable unusedVarActual = unusedVars[0];
+    Variable unusedVarExpected = cast(Variable)tc.getResolver().resolveBest(tc.getModule(), "j");
+    assert(unusedVarActual is unusedVarExpected);
 }
