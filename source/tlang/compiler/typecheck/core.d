@@ -392,7 +392,8 @@ public final class TypeChecker
     {
         import tlang.compiler.symbols.typing.core;
 
-        TypeChecker tc = new TypeChecker(null);
+        Module dummyModule = null;
+        TypeChecker tc = new TypeChecker(dummyModule);
 
         /* To type is `t1` */
         Type t1 = getBuiltInType(tc, "uint");
@@ -444,7 +445,8 @@ public final class TypeChecker
     {
         import tlang.compiler.symbols.typing.core;
 
-        TypeChecker tc = new TypeChecker(null);
+        Module dummyModule = null;
+        TypeChecker tc = new TypeChecker(dummyModule);
 
         /* To type is `t1` */
         Type t1 = getBuiltInType(tc, "uint");
