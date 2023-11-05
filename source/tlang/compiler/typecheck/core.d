@@ -234,7 +234,7 @@ public final class TypeChecker
                 foreach(Variable unusedVariable; unusedVariables)
                 {
                     // TODO: Get a nicer name, full path-based
-                    gprintln("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never");
+                    gprintln("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never used");
                 }
             }
         }
