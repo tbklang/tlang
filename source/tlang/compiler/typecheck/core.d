@@ -3687,3 +3687,31 @@ unittest
     Variable unusedVarExpected = cast(Variable)tc.getResolver().resolveBest(tc.getModule(), "j");
     assert(unusedVarActual is unusedVarExpected);
 }
+
+/** 
+ * Tests the unused variable detection mechanism
+ *
+ * Case: Negative (unused variables do NOT exist)
+ * Source file: source/tlang/testing/unused_vars_none.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_vars_none.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 0 unused variables
+     */
+    Variable[] unusedVars = tc.getUnusedVariables();
+    assert(unusedVars.length == 0);
+}
