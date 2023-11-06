@@ -5,14 +5,31 @@ import gogga;
 import tlang.compiler.symbols.data;
 import std.string;
 import std.conv : to;
+import tlang.compiler.core;
 
 public final class Resolver
 {
-    /* Associated TypeChecker engine */
+    /** 
+     * The root of everything; the `Program`
+     */
+    private Program program;
+
+    /** 
+     * Associated TypeChecker engine
+     */
     private TypeChecker typeChecker;
 
-    this(TypeChecker typeChecker)
+    /** 
+     * Comnstructs a new resolver with the gievn
+     * root program and the type checking instance
+     *
+     * Params:
+     *   program = the root program
+     *   typeChecker =  the type checker instance
+     */
+    this(Program program, TypeChecker typeChecker)
     {
+        this.program = program;
         this.typeChecker = typeChecker;
     }
 
@@ -354,19 +371,16 @@ public final class Resolver
             /* We need to search higher */
             else
             {
-                /* TODO: Bug is we will never find top container */
-                /* Check if the name of root is that of Module */
-                if (cmp(typeChecker.getModule().getName(), path[0]) == 0)
+                /**
+                 * Check if the name is of one of the modules
+                 * attached to the program
+                 */
+                foreach(Module curModule; this.program.getModules()) // TODO; Ensure `getModules()` is the correct call to use
                 {
-                    /* Root ourselves relative to the Module */
-                    /* TODO: Don't serch for myModule class and ooga within */
-                    /**
-                    * TODO: Although the above should be impossible when we set usable names
-                    * and make sure module name cannot be sed anywhere
-                    */
-                    /* TODO: Even if it could be because of this check it would be ignored */
-                    /* TODO: This is what we want, but to avoid confusion we shouldn't allow the use of that name */
-                    return resolveBest(typeChecker.getModule(), name);
+                    if(cmp(curModule.getName(), path[0]) == 0)
+                    {
+                        return resolveBest(curModule, name);
+                    }
                 }
 
                 Entity entityFound = resolveUp(c, path[0]);
