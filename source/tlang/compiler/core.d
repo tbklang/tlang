@@ -234,7 +234,7 @@ public class Compiler
             throw new CompilerException(CompilerError.PARSE_NOT_YET_PERFORMED);
         }
 
-        this.typeChecker = new TypeChecker(modulle, config);
+        this.typeChecker = new TypeChecker(this);
 
         /* Perform typechecking/codegen */
         this.typeChecker.beginCheck();
