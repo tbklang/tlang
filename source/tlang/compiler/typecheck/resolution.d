@@ -306,10 +306,18 @@ public final class Resolver
             /* TODO: Add path[0], c.getName()) == modulle */
 
             /* TODO: This is for getting module entity */
-            /* Check if the name, regardless of container, is root (Module) */
-            if (cmp(name, typeChecker.getModule().getName()) == 0)
+
+            /**
+             * Check if the name, regardless of container,
+             * matches any of the roots (modules attached
+             * to this program)
+             */
+            foreach(Module curModule; this.program.getModules())
             {
-                return typeChecker.getModule();
+                if(cmp(name, curModule.getName()) == 0)
+                {
+                    return curModule;
+                }
             }
 
             Entity entityWithin = resolveUp(c, name);
