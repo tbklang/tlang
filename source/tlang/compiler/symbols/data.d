@@ -14,7 +14,7 @@ import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable
  * Represents a program made up of one or more
  * module(s)
  */
-public class Program
+public final class Program : Container
 {
     /** 
      * Modules this program is made up of
@@ -37,6 +37,47 @@ public class Program
         this.modules ~= newModule;
     }
 
+    /** 
+     * Returns the list of all modules which
+     * make up this program
+     *
+     * Returns: the array of modules
+     */
+    public Module[] getModules()
+    {
+        return this.modules;
+    }
+
+    public Statement[] search(TypeInfo_Class clazzType)
+    {
+        // TODO: Implement me
+        return [];
+    }
+
+    public bool replace(Statement thiz, Statement that)
+    {
+        // TODO: Implement me
+        return false;
+    }
+
+    public void addStatement(Statement statement)
+    {
+        assert(cast(Module)statement);
+        this.modules ~= cast(Module)statement;
+    }
+
+    public void addStatements(Statement[] statements)
+    {
+        foreach(Statement statement; statements)
+        {
+            addStatement(statement);
+        }
+    }
+
+    public Statement[] getStatements()
+    {
+        return cast(Statement[])this.modules;
+    }
 
 
     // TODO: Clean up
@@ -64,9 +105,10 @@ public class Program
     // TODO: Clean up
     public void setModule(ModuleEntry ent, Module mod)
     {
-        // TODO: Sanit check for already present?
+        // TODO: Sanity check for already present?
         this.modsMap[ent.getName()] = mod;
         this.insertOrds ~= mod;
+        this.modules ~= mod;
     }
 
     // TODO: Clean up
