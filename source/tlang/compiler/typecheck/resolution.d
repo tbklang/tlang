@@ -298,15 +298,9 @@ public final class Resolver
         * If no dot
         *
         * Try and find `name` within c
-        *
-        * TODO: WOn't resolve a module
         */
         if (path.length == 1)
         {
-            /* TODO: Add path[0], c.getName()) == modulle */
-
-            /* TODO: This is for getting module entity */
-
             /**
              * Check if the name, regardless of container,
              * matches any of the roots (modules attached
