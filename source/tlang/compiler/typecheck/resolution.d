@@ -350,14 +350,14 @@ public final class Resolver
         if(cast(Program)c)
         {
             gprintln("resolveBest: Container is program ("~to!(string)(c)~")");
-            Program program = cast(Program)c;
+            Program programC = cast(Program)c;
 
             // If you were asking just for the module
             // e.g. `simple_module`
             if(path.length == 1)
             {
                 string moduleRequested = name;
-                foreach(Module curMod; program.getModules())
+                foreach(Module curMod; programC.getModules())
                 {
                     gprintln("resolveBest(moduleHorizontal): "~to!(string)(curMod));
                     if(cmp(moduleRequested, curMod.getName()) == 0)
@@ -378,7 +378,7 @@ public final class Resolver
                 string moduleRequested = path[0];
                 Container anchor;
 
-                foreach(Module curMod; program.getModules())
+                foreach(Module curMod; programC.getModules())
                 {
                     gprintln("resolveBest(moduleHorizontal): "~to!(string)(curMod));
                     if(cmp(moduleRequested, curMod.getName()) == 0)
