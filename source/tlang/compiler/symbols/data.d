@@ -124,12 +124,21 @@ public final class Program : Container
         return this.insertOrds;
     }
 
-    public void debugDump()
+    public void debugDumpOrds()
     {
         import niknaks.debugging : dumpArray;
         import std.stdio : writeln;
         Module[] insertOrds = this.insertOrds;
         writeln(dumpArray!(insertOrds));
+    }
+
+    public void debugDump()
+    {
+        gprintln("Dumping modules imported into program:");
+        import niknaks.debugging : dumpArray;
+        import std.stdio : writeln;
+        Module[] modulesImported = this.modules;
+        writeln(dumpArray!(modulesImported));
     }
 
     /** 
