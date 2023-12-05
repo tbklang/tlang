@@ -339,63 +339,63 @@ public final class Resolver
         // ...called relative to a Module, there
         // are only some cases where it makes sense
         // otherwise
-        // if(cast(Program)c)
-        // {
-        //     gprintln("resolveBest: Container is program ("~to!(string)(c)~")");
-        //     Program program = cast(Program)c;
+        if(cast(Program)c)
+        {
+            gprintln("resolveBest: Container is program ("~to!(string)(c)~")");
+            Program program = cast(Program)c;
 
-        //     // If you were asking just for the module
-        //     // e.g. `simple_module`
-        //     if(path.length == 0)
-        //     {
-        //         string moduleRequested = name;
-        //         foreach(Module curMod; program.getModules())
-        //         {
-        //             gprintln("resolveBest(moduleHorizontal): "~to!(string)(curMod));
-        //             if(cmp(moduleRequested, curMod.getName()) == 0)
-        //             {
-        //                 return curMod;
-        //             }
-        //         }
+            // If you were asking just for the module
+            // e.g. `simple_module`
+            if(path.length == 0)
+            {
+                string moduleRequested = name;
+                foreach(Module curMod; program.getModules())
+                {
+                    gprintln("resolveBest(moduleHorizontal): "~to!(string)(curMod));
+                    if(cmp(moduleRequested, curMod.getName()) == 0)
+                    {
+                        return curMod;
+                    }
+                }
 
-        //         gprintln("resolveBest(Program root): Could not find module for DIRECT access", DebugType.ERROR);
-        //         return null;
-        //     }
-        //     // If you were asking for some entity
-        //     // anchored within a module
-        //     // e.g.`simple_module.x`
-        //     else
-        //     {
-        //         // First ensure a valid module name as anchor
-        //         string moduleRequested = path[0];
-        //         Container anchor;
+                gprintln("resolveBest(Program root): Could not find module for DIRECT access", DebugType.ERROR);
+                return null;
+            }
+            // If you were asking for some entity
+            // anchored within a module
+            // e.g.`simple_module.x`
+            else
+            {
+                // First ensure a valid module name as anchor
+                string moduleRequested = path[0];
+                Container anchor;
 
-        //         foreach(Module curMod; program.getModules())
-        //         {
-        //             gprintln("resolveBest(moduleHorizontal): "~to!(string)(curMod));
-        //             if(cmp(moduleRequested, curMod.getName()) == 0)
-        //             {
-        //                 anchor = curMod;
-        //                 break;
-        //             }
-        //         }
+                foreach(Module curMod; program.getModules())
+                {
+                    gprintln("resolveBest(moduleHorizontal): "~to!(string)(curMod));
+                    if(cmp(moduleRequested, curMod.getName()) == 0)
+                    {
+                        anchor = curMod;
+                        break;
+                    }
+                }
 
-        //         // If we found the module
-        //         // then do an anchored search
-        //         // on the remaining path
-        //         if(anchor)
-        //         {
-        //             string remainingPath = join(path[1..$], ".");
-        //             return resolveBest(anchor, remainingPath);
-        //         }
-        //         // If we could not find the module
-        //         else
-        //         {
-        //             gprintln("resolveBest(Program root): Could not find module '"~moduleRequested~"' for ANCHORED access", DebugType.ERROR);
-        //             return null;
-        //         }
-        //     }
-        // }
+                // If we found the module
+                // then do an anchored search
+                // on the remaining path
+                if(anchor)
+                {
+                    string remainingPath = join(path[1..$], ".");
+                    return resolveBest(anchor, remainingPath);
+                }
+                // If we could not find the module
+                else
+                {
+                    gprintln("resolveBest(Program root): Could not find module '"~moduleRequested~"' for ANCHORED access", DebugType.ERROR);
+                    return null;
+                }
+            }
+        }
 
         /**
         * TODO: Always make sure this holds
