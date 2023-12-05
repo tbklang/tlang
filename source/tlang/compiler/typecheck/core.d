@@ -45,7 +45,7 @@ public final class TypeChecker
     private MetaProcessor meta;
 
     // TODO: Remove this
-    public Module getModule()
+    public Module deprecated_getModule()
     {
         // return modulle;
         return this.program.getModules()[0];
