@@ -33,7 +33,7 @@ public final class TypeChecker
     private CompilerConfiguration config;
 
 
-
+    // TODO: Remove this
     private Module modulle;
 
     /* The name resolver */
@@ -44,42 +44,32 @@ public final class TypeChecker
      */
     private MetaProcessor meta;
 
+    // TODO: Remove this
     public Module getModule()
     {
-        return modulle;
-    }
-
-    /** 
-     * Constructs a new `TypeChecker` based on the provided `Module`
-     * of which to typecheck its members and using the default
-     * compiler configuration
-     *
-     * Params:
-     *   modulle = the `Module` to check
-     *   config = the `CompilerConfiguration` (default if not specified)
-     */
-    this(Module modulle, CompilerConfiguration config = CompilerConfiguration.defaultConfig())
-    {
-        this.modulle = modulle;
-        this.config = config;
-
-        this.resolver = new Resolver(this);
-        this.meta = new MetaProcessor(this, true);
-        
-        /* TODO: Module check?!?!? */
+        // return modulle;
+        return this.program.getModules()[0];
     }
 
     private Compiler compiler;
     private Program program;
 
     // TODO: Do we need the config then?
+
+    /** 
+     * Constructs a new `TypeChecker` with the given
+     * compiler instance
+     *
+     * Params:
+     *   compiler = the `Compiler` instance
+     */
     this(Compiler compiler)
     {
         this.compiler = compiler;
         this.config = compiler.getConfig();
         this.program = compiler.getProgram();
 
-        this.resolver = new Resolver(this);
+        this.resolver = new Resolver(program, this);
         this.meta = new MetaProcessor(this, true);
     }
 
@@ -116,11 +106,19 @@ public final class TypeChecker
     */
     public void dependencyCheck()
     {
+        // TODO: Ensure this is CORRECT! (MODMAN)
         /* Check declaration and definition types */
-        checkDefinitionTypes(modulle);
-
+        foreach(Statement curModule; this.program.getModules())
+        {
+            checkDefinitionTypes(cast(Module)curModule);
+        }
+        
+        // TODO: Ensure this is CORRECT! (MODMAN)
         /* TODO: Implement me */
-        checkClassInherit(modulle);
+        foreach(Statement curModule; this.program.getModules())
+        {
+            checkClassInherit(cast(Module)curModule);
+        }
 
         // TODO: Issue 88: Don't use static state
         scope(exit)
@@ -392,8 +390,9 @@ public final class TypeChecker
     {
         import tlang.compiler.symbols.typing.core;
 
-        Module dummyModule = null;
-        TypeChecker tc = new TypeChecker(dummyModule);
+        File dummyFile;
+        Compiler dummyCompiler = new Compiler("", "legitidk.t", dummyFile);
+        TypeChecker tc = new TypeChecker(dummyCompiler);
 
         /* To type is `t1` */
         Type t1 = getBuiltInType(tc, "uint");
@@ -445,8 +444,9 @@ public final class TypeChecker
     {
         import tlang.compiler.symbols.typing.core;
 
-        Module dummyModule = null;
-        TypeChecker tc = new TypeChecker(dummyModule);
+        File dummyFile;
+        Compiler dummyCompiler = new Compiler("", "legitidk.t", dummyFile);
+        TypeChecker tc = new TypeChecker(dummyCompiler);
 
         /* To type is `t1` */
         Type t1 = getBuiltInType(tc, "uint");
@@ -550,8 +550,15 @@ public final class TypeChecker
          * a function that returns an uint
          * and an expression of type ubyte
          */
+        File dummyFile;
+        Compiler compiler = new Compiler("", "", dummyFile);
+
+        Program program = new Program();
         Module testModule = new Module("myModule");
-        TypeChecker tc = new TypeChecker(testModule);
+        program.addModule(testModule);
+        compiler.setProgram(program);
+        
+        TypeChecker tc = new TypeChecker(compiler);
 
 
         /* Add the function with a return expression */
@@ -1486,6 +1493,7 @@ public final class TypeChecker
 
                 gprintln("Yaa, it's rewind time");
                 auto g  = cast(VariableExpression)statement;
+                assert(g);
 
                 /* FIXME: It would seem that g.getContext() is returning null, so within function body's context is not being set */
                 gprintln("VarExp: "~g.getName());
@@ -1494,8 +1502,7 @@ public final class TypeChecker
                 gprintln("gVar nullity?: "~to!(string)(gVar is null));
 
                 /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
-
-                string variableName = resolver.generateName(modulle, gVar);
+                string variableName = resolver.generateName(this.program, gVar);
 
                 gprintln("VarName: "~variableName);
                 gprintln("Halo");
@@ -1807,8 +1814,14 @@ public final class TypeChecker
 
                 FunctionCall funcCall = cast(FunctionCall)statement;
 
+                // Find the top-level container of the function being called
+                // and then use this as the container to resolve our function
+                // being-called to (as a starting point)
+                Module belongsTo = cast(Module)resolver.findContainerOfType(Module.classinfo, statement);
+                assert(belongsTo);
+
                 /* TODO: Look up func def to know when popping stops (types-based delimiting) */
-                Function func = cast(Function)resolver.resolveBest(modulle, funcCall.getName());
+                Function func = cast(Function)resolver.resolveBest(belongsTo, funcCall.getName());
                 assert(func);
                 VariableParameter[] paremeters = func.getParams();
 
@@ -2157,7 +2170,8 @@ public final class TypeChecker
             */
             Variable variablePNode = cast(Variable)dnode.getEntity();
             gprintln("HELLO FELLA");
-            string variableName = resolver.generateName(modulle, variablePNode);
+
+            string variableName = resolver.generateName(this.program, variablePNode);
             gprintln("HELLO FELLA (name): "~variableName);
             
 
@@ -2802,19 +2816,28 @@ public final class TypeChecker
     */
     public void beginCheck()
     {
+        // TODO: Ensure this is CORRECT! (MODMAN)
         /* Run the meta-processor on the AST tree (starting from the Module) */
-        meta.process(modulle);
+        meta.process(this.program);
 
-        /* Process all pseudo entities of the given module */
-        processPseudoEntities(modulle);
+        // TODO: Ensure this is CORRECT! (MODMAN)
+        /* Process all pseudo entities of the program's modules */
+        foreach(Statement curModule; this.program.getStatements())
+        {
+            processPseudoEntities(cast(Module)curModule);
+        }
 
+        // TODO: Ensure this is CORRECT! (MODMAN)
         /**
         * Make sure there are no name collisions anywhere
         * in the Module with an order of precedence of
         * Classes being declared before Functions and
         * Functions before Variables
         */
-        checkContainerCollision(modulle); /* TODO: Rename checkContainerCollision */
+        foreach(Statement curModule; this.program.getStatements())
+        {
+            checkContainerCollision(cast(Module)curModule); /* TODO: Rename checkContainerCollision */
+        }
 
         /* TODO: Now that everything is defined, no collision */
         /* TODO: Do actual type checking and declarations */
@@ -2973,6 +2996,15 @@ public final class TypeChecker
     * same level), HOWEVER if so, we then recursively
     * call `checkContainer` on said Entity and the
     * logic above applies again
+    *
+    * FIXME:
+    *
+    * (MODMAN) We need to know WHICH `Module` we
+    * are currently examining when we do this such
+    * that we can then fix the other `resolver`
+    * calls when we `generateName`(s), else
+    * we use the old `modulle` which is null
+    * now.
     */
     private void checkContainerCollision(Container c)
     {
@@ -2993,18 +3025,25 @@ public final class TypeChecker
 
         foreach (Entity entity; entities)
         {
-            /**
-            * Absolute root Container (in other words, the Module)
-            * can not be used
-            */
-            if(cmp(modulle.getName(), entity.getName()) == 0)
+            // (MODMAN) Don't use `modulle` - as it would be null
+            gprintln("Is modulle null?: "~to!(string)(modulle is null));
+
+
+            // (MODMAN) TODO: We need to loop through each module and make
+            // ... sure its name doesn't match with any of them
+            foreach(Module curMod; program.getModules())
             {
-                throw new CollidingNameException(this, modulle, entity, c);
+                if(cmp(entity.getName(), curMod.getName()) == 0)
+                {
+                    throw new CollidingNameException(this, curMod, entity, c);
+                }
             }
+            
+
             /**
             * If the current entity's name matches the container then error
             */
-            else if (cmp(containerEntity.getName(), entity.getName()) == 0)
+            if (cmp(containerEntity.getName(), entity.getName()) == 0)
             {
                 throw new CollidingNameException(this, containerEntity, entity, c);
             }
@@ -3023,8 +3062,10 @@ public final class TypeChecker
             */
             else
             {
-                string fullPath = resolver.generateName(modulle, entity);
-                string containerNameFullPath = resolver.generateName(modulle, containerEntity);
+                // (MODMAN) This will need to be fixed (anchored at the Program-level)
+                string fullPath = resolver.generateName(this.program, entity);
+                // (MODMAN) This will need to be fixed (anchored at the Program-level)
+                string containerNameFullPath = resolver.generateName(this.program, containerEntity);
                 gprintln("Entity \"" ~ fullPath
                         ~ "\" is allowed to be defined within container \""
                         ~ containerNameFullPath ~ "\"");
@@ -3042,7 +3083,6 @@ public final class TypeChecker
         }
 
     }
-
 
     /**
     * TODO: Create a version of the below function that possibly
@@ -3303,27 +3343,30 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
-
+    compiler.doLex();
+    compiler.doParse();
+    
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity container = typeChecker.getResolver().resolveBest(modulle, "y");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(modulle, "y.y");
+
         /* Make sure the member y.y collided with root container (module) y */
         assert(e.defined == container);
     }
@@ -3345,27 +3388,30 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.a.b.c.y");
+    compiler.doLex();
+    compiler.doParse();
 
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.a.b.c.y");
+
         /* Make sure the member y.a.b.c.y collided with root container (module) y */
         assert(e.defined == container);
     }
@@ -3385,27 +3431,30 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c.c");
+    compiler.doLex();
+    compiler.doParse();
 
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c.c");
+
         /* Make sure the member a.b.c.c collided with a.b.c container */
         assert(e.defined == container);
     }
@@ -3425,26 +3474,29 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity memberFirst = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b");
+    compiler.doLex();
+    compiler.doParse();
 
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity memberFirst = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b");
+
         /* Make sure the member a.b.c.c collided with a.b.c container */
         assert(e.attempted != memberFirst);
     }
@@ -3464,26 +3516,29 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity ourClassA = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a");
+    compiler.doLex();
+    compiler.doParse();
 
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity ourClassA = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a");
+
         /* Make sure the member attempted was Variable and defined was Clazz */
         assert(cast(Variable)e.attempted);
         assert(cast(Clazz)e.defined);
@@ -3505,27 +3560,30 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
+    compiler.doLex();
+    compiler.doParse();
 
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
+
         /* Make sure the member y.y collided with root container (module) y */
         assert(e.defined == container);
     }
@@ -3585,17 +3643,14 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-   
+    compiler.doLex();
+    compiler.doParse();
 
     /* Perform test */
-    typeChecker.beginCheck();
+    compiler.doTypeCheck();
 
     /* TODO: Actually test generated code queue */
 }
