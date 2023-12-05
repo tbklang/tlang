@@ -314,6 +314,13 @@ public final class Resolver
         assert(path.length == 1);
     }
 
+    unittest
+    {
+        string input = "";
+        string[] path = split(input, '.');
+        assert(path.length == 0);
+    }
+
 
     /**
     * Resolves dot-paths and non-dot paths
