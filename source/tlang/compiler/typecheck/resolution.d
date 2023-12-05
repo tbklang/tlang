@@ -78,6 +78,27 @@ public final class Resolver
     */
     public string generateName(Container relativeTo, Entity entity)
     {
+        // FIXME: (MODMAN) The relativeTo here (if we ever call with)
+        // ... a program will obviously cause the assertion to fail
+        // ... because Program's are not Entity(s) - the assertion
+        // ... is in the inner call
+        //
+        // For that we must have a `getRoot` (use `findContainerOfType`
+        // with the type set to `Module`) which resolves till it stops
+        // at the top of the parenthood tree of `entity`, then we should
+        // just early return `generateName_Internal(foundMod, entity)`
+        //
+        // Because as I said, a Program is not an Entity - IT HAS NO NAME!
+        if(cast(Program)relativeTo)
+        {
+            Container potModC = findContainerOfType(Module.classinfo, entity);
+            assert(potModC); // Should always be true (unless you butchered the AST)
+            Module potMod = cast(Module)potModC;
+            assert(potMod); // Should always be true (unless you butchered the AST)
+
+            return generateName(potMod, entity);
+        }
+
         string[] name = generateName_Internal(relativeTo, entity);
         string path;
         for (ulong i = 0; i < name.length; i++)
@@ -283,6 +304,77 @@ public final class Resolver
     */
     public Entity resolveBest(Container c, string name)
     {
+        string[] path = split(name, '.');
+
+        // FIXME: (MODMAN) Container can be a `Program`
+        // ... (if we call it with that)
+        // ... and the assertion below will fail
+        // ... therefore we will have to take the 
+        // ... name in such a case (should we even
+        // ... be calling it like so)
+        //
+        // Infact this should probably only be
+        // ...called relative to a Module, there
+        // are only some cases where it makes sense
+        // otherwise
+        // if(cast(Program)c)
+        // {
+        //     gprintln("resolveBest: Container is program ("~to!(string)(c)~")");
+        //     Program program = cast(Program)c;
+
+        //     // If you were asking just for the module
+        //     // e.g. `simple_module`
+        //     if(path.length == 0)
+        //     {
+        //         string moduleRequested = name;
+        //         foreach(Module curMod; program.getModules())
+        //         {
+        //             gprintln("resolveBest(moduleHorizontal): "~to!(string)(curMod));
+        //             if(cmp(moduleRequested, curMod.getName()) == 0)
+        //             {
+        //                 return curMod;
+        //             }
+        //         }
+
+        //         gprintln("resolveBest(Program root): Could not find module for DIRECT access", DebugType.ERROR);
+        //         return null;
+        //     }
+        //     // If you were asking for some entity
+        //     // anchored within a module
+        //     // e.g.`simple_module.x`
+        //     else
+        //     {
+        //         // First ensure a valid module name as anchor
+        //         string moduleRequested = path[0];
+        //         Container anchor;
+
+        //         foreach(Module curMod; program.getModules())
+        //         {
+        //             gprintln("resolveBest(moduleHorizontal): "~to!(string)(curMod));
+        //             if(cmp(moduleRequested, curMod.getName()) == 0)
+        //             {
+        //                 anchor = curMod;
+        //                 break;
+        //             }
+        //         }
+
+        //         // If we found the module
+        //         // then do an anchored search
+        //         // on the remaining path
+        //         if(anchor)
+        //         {
+        //             string remainingPath = join(path[1..$], ".");
+        //             return resolveBest(anchor, remainingPath);
+        //         }
+        //         // If we could not find the module
+        //         else
+        //         {
+        //             gprintln("resolveBest(Program root): Could not find module '"~moduleRequested~"' for ANCHORED access", DebugType.ERROR);
+        //             return null;
+        //         }
+        //     }
+        // }
+
         /**
         * TODO: Always make sure this holds
         *
@@ -291,8 +383,6 @@ public final class Resolver
         */
         Entity containerEntity = cast(Entity) c;
         assert(containerEntity);
-
-        string[] path = split(name, '.');
 
         /**
         * If no dot
@@ -425,6 +515,9 @@ public final class Resolver
      */
     public Container findContainerOfType(TypeInfo_Class containerType, Statement startingNode)
     {
+        gprintln("findContainerOfType(TypeInfo_Class, Statement): StmtStart: "~to!(string)(startingNode));
+        gprintln("findContainerOfType(TypeInfo_Class, Statement): StmtStart (type): "~to!(string)(startingNode.classinfo));
+
         // If the given AST objetc is null, return null
         if(startingNode is null)
         {
@@ -440,6 +533,7 @@ public final class Resolver
         // If not, swim up to the parent
         else
         {
+            gprintln("parent of "~to!(string)(startingNode)~" is "~to!(string)(startingNode.parentOf()));
             return findContainerOfType(containerType, cast(Statement)startingNode.parentOf());
         }
     }
