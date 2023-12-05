@@ -334,6 +334,7 @@ public final class Resolver
     public Entity resolveBest(Container c, string name)
     {
         string[] path = split(name, '.');
+        assert(path.length); // We must have _something_ here
 
         // FIXME: (MODMAN) Container can be a `Program`
         // ... (if we call it with that)
