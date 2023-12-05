@@ -293,6 +293,28 @@ public final class Resolver
         }
     }
 
+    unittest
+    {
+        string input = "hello.world";
+        string[] path = split(input, '.');
+        assert(path.length == 2);
+    }
+
+    unittest
+    {
+        string input = "hello.";
+        string[] path = split(input, '.');
+        assert(path.length == 2);
+    }
+
+    unittest
+    {
+        string input = "hello";
+        string[] path = split(input, '.');
+        assert(path.length == 1);
+    }
+
+
     /**
     * Resolves dot-paths and non-dot paths
     * (both relative to a container)
