@@ -346,7 +346,7 @@ public final class Resolver
 
             // If you were asking just for the module
             // e.g. `simple_module`
-            if(path.length == 0)
+            if(path.length == 1)
             {
                 string moduleRequested = name;
                 foreach(Module curMod; program.getModules())
