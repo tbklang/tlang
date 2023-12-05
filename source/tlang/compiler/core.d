@@ -133,6 +133,11 @@ public class Compiler
         return this.program;
     }
 
+    public void setProgram(Program program)
+    {
+        this.program = program;
+    }
+
     /* The module manager */
     private ModuleManager modMan;
 
@@ -210,12 +215,17 @@ public class Compiler
             this.parser = new Parser(lexer, this);
 
             modulle = parser.parse(this.inputFilePath);
+
+            // TODO: We should add this entry point module now to the front of it?
+            ModuleEntry entryModEnt = ModuleEntry(this.inputFilePath, modulle.getName());
+            this.program.setModule(entryModEnt, modulle);
         }
 
         // Print out module tree
         gprintln("Module tree: "~to!(string)(this.program.getMods()));
         // gprintln("Module ongod: "~to!(string)(this.program.getOMods()));
-        this.program.debugDump();
+        this.program.debugDumpOrds();
+        this.program.debugDump(); 
     }
 
     public Module getModule()
@@ -238,6 +248,12 @@ public class Compiler
 
         /* Perform typechecking/codegen */
         this.typeChecker.beginCheck();
+    }
+
+    public TypeChecker getTypeChecker()
+    {
+        // TODO: Should we do a check for if `doTypeCheck()` was called or not?
+        return this.typeChecker;
     }
 
     /* Perform code emitting */
@@ -501,6 +517,7 @@ unittest
         // On Error
         catch(Exception e)
         {
+            gprintln("Yo: "~e.toString(), DebugType.ERROR);
             gprintln("Yo, we should not be getting this but rather ONLY TErrors, this is a bug to be fixed", DebugType.ERROR);
             assert(false);
         }
