@@ -51,6 +51,11 @@ public final class TypeChecker
         return this.program.getModules()[0];
     }
 
+    public Program getProgram()
+    {
+        return this.program;
+    }
+
     private Compiler compiler;
     private Program program;
 
