@@ -1,5 +1,8 @@
 module tlang.compiler.typecheck.dependency.pool;
 
+import tlang.compiler.typecheck.dependency.core : DNode;
+import tlang.compiler.symbols.data : Statement;
+
 /** 
  * Defines an interface by which
  * `Statement`s (i.e. AST nodes)
