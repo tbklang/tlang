@@ -5,7 +5,6 @@ import tlang.compiler.typecheck.dependency.expression : ExpressionDNode;
 import tlang.compiler.typecheck.dependency.variables : VariableNode, FuncDecNode, StaticVariableDeclaration;
 
 import tlang.compiler.symbols.data : Statement, Expression, Variable, Function;
-import std.traits : isAssignable;
 
 // TODO: In future if we do not require the specific `ExpressionDNode` et al
 // ... then remove them from the interface definition below
