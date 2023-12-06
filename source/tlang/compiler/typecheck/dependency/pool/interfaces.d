@@ -1,8 +1,14 @@
 module tlang.compiler.typecheck.dependency.pool.interfaces;
 
 import tlang.compiler.typecheck.dependency.core : DNode;
-import tlang.compiler.symbols.data : Statement;
+import tlang.compiler.typecheck.dependency.expression : ExpressionDNode;
+import tlang.compiler.typecheck.dependency.variables : VariableNode, FuncDecNode, StaticVariableDeclaration;
+
+import tlang.compiler.symbols.data : Statement, Expression, Variable, Function;
 import std.traits : isAssignable;
+
+// TODO: In future if we do not require the specific `ExpressionDNode` et al
+// ... then remove them from the interface definition below
 
 /** 
  * Defines an interface by which
@@ -25,21 +31,42 @@ public interface IPoolManager
     public DNode pool(Statement statement);
 
     /** 
-     * Pools the provided AST node
-     * to a dependency node
-     *
-     * This version is templatised
-     * in that it lets you specify
-     * the type of `DNode` you want
-     * to construct (in the case it
-     * does not yet exist in the
-     * pool) and also the type
-     * of AST node going in
+     * Pools the provided `Expression`
+     * AST node into an `ExpressionDNode`
      *
      * Params:
-     *   entity = the AST node
-     * Returns: the pooled `DNodeType`
+     *   expression = the AST node
+     * Returns: the pooled `ExpressionDNode`
      */
-    public DNodeType poolT(DNodeType, EntityType)(EntityType entity)
-    if(isAssignable!(DNode, DNodeType));
+    public ExpressionDNode poolExpression(Expression expression);
+
+    /** 
+     * Pools the provided `Variable`
+     * AST node into a `VariableNode`
+     *
+     * Params:
+     *   variable = the AST node
+     * Returns: the pooled `VariableNode`
+     */
+    public VariableNode poolVariable(Variable variable);
+
+    /** 
+     * Pools the provided `Variable`
+     * AST node into a `StaticVariableDeclaration`
+     *
+     * Params:
+     *   variable = the AST node
+     * Returns: the pooled `StaticVariableDeclaration`
+     */
+    public StaticVariableDeclaration poolStaticVariable(Variable variable);
+
+    /** 
+     * Pools the provided `Function`
+     * AST node into a `FuncDecNode`
+     *
+     * Params:
+     *   func = the AST node
+     * Returns: the pooled `FUncDecNode`
+     */
+    public FuncDecNode poolFuncDec(Function func);
 }
