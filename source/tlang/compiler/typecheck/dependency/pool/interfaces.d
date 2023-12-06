@@ -1,6 +1,6 @@
 module tlang.compiler.typecheck.dependency.pool.interfaces;
 
-import tlang.compiler.typecheck.dependency.core : DNode, DNodeGenerator;
+import tlang.compiler.typecheck.dependency.core : DNode;
 import tlang.compiler.symbols.data : Statement;
 
 /** 
@@ -18,9 +18,8 @@ public interface IPoolManager
      * to a dependency node
      *
      * Params:
-     *   generator = the `DNodeGenerator`
      *   statement = the AST node
      * Returns: the pooled `DNode`
      */
-    public DNode pool(DNodeGenerator generator, Statement statement);
+    public DNode pool(Statement statement);
 }
