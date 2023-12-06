@@ -13,6 +13,8 @@ import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
 import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
+import tlang.compiler.typecheck.dependency.pool.interfaces;
+import tlang.compiler.typecheck.dependency.pool.impls;
 
 
 /**
@@ -182,8 +184,8 @@ public class DNode
     this(DNodeGenerator dnodegen, Statement entity)
     {
         this.entity = entity;
-        this.dnodegen = dnodegen;
-        this.resolver = dnodegen.resolver;
+        this.dnodegen = dnodegen; // TODO: Is this needed? (It IS unused)
+        this.resolver = dnodegen.resolver; // TODO: Is this needed? (It IS unused)
 
         initName();
     }
@@ -479,6 +481,12 @@ public class DNodeGenerator
     */
     private static DNode[] nodePool;
 
+    /** 
+     * Dependency node pooling
+     * management
+     */
+    private IPoolManager poolManager;
+
     this(TypeChecker tc)
     {
         // /* NOTE: NEW STUFF 1st Oct 2022 */
@@ -486,8 +494,10 @@ public class DNodeGenerator
         // Context context = new Context(modulle, InitScope.STATIC);
         // super(tc, context, context.getContainer().getStatements());
 
-
-
+        // TODO: See if we can pass it in rather, but
+        // ... because this needs a this we must make
+        // ... it here
+        this.poolManager = new PoolManager(this);
 
         this.tc = tc;
         this.resolver = tc.getResolver();
