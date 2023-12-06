@@ -2314,7 +2314,7 @@ public final class TypeChecker
                 */
 
                 /* If the function's return type is void */
-                if(isSameType(functionReturnType, getBuiltInType(this, "void")))
+                if(isSameType(functionReturnType, getType(cast(Container)funcContainer, "void")))
                 {
                     /* It is an error to have a return expression if function is return void */
                     if(returnStatement.hasReturnExpression())
@@ -2786,7 +2786,7 @@ public final class TypeChecker
         Type foundType;
 
         /* Check if the type is built-in */
-        foundType = getBuiltInType(this, typeString);
+        foundType = getBuiltInType(this, c, typeString);
 
         /* If it isn't then check for a type (resolve it) */
         if(!foundType)
