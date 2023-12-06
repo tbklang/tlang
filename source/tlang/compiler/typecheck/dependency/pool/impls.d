@@ -3,6 +3,7 @@ module tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.core : DNode, DNodeGenerator;
 import tlang.compiler.symbols.data : Statement;
+import std.traits : isAssignable;
 
 /** 
  * Provides an implementation of
@@ -47,20 +48,41 @@ public final class PoolManager : IPoolManager
      */
     public DNode pool(Statement statement)
     {
+        return poolT!(DNode, Statement)(statement);
+    }
+
+    /** 
+     * Pools the provided AST node
+     * to a dependency node, creating
+     * one if one did not yet exist.
+     *
+     * This is a templatised version
+     * which lets you specify the
+     * kind-of `DNode` to be constructed
+     * (if it does not yet exist) and
+     * the incoming type of AST node.
+     *
+     * Params:
+     *   entity = the AST node
+     * Returns: the dependency node
+     */
+    public DNodeType poolT(DNodeType, EntityType)(EntityType entity)
+    if(isAssignable!(DNode, DNodeType))
+    {
         foreach(DNode dnode; nodePool)
         {
-            if(dnode.getEntity() == statement)
+            if(dnode.getEntity() == entity)
             {
-                return dnode;
+                return cast(DNodeType)dnode;
             }
         }
 
         /**
         * If no DNode is found that is associated with
-        * the provided Statement then create a new one
-        * and pool it
+        * the provided Entity then create a new one and
+        * pool it
         */
-        DNode newDNode = new DNode(this.generator, statement);
+        DNodeType newDNode = new DNodeType(this.generator, entity);
         nodePool ~= newDNode;
 
         return newDNode;
