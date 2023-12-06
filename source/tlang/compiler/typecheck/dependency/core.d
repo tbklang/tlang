@@ -130,7 +130,7 @@ public void clearFuncDefs()
 *
 * Requires a TypeChecker `tc`
 */
-private void addFunctionDef(TypeChecker tc, Function func)
+private void addFunctionDef(IPoolManager poolManager, TypeChecker tc, Function func)
 {
     /* (Sanity Check) This should never be called again */
     foreach(string cFuncKey; functions.keys())
@@ -149,7 +149,7 @@ private void addFunctionDef(TypeChecker tc, Function func)
     * context etc.
     */
     FunctionData funcData;
-    funcData.ownGenerator = new DFunctionInnerGenerator(tc, func);
+    funcData.ownGenerator = new DFunctionInnerGenerator(poolManager, tc, func);
     funcData.name = func.getName();
     funcData.func = func;
 
@@ -174,18 +174,13 @@ public class DNode
 
     protected string name;
 
-    protected DNodeGenerator dnodegen;
-    protected Resolver resolver;
-
     private bool visited;
     private bool complete;
     private DNode[] dependencies;
 
-    this(DNodeGenerator dnodegen, Statement entity)
+    this(Statement entity)
     {
         this.entity = entity;
-        this.dnodegen = dnodegen; // TODO: Is this needed? (It IS unused)
-        this.resolver = dnodegen.resolver; // TODO: Is this needed? (It IS unused)
 
         initName();
     }
@@ -410,9 +405,9 @@ public final class DFunctionInnerGenerator : DNodeGenerator
 {
     private Function func;
 
-    this(TypeChecker tc, Function func)
+    this(IPoolManager poolManager, TypeChecker tc, Function func)
     {
-        super(tc);
+        super(poolManager, tc);
         this.func = func;
     }
 
@@ -487,7 +482,7 @@ public class DNodeGenerator
      */
     private IPoolManager poolManager;
 
-    this(TypeChecker tc)
+    this(IPoolManager poolManager, TypeChecker tc)
     {
         // /* NOTE: NEW STUFF 1st Oct 2022 */
         // Module modulle = tc.getModule();
@@ -497,7 +492,7 @@ public class DNodeGenerator
         // TODO: See if we can pass it in rather, but
         // ... because this needs a this we must make
         // ... it here
-        this.poolManager = new PoolManager(this);
+        this.poolManager = poolManager;
 
         this.tc = tc;
         this.resolver = tc.getResolver();
@@ -539,23 +534,7 @@ public class DNodeGenerator
 
     private DNode pool(Statement entity)
     {
-        foreach(DNode dnode; nodePool)
-        {
-            if(dnode.getEntity() == entity)
-            {
-                return dnode;
-            }
-        }
-
-        /**
-        * If no DNode is found that is associated with
-        * the provided Entity then create a new one and
-        * pool it
-        */
-        DNode newDNode = new DNode(this, entity);
-        nodePool ~= newDNode;
-
-        return newDNode;
+        return this.poolManager.pool(entity);
     }
 
     /**
@@ -565,23 +544,27 @@ public class DNodeGenerator
     */
     private DNodeType poolT(DNodeType, EntityType)(EntityType entity)
     {
-        foreach(DNode dnode; nodePool)
+        static if(__traits(isSame, DNodeType, ExpressionDNode))
         {
-            if(dnode.getEntity() == entity)
-            {
-                return cast(DNodeType)dnode;
-            }
+            return this.poolManager.poolExpression(cast(Expression)entity);
         }
-
-        /**
-        * If no DNode is found that is associated with
-        * the provided Entity then create a new one and
-        * pool it
-        */
-        DNodeType newDNode = new DNodeType(this, entity);
-        nodePool ~= newDNode;
-
-        return newDNode;
+        else static if(__traits(isSame, DNodeType, VariableNode))
+        {
+            return this.poolManager.poolVariable(cast(Variable)entity);
+        }
+        else static if(__traits(isSame, DNodeType, StaticVariableDeclaration))
+        {
+            return this.poolManager.poolStaticVariable(cast(Variable)entity);
+        }
+        else static if(__traits(isSame, DNodeType, FuncDecNode))
+        {
+            return this.poolManager.poolFuncDec(cast(Function)entity);
+        }
+        else
+        {
+            pragma(msg, "This is an invalid case");
+            static assert(false);
+        }
     }
 
 
@@ -611,7 +594,7 @@ public class DNodeGenerator
     {
         /* We don't pool anything here - a constructor call is unique */
         
-        ObjectInitializationNode node = new ObjectInitializationNode(this, clazz, newExpression);
+        ObjectInitializationNode node = new ObjectInitializationNode(clazz, newExpression);
 
 
         /* TODO: Call a virtual pass over the class */
@@ -1056,7 +1039,7 @@ public class DNodeGenerator
         * the provided Entity then create a new one and
         * pool it
         */
-        ModuleVariableDeclaration newDNode = new ModuleVariableDeclaration(this, entity);
+        ModuleVariableDeclaration newDNode = new ModuleVariableDeclaration(entity);
         nodePool ~= newDNode;
 
         return newDNode;
@@ -1290,7 +1273,7 @@ public class DNodeGenerator
 
             /* Add funtion definition */
             gprintln("Hello");
-            addFunctionDef(tc, func);
+            addFunctionDef(poolManager, tc, func);
 
             return null;
         }
@@ -1652,7 +1635,7 @@ public class DNodeGenerator
         * the provided Entity then create a new one and
         * pool it
         */
-        ClassStaticNode newDNode = new ClassStaticNode(this, clazz);
+        ClassStaticNode newDNode = new ClassStaticNode(clazz);
         nodePool ~= newDNode;
 
         return newDNode;
