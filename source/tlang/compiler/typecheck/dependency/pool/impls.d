@@ -23,21 +23,10 @@ public final class PoolManager : IPoolManager
     private DNode[] nodePool;
 
     /** 
-     * The dependency generator
-     */
-    private DNodeGenerator generator;
-
-    /** 
      * Constructs a new pooling manager
-     * with the provide dependency node
-     * generator
-     *
-     * Params:
-     *   generator = the `DNodeGenerator`
      */
-    this(DNodeGenerator generator)
+    this()
     {
-        this.generator = generator;
     }
 
     /** 
@@ -137,7 +126,7 @@ public final class PoolManager : IPoolManager
         * the provided Entity then create a new one and
         * pool it
         */
-        DNodeType newDNode = new DNodeType(this.generator, entity);
+        DNodeType newDNode = new DNodeType(entity);
         nodePool ~= newDNode;
 
         return newDNode;
@@ -161,11 +150,8 @@ unittest
     Module testModule = new Module("myModule");
     TypeChecker tc = new TypeChecker(testModule);
 
-    // Create a bogus dnode generator
-    DNodeGenerator gen = new DNodeGenerator(tc);
-
     // Create a pool manager
-    IPoolManager pool = new PoolManager(gen);
+    IPoolManager pool = new PoolManager();
 
     // Pool an AST node
     Variable astNode = new Variable("int", "age");
