@@ -125,8 +125,13 @@ public final class TypeChecker
         *
         */
         
+        // Create a pooling mechanism
+        import tlang.compiler.typecheck.dependency.pool.interfaces;
+        import tlang.compiler.typecheck.dependency.pool.impls;
+        IPoolManager poolManager = new PoolManager();
 
-        DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
+        /* Create the dependency generator */
+        DNodeGenerator dNodeGenerator = new DNodeGenerator(poolManager, this);
 
         /* Generate the dependency tree */
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
