@@ -2,7 +2,10 @@ module tlang.compiler.typecheck.dependency.pool.impls;
 
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.core : DNode, DNodeGenerator;
-import tlang.compiler.symbols.data : Statement;
+import tlang.compiler.typecheck.dependency.expression : ExpressionDNode;
+import tlang.compiler.typecheck.dependency.variables : VariableNode, FuncDecNode, StaticVariableDeclaration;
+
+import tlang.compiler.symbols.data : Statement, Expression, Variable, Function;
 import std.traits : isAssignable;
 
 /** 
@@ -49,6 +52,58 @@ public final class PoolManager : IPoolManager
     public DNode pool(Statement statement)
     {
         return poolT!(DNode, Statement)(statement);
+    }
+
+    /** 
+     * Pools the provided `Expression`
+     * AST node into an `ExpressionDNode`
+     *
+     * Params:
+     *   expression = the AST node
+     * Returns: the pooled `ExpressionDNode`
+     */
+    public ExpressionDNode poolExpression(Expression expression)
+    {
+        return poolT!(ExpressionDNode, Expression)(expression);
+    }
+
+    /** 
+     * Pools the provided `Variable`
+     * AST node into a `VariableNode`
+     *
+     * Params:
+     *   variable = the AST node
+     * Returns: the pooled `VariableNode`
+     */
+    public VariableNode poolVariable(Variable variable)
+    {
+        return poolT!(VariableNode, Variable)(variable);
+    }
+
+    /** 
+     * Pools the provided `Variable`
+     * AST node into a `StaticVariableDeclaration`
+     *
+     * Params:
+     *   variable = the AST node
+     * Returns: the pooled `StaticVariableDeclaration`
+     */
+    public StaticVariableDeclaration poolStaticVariable(Variable variable)
+    {
+        return poolT!(StaticVariableDeclaration, Variable)(variable);
+    }
+
+    /** 
+     * Pools the provided `Function`
+     * AST node into a `FuncDecNode`
+     *
+     * Params:
+     *   func = the AST node
+     * Returns: the pooled `FUncDecNode`
+     */
+    public FuncDecNode poolFuncDec(Function func)
+    {
+        return poolT!(FuncDecNode, Function)(func);
     }
 
     /** 
