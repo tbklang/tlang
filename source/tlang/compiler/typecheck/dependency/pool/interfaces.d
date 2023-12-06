@@ -1,4 +1,4 @@
-module tlang.compiler.typecheck.dependency.pool;
+module tlang.compiler.typecheck.dependency.pool.interfaces;
 
 import tlang.compiler.typecheck.dependency.core : DNode;
 import tlang.compiler.symbols.data : Statement;
