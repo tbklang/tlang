@@ -468,14 +468,6 @@ public class DNodeGenerator
         return functionDefinitions[functionAbsolutePath];
     }
 
-
-    /**
-    * DNode pool
-    *
-    * This holds unique pool entries
-    */
-    private static DNode[] nodePool;
-
     /** 
      * Dependency node pooling
      * management
@@ -1026,23 +1018,7 @@ public class DNodeGenerator
     import tlang.compiler.typecheck.dependency.variables;
     private ModuleVariableDeclaration pool_module_vardec(Variable entity)
     {
-        foreach(DNode dnode; nodePool)
-        {
-            if(dnode.getEntity() == entity)
-            {
-                return cast(ModuleVariableDeclaration)dnode;
-            }
-        }
-
-        /**
-        * If no DNode is found that is associated with
-        * the provided Entity then create a new one and
-        * pool it
-        */
-        ModuleVariableDeclaration newDNode = new ModuleVariableDeclaration(entity);
-        nodePool ~= newDNode;
-
-        return newDNode;
+        return this.poolManager.poolModuleVariableDeclaration(entity);
     }
 
     // TODO: Work in progress
