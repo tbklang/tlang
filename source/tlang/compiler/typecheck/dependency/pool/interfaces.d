@@ -2,7 +2,7 @@ module tlang.compiler.typecheck.dependency.pool.interfaces;
 
 import tlang.compiler.typecheck.dependency.core : DNode;
 import tlang.compiler.typecheck.dependency.expression : ExpressionDNode;
-import tlang.compiler.typecheck.dependency.variables : VariableNode, FuncDecNode, StaticVariableDeclaration;
+import tlang.compiler.typecheck.dependency.variables : VariableNode, FuncDecNode, StaticVariableDeclaration, ModuleVariableDeclaration;
 
 import tlang.compiler.symbols.data : Statement, Expression, Variable, Function;
 
@@ -58,6 +58,16 @@ public interface IPoolManager
      * Returns: the pooled `StaticVariableDeclaration`
      */
     public StaticVariableDeclaration poolStaticVariable(Variable variable);
+
+    /** 
+     * Pools the provided `Variable`
+     * AST node into a `ModuleVariableDeclaration`
+     *
+     * Params:
+     *   variable = the AST node
+     * Returns: the pooled `ModuleVariableDeclaration`
+     */
+    public ModuleVariableDeclaration poolModuleVariableDeclaration(Variable variable);
 
     /** 
      * Pools the provided `Function`
