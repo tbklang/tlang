@@ -9,6 +9,11 @@ import tlang.compiler.symbols.data : Statement, Expression, Variable, Function;
 // TODO: In future if we do not require the specific `ExpressionDNode` et al
 // ... then remove them from the interface definition below
 
+import niknaks.functional : predicateOf, Predicate;
+
+public alias ASTPredicate = Predicate!(Statement);
+public alias DNodePredicate = Predicate!(DNode);
+
 /** 
  * Defines an interface by which
  * `Statement`s (i.e. AST nodes)
@@ -28,6 +33,22 @@ public interface IPoolManager
      * Returns: the pooled `DNode`
      */
     public DNode pool(Statement statement);
+
+    /** 
+     * Pools the provided AST node
+     * to a dependency node but
+     * with the addition of
+     * a predicate which is applied
+     * over each matched AST
+     * node
+     *
+     * Params:
+     *   depNodePredicate = dependency
+     * node predicate
+     *   statement = the AST node
+     * Returns: the pooled `DNode`
+     */
+    public DNode pool(DNodePredicate depNodePredicate, Statement statement);
 
     /** 
      * Pools the provided `Expression`
