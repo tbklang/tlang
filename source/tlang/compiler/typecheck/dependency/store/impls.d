@@ -19,9 +19,13 @@ public final class FuncDefStore : IFuncDefStore
     private TypeChecker tc;
 
     /** 
-     * 
+     * Constructs a new function
+     * definition store with
+     * the provided type
+     * checking instance
+     *
      * Params:
-     *   typeChecker = 
+     *   typeChecker = the `TypeChecker`
      */
     this(TypeChecker typeChecker)
     {
@@ -55,6 +59,10 @@ public final class FuncDefStore : IFuncDefStore
         */
         FunctionData funcData;
         funcData.ownGenerator = new DFunctionInnerGenerator(tc, func);
+        // TODO: Should we not generate a HELLA long name rather, to avoid duplication problems and overwrites of key values
+
+        funcData.name = tc.getResolver().generateName(tc.getModule(), func);
+
         funcData.name = func.getName();
         funcData.func = func;
 
