@@ -1596,25 +1596,7 @@ public class DNodeGenerator
             // assert(clazz.getModifierType() == InitScope.STATIC);
         }
         
-
-        foreach(DNode dnode; nodePool)
-        {
-            Statement entity = dnode.getEntity();
-            if(entity == clazz && cast(ClassStaticNode)dnode)
-            {
-                return cast(ClassStaticNode)dnode;
-            }
-        }
-
-        /**
-        * If no DNode is found that is associated with
-        * the provided Entity then create a new one and
-        * pool it
-        */
-        ClassStaticNode newDNode = new ClassStaticNode(clazz);
-        nodePool ~= newDNode;
-
-        return newDNode;
+        return this.poolManager.poolClassStatic(clazz);
     }
 
     /**
