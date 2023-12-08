@@ -4,8 +4,9 @@ import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.core : DNode, DNodeGenerator;
 import tlang.compiler.typecheck.dependency.expression : ExpressionDNode;
 import tlang.compiler.typecheck.dependency.variables : VariableNode, FuncDecNode, StaticVariableDeclaration, ModuleVariableDeclaration;
+import tlang.compiler.typecheck.dependency.classes.classStaticDep : ClassStaticNode;
 
-import tlang.compiler.symbols.data : Statement, Expression, Variable, Function;
+import tlang.compiler.symbols.data : Statement, Expression, Variable, Function, Clazz;
 import std.traits : isAssignable;
 
 /** 
@@ -41,6 +42,42 @@ public final class PoolManager : IPoolManager
     public DNode pool(Statement statement)
     {
         return poolT!(DNode, Statement)(statement);
+    }
+
+    /** 
+     * Pools the provided `Clazz`
+     * AST node but with an additional
+     * check that it should match
+     * against a `ClassStaticNode`
+     * and if one does not exist
+     * then one such dependency
+     * node should be created
+     *
+     * Params:
+     *   clazz = the class to statcally
+     * pool
+     * Returns: the pooled `ClassStaticNode`
+     */
+    public ClassStaticNode poolClassStatic(Clazz clazz)
+    {
+        foreach(DNode dnode; nodePool)
+        {
+            Statement entity = dnode.getEntity();
+            if(entity == clazz && cast(ClassStaticNode)dnode)
+            {
+                return cast(ClassStaticNode)dnode;
+            }
+        }
+
+        /**
+        * If no DNode is found that is associated with
+        * the provided Entity then create a new one and
+        * pool it
+        */
+        ClassStaticNode newDNode = new ClassStaticNode(clazz);
+        nodePool ~= newDNode;
+
+        return newDNode;
     }
 
     /** 
