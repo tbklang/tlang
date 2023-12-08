@@ -3,8 +3,9 @@ module tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.core : DNode;
 import tlang.compiler.typecheck.dependency.expression : ExpressionDNode;
 import tlang.compiler.typecheck.dependency.variables : VariableNode, FuncDecNode, StaticVariableDeclaration, ModuleVariableDeclaration;
+import tlang.compiler.typecheck.dependency.classes.classStaticDep : ClassStaticNode;
 
-import tlang.compiler.symbols.data : Statement, Expression, Variable, Function;
+import tlang.compiler.symbols.data : Statement, Expression, Variable, Function, Clazz;
 
 // TODO: In future if we do not require the specific `ExpressionDNode` et al
 // ... then remove them from the interface definition below
@@ -29,6 +30,22 @@ public interface IPoolManager
      * Returns: the pooled `DNode`
      */
     public DNode pool(Statement statement);
+
+    /** 
+     * Pools the provided `Clazz`
+     * AST node but with an additional
+     * check that it should match
+     * against a `ClassStaticNode`
+     * and if one does not exist
+     * then one such dependency
+     * node should be created
+     *
+     * Params:
+     *   clazz = the class to statcally
+     * pool
+     * Returns: the pooled `ClassStaticNode`
+     */
+    public ClassStaticNode poolClassStatic(Clazz clazz);
 
     /** 
      * Pools the provided `Expression`
