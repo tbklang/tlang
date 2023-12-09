@@ -3,6 +3,11 @@ module tlang.compiler.typecheck.dependency.store.interfaces;
 import tlang.compiler.symbols.data : Function;
 import tlang.compiler.typecheck.dependency.core : FunctionData;
 
+/** 
+ * Represents a storage mechanism
+ * which can store and retrieve
+ * function definition datas
+ */
 public interface IFuncDefStore
 {
     /** 
@@ -22,4 +27,14 @@ public interface IFuncDefStore
      * map
      */
     public FunctionData[string] grabFunctionDefs();
+
+    /** 
+     * Grabs a function definition by its
+     * name
+     *
+     * Params:
+     *   name = the name of the function
+     * Returns: the `FunctionData`
+     */
+    public FunctionData grabFunctionDef(string name);
 }
