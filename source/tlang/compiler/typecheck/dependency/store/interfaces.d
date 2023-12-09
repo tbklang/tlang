@@ -38,3 +38,13 @@ public interface IFuncDefStore
      */
     public FunctionData grabFunctionDef(string name);
 }
+
+import misc.exceptions : TError;
+
+public final class FuncDefStoreException : TError
+{
+    this(string msg)
+    {
+        super(msg);
+    }
+}
