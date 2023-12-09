@@ -1,6 +1,6 @@
 module tlang.compiler.typecheck.dependency.store.impls;
 
-import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
+import tlang.compiler.typecheck.dependency.store.interfaces;
 import tlang.compiler.symbols.data : Function;
 
 import tlang.compiler.typecheck.dependency.core : FunctionData, DFunctionInnerGenerator;
@@ -58,7 +58,7 @@ public final class FuncDefStore : IFuncDefStore
         * context etc.
         */
         FunctionData funcData;
-        funcData.ownGenerator = new DFunctionInnerGenerator(tc, func);
+        funcData.ownGenerator = new DFunctionInnerGenerator(tc, this, func);
         // TODO: Should we not generate a HELLA long name rather, to avoid duplication problems and overwrites of key values
 
         funcData.name = tc.getResolver().generateName(tc.getModule(), func);
@@ -80,5 +80,28 @@ public final class FuncDefStore : IFuncDefStore
     public FunctionData[string] grabFunctionDefs()
     {
         return this.functions.dup;
+    }
+
+    /** 
+     * Grabs a function definition by its
+     * name
+     *
+     * Params:
+     *   name = the name of the function
+     * Returns: the `FunctionData`
+     * Throws:
+     *   FuncDefStoreException if the function
+     * could not be found
+     */
+    public FunctionData grabFunctionDef(string name)
+    {
+        if(name in this.functions)
+        {
+            return this.functions[name];
+        }
+        else
+        {
+            throw new FuncDefStoreException("Could not find function by name '"~name~"'");
+        }
     }
 }
