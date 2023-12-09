@@ -35,6 +35,9 @@ public interface IFuncDefStore
      * Params:
      *   name = the name of the function
      * Returns: the `FunctionData`
+     * Throws:
+     *   FuncDefStoreException if the function
+     * could not be found
      */
     public FunctionData grabFunctionDef(string name);
 }
