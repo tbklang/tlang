@@ -20,6 +20,9 @@ public interface IFuncDefStore
      *
      * Params:
      *   func = the function to add
+     * Throws:
+     *   FuncDefStoreException if the function
+     * has already been added
      */
     public void addFunctionDef(Function func);
 
