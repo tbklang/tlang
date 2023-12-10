@@ -1,3 +1,7 @@
+/** 
+ * Provides the definition of a function definition
+ * store and retrieval system
+ */
 module tlang.compiler.typecheck.dependency.store.interfaces;
 
 import tlang.compiler.symbols.data : Function;
