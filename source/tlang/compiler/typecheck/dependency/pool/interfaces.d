@@ -1,15 +1,22 @@
+/** 
+ * Defines interfaces for managing
+ * the pooling of AST nodes to 
+ * dependency nodes which are to be
+ * used within the dependency generator
+ * and later the codegen/typechecker
+ * which consumes these dependency
+ * nodes
+ */
 module tlang.compiler.typecheck.dependency.pool.interfaces;
 
 import tlang.compiler.typecheck.dependency.core : DNode;
 import tlang.compiler.typecheck.dependency.expression : ExpressionDNode;
 import tlang.compiler.typecheck.dependency.variables : VariableNode, FuncDecNode, StaticVariableDeclaration, ModuleVariableDeclaration;
 import tlang.compiler.typecheck.dependency.classes.classStaticDep : ClassStaticNode;
-
 import tlang.compiler.symbols.data : Statement, Expression, Variable, Function, Clazz;
 
 // TODO: In future if we do not require the specific `ExpressionDNode` et al
 // ... then remove them from the interface definition below
-
 
 /** 
  * Defines an interface by which
