@@ -6,6 +6,7 @@ module tlang.compiler.typecheck.dependency.store.interfaces;
 
 import tlang.compiler.symbols.data : Function;
 import tlang.compiler.typecheck.dependency.core : FunctionData;
+import misc.exceptions : TError;
 
 /** 
  * Represents a storage mechanism
@@ -48,8 +49,6 @@ public interface IFuncDefStore
      */
     public FunctionData grabFunctionDef(string name);
 }
-
-import misc.exceptions : TError;
 
 /**
  * Exception thrown when an error occurs
