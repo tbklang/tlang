@@ -6,7 +6,6 @@ module tlang.compiler.typecheck.dependency.store.impls;
 
 import tlang.compiler.typecheck.dependency.store.interfaces;
 import tlang.compiler.symbols.data : Function;
-
 import tlang.compiler.typecheck.dependency.core : FunctionData, DFunctionInnerGenerator;
 import tlang.compiler.typecheck.core : TypeChecker;
 
