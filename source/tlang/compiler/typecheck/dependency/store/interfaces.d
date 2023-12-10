@@ -48,8 +48,19 @@ public interface IFuncDefStore
 
 import misc.exceptions : TError;
 
+/**
+ * Exception thrown when an error occurs
+ * with the `IFuncDefStore` system
+ */
 public final class FuncDefStoreException : TError
 {
+    /** 
+     * Constructs a new `FuncDefStoreException`
+     * with the given error message
+     *
+     * Params:
+     *   msg = the error message
+     */
     this(string msg)
     {
         super(msg);
