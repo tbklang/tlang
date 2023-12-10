@@ -1,3 +1,7 @@
+/** 
+ * Provides implementation of the `IFuncDefStore`
+ * interface
+ */
 module tlang.compiler.typecheck.dependency.store.impls;
 
 import tlang.compiler.typecheck.dependency.store.interfaces;
@@ -6,6 +10,12 @@ import tlang.compiler.symbols.data : Function;
 import tlang.compiler.typecheck.dependency.core : FunctionData, DFunctionInnerGenerator;
 import tlang.compiler.typecheck.core : TypeChecker;
 
+/** 
+ * An implementation of the `IFuncDefStore`
+ * which provides us with a way to store
+ * function definitions and retrieve them
+ * later
+ */
 public final class FuncDefStore : IFuncDefStore
 {
     /**
