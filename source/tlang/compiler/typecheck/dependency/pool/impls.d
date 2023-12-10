@@ -1,3 +1,7 @@
+/** 
+ * Implementation of the `IPoolManager`
+ * interface
+ */
 module tlang.compiler.typecheck.dependency.pool.impls;
 
 import tlang.compiler.typecheck.dependency.pool.interfaces;
@@ -5,7 +9,6 @@ import tlang.compiler.typecheck.dependency.core : DNode, DNodeGenerator;
 import tlang.compiler.typecheck.dependency.expression : ExpressionDNode;
 import tlang.compiler.typecheck.dependency.variables : VariableNode, FuncDecNode, StaticVariableDeclaration, ModuleVariableDeclaration;
 import tlang.compiler.typecheck.dependency.classes.classStaticDep : ClassStaticNode;
-
 import tlang.compiler.symbols.data : Statement, Expression, Variable, Function, Clazz;
 import std.traits : isAssignable;
 
