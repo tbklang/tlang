@@ -48,6 +48,9 @@ public final class FuncDefStore : IFuncDefStore
      *
      * Params:
      *   func = the function to add
+     * Throws:
+     *   FuncDefStoreException if the function
+     * has already been added
      */
     public void addFunctionDef(Function func)
     {
@@ -59,7 +62,7 @@ public final class FuncDefStore : IFuncDefStore
 
             if(cFunc == func)
             {
-                assert(false);
+                throw new FuncDefStoreException("The provided Function already exists within the store");
             }
         }
 
