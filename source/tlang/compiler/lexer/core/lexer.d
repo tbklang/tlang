@@ -103,11 +103,13 @@ public enum LexerSymbols: char {
     DOUBLE_QUOTE = '"',
     SINGLE_QUOTE =  '\'' ,
     BACKSLASH =  '\\' ,
+    UNDERSCORE =  '_' ,
 
     ESC_NOTHING =  '0' ,
     ESC_CARRIAGE_RETURN =  'r' ,
     ESC_TAB =  't' ,
     ESC_NEWLINE =  'n' ,
+    ESC_BELL=  'a' ,
 
     ENC_BYTE =  'B' ,
     ENC_INT =  'I' ,
