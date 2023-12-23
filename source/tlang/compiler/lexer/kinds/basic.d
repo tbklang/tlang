@@ -695,11 +695,6 @@ private void shout(int i = __LINE__)
     gprintln("Unittest ("~to!(string)(roll())~") at "~to!(string)(i));
 }
 
-private void goggaWithLineInfo(string message, string[] lineInfo = [__DATE__, to!(string)(__LINE__), __MODULE__, __PRETTY_FUNCTION__])
-{
-    gprintln(lineInfo[2]~":"~lineInfo[1]~" "~message);
-}
-
 /* Test input: `hello "world";` */
 unittest
 {
