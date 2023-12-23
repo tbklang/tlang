@@ -153,21 +153,6 @@ public final class BasicLexer : LexerInterface
     }
 
     /**
-    * Used for tokenising a2.b2
-    *
-    * When the `.` is encountered
-    * and there are some characters
-    * behind it this checks if we can
-    * append a further dot to it
-    */
-    private bool isBuildUpValidIdent()
-    {
-        import tlang.compiler.symbols.check;
-
-        return isPathIdentifier(currentToken) || isIdentifier(currentToken);
-    }
-
-    /**
     * Returns true if we have a token being built
     * false otherwise
     */
@@ -272,7 +257,11 @@ public final class BasicLexer : LexerInterface
                 {
                     splitterToken = "||";
                     improvedAdvance(2, false);
-                } else if (currentChar == LS.SHEFFER_STROKE) {
+                } else if (currentChar == LS.EXCLAMATION && isForward() && sourceCode[position + 1] == LS.EQUALS)
+                {
+                    splitterToken = "!=";
+                    improvedAdvance(2, false);
+                }else if (currentChar == LS.SHEFFER_STROKE) {
                     splitterToken = "|";
                     improvedAdvance(1, false);
                 } else if (currentChar == LS.AMPERSAND) {
@@ -368,7 +357,8 @@ public final class BasicLexer : LexerInterface
                     throw new LexerException(this, "Invalid character in identifier build up.");
                 } else {
                     if (!buildAdvance()) {
-                        return false;
+                        throw new LexerException(this, "Invalid character in identifier build up.");
+                        //return false;
                     }
                 }
             } else if (isSplitter(currentChar)) {
@@ -443,16 +433,19 @@ public final class BasicLexer : LexerInterface
      * Returns: true if characters left in buffer, else false
      */
     private bool doComment() {
-        if (!buildAdvance()) {
-            flush();
-            /* TODO: perhaps error here */
-            return false;
-        }
+        buildAdvance();
+        // if (!buildAdvance()) {
+        //     flush();
+        //     return false;
+        // }
         bool multiLine = currentChar == LS.STAR;
         if (!buildAdvance()) {
+            if (multiLine) {
+                throw new LexerException(this, "Expected closing Comment, but got EOF");
+            } else {
             flush();
-        /* TODO: perhaps error here */
             return false;
+            }
         }
         while (true) {
             if (!multiLine && currentChar == LS.NEWLINE) {
@@ -469,8 +462,15 @@ public final class BasicLexer : LexerInterface
                 }
             } else {
                 if (!buildAdvance()) {
-                    flush();
-                    return false;
+                    if (multiLine)
+                    {
+                        throw new LexerException(this, "Expected closing Comment, but got EOF");
+                    }
+                    else
+                    {
+                        flush();
+                        return false;
+                    }
                 }
             }
         }
@@ -487,16 +487,11 @@ public final class BasicLexer : LexerInterface
         }
         // currentToken ~= LS.BACKSLASH;
         if (isValidEscape_String(currentChar)) {
-            if (!buildAdvance()) {
-                // flush();
-                //TODO: Maybe throw error here
-                return false;
-            }
+            return buildAdvance();
         } else {
             throw new LexerException(this, "Invalid escape code");
         }
         // flush();
-        return true;
     }
 
 
@@ -747,12 +742,6 @@ shout();
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     try {
         currentLexer.performLex();
-        gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
-        assert(currentLexer.getTokens() == [
-                new Token("hello", 0, 0), new Token("\"wo\nrld\"", 0, 0),
-                new Token(";", 0, 0)
-            ]);
-        assert(false);
     } catch (LexerException) {
         assert(true);
 
@@ -1078,7 +1067,6 @@ shout();
     // gprintln(currentLexer.performLex());
     try {
         currentLexer.performLex();
-        gprintln("Collected "~to!(string)(currentLexer.getTokens()));
         assert(false);
     } catch (LexerException) {
         assert(true);
@@ -1090,7 +1078,6 @@ shout();
     // gprintln(currentLexer.performLex());
     try {
         currentLexer.performLex();
-        gprintln("Collected "~to!(string)(currentLexer.getTokens()));
         assert(false);
     } catch (LexerException) {
         assert(true);
@@ -1220,7 +1207,6 @@ shout();
     try
     {
         currentLexer.performLex();
-        gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
         assert(false);
     }
     catch (LexerException e)
@@ -1480,7 +1466,6 @@ shout();
     try
     {
         currentLexer.performLex();
-        gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
     }
     catch (LexerException e)
     {
@@ -1502,7 +1487,6 @@ shout();
     try
     {
         currentLexer.performLex();
-        gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
     }
     catch (LexerException e)
     {
@@ -1534,5 +1518,363 @@ shout();
             new Token("12", 0, 0),
             new Token("12.3", 0, 0),
             new Token("1.23", 0, 0),
+        ]);
+}
+
+/**
+* Testing Comparison in numbers
+*
+* Input: `<= >= ==`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "<= >= =< => == != < > ^";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("<=", 0, 0),
+            new Token(">=", 0, 0),
+            new Token("=<", 0, 0),
+            new Token("=>", 0, 0),
+            new Token("==", 0, 0),
+            new Token("!=", 0, 0),
+            new Token("<", 0, 0),
+            new Token(">", 0, 0),
+            new Token("^", 0, 0),
+        ]);
+}
+
+/**
+* Testing Chars
+*
+* Input: `'a'`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "'a'";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("'a'", 0, 0),
+        ]);
+}
+
+
+unittest
+{
+shout();
+    /**
+    * Test for invalid ident
+    * Input: `hello. `
+    */
+    bool didFail = false;
+    string sourceCode = "hello. ";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Test for invalid ident
+    * Input: `hello.`
+    */
+    bool didFail = false;
+    string sourceCode = "hello.";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing Chars
+    * Input: `'`
+    */
+    bool didFail = false;
+    string sourceCode = "'";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing Chars
+    * Input: `'a`
+    */
+    bool didFail = false;
+    string sourceCode = "'a";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing Chars
+    * Input: `'aa`
+    */
+    bool didFail = false;
+    string sourceCode = "'aa";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+
+unittest
+{
+shout();
+    /**
+    * Testing String EOF
+    * Input: `"a`
+    */
+    bool didFail = false;
+    string sourceCode = "\"a";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing String EOF
+    * Input: `"a`
+    */
+    bool didFail = false;
+    string sourceCode = "\"";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+
+unittest
+{
+shout();
+    /**
+    * Testing String EOF
+    * Input: `"\`
+    */
+    bool didFail = false;
+    string sourceCode = "\"\\";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing Comment EOF
+    * Input: `/*`
+    */
+    bool didFail = false;
+    string sourceCode = "/*";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing Comment EOF
+    * Input: `/* `
+    */
+    bool didFail = false;
+    string sourceCode = "/* ";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+/**
+* Testing Line comment EOF
+*
+* Input: `//`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "//";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+        new Token("//", 0, 0)
+        ]);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing invalid Escape Code
+    * Input: `\p`
+    */
+    bool didFail = false;
+    string sourceCode = "\"\\p";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing invalid Escape Code
+    * Input: `\p`
+    */
+    bool didFail = false;
+    string sourceCode = "\\p";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+/**
+* Testing comment
+*
+* Input: `'a' `
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "'a' ";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+        new Token("'a'", 0, 0)
+        ]);
+}
+
+/**
+* Testing comment
+*
+* Input: `// \n`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "// \n";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+        new Token("// ", 0, 0)
         ]);
 }
