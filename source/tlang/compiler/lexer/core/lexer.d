@@ -75,7 +75,13 @@ public interface LexerInterface
     public Token[] getTokens();
 }
 
-public enum LexerSymbols: char {
+/** 
+ * Human-readable names assigned
+ * to commonly used character
+ * constants
+ */
+public enum LexerSymbols : char
+{
     L_PAREN = '(',
     R_PAREN = ')',
     SEMI_COLON = ';',
