@@ -691,15 +691,18 @@ public final class BasicLexer : LexerInterface
     }
 }
 
-private int rolled = 0;
-private int roll()
+/** 
+ * Does a print out of some text just to show you
+ * where you are from within the caller
+ *
+ * Params:
+ *   __LINE__ = line number (auto-filled)
+ *   __MODULE__ = module name (auto-filled)
+ *   __FUNCTION__ = function name (auto-filled)
+ */
+private void shout(int i = __LINE__, string mod = __MODULE__, string func = __FUNCTION__)
 {
-    return rolled++;
-}
-
-private void shout(int i = __LINE__)
-{
-    gprintln("Unittest ("~to!(string)(roll())~") at "~to!(string)(i));
+    gprintln("Unittest at "~to!(string)(i)~" in "~func~" (within module "~mod~")");
 }
 
 /* Test input: `hello "world";` */
