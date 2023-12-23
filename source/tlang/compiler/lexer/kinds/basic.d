@@ -684,6 +684,15 @@ public final class BasicLexer : LexerInterface
     }
 }
 
+/** 
+ * Does a print out of some text just to show you
+ * where you are from within the caller
+ *
+ * Params:
+ *   __LINE__ = line number (auto-filled)
+ *   __MODULE__ = module name (auto-filled)
+ *   __FUNCTION__ = function name (auto-filled)
+ */
 private void shout(int i = __LINE__, string mod = __MODULE__, string func = __FUNCTION__)
 {
     gprintln("Unittest at "~to!(string)(i)~" in "~func~" (within module "~mod~")");
