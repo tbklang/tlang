@@ -4,6 +4,7 @@
 module tlang.compiler.lexer.kinds.basic;
 
 import std.container.slist;
+import std.string : replace;
 import gogga;
 import std.conv : to;
 import std.ascii : isDigit, isAlpha, isWhite;
@@ -152,21 +153,6 @@ public final class BasicLexer : LexerInterface
     }
 
     /**
-    * Used for tokenising a2.b2
-    *
-    * When the `.` is encountered
-    * and there are some characters
-    * behind it this checks if we can
-    * append a further dot to it
-    */
-    private bool isBuildUpValidIdent()
-    {
-        import tlang.compiler.symbols.check;
-
-        return isPathIdentifier(currentToken) || isIdentifier(currentToken);
-    }
-
-    /**
     * Returns true if we have a token being built
     * false otherwise
     */
@@ -180,61 +166,57 @@ public final class BasicLexer : LexerInterface
     public void performLex()
     {
 
+        currentChar = sourceCode[position];
         while (position < sourceCode.length)
         {
             // gprintln("SrcCodeLen: "~to!(string)(sourceCode.length));
             // gprintln("Position: "~to!(string)(position));
 
-            currentChar = sourceCode[position];
 
-            if (isWhite(currentChar))
+            // // currentChar = sourceCode[position];
+            // gprintln("Current Char\"" ~ currentChar ~ "\"");
+            // gprintln("Current Token\"" ~ currentToken ~ "\"");
+            // gprintln("Match alpha check" ~ to!(bool)(currentChar == LS.UNDERSCORE || isAlpha(currentChar)));
+
+            if (isSplitter(currentChar))
             {
-                /* TODO: Check if current token is fulled, then flush */
+
                 if (currentToken.length != 0)
                 {
                     flush();
                 }
-
-                bool run;
-                if (currentChar == LS.NEWLINE) {
-                    if (!advanceLine()) {
+                if (isWhite(currentChar) ) {
+                    if (improvedAdvance()) {
+                        continue;
+                    } else {
                         break;
                     }
-                } else if (!advance()) {
-                    break;
-                }
-            }
-            else if (isSplitter(currentChar))
-            {
-                /* The splitter token to finally insert */
+                }                /* The splitter token to finally insert */
                 string splitterToken;
 
-                gprintln("Build up: " ~ currentToken);
-                gprintln("Current char: " ~ currentChar);
+                // gprintln("Build up: " ~ currentToken);
+                // gprintln("Current char, splitter: " ~ currentChar);
                 if (currentChar == LS.FORWARD_SLASH && isForward() && (sourceCode[position+1] == LS.FORWARD_SLASH || sourceCode[position+1] == LS.STAR)) {
                     if (!doComment()) {
                         break;
                     }
                 }
 
-                /* Check for case of `==` (where we are on the first `=` sign) */
-                if (currentChar == LS.EQUALS && isForward() && sourceCode[position + 1] == LS.EQUALS)
+                /* Check for case of `==` or `=<` or `=>` (where we are on the first `=` sign) */
+                if (currentChar == LS.EQUALS && isForward() && (sourceCode[position + 1] == LS.EQUALS || sourceCode[position + 1] == LS.LESS_THAN || sourceCode[position + 1] == LS.BIGGER_THAN))
                 {
-                    /* Flush any current token (if exists) */
-                    if (currentToken.length)
-                    {
-                        currentTokens ~= new Token(currentToken, line, column);
-                        currentToken = EMPTY;
-                    }
+                    buildAdvance();
+                    buildAdvance();
+                    flush();
+                    continue;
+                }
 
-                    // Create the `==` token
-                    currentTokens ~= new Token("==", line, column);
-
-                    // Skip over the current `=` and the next `=`
-                    position += 2;
-
-                    column += 2;
-
+                /* Check for case of `<=` or `>=` */
+                if ((currentChar == LS.LESS_THAN || currentChar == LS.BIGGER_THAN) && isForward() && (sourceCode[position + 1] == LS.EQUALS || sourceCode[position + 1] == LS.LESS_THAN || sourceCode[position + 1] == LS.BIGGER_THAN))
+                {
+                    buildAdvance();
+                    buildAdvance();
+                    flush();
                     continue;
                 }
 
@@ -254,32 +236,7 @@ public final class BasicLexer : LexerInterface
                     {
                         throw new LexerException(this, "Character '.' is not allowed to precede a whitespace.");
                     }
-                    /* TODO: Error checking will need to be added */
-                    else if (hasToken() && isBuildUpValidIdent())
-                    {
-
-                        gprintln("Bruh");
-                        /**
-                    * Now we check that we have a character infront of us
-                    * and that it is a letter
-                    *
-                    * TODO: Add _ check too as that is a valid identifier start
-                    */
-                        if (isForward() && isCharacterAlpha(sourceCode[position + 1]))
-                        {
-                            position++;
-                            column += 1;
-
-                            currentToken ~= LS.DOT;
-
-                            continue;
-                        }
-                        else
-                        {
-                            throw new LexerException(this, "Expected a letter to follow the .");
-                        }
-                    }
-                    else if (!hasToken() && (isForward() && !isValidDotPrecede(
+                    else if (!hasToken() && (isBackward() && !isValidDotPrecede(
                             sourceCode[position - 1])))
                     {
                         throw new LexerException(this, "Character '.' should be preceded by valid identifier or numerical.");
@@ -287,45 +244,54 @@ public final class BasicLexer : LexerInterface
                     else
                     {
                         splitterToken = EMPTY ~ currentChar;
-                        column++;
-                        position++;
+                        improvedAdvance();
                     }
-
-                }
+                }else if (currentChar == LS.AMPERSAND && (position + 1) != sourceCode.length && sourceCode[position + 1] == LS.AMPERSAND)
+                {
+                    splitterToken = "&&";
+                    improvedAdvance(2, false);
+                } 
                 /* Check if we need to do combinators (e.g. for ||, &&) */
                 /* TODO: Second operand in condition out of bounds */
                 else if (currentChar == LS.SHEFFER_STROKE && isForward() && sourceCode[position + 1] == LS.SHEFFER_STROKE)
                 {
                     splitterToken = "||";
-                    column += 2;
-                    position += 2;
-                }
-                else if (currentChar == LS.AMPERSAND && (position + 1) != sourceCode.length && sourceCode[position + 1] == LS.AMPERSAND)
+                    improvedAdvance(2, false);
+                } else if (currentChar == LS.EXCLAMATION && isForward() && sourceCode[position + 1] == LS.EQUALS)
                 {
-                    splitterToken = "&&";
-                    column += 2;
-                    position += 2;
-                } else if (isWhite(currentChar)) {
-                    if (currentChar == LS.NEWLINE) {
-                        if (!advanceLine()) {
-                            break;
-                        }
-                    } else if (!advance()) {
+                    splitterToken = "!=";
+                    improvedAdvance(2, false);
+                }else if (currentChar == LS.SHEFFER_STROKE) {
+                    splitterToken = "|";
+                    improvedAdvance(1, false);
+                } else if (currentChar == LS.AMPERSAND) {
+                    splitterToken = "&";
+                    improvedAdvance(1, false);
+                } else if (currentChar == LS.CARET) {
+                    splitterToken = "^";
+                    improvedAdvance(1, false);
+                } else if (currentChar == LS.LESS_THAN) {
+                    splitterToken = [LS.LESS_THAN];
+                    improvedAdvance(1, false);
+                } else if (currentChar == LS.BIGGER_THAN) {
+                    splitterToken = [LS.BIGGER_THAN];
+                    improvedAdvance(1, false);
+                }  
+                else if (isWhite(currentChar)) {
+                    if (!improvedAdvance()) {
                         break;
                     }
                 }
                 else
                 {
                     splitterToken = EMPTY ~ currentChar;
-                    column++;
-                    position++;
+                    improvedAdvance();
                 }
 
                 /* Flush the current token (if one exists) */
                 if (currentToken.length)
                 {
-                    currentTokens ~= new Token(currentToken, line, column);
-                    currentToken = EMPTY;
+                    flush();
                 }
 
                 /* Add the splitter token (only if it isn't empty) */
@@ -334,70 +300,39 @@ public final class BasicLexer : LexerInterface
                     currentTokens ~= new Token(splitterToken, line, column);
                 }
             }
+            //else if (currentChar == LS.UNDERSCORE || ((!isSplitter(currentChar) && !isDigit(currentChar)) && currentChar != LS.DOUBLE_QUOTE && currentChar != LS.SINGLE_QUOTE && currentChar != LS.BACKSLASH)) {
+            else if (currentChar == LS.UNDERSCORE || isAlpha(currentChar)) {
+                gprintln("path ident String");
+                if (!doIdentOrPath()) {
+                    break;
+                } else {
+                    continue;
+                }
+            }
             else if (currentChar == LS.DOUBLE_QUOTE)
             {
                 if (!doString()) {
                     break;
                 }
             }
-            else if (currentChar == LS.BACKSLASH)
-            {
-                throw new LexerException(this, "Escape sequences can only be used within strings");
-            }
-            /* Character literal support */
             else if (currentChar == LS.SINGLE_QUOTE)
             {
-                currentToken ~= LS.SINGLE_QUOTE;
-
-                /* Character literal must be next */
-                if (position + 1 != sourceCode.length)
-                {
-                    /* TODO: Escape support for \' */
-
-                    /* Get the character */
-                    currentToken ~= EMPTY ~ sourceCode[position + 1];
-                    column++;
-                    position++;
-
-                    /* Closing ' must be next */
-                    if (position + 1 != sourceCode.length && sourceCode[position + 1] == LS.SINGLE_QUOTE)
-                    {
-                        /* Generate and add the token */
-                        currentToken ~= LS.SINGLE_QUOTE;
-                        currentTokens ~= new Token(currentToken, line, column);
-
-                        /* Flush the token */
-                        currentToken = EMPTY;
-
-                        column += 2;
-                        position += 2;
-                    }
-                    else
-                    {
-                        throw new LexerException(this, "Was expecting closing ' when finishing character literal");
-                    }
-                }
-                else
-                {
-                    throw new LexerException(this, LexerError.EXHAUSTED_CHARACTERS, "EOSC reached when trying to get character literal");
+                if (!doChar()) {
+                    break;
                 }
             }
-            /**
-            * If we are building up a number
-            *
-            * TODO: Build up token right at the end (#DuplicateCode)
-            */
             else if (isDigit(currentChar)){
                 if (!doNumber()) {
                     break;
                 }
+                currentToken = currentToken.replace("_", "");
             }
-            /* Any other case, keep building the curent token */
-            else
+            else if (currentChar == LS.BACKSLASH)
             {
-                currentToken ~= currentChar;
-                column++;
-                position++;
+                throw new LexerException(this, "Escape sequences can only be used within strings");
+            } else {
+                throw new LexerException(this, "Unsupported Character in this position");
+                //gprintln("Fuck " ~ " me col" ~ to!(string)(column));
             }
         }
 
@@ -408,6 +343,61 @@ public final class BasicLexer : LexerInterface
         }
 
         tokens = currentTokens;
+    }
+
+    private bool doIdentOrPath () {
+        if (!buildAdvance()) {
+            flush();
+            return false;
+        }
+
+        while (true) {
+            if (currentChar == LS.DOT) {
+                if (isForward() && (isSplitter(sourceCode[position + 1]) || isDigit(sourceCode[position + 1]))) {
+                    throw new LexerException(this, "Invalid character in identifier build up.");
+                } else {
+                    if (!buildAdvance()) {
+                        throw new LexerException(this, "Invalid character in identifier build up.");
+                        //return false;
+                    }
+                }
+            } else if (isSplitter(currentChar)) {
+                flush();
+                return true;
+            } else if (!(isAlpha(currentChar) || isDigit(currentChar) || currentChar == LS.UNDERSCORE)) {
+                throw new LexerException(this, "Invalid character in identifier build up.");
+            } else {
+                if (!buildAdvance()) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    private bool doChar() {
+        if (!buildAdvance()) {
+            throw new LexerException(this, "Expected character,  but got EOF");
+        }
+        /* Character literal must be next */
+        bool valid;
+        if (currentChar == LS.BACKSLASH) {
+            valid = doEscapeCode();
+        } else {
+            valid = buildAdvance();
+        }
+        if (!valid) {
+            throw new LexerException(this, "Expected ''',  but got EOF");
+        }
+
+        if (currentChar != LS.SINGLE_QUOTE) {
+            throw new LexerException(this, "Expected ''',  but got EOF");
+        }
+        if (!buildAdvance()) {
+            flush();
+            return false;
+        }
+        flush();
+        return true;
     }
 
     private bool doString() {
@@ -443,16 +433,19 @@ public final class BasicLexer : LexerInterface
      * Returns: true if characters left in buffer, else false
      */
     private bool doComment() {
-        if (!buildAdvance()) {
-            flush();
-            /* TODO: perhaps error here */
-            return false;
-        }
+        buildAdvance();
+        // if (!buildAdvance()) {
+        //     flush();
+        //     return false;
+        // }
         bool multiLine = currentChar == LS.STAR;
         if (!buildAdvance()) {
+            if (multiLine) {
+                throw new LexerException(this, "Expected closing Comment, but got EOF");
+            } else {
             flush();
-        /* TODO: perhaps error here */
             return false;
+            }
         }
         while (true) {
             if (!multiLine && currentChar == LS.NEWLINE) {
@@ -469,8 +462,15 @@ public final class BasicLexer : LexerInterface
                 }
             } else {
                 if (!buildAdvance()) {
-                    flush();
-                    return false;
+                    if (multiLine)
+                    {
+                        throw new LexerException(this, "Expected closing Comment, but got EOF");
+                    }
+                    else
+                    {
+                        flush();
+                        return false;
+                    }
                 }
             }
         }
@@ -487,16 +487,11 @@ public final class BasicLexer : LexerInterface
         }
         // currentToken ~= LS.BACKSLASH;
         if (isValidEscape_String(currentChar)) {
-            if (!buildAdvance()) {
-                // flush();
-                //TODO: Maybe throw error here
-                return false;
-            }
+            return buildAdvance();
         } else {
             throw new LexerException(this, "Invalid escape code");
         }
         // flush();
-        return true;
     }
 
 
@@ -508,8 +503,9 @@ public final class BasicLexer : LexerInterface
      */
     private bool doNumber() {
         while (true) {
-            if (isDigit(currentChar)) {
+            if (isDigit(currentChar) || currentChar == LS.UNDERSCORE) {
                 if(!buildAdvance()) {
+                    currentToken = currentToken.replace("_", "");
                     flush();
                     return false;
                 }
@@ -520,10 +516,6 @@ public final class BasicLexer : LexerInterface
             } else {
                 return true;
             }
-            // if (!advance()) {
-            //     flush();
-            //     return false;
-            // }
         }
     }
 
@@ -564,17 +556,20 @@ public final class BasicLexer : LexerInterface
             throw new LexerException(this, "Floating point expected digit, got EOF.");
             //return false;
         }
+        size_t count = 0;
         bool valid = false;
         while (true) {
 
-            if (isDigit(currentChar))
+            if (isDigit(currentChar) || (count > 0 && currentChar == LS.UNDERSCORE))
             {
                 /* tack on and move to next iteration */
                 valid = true;
                 if (!buildAdvance()) {
+                    currentToken = currentToken.replace("_", "");
                     flush();
                     return false;
                 }
+                count++;
                 continue;
             }
             else
@@ -582,6 +577,7 @@ public final class BasicLexer : LexerInterface
                 /* TODO: Throw erropr here */
                 if (isSplitter(currentChar) && valid)
                 {
+                    currentToken = currentToken.replace("_", "");
                     flush();
                     return true;
                 }
@@ -606,16 +602,19 @@ public final class BasicLexer : LexerInterface
      */
     private bool buildAdvance() {
         currentToken ~= currentChar;
-        return advance();
+        return improvedAdvance();
     }
 
-    /** 
-     * Advance the position, column and current token.
-     * Returns: true if characters left in buffer, else false
-     */
-    private bool advance(int inc = 1) {
-        column += inc;
-        position += inc;
+    private bool improvedAdvance(int inc = 1, bool shouldFlush = false) {
+        if (currentChar == LS.NEWLINE) {
+            shouldFlush && flush();
+            line++;
+            column = 1;
+            position++;
+        } else {
+            column += inc;
+            position += inc;
+        }
         if (position >= sourceCode.length) {
             return false;
         }
@@ -638,16 +637,19 @@ public final class BasicLexer : LexerInterface
         return true;
     }
 
-    private bool isSplitter(char character)
+    private bool isOperator(char c) {
+        return c == LS.PLUS || c == LS.TILDE || c == LS.MINUS ||
+            c == LS.STAR || c == LS.FORWARD_SLASH || c == LS.AMPERSAND ||
+            c == LS.CARET || c == LS.EXCLAMATION || c == LS.SHEFFER_STROKE || c == LS.LESS_THAN || c == LS.BIGGER_THAN;
+    }
+
+    private bool isSplitter(char c)
     {
-        return character == LS.SEMI_COLON || character == LS.COMMA || character == LS.L_PAREN ||
-            character == LS.R_PAREN || character == LS.L_BRACK || character == LS.R_BRACK ||
-            character == LS.PLUS || character == LS.MINUS || character == LS.FORWARD_SLASH ||
-            character == LS.PERCENT || character == LS.STAR || character == LS.AMPERSAND ||
-            character == LS.L_BRACE || character == LS.R_BRACE || character == LS.EQUALS ||
-            character == LS.SHEFFER_STROKE || character == LS.CARET || character == LS.EXCLAMATION ||
-            character == LS.TILDE || character == LS.DOT || character == LS.COLON ||
-            isWhite(character); //|| isNumericalEncoder(character);
+        return c == LS.SEMI_COLON || c == LS.COMMA || c == LS.L_PAREN ||
+            c == LS.R_PAREN || c == LS.L_BRACK || c == LS.R_BRACK ||
+            c == LS.PERCENT || c == LS.L_BRACE || c == LS.R_BRACE ||
+            c == LS.EQUALS || c == LS.DOT || c == LS.COLON ||
+            isOperator(c) || isWhite(c);
     }
 
     /**
@@ -680,7 +682,7 @@ public final class BasicLexer : LexerInterface
     {
         return character == LS.BACKSLASH || character == LS.DOUBLE_QUOTE || character == LS.SINGLE_QUOTE
         || character == LS.ESC_NOTHING || character == LS.ESC_NEWLINE 
-        || character == LS.ESC_CARRIAGE_RETURN || character == LS.TAB;
+        || character == LS.ESC_CARRIAGE_RETURN || character == LS.TAB || character == LS.ESC_BELL;
     }
 }
 
@@ -701,6 +703,7 @@ private void shout(int i = __LINE__, string mod = __MODULE__, string func = __FU
 /* Test input: `hello "world";` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\";";
@@ -716,6 +719,7 @@ unittest
 /* Test input: `hello \n "world";` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \n \"world\";";
@@ -731,18 +735,13 @@ unittest
 /* Test input: `hello "wo\nrld";` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"wo\nrld\";";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     try {
         currentLexer.performLex();
-        gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
-        assert(currentLexer.getTokens() == [
-                new Token("hello", 0, 0), new Token("\"wo\nrld\"", 0, 0),
-                new Token(";", 0, 0)
-            ]);
-        assert(false);
     } catch (LexerException) {
         assert(true);
 
@@ -752,6 +751,7 @@ unittest
 /* Test input: `hello "world"|| ` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\"|| ";
@@ -764,17 +764,34 @@ unittest
         ]);
 }
 
-/* Test input: `hello "world"||` */
+/* Test input: `hello "world"&& ` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
-    string sourceCode = "hello \"world\"||";
+    string sourceCode = "hello \"world\"&& ";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
     gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("hello", 0, 0), new Token("\"world\"", 0, 0),
+            new Token("&&", 0, 0)
+        ]);
+}
+
+/* Test input: `hello "wooorld"||` */
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "hello \"wooorld\"||";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("hello", 0, 0), new Token("\"wooorld\"", 0, 0),
             new Token("||", 0, 0)
         ]);
 }
@@ -782,6 +799,7 @@ unittest
 /* Test input: `hello "world"|` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\";|";
@@ -797,6 +815,7 @@ unittest
 /* Test input: `     hello` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = " hello";
@@ -809,6 +828,7 @@ unittest
 /* Test input: `//trist` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "//trist";
@@ -821,6 +841,7 @@ unittest
 /* Test input: `/*trist\*\/` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "/*trist*/";
@@ -833,6 +854,7 @@ unittest
 /* Test input: `/*t\nr\ni\ns\nt\*\/` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "/*t\nr\ni\ns\nt*/";
@@ -845,6 +867,7 @@ unittest
 /* Test input: `/*t\nr\ni\ns\nt\*\/ ` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "/*t\nr\ni\ns\nt*/ ";
@@ -857,6 +880,7 @@ unittest
 /* Test input: `//trist \n hello` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "//trist \n hello";
@@ -872,6 +896,7 @@ unittest
 /* Test input: `hello;` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = " hello;";
@@ -883,9 +908,27 @@ unittest
         ]);
 }
 
+/* Test input: `5+5` */
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "5+5";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("5", 0, 0),
+            new Token("+", 0, 0),
+            new Token("5", 0, 0),
+        ]);
+}
+
 /* Test input: `hello "world\""` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\\\"\"";
@@ -900,6 +943,7 @@ unittest
 /* Test input: `'c'` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "'c'";
@@ -912,6 +956,7 @@ unittest
 /* Test input: `2121\n2121` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "2121\n2121";
@@ -928,6 +973,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = " =\n";
@@ -995,6 +1041,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode;
@@ -1020,7 +1067,6 @@ unittest
     // gprintln(currentLexer.performLex());
     try {
         currentLexer.performLex();
-        gprintln("Collected "~to!(string)(currentLexer.getTokens()));
         assert(false);
     } catch (LexerException) {
         assert(true);
@@ -1032,7 +1078,6 @@ unittest
     // gprintln(currentLexer.performLex());
     try {
         currentLexer.performLex();
-        gprintln("Collected "~to!(string)(currentLexer.getTokens()));
         assert(false);
     } catch (LexerException) {
         assert(true);
@@ -1059,6 +1104,7 @@ unittest
 /* Test input: `1.5` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "1.5";
@@ -1076,6 +1122,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "new A().l.p.p;";
@@ -1098,6 +1145,7 @@ unittest
 */
 unittest
 {
+shout();
     /**
     * Test tab dropping in front of a float.
     * Test calssification: Valid
@@ -1148,6 +1196,23 @@ unittest
     catch (LexerException e)
     {
     }
+    
+    /**
+    * Testing illegal backslash.
+    * Test calssification: Invalid
+    * Test input: `1.`
+    */
+    sourceCode = "hello \\ ";
+    currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+        assert(false);
+    }
+    catch (LexerException e)
+    {
+    }
+
     /**
     * Test tab dropping after '.' of float.
     * Catch fail for verification.
@@ -1189,10 +1254,37 @@ unittest
 * non-floating point cases where whitespace has been inserted before and after.
 * Test Classification: Invalid
 *
+* Input: `new A() .l.p.p;`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    bool didFail = false;
+    string sourceCode = "new A(). l.p.p;";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+/**
+* Test correct handling of dot-operator for
+* non-floating point cases where whitespace has been inserted before and after.
+* Test Classification: Invalid
+*
 * Input: `new A() . l.p.p;`
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     bool didFail = false;
@@ -1211,6 +1303,7 @@ unittest
 
 unittest
 {
+shout();
 
     /**
     * Test dot for fail on dot operator with no buildup and invalid lead
@@ -1291,6 +1384,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "\n\n\n\n";
@@ -1298,4 +1392,489 @@ unittest
     currentLexer.performLex();
     gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens().length == 0);
+}
+
+/**
+* Test for character escape codes
+*
+* Input: `'\\'`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "'\\\\'";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("'\\\\'", 0, 0),
+        ]);
+}
+
+/**
+* Test for character escape codes
+*
+* Input: `'\a'`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "'\\a'";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("'\\a'", 0, 0),
+        ]);
+}
+
+unittest
+{
+shout();
+    /**
+    * Test for invalid escape sequence
+    * Input: `'\f'`
+    */
+    bool didFail = false;
+    string sourceCode = "\\f";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Test for invalid char in ident
+    * Input: `hello$k`
+    */
+    bool didFail = false;
+    string sourceCode = "hello$k";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Test for invalid char in ident
+    * Input: `$`
+    */
+    bool didFail = false;
+    string sourceCode = "$";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+
+/**
+* Testing Underscores in numbers
+*
+* Input: `1_ 1_2 1_2.3 1_2.3_ 1__2 1__2.3 1__.23__`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "1_ 1_2 1_2.3 1_2.3_ 1__2 1__2.3 1__.23__";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("1", 0, 0),
+            new Token("12", 0, 0),
+            new Token("12.3", 0, 0),
+            new Token("12.3", 0, 0),
+            new Token("12", 0, 0),
+            new Token("12.3", 0, 0),
+            new Token("1.23", 0, 0),
+        ]);
+}
+
+/**
+* Testing Comparison in numbers
+*
+* Input: `<= >= ==`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "<= >= =< => == != < > ^";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("<=", 0, 0),
+            new Token(">=", 0, 0),
+            new Token("=<", 0, 0),
+            new Token("=>", 0, 0),
+            new Token("==", 0, 0),
+            new Token("!=", 0, 0),
+            new Token("<", 0, 0),
+            new Token(">", 0, 0),
+            new Token("^", 0, 0),
+        ]);
+}
+
+/**
+* Testing Chars
+*
+* Input: `'a'`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "'a'";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("'a'", 0, 0),
+        ]);
+}
+
+
+unittest
+{
+shout();
+    /**
+    * Test for invalid ident
+    * Input: `hello. `
+    */
+    bool didFail = false;
+    string sourceCode = "hello. ";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Test for invalid ident
+    * Input: `hello.`
+    */
+    bool didFail = false;
+    string sourceCode = "hello.";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing Chars
+    * Input: `'`
+    */
+    bool didFail = false;
+    string sourceCode = "'";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing Chars
+    * Input: `'a`
+    */
+    bool didFail = false;
+    string sourceCode = "'a";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing Chars
+    * Input: `'aa`
+    */
+    bool didFail = false;
+    string sourceCode = "'aa";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+
+unittest
+{
+shout();
+    /**
+    * Testing String EOF
+    * Input: `"a`
+    */
+    bool didFail = false;
+    string sourceCode = "\"a";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing String EOF
+    * Input: `"a`
+    */
+    bool didFail = false;
+    string sourceCode = "\"";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+
+unittest
+{
+shout();
+    /**
+    * Testing String EOF
+    * Input: `"\`
+    */
+    bool didFail = false;
+    string sourceCode = "\"\\";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing Comment EOF
+    * Input: `/*`
+    */
+    bool didFail = false;
+    string sourceCode = "/*";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing Comment EOF
+    * Input: `/* `
+    */
+    bool didFail = false;
+    string sourceCode = "/* ";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+/**
+* Testing Line comment EOF
+*
+* Input: `//`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "//";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+        new Token("//", 0, 0)
+        ]);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing invalid Escape Code
+    * Input: `\p`
+    */
+    bool didFail = false;
+    string sourceCode = "\"\\p";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+unittest
+{
+shout();
+    /**
+    * Testing invalid Escape Code
+    * Input: `\p`
+    */
+    bool didFail = false;
+    string sourceCode = "\\p";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        currentLexer.performLex();
+    }
+    catch (LexerException e)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}
+
+/**
+* Testing comment
+*
+* Input: `'a' `
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "'a' ";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+        new Token("'a'", 0, 0)
+        ]);
+}
+
+/**
+* Testing comment
+*
+* Input: `// \n`
+*/
+unittest
+{
+shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "// \n";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+        new Token("// ", 0, 0)
+        ]);
 }
