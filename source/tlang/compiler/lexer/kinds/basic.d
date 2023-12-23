@@ -187,7 +187,11 @@ public final class BasicLexer : LexerInterface
             // gprintln("SrcCodeLen: "~to!(string)(sourceCode.length));
             // gprintln("Position: "~to!(string)(position));
 
-            // currentChar = sourceCode[position];
+
+            // // currentChar = sourceCode[position];
+            // gprintln("Current Char\"" ~ currentChar ~ "\"");
+            // gprintln("Current Token\"" ~ currentToken ~ "\"");
+            // gprintln("Match alpha check" ~ to!(bool)(currentChar == LS.UNDERSCORE || isAlpha(currentChar)));
 
             if (isSplitter(currentChar))
             {
@@ -205,16 +209,25 @@ public final class BasicLexer : LexerInterface
                 }                /* The splitter token to finally insert */
                 string splitterToken;
 
-                gprintln("Build up: " ~ currentToken);
-                gprintln("Current char: " ~ currentChar);
+                // gprintln("Build up: " ~ currentToken);
+                // gprintln("Current char, splitter: " ~ currentChar);
                 if (currentChar == LS.FORWARD_SLASH && isForward() && (sourceCode[position+1] == LS.FORWARD_SLASH || sourceCode[position+1] == LS.STAR)) {
                     if (!doComment()) {
                         break;
                     }
                 }
 
-                /* Check for case of `==` (where we are on the first `=` sign) */
-                if (currentChar == LS.EQUALS && isForward() && sourceCode[position + 1] == LS.EQUALS)
+                /* Check for case of `==` or `=<` or `=>` (where we are on the first `=` sign) */
+                if (currentChar == LS.EQUALS && isForward() && (sourceCode[position + 1] == LS.EQUALS || sourceCode[position + 1] == LS.LESS_THAN || sourceCode[position + 1] == LS.BIGGER_THAN))
+                {
+                    buildAdvance();
+                    buildAdvance();
+                    flush();
+                    continue;
+                }
+
+                /* Check for case of `<=` or `>=` */
+                if ((currentChar == LS.LESS_THAN || currentChar == LS.BIGGER_THAN) && isForward() && (sourceCode[position + 1] == LS.EQUALS || sourceCode[position + 1] == LS.LESS_THAN || sourceCode[position + 1] == LS.BIGGER_THAN))
                 {
                     buildAdvance();
                     buildAdvance();
@@ -248,19 +261,34 @@ public final class BasicLexer : LexerInterface
                         splitterToken = EMPTY ~ currentChar;
                         improvedAdvance();
                     }
-                }
+                }else if (currentChar == LS.AMPERSAND && (position + 1) != sourceCode.length && sourceCode[position + 1] == LS.AMPERSAND)
+                {
+                    splitterToken = "&&";
+                    improvedAdvance(2, false);
+                } 
                 /* Check if we need to do combinators (e.g. for ||, &&) */
                 /* TODO: Second operand in condition out of bounds */
                 else if (currentChar == LS.SHEFFER_STROKE && isForward() && sourceCode[position + 1] == LS.SHEFFER_STROKE)
                 {
                     splitterToken = "||";
                     improvedAdvance(2, false);
-                }
-                else if (currentChar == LS.AMPERSAND && (position + 1) != sourceCode.length && sourceCode[position + 1] == LS.AMPERSAND)
-                {
-                    splitterToken = "&&";
-                    improvedAdvance(2, false);
-                } else if (isWhite(currentChar)) {
+                } else if (currentChar == LS.SHEFFER_STROKE) {
+                    splitterToken = "|";
+                    improvedAdvance(1, false);
+                } else if (currentChar == LS.AMPERSAND) {
+                    splitterToken = "&";
+                    improvedAdvance(1, false);
+                } else if (currentChar == LS.CARET) {
+                    splitterToken = "^";
+                    improvedAdvance(1, false);
+                } else if (currentChar == LS.LESS_THAN) {
+                    splitterToken = [LS.LESS_THAN];
+                    improvedAdvance(1, false);
+                } else if (currentChar == LS.BIGGER_THAN) {
+                    splitterToken = [LS.BIGGER_THAN];
+                    improvedAdvance(1, false);
+                }  
+                else if (isWhite(currentChar)) {
                     if (!improvedAdvance()) {
                         break;
                     }
@@ -285,6 +313,7 @@ public final class BasicLexer : LexerInterface
             }
             //else if (currentChar == LS.UNDERSCORE || ((!isSplitter(currentChar) && !isDigit(currentChar)) && currentChar != LS.DOUBLE_QUOTE && currentChar != LS.SINGLE_QUOTE && currentChar != LS.BACKSLASH)) {
             else if (currentChar == LS.UNDERSCORE || isAlpha(currentChar)) {
+                gprintln("path ident String");
                 if (!doIdentOrPath()) {
                     break;
                 } else {
@@ -312,7 +341,7 @@ public final class BasicLexer : LexerInterface
             {
                 throw new LexerException(this, "Escape sequences can only be used within strings");
             } else {
-                gprintln("Fuck " ~ " me col" ~ to!(string)(column));
+                //gprintln("Fuck " ~ " me col" ~ to!(string)(column));
             }
         }
 
@@ -614,7 +643,7 @@ public final class BasicLexer : LexerInterface
     private bool isOperator(char c) {
         return c == LS.PLUS || c == LS.TILDE || c == LS.MINUS ||
             c == LS.STAR || c == LS.FORWARD_SLASH || c == LS.AMPERSAND ||
-            c == LS.CARET || c == LS.EXCLAMATION || c == LS.SHEFFER_STROKE;
+            c == LS.CARET || c == LS.EXCLAMATION || c == LS.SHEFFER_STROKE || c == LS.LESS_THAN || c == LS.BIGGER_THAN;
     }
 
     private bool isSplitter(char c)
@@ -671,19 +700,21 @@ private void shout(string lineNu = to!(string)(__LINE__))
     gprintln("Unittest ("~to!(string)(roll())~") at "~lineNu);
 }
 
-private void goggaWithLineInfo(string message, string[] lineInfo = [__DATE__, to!(string)(__LINE__), __MODULE__, __PRETTY_FUNCTION__])
-{
-    gprintln(lineInfo[2]~":"~lineInfo[1]~" "~message);
-}
-
-unittest
-{
-    goggaWithLineInfo("halo");
-}
+// private void goggaWithLineInfo(string message, string[] lineInfo = [__DATE__, to!(string)(__LINE__), __MODULE__, __PRETTY_FUNCTION__])
+// {
+//     gprintln(lineInfo[2]~":"~lineInfo[1]~" "~message);
+// }
+// 
+// unittest
+// {
+// shout();
+//     goggaWithLineInfo("halo");
+// }
 
 /* Test input: `hello "world";` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\";";
@@ -699,6 +730,7 @@ unittest
 /* Test input: `hello \n "world";` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \n \"world\";";
@@ -714,6 +746,7 @@ unittest
 /* Test input: `hello "wo\nrld";` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"wo\nrld\";";
@@ -735,6 +768,7 @@ unittest
 /* Test input: `hello "world"|| ` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\"|| ";
@@ -750,6 +784,7 @@ unittest
 /* Test input: `hello "world"&& ` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\"&& ";
@@ -765,6 +800,7 @@ unittest
 /* Test input: `hello "wooorld"||` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"wooorld\"||";
@@ -780,6 +816,7 @@ unittest
 /* Test input: `hello "world"|` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\";|";
@@ -795,6 +832,7 @@ unittest
 /* Test input: `     hello` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = " hello";
@@ -807,6 +845,7 @@ unittest
 /* Test input: `//trist` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "//trist";
@@ -819,6 +858,7 @@ unittest
 /* Test input: `/*trist\*\/` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "/*trist*/";
@@ -831,6 +871,7 @@ unittest
 /* Test input: `/*t\nr\ni\ns\nt\*\/` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "/*t\nr\ni\ns\nt*/";
@@ -843,6 +884,7 @@ unittest
 /* Test input: `/*t\nr\ni\ns\nt\*\/ ` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "/*t\nr\ni\ns\nt*/ ";
@@ -855,6 +897,7 @@ unittest
 /* Test input: `//trist \n hello` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "//trist \n hello";
@@ -870,6 +913,7 @@ unittest
 /* Test input: `hello;` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = " hello;";
@@ -884,6 +928,7 @@ unittest
 /* Test input: `5+5` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "5+5";
@@ -900,6 +945,7 @@ unittest
 /* Test input: `hello "world\""` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\\\"\"";
@@ -914,6 +960,7 @@ unittest
 /* Test input: `'c'` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "'c'";
@@ -926,6 +973,7 @@ unittest
 /* Test input: `2121\n2121` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "2121\n2121";
@@ -942,6 +990,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = " =\n";
@@ -1009,6 +1058,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode;
@@ -1073,6 +1123,7 @@ unittest
 /* Test input: `1.5` */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "1.5";
@@ -1090,6 +1141,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "new A().l.p.p;";
@@ -1112,6 +1164,7 @@ unittest
 */
 unittest
 {
+shout();
     /**
     * Test tab dropping in front of a float.
     * Test calssification: Valid
@@ -1225,6 +1278,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     bool didFail = false;
@@ -1250,6 +1304,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     bool didFail = false;
@@ -1268,6 +1323,7 @@ unittest
 
 unittest
 {
+shout();
 
     /**
     * Test dot for fail on dot operator with no buildup and invalid lead
@@ -1348,6 +1404,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "\n\n\n\n";
@@ -1364,6 +1421,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "'\\\\'";
@@ -1382,6 +1440,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "'\\a'";
@@ -1395,6 +1454,7 @@ unittest
 
 unittest
 {
+shout();
     /**
     * Test for invalid escape sequence
     * Input: `'\f'`
@@ -1415,6 +1475,7 @@ unittest
 
 unittest
 {
+shout();
     /**
     * Test for invalid char in ident
     * Input: `hello$k`
@@ -1436,6 +1497,7 @@ unittest
 
 unittest
 {
+shout();
     /**
     * Test for invalid char in ident
     * Input: `$`
@@ -1463,6 +1525,7 @@ unittest
 */
 unittest
 {
+shout();
     import std.algorithm.comparison;
 
     string sourceCode = "1_ 1_2 1_2.3 1_2.3_ 1__2 1__2.3 1__.23__";
