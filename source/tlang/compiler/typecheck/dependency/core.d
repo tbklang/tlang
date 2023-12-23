@@ -1122,7 +1122,31 @@ public class DNodeGenerator
             /* Struct-type */
             else if(cast(Struct)variableType)
             {
+                Struct structType = cast(Struct)variableType;
 
+                import tlang.compiler.typecheck.dependency.declarables : StructTypeDeclarable;
+                StructTypeDeclarable stdDNode = declareStructType(structType);
+                variableDNode.needs(stdDNode);
+
+                // Make a cloned-and-reparented copy
+                Struct structInstance = cast(Struct)structType.clone(structType.parentOf());
+
+                // We need a fresh clone of this struct type
+                // such that we can treat all vardecs as unique
+                // and not pool the same ones which would
+                // affect their visitation status on first run
+
+                // FIXME: THE POOL SHOULD BE OF A CLONE!
+                // TODO: We may need to check this for 
+                DNode structInstanceDNode = generalPass(structInstance, context);
+                structInstanceDNode.name = "StructClone (of: "~structInstance.getName()~")"; // NOTE: Set this as it;s confusing otherwise
+
+                // import tlang.compiler.typecheck.dependency.structInit : StructInstanceInit;
+                // StructInstanceInit structInstantiateDNode = new StructInstanceInit(this, structInstance);
+
+                // structInstantiateDNode.needs(structInstanceDNode);
+
+                variableDNode.needs(structInstanceDNode);
             }
             /* Stack-based array-type */
             else if(cast(StackArray)variableType)
@@ -1226,6 +1250,24 @@ public class DNodeGenerator
                 expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
                 return null;
             }            
+        }
+        /**
+        * Struct-typed variable declarations
+        */
+        else if(cast(StructVariableInstance)entity)
+        {
+            StructVariableInstance structVarDec = cast(StructVariableInstance)entity;
+            structVarDec.setContext(context);
+            DNode structVariableDNode = generalPass(structVarDec, context);
+            
+            // Set a human-readable name other than "bruh" for the DNode
+            structVariableDNode.name = "StructVariableInstance (name: "~structVarDec.getName()~")";
+
+            
+
+            gprintln("Hello daddy, I'm your cherry bomb (https://youtu.be/Kt-tLuszKBA?t=2543)");
+            
+            return structVariableDNode;
         }
         /**
         * Array assignments
@@ -1533,6 +1575,21 @@ public class DNodeGenerator
 
             return funcCallDNode;
         }
+        /** 
+         * Struct type declaration
+         */
+        else if(cast(Struct)entity)
+        {
+            gprintln("Struct type dependency generation", DebugType.ERROR);
+            Struct structType = cast(Struct)entity;
+
+            /** 
+             * Pass the 
+             */
+            import tlang.compiler.typecheck.dependency.declarables : StructTypeDeclarable;
+            StructTypeDeclarable stdDNode = declareStructType(structType);
+            return stdDNode;
+        }
 
         return null;
     }
@@ -1698,6 +1755,29 @@ public class DNodeGenerator
         generalPass(clazz, new Context(clazz, InitScope.STATIC));
 
         return classDNode;
+    }
+
+    import tlang.compiler.typecheck.dependency.declarables : StructTypeDeclarable;
+    import tlang.compiler.symbols.containers : Struct;
+    private StructTypeDeclarable declareStructType(Struct typeToDeclare)
+    {
+        // Pool
+        StructTypeDeclarable dnode = poolT!(StructTypeDeclarable, Struct)(typeToDeclare);
+
+        // If we have visited return us
+        if(dnode.isVisisted())
+        {
+            return dnode;
+        }
+        else
+        {
+            /* Set as visited */
+            dnode.markVisited();
+        }
+        
+        generalPass(typeToDeclare, new Context(typeToDeclare, InitScope.STATIC));
+
+        return dnode;
     }
 
 }

@@ -1296,6 +1296,7 @@ public final class TypeChecker
         }
     }
 
+    import tlang.compiler.typecheck.dependency.declarables : StructTypeDeclarable;
     /** 
      * Checks if the given `Type` is a pointer-type
      *
@@ -2147,6 +2148,61 @@ public final class TypeChecker
             Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
 
 
+            // TODO: Add a check here for if the type is Struct
+            // ... then we need to back-pop some things off
+            if(cast(Struct)variableDeclarationType)
+            {
+                gprintln("Variable '"~variableName~"' being declared is of a struct-type", DebugType.WARNING);
+                Struct structType = cast(Struct)variableDeclarationType;
+                string structTypeName = structType.getName();
+
+                // Determine the number of members this type has
+                ulong structMemberCount = structType.getStatements().length;
+                gprintln("Struct type '"~structTypeName~"' has "~to!(string)(structMemberCount)~" many members");
+
+                StorageDeclaration[] memberDeclInstrs;
+                ulong i = 0;
+                while(i < structMemberCount)
+                {
+                    // Pop member
+                    StorageDeclaration tailPoppedInstr = cast(StorageDeclaration)tailPopInstr();
+                    assert(tailPoppedInstr);
+
+                    // Checks specific to members which are simple variables
+                    if(cast(VariableDeclaration)tailPoppedInstr)
+                    {
+                        VariableDeclaration varPopped = cast(VariableDeclaration)tailPoppedInstr;
+
+                        // Struct members cannot have (according to a TLANG_RULE_1: because I decided so) assignments
+                        if(varPopped.getAssignmentInstr() !is null)
+                        {
+                            // TODO: Actually this is caught earlier by parser
+                            throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                                                            "Cannot assign to member '"~varPopped.varName~"' "~
+                                                            "of struct instance '"~variableName~"'");
+                        }
+                    }
+
+
+                    memberDeclInstrs ~= tailPoppedInstr;
+                    i++;
+                }
+                memberDeclInstrs = reverse(memberDeclInstrs);
+                gprintln("Collected struct member decls: "~to!(string)(memberDeclInstrs));
+
+                /** 
+                 * We now generate a `StructInstantiateInstruction` with
+                 * the struct-type (for type info persistence) and the
+                 * accompanying members in the form of `VariableDeclaration[]`
+                 * instructions
+                 */
+                StructInstantiateInstruction structInstantiateInstr = new StructInstantiateInstruction(variableName, structType, memberDeclInstrs);
+                structInstantiateInstr.setContext(variablePNode.context);
+                addInstrB(structInstantiateInstr);
+                return;
+            }
+
+
             // Check if this variable declaration has an assignment attached
             Value assignmentInstr;
             if(variablePNode.getAssignment())
@@ -2186,6 +2242,37 @@ public final class TypeChecker
 
             /* Add this static initialization to the list of global allocations required */
             addInit(clazzStaticInitAllocInstr);
+        }
+        /**
+         * Struct type declaration dependency
+         */
+        else if(cast(StructTypeDeclarable)dnode)
+        {
+            StructTypeDeclarable structTypeDec = cast(StructTypeDeclarable)dnode;
+            Struct structType = structTypeDec.getType();
+
+            /**
+             * Determine the number of members this struct
+             * contained (as per its definition) and then
+             * back-pop the declaration instructions
+             */
+            ulong structMemberCount = structType.getStatements().length;
+
+            StorageDeclaration[] memberDeclInstrs;
+            ulong i = 0;
+            while(i < structMemberCount)
+            {
+                StorageDeclaration tailPoppedInstr = cast(StorageDeclaration)tailPopInstr();
+                assert(tailPoppedInstr);
+                memberDeclInstrs ~= tailPoppedInstr;
+                i++;
+            }
+            memberDeclInstrs = reverse(memberDeclInstrs);
+            gprintln("Collected struct member decls: "~to!(string)(memberDeclInstrs));
+
+            StructTypeDeclareInstruction structTypeDecInstr = new StructTypeDeclareInstruction(structType, memberDeclInstrs);
+            structTypeDecInstr.setContext(structType.context); // TODO: Check this context
+            addInit(structTypeDecInstr);
         }
         /* It will pop a bunch of shiiit */
         /* TODO: ANy statement */
@@ -2687,6 +2774,46 @@ public final class TypeChecker
 
                 /* Add the instruction */
                 addInstrB(generatedInstruction);
+            }
+            /**
+             * Struct type declaration
+             */
+            else if(cast(StructVariableInstance)statement)
+            {
+                StructVariableInstance structDecl = cast(StructVariableInstance)statement;
+                assert(structDecl.getContext());
+                Struct structType = cast(Struct)getType(statement.getContext().container, structDecl.getType());
+
+                /**
+                 * Determine the number of members this struct
+                 * contained (as per its definition) and then
+                 * back-pop the declaration instructions
+                 */
+                ulong structMemberCount = structType.getStatements().length;
+                StorageDeclaration[] memberDeclInstrs;
+                ulong i = 0;
+                while(i < structMemberCount)
+                {
+                    StorageDeclaration tailPoppedInstr = cast(StorageDeclaration)tailPopInstr();
+                    assert(tailPoppedInstr);
+                    memberDeclInstrs ~= tailPoppedInstr;
+                    i++;
+                }
+                memberDeclInstrs = reverse(memberDeclInstrs);
+                gprintln("Collected struct member decls: "~to!(string)(memberDeclInstrs));
+
+                StructInstantiateInstruction structVarDecInstr = new StructInstantiateInstruction(structDecl.getName(), structType, memberDeclInstrs);
+                structVarDecInstr.setContext(structDecl.context); // TODO: Check this context
+                
+
+                // TODO: add it instrb
+                addInstrB(structVarDecInstr);
+
+
+
+                // TODO: Implement me 
+                gprintln("Mr blueskyyyyyyyy!");
+                // assert(false);
             }
             /* Case of no matches */
             else

@@ -626,6 +626,9 @@ public final class Parser
         /* Generate a new Struct with the given body Statement(s) */
         generatedStruct = new Struct(structName);
         generatedStruct.addStatements(statements);
+
+        /* Parent all the body statements to the struct */
+        parentToContainer(generatedStruct, statements);
         
         /* Expect closing brace (sanity) */
         expect(SymbolType.CCURLY, lexer.getCurrentToken());

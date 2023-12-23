@@ -1,9 +1,9 @@
 module tlang.compiler.typecheck.meta;
 
-import tlang.compiler.symbols.data : Statement, TypedEntity, Function, FunctionCall, IdentExpression;
+import tlang.compiler.symbols.data : Statement, TypedEntity, Function, FunctionCall, IdentExpression, Variable;
 import tlang.compiler.symbols.expressions : Expression, IntegerLiteral, IntegerLiteralEncoding;
 import tlang.compiler.symbols.typing.core;
-import tlang.compiler.symbols.containers : Container;
+import tlang.compiler.symbols.containers : Container, Struct;
 import tlang.compiler.symbols.mcro;
 import tlang.compiler.typecheck.core;
 import gogga;
@@ -102,7 +102,59 @@ public class MetaProcessor
                         }
                     }
                 }
+
+                gprintln("When we when we");
+                gprintln(curStmt);
+
+                /**
+                 * Search for all `Variable` AST nodes of which are 
+                 * of a `Struct`-based type
+                 */
+                if(cast(Variable)curStmt)
+                {
+                    Variable variable = cast(Variable)curStmt;
+                    Type declaredType = tc.getType(container, variable.getType());
+
+                    gprintln("Mashallah?");
+
+                    if(cast(Struct)declaredType)
+                    {
+                        Struct structType = cast(Struct)declaredType;
+
+                        gprintln("Okay?");
+                        gprintln(structType);
+                        import tlang.compiler.symbols.data : StructVariableInstance;
+
+                        // Create the replacement AST node we will use
+                        StructVariableInstance newVar = new StructVariableInstance(variable.getType(), variable.getName(), []);
+
+                        // Get cloned copies of the struct-type's members
+                        // and add them to the struct instance
+                        TypedEntity[] members;
+                        gprintln("Are we making it out of the hood?");
+                        foreach(Statement member; structType.getStatements())
+                        {
+                            // Sanity check: Struct type members are either `Variable` or `StructInstanceVariable`
+                            assert(cast(Variable)member !is null || cast(StructVariableInstance)member !is null);
+
+                            MCloneable memberVar = cast(MCloneable)member;
+                            Statement clonedMemberVar = cast(Statement)memberVar.clone(newVar);
+                            newVar.addStatement(clonedMemberVar);
+
+                            gprintln("Yess");
+                        }
+                        
+
+                        // Replace the Variable -> StructVariableInstance
+                        gprintln("Our replacement AST node: "~to!(string)(newVar));
+                        container.replace(curStmt, newVar);
+                        gprintln("You cannot park da kar deerr");
+                    }
+                }
             }
+
+            
+            gprintln("rr");
 
             /** 
              * If the current statement is a Container then recurse

@@ -516,6 +516,19 @@ jobs:
           ./tlang.out
 
 
+      - name: Simple structs
+        run: |
+          ./tlang compile source/tlang/testing/simple_structs.t
+          ./tlang.out
+      - name: Complex structs
+        run: |
+          ./tlang compile source/tlang/testing/complex_structs.t
+          ./tlang.out
+
+
+
+
+
 
 ##################################
 ####### Deployment section #######

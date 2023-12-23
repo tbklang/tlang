@@ -14,10 +14,11 @@ import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
 import tlang.compiler.codegen.mapper.core : SymbolMapper;
-import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
+import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter, StructVariableInstance, Entity;
 import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
+import tlang.compiler.symbols.containers : Struct, Clazz;
 import tlang.compiler.configuration : CompilerConfiguration;
 
 public final class DCodeEmitter : CodeEmitter
@@ -27,6 +28,23 @@ public final class DCodeEmitter : CodeEmitter
      * apply to identifiers
      */
     private bool symbolMapping;
+
+    /** 
+     * Pre-inliner variable counter
+     *
+     * Used for unique names for the pre-inlined
+     * variables for function arguments
+     */
+    private ulong preinlinerIdx = 0;
+
+    /** 
+     * Pre-inliner emit
+     *
+     * Holds the build-up of emits
+     * required for declaring pre-inliner
+     * variables
+     */
+    private string currentPreinlineEmit;
 
     // NOTE: In future store the mapper in the config please
     this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
@@ -51,6 +69,34 @@ public final class DCodeEmitter : CodeEmitter
     private void disableSymbolMapping()
     {
      	this.symbolMapping = false;
+    }
+
+    /** 
+     * Tacks on the given emit
+     * to the pre-inliner build-up.
+     *
+     * This automatically adds a
+     * newline to the provided emit.
+     *
+     * Params:
+     *   emit = the emit to tack on
+     */
+    private void tackonPreinline(string emit)
+    {
+        this.currentPreinlineEmit ~= emit~"\n";
+    }
+
+    /** 
+     * Yanks the current pre-inliner emit
+     * and then clears it
+     *
+     * Returns: the preinliner emit
+     */
+    private string yankPreinline()
+    {
+        string preinlinerEmitCpy = this.currentPreinlineEmit;
+        this.currentPreinlineEmit = "";
+        return preinlinerEmitCpy;
     }
 
     private ulong transformDepth = 0;
@@ -128,12 +174,39 @@ public final class DCodeEmitter : CodeEmitter
             return typeTransform(stackArray.getComponentType());
             // return "KAK TODO";
         }
+        /* Struct type */
+        else if(cast(Struct)typeIn)
+        {
+            Struct structType = cast(Struct)typeIn;
+
+            // TODO: We could make it typedef somewhere but would need to store
+            // ... declared types then to make use of it here
+            string typeString = "struct "~structType.getName();
+            // FIXME: Is the above the correct struct-type-usage syntax?
+
+            return typeString;
+        }
+        /* Class type */
+        else if(cast(Clazz)typeIn)
+        {
+            Clazz classType = cast(Clazz)typeIn;
+
+            string typeString = classType.getName();
+
+            return typeString;
+        }
 
         gprintln("Type transform unimplemented for type '"~to!(string)(typeIn)~"'", DebugType.ERROR);
         assert(false);
         // return stringRepr;
     }
 
+    private bool isStatementLevel(Instruction instruction)
+    {
+        // TODO: Add more
+        return cast(VariableDeclaration)instruction !is null ||
+            cast(VariableAssignmentInstr)instruction !is null;
+    }
 
     public override string transform(const Instruction instruction)
     {
@@ -147,6 +220,12 @@ public final class DCodeEmitter : CodeEmitter
         // At any return decrement the depth
         scope(exit)
         {
+            if(isStatementLevel(cast(Instruction)instruction))
+            {
+                gprintln("Yanked: "~yankPreinline());
+            }
+
+
             transformDepth--;
         }
 
@@ -203,7 +282,7 @@ public final class DCodeEmitter : CodeEmitter
                 //NOTE: We may need to create a symbol table actually and add to that and use that as these names
                 //could get out of hand (too long)
                 // NOTE: Best would be identity-mapping Entity's to a name
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                string renamedSymbol = symbolMapping ? mapper.symbolLookup(typedEntityVariable) : typedEntityVariable.getName();
 
 
                 // Check if the type is a stack-based array
@@ -234,6 +313,25 @@ public final class DCodeEmitter : CodeEmitter
                 emmmmit = "extern "~typeTransform(cast(Type)varDecInstr.varType)~" "~typedEntityVariable.getName()~";";
             }
         }
+        /* StructInstantiateInstruction */
+        else if(cast(StructInstantiateInstruction)instruction)
+        {
+            gprintln("You knows its true, everything i do, i do it for you");
+            
+            // TODO: Implement me
+            StructInstantiateInstruction structInstntInstr = cast(StructInstantiateInstruction)instruction;
+            Context context = structInstntInstr.getContext();
+            StructVariableInstance variable = cast(StructVariableInstance)typeChecker.getResolver().resolveBest(context.getContainer(), structInstntInstr.getDeclaredName());
+            string variableName = variable.getName();
+            Type variableType = structInstntInstr.getDeclaredType();
+
+            // Emit
+            string renamedSymbol = symbolMapping ? mapper.symbolLookup(variable) : variableName;
+            string emit = typeTransform(variableType)~" "~renamedSymbol;
+            emit ~= ";";
+
+            return emit;
+        }
         /* LiteralValue */
         else if(cast(LiteralValue)instruction)
         {
@@ -251,22 +349,27 @@ public final class DCodeEmitter : CodeEmitter
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
 
-            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName); //TODO: Remove `auto`
+            // TODO: Add StructSupport ongod? . syntax needs help out here
+
+            Entity fetchedEntity = cast(Entity)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName);
+
+            // Sanity check: Should only be a `Variable` or `StructVariableInstance`
+            assert(cast(Variable)fetchedEntity || cast(StructVariableInstance)fetchedEntity);
 
             /* If it is not external */
-            if(!typedEntityVariable.isExternal())
+            if(!fetchedEntity.isExternal())
             {
                 //TODO: THis is giving me kak (see issue #54), it's generating name but trying to do it for the given container, relative to it
                 //TODO: We might need a version of generateName that is like generatenamebest (currently it acts like generatename, within)
 
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                string renamedSymbol = mapper.symbolLookup(fetchedEntity);
 
                 emmmmit = renamedSymbol;
             }
             /* If it is external */
             else
             {
-                emmmmit = typedEntityVariable.getName();
+                emmmmit = fetchedEntity.getName();
             }
         }
         /* BinOpInstr */
@@ -347,6 +450,9 @@ public final class DCodeEmitter : CodeEmitter
             //NOTE (Behaviour): We may want to actually have an preinliner for these arguments
             //such to enforce a certain ordering. I believe this should be done in the emitter stage,
             //so it is best placed here
+            string preinlineEmit;
+
+
             if(functionToCall.hasParams())
             {
                 Value[] argumentInstructions = funcCallInstr.getEvaluationInstructions();
@@ -355,7 +461,33 @@ public final class DCodeEmitter : CodeEmitter
                 for(ulong argIdx = 0; argIdx < argumentInstructions.length; argIdx++)
                 {
                     Value currentArgumentInstr = argumentInstructions[argIdx];
-                    argumentString~=transform(currentArgumentInstr);
+                    string transformedArgument = transform(currentArgumentInstr);
+
+                    /**
+                     * If pre-inlining of argumnets is enabled
+                     * then deduce type, declare variable
+                     * of said type and assign it the
+                     * `transformedArgument`
+                     *
+                     * Shove this to the top of the emit
+                     */
+                    if(config.getConfig("dgen:preinline_args").getBoolean() == true)
+                    {
+                        string varNameTODO = "preinliner_"~to!(string)(preinlinerIdx)~"_"~to!(string)(transformDepth); // TODO: make unique
+                        preinlinerIdx++;
+                        gprintln("IIIIIIIIIINC"~transformedArgument);
+                        // TODO: register-declaration
+                        string preinlineVarDecEmit = typeTransform(currentArgumentInstr.getInstrType())~" "~varNameTODO~" = "~transformedArgument~";";
+
+                        // Add to pre-inline emit
+                        preinlineEmit~=preinlineVarDecEmit~"\n";
+                        tackonPreinline(preinlineVarDecEmit);
+                        
+                        // Now make the argument the pre-inlined variable
+                        transformedArgument = varNameTODO;
+                    }
+
+                    argumentString~=transformedArgument;
 
                     if(argIdx != (argumentInstructions.length-1))
                     {
@@ -789,6 +921,38 @@ public final class DCodeEmitter : CodeEmitter
 
             emmmmit = emit;
         }
+        /** 
+         * Struct-type declaration
+         */
+        else if(cast(StructTypeDeclareInstruction)instruction)
+        {
+            StructTypeDeclareInstruction strctTypeDeclInstr = cast(StructTypeDeclareInstruction)instruction;
+            Struct structType = strctTypeDeclInstr.getType();
+
+            // Emit
+            string emit = typeTransform(structType);
+            emit ~= "\n";
+            emit ~= "{";
+            emit ~= "\n";
+            
+            foreach(StorageDeclaration memberDecInstr; strctTypeDeclInstr.getMembers())
+            {
+                /** 
+                 * We don't want to map the symbols for the definition of
+                 * a struct type. Therefore we temporarily disable symbol
+                 * mapping for the `transform(memberDecInstr)` call and then
+                 * re-enable it afterwards
+                 */
+                disableSymbolMapping();
+                emit ~= genTabs(transformDepth)~transform(memberDecInstr);
+                enableSymbolMapping();
+                emit ~= "\n";
+            }
+
+            emit ~= "};";
+
+            return emit;
+        }
         // TODO: MAAAAN we don't even have this yet
         // else if(cast(StringExpression))
         /** 
@@ -874,6 +1038,16 @@ public final class DCodeEmitter : CodeEmitter
     {
         selectQueue(QueueType.ALLOC_QUEUE);
         gprintln("Static allocations needed: "~to!(string)(getQueueLength()));
+
+        while(hasInstructions())
+        {
+            Instruction curInitInstr = getCurrentInstruction();
+            gprintln("Current init instruction: "~curInitInstr.toString());
+
+            file.writeln(transform(curInitInstr));
+            nextInstruction();
+        }
+
 
         file.writeln();
     }
