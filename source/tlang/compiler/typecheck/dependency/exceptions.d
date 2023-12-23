@@ -8,6 +8,7 @@ public enum DependencyError
 {
     NOT_YET_LINEARIZED,
     ALREADY_LINEARIZED,
+    GENERAL_ERROR
 }
 
 public final class DependencyException : TError

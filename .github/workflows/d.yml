@@ -20,9 +20,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        dc: [dmd-2.101.0]
+        dc: [dmd-latest]
         exclude:
-          - { os: macOS-latest, dc: dmd-2.085.0 }
+          - { os: macOS-latest, dc: dmd-latest }
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -63,9 +63,22 @@ jobs:
         uses: dlang-community/setup-dlang@v1
         with:
           compiler: ${{ matrix.dc }}
+
+      - name: Install Doveralls (code coverage tool)
+        run: |
+          # wget -O doveralls "https://github.com/ColdenCullen/doveralls/releases/download/v1.1.5/doveralls_linux_travis"
+          # mv doveralls_linux_travis doveralls
+          # chmod +x doveralls
+          dub fetch doveralls
+          sudo apt install libcurl4-openssl-dev
         
       - name: DUB unit tests with coverage
         run: dub test --coverage
+
+      - name: Coverage upload
+        run: |
+          export CI_BRANCH=$(git branch --show-current)
+          dub run doveralls -- -t ${{secrets.COVERALLS_REPO_TOKEN}}
         
       - uses: actions/upload-artifact@v3
         with:
@@ -323,6 +336,51 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/simple_literals5.t
       - name: Simple literals 6
         run: ./tlang typecheck source/tlang/testing/simple_literals6.t
+
+
+
+      # All the universal coercion tests are below
+      #
+      # Over time those above will be ported over to it and will
+      # infact make part of the test suite of typeEnforce()
+      - name: Simple Coerce Literal Good (to variable declaration)
+        run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_good.t
+      - name: Simple Coerce Literal Bad [Size loss] (to variable declaration)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Simple Coerce Literal Good (standalone variable assignment)
+        run: ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_good_stdalo.t
+      - name: Simple Coerce Literal Bad [Size loss] (standalone variable assignment)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/universal_coerce/simple_coerce_literal_bad_stdalon.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Function return expression coercion (good)
+        run: ./tlang typecheck source/tlang/testing/simple_function_return_type_check_good.t
+      - name: Function return expression coercion (bad)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_function_return_type_check_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
   emit:
     needs: [build, unittests]
@@ -336,8 +394,9 @@ jobs:
           name: tbin
         
       - name: Chmod compiler
-        run: chmod +x tlang  
-        
+        run: chmod +x tlang
+
+
       - name: Simple functions
         run: |
           ./tlang compile source/tlang/testing/simple_functions.t
@@ -370,7 +429,7 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_function_decls.t
           ./tlang.out
-      - name: Simple function (only) decls
+      - name: Simple variables (only) decls
         run: |
           ./tlang compile source/tlang/testing/simple_variables_only_decs.t
           ./tlang.out

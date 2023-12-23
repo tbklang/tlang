@@ -660,6 +660,27 @@ public final class BasicLexer : LexerInterface
     }
 }
 
+private int rolled = 0;
+private int roll()
+{
+    return rolled++;
+}
+
+private void shout(string lineNu = to!(string)(__LINE__))
+{
+    gprintln("Unittest ("~to!(string)(roll())~") at "~lineNu);
+}
+
+private void goggaWithLineInfo(string message, string[] lineInfo = [__DATE__, to!(string)(__LINE__), __MODULE__, __PRETTY_FUNCTION__])
+{
+    gprintln(lineInfo[2]~":"~lineInfo[1]~" "~message);
+}
+
+unittest
+{
+    goggaWithLineInfo("halo");
+}
+
 /* Test input: `hello "world";` */
 unittest
 {

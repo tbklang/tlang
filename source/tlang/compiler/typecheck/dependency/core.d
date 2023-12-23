@@ -98,11 +98,28 @@ private FunctionData[string] functions;
 
 
 /**
-* Returns the declared functions
-*/
+ * Returns the declared functions
+ */
 public FunctionData[string] grabFunctionDefs()
 {
     return functions;
+}
+
+/** 
+ * Clars the `FunctionData[string]` map
+ *
+ * This is called normally after the
+ * typechecking and code generation such
+ * that the module-static field inside
+ * this module can be cleared and not
+ * persist across compilations
+ */
+public void clearFuncDefs()
+{
+    foreach(string key; functions.keys())
+    {
+        functions.remove(key);
+    }
 }
 
 /**
@@ -479,6 +496,19 @@ public class DNodeGenerator
         //generate();
     }
 
+    /** 
+     * Crashes the dependency generator with an
+     * expectation message by throwing a new
+     * `DependencyException`.
+     *
+     * Params:
+     *   message = the expectation message
+     */
+    public void expect(string message)
+    {
+        throw new DependencyException(DependencyError.GENERAL_ERROR, message);
+    }
+
     public DNode root;
 
 
@@ -702,14 +732,14 @@ public class DNodeGenerator
                 }
                 else
                 {
-                    Parser.expect("Only class-type may be used with `new`");
+                    expect("Only class-type may be used with `new`");
                     assert(false);
                 }
-                gprintln("Poe naais");
+                gprintln("King of the castle");
             }
             else
             {
-                Parser.expect("Invalid ryp");
+                expect("Invalid ryp");
                 assert(false);
             }
             // FunctionCall 
@@ -724,291 +754,98 @@ public class DNodeGenerator
         */
         else if(cast(VariableExpression)exp)
         {
-            /* TODO: Figure out where the variable lies */
-
-            /* TODO: Change this later */
-            // return new DNode(this, exp);
-
-            /**
-            * Extract the variable name
-            */
+            // Extract the variable's name
             VariableExpression varExp = cast(VariableExpression)exp;
-            
-            string path = varExp.getName();
-            long nearestDot = indexOf(path, ".");
+            string nearestName = varExp.getName();
 
-
-            gprintln("VariableExpressionPass(): Path: "~path, DebugType.WARNING);
-            gprintln("VarExp Context set? (before): "~to!(string)(varExp.getContext()));
-
-            /* See issue #9 on Gitea */
-            /* FIXME: We only set context in some situations - we MUST fix this */
-            /* NOTE: I think THIS is wrong -   varExp.setContext(context); */
-            /* What we need to do is set the variable itself me thinks */
-            /* NOTE: But the above seems to also be needed */
-
-            /* FIXME: Remove the context sets below */
-
-            /* NOTE: Fix is below I think (it doesn't crash then) */
-            /* Set context for expression and the variable itself */
+            // Set the context of the variable expression
             varExp.setContext(context);
-            gprintln("Context (after): "~to!(string)(varExp.getContext().getContainer()));
-            Entity bruh = tc.getResolver().resolveBest(context.getContainer(), path);
-            bruh.setContext(context);
-          
-            /* Has two dots? */
-            bool hasTwoDots = indexOf(path, ".", nearestDot+1) == lastIndexOf(path, ".") && indexOf(path, ".", nearestDot+1) > -1;
-            gprintln(indexOf(path, ".", nearestDot+1));
+           
+            // Resolve the entity the name refers to
+            Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
 
-            /**
-            * Current named entity
-            */
-            string nearestName;
 
-            /**
-            * If the `path` has no dots
-            *
-            * Example: `variableX`
-            */
-            if(nearestDot == -1)
+            /* If the entity was found */
+            if(namedEntity)
             {
-                /* The name is exactly the path */
-                nearestName = path;
+                /* FIXME: Below assumes basic variable declarations at module level, fix later */
 
-                /* Resolve the Entity */
-                Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
-
-
-
-                 /**
-                * NEW CODE!!!! (Added 25th Oct)
-                *
-                * Update name for later typechecking resolution of var
-                * 
-                */
-                varExp.setContext(context);
-                gprintln("Kont: "~to!(string)(context));
-
-                
-                if(namedEntity)
+                /** 
+                 * If `namedEntity` is a `Variable`
+                 *
+                 * Think of, well, a variable
+                 */
+                if(cast(Variable)namedEntity)
                 {
-                    /* FIXME: Below assumes basic variable declarations at module level, fix later */
-
-                    /**
-                    * Get the Entity as a Variable
-                    */
+                    /* Get the entity as a Variable */
                     Variable variable = cast(Variable)namedEntity;
 
-                    if(variable)
+                    /* Pool the node */
+                    VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
+
+                    /**
+                     * Check if the variable being referenced has been
+                     * visited (i.e. declared)
+                     *
+                     * If it has then setup dependency, if not then error
+                     * out
+                     */
+                    if(varDecNode.isVisisted())
                     {
-                        /* Pool the node */
-                        VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
-
-                        /**
-                        * Check if the variable being referenced has been
-                        * visited (i.e. declared)
-                        *
-                        * If it has then setup dependency, if not then error
-                        * out
-                        */
-                        if(varDecNode.isVisisted())
-                        {
-                            dnode.needs(varDecNode);
-                        }
-                        else
-                        {
-                            Parser.expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
-                        }
-
-
-                        /* Use the Context to make a decision */
-                    }
-                    else if(cast(Function)namedEntity)
-                    {
-                        /**
-                        * FIXME: Yes it isn't a funcall not, and it is not a variable and is probably
-                        * being returned as the lookup, so a FUnction node i guess 
-                        */
-                        Function funcHandle = cast(Function)namedEntity;
-                        
-                        /**
-                        * FIXME: Find the best place for this. Functions will always
-                        * be declared (atleast for basic examples as like now) in
-                        * the module level
-                        */
-                        Context cont = new Context(tc.getModule(), InitScope.STATIC);
-                        // cont.container = tc.getModule();
-                        // cont.
-                        funcHandle.setContext(cont);
-
-                        // funcHandle
-                        
-
-                        /**
-                        * FIXME: Do we have to visit the function, I am not sure, like maybe declaration
-                        * or surely it is already declared??!?!?
-                        *
-                        * Does pooling it make sense? Do we force a visitation?
-                        */
-                        FuncDecNode funcDecNode = poolT!(FuncDecNode, Function)(funcHandle);
-                        dnode.needs(funcDecNode);
-
-                        gprintln("Muh function handle: "~namedEntity.toString(), DebugType.WARNING);
+                        dnode.needs(varDecNode);
                     }
                     else
                     {
-                        /* TODO: Add check ? */
+                        expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
                     }
+                }
+                /** 
+                 * If `namedEntity` is a `Function`
+                 *
+                 * Think of a function handle
+                 */
+                else if(cast(Function)namedEntity)
+                {
+                    /**
+                    * FIXME: Yes it isn't a funcall not, and it is not a variable and is probably
+                    * being returned as the lookup, so a FUnction node i guess 
+                    */
+                    Function funcHandle = cast(Function)namedEntity;
+                    
+                    /**
+                    * FIXME: Find the best place for this. Functions will always
+                    * be declared (atleast for basic examples as like now) in
+                    * the module level
+                    */
+                    Context cont = new Context(tc.getModule(), InitScope.STATIC);
+                    // cont.container = tc.getModule();
+                    // cont.
+                    funcHandle.setContext(cont);
+
+                    // funcHandle
                     
 
-                    
+                    /**
+                    * FIXME: Do we have to visit the function, I am not sure, like maybe declaration
+                    * or surely it is already declared??!?!?
+                    *
+                    * Does pooling it make sense? Do we force a visitation?
+                    */
+                    FuncDecNode funcDecNode = poolT!(FuncDecNode, Function)(funcHandle);
+                    dnode.needs(funcDecNode);
+
+                    gprintln("Muh function handle: "~namedEntity.toString(), DebugType.WARNING);
                 }
                 else
                 {
-                    Parser.expect("No entity by the name "~nearestName~" exists (at all)");
-                }
-
-               
+                    /* TODO: Add check ? */
+                }   
             }
-            /**
-            * If the `path` has dots
-            *
-            * Example: `container.variableX`
-            *
-            * We want to start left to right, first look at `variableX`,
-            * take that node, then recurse on `container.` (everything
-            * without the last segment) as this results in the correct
-            * dependency sub-tree
-            *
-            * FIXME: We should stop at `x.y` and not go further as we need
-            * to know what we are acessing
-            */
+            /* If the entity could not be found */
             else
             {
-                /* Chop off the last segment */
-                long lastDot = lastIndexOf(path, ".");
-                string remainingSegment = path[0..(lastDot)];
-
-                /* TODO: Check th container passed in */
-                /* Lookup the name within the current entity's context */
-                gprintln("Now looking up: "~remainingSegment);
-                Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), remainingSegment);
-                gprintln("namedEntity: "~to!(string)(namedEntity));
-                gprintln("Context used for resolution: "~to!(string)(context.getContainer()));
-
-                /* The remaining segment must EXIST */
-                if(namedEntity)
-                {
-                    /* The remaining segment must be a CONTAINER */
-                    Container container = cast(Container)namedEntity;
-                    if(container)
-                    {
-                        /* If we have a class then it needs static init */
-                        if(cast(Clazz)container)
-                        {
-                            Clazz containerClass = cast(Clazz)container;
-                            DNode classStaticAllocate = classPassStatic(containerClass);
-                            dnode.needs(classStaticAllocate);
-                            gprintln("Hello "~remainingSegment, DebugType.ERROR);
-                        }
-
-                        /**
-                        * FIXME: Decide what requires new dep and what doesn't, instance vs class access etc
-                        *
-                        * How detailed we need to be? Will we combine these and consume later, we need to take these things
-                        * into account. I am erring on the side of one single access, the only things along the way are possible static
-                        * allocations, but that is my feeling - each path segment doesn't need something for simply existing
-                        */
-
-                        /* If we only have one dot left s(TODO: implement ) */
-                        bool hasMoreDot = indexOf(remainingSegment, ".") > -1;
-                        if(hasMoreDot)
-                        {
-                            gprintln("has mor dot");
-
-                            /**
-                            * Create a VariableExpression for the remaining segment,
-                            * run `passExpression()` on it (recurse) and make the CURRENT
-                            * DNode (`dnode`) depend on the returned DNode
-                            *
-                            * TOOD: Double check the Context passed in
-                            */
-                            // Context varExpRemContext = new Context(tc.getModule(), InitScope.STATIC);
-                            VariableExpression varExpRem = new VariableExpression(remainingSegment);
-                            DNode varExpRemDNode = expressionPass(varExpRem, context);
-
-                            /* TODO: Double check if we need this, problems lie here and when we NEED to do and and when NOT */
-                            dnode.needs(varExpRemDNode);
-                        }
-                        else
-                        {
-                            /* Do access operation here */
-                            gprintln("No more dot");
-
-                            gprintln("No mord to accevssor(): "~to!(string)(dnode));
-
-                            /* TODO: We now have `TestClass.P` so accessor op or what? */
-                        }
-
-
-                        
-
-
-                        
-
-
-                    }
-                    else
-                    {
-                        Parser.expect("Could not acces \""~remainingSegment~"\" as it is not a container");
-                    }
-
-                }
-                /**
-                * If an entity by that name doesn't exist then
-                * this is a typechecking error and we should
-                * break
-                */
-                else
-                {
-                    Parser.expect("Could not find an entity named "~remainingSegment);
-                }
+                expect("No entity by the name "~nearestName~" exists (at all)");
             }
-
-            /* TODO:C lean up and mke DNode */
-
-            /* TODO: Process `nearestName` by doing a tc.resolveWithin() */
-
-
-            
-
-            /* TODO: SPlit the path up and resolve the shit */
-
-            /* TODO: gte start of path  (TODO)*/
-            /* TODO: Then check that within current context, then we shift context for another call */
-            string currentName;
-
-            /**
-            * If we can resolve anywhere (TODO: Perhaps module level was better
-            */
-            if(context.isAllowUp())
-            {
-                /* TODO: Use normal resolveBest */
-            }
-            /**
-            * Only within resolution allowed
-            */
-            else
-            {
-                gprintln("87er78fgy678fyg678g6f8gfyduhgfjfgdjkgfdhjkfgdhjfkgdhgfdjkhgfjkhgfdjkhgfdjkhgfdjkfgdhjkfgdhjkfdghjgkfdhgfdjkhgfdjkhgfdjkhfgdjkhfgd");
-                Entity entity = tc.getResolver().resolveWithin(context.getContainer(), nearestName);
-
-                /* TODO: If dots remain then make sure cast(Container)entity is non-zero, i.e. is a container, else fail, typecheck error! */
-            }
-
-
-            gprintln("VarExp Context set? (after): "~to!(string)(varExp.getContext()));
-
         }
         /**
         * Binary operator
@@ -1161,8 +998,6 @@ public class DNodeGenerator
         */
         else if(cast(ArrayIndex)exp)
         {
-            gprintln("Working on expressionPass'ing of ArrayIndex", DebugType.ERROR);
-
             ArrayIndex arrayIndex = cast(ArrayIndex)exp;
 
             // Set the context as we need to grab it later in the typechecker
@@ -1177,9 +1012,6 @@ public class DNodeGenerator
             Expression indexedExp = arrayIndex.getIndexed();
             DNode indexedExpDNode = expressionPass(indexedExp, context);
             dnode.needs(indexedExpDNode);
-
-
-            // assert(false);
         }
         else
         {
@@ -1391,7 +1223,7 @@ public class DNodeGenerator
             }
             else
             {
-                Parser.expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
+                expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
                 return null;
             }            
         }
@@ -1791,7 +1623,7 @@ public class DNodeGenerator
         /* Sanity check */
         if(clazz.getModifierType() != InitScope.STATIC)
         {
-            Parser.expect("SanityCheck: poolClassStatic(): Cannot pool a non-static class");
+            expect("SanityCheck: poolClassStatic(): Cannot pool a non-static class");
             // assert(clazz.getModifierType() == InitScope.STATIC);
         }
         

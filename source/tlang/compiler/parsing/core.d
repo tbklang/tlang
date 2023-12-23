@@ -10,15 +10,6 @@ import core.stdc.stdlib;
 import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
 
-// public final class ParserError : TError
-// {
-
-// }
-
-
-
-bool isUnitTest;
-
 // TODO: Technically we could make a core parser etc
 public final class Parser
 {
@@ -46,24 +37,18 @@ public final class Parser
         }
     }
 
-    /**
-    * Crashes the parser with the given message
-    */
-    public static void expect(string message)
+    /** 
+     * Crashes the parser with an expectation message
+     * by throwing a new `ParserException`.
+     *
+     * Params:
+     *   message = the expectation message
+     */
+    public void expect(string message)
     {
-        //throw new TError(message);
         gprintln(message, DebugType.ERROR);
 
-        if(isUnitTest)
-        {
-            throw new TError(message);
-            assert(false);
-        }
-        else
-        {
-            throw new TError(message);
-            //exit(0); /* TODO: Exit code */  /* TODO: Version that returns or asserts for unit tests */
-        }
+        throw new ParserException(this, ParserException.ParserErrorType.GENERAL_ERROR, message);
     }
 
     /** 
@@ -76,6 +61,61 @@ public final class Parser
     this(LexerInterface lexer)
     {
         this.lexer = lexer;
+    }
+
+    /** 
+     * Given a type of `Statement` to look for and a `Container` of
+     * which to search with in. This method will recursively search
+     * down the given container and look for any statements which
+     * are a kind-of (`isBaseOf`) the requested type. it will return
+     * an array of `Statement` (`Statement[]`) of the matches.
+     *
+     * The container itself is not considered in this type check.
+     *
+     * Params:
+     *   statementType = the kind-of statement to look for
+     *   from = the `Container` to search within
+     * Returns: a `Statement[]` of matches
+     */
+    private static Statement[] findOfType(TypeInfo_Class statementType, Container from)
+    {
+        Statement[] matches;
+
+        Statement[] bodyStatements = from.getStatements();
+        foreach(Statement bodyStmt; bodyStatements)
+        {
+            if(cast(Container)bodyStmt)
+            {
+                matches ~= findOfType(statementType, cast(Container)bodyStmt);
+            }
+
+            if(statementType.isBaseOf(typeid(bodyStmt)))
+            {
+                matches ~= [bodyStmt];
+            }
+        }
+
+        return matches;
+    }
+
+    /** 
+     * Given a type of `Statement` to look for and a `Container` of
+     * which to search with in. This method will recursively search
+     * down the given container and look for any statements which
+     * are a kind-of (`isBaseOf`) the requested type. It will return
+     * `true` if any macthes are found.
+     *
+     * The container itself is not considered in this type check.
+     *
+     * Params:
+     *   statementType = the kind-of statement to look for
+     *   from = the `Container` to search within
+     * Returns: `true` if at least one match is found, `false`
+     * otherwise
+     */
+    private static bool existsWithin(TypeInfo_Class statementType, Container from)
+    {
+        return findOfType(statementType, from).length != 0;
     }
 
     /**
@@ -1600,7 +1640,26 @@ public final class Parser
                 /* Will consume the `}` (or `;` if wantsBody-false) */
                 funcDefPair pair = parseFuncDef(wantsBody);
 
+                
+
                 generated = new Function(identifier, type, pair.bodyStatements, pair.params);
+
+                /**
+                 * If this function definition has a body (i.e. `wantsBody == true`)
+                 * and if the return type is non-void, THEN ensure we have a `ReturnStmt`
+                 * (return statement)
+                 */
+                if(wantsBody && type != "void")
+                {
+                    /* Recurse down to find a `ReturnStmt` */
+                    bool hasReturn = existsWithin(typeid(ReturnStmt), cast(Container)generated);
+
+                    // Error if no return statement exists
+                    if(!hasReturn)
+                    {
+                        expect("Function '"~identifier~"' declared with return type does not contain a return statement");
+                    }
+                }
                 
                 import std.stdio;
                 writeln(to!(string)((cast(Function)generated).getVariables()));
@@ -1995,12 +2054,12 @@ public final class Parser
     {
         import tlang.compiler.lexer.kinds.arr : ArrLexer;
 
-        Token[] tokens = [new Token("module", 0, 0),
-                          new Token("myCommentedModule", 0, 0),
-                          new Token(";", 0, 0),
-                          new Token("// Hello", 0, 0)
-                          ];
-        LexerInterface currentLexer = new ArrLexer(tokens);
+        string sourceCode = `module myCommentModule;
+        // Hello`;
+
+        LexerInterface currentLexer = new BasicLexer(sourceCode);
+        (cast(BasicLexer)currentLexer).performLex();
+
         Parser parser = new Parser(currentLexer);
     
         try
@@ -2015,13 +2074,13 @@ public final class Parser
             assert(false);
         }
 
-        tokens = [new Token("module", 0, 0),
-                          new Token("myCommentedModule", 0, 0),
-                          new Token(";", 0, 0),
-                          new Token("/*Hello", 0, 0),
-                          new Token("/* Hello", 0, 0)
-                          ];
-        currentLexer = new ArrLexer(tokens);
+        sourceCode = `module myCommntedModule;
+        /*Hello */
+        
+        /* Hello*/`;
+
+        currentLexer = new BasicLexer(sourceCode);
+        (cast(BasicLexer)currentLexer).performLex();
         parser = new Parser(currentLexer);
     
         try
@@ -2030,6 +2089,33 @@ public final class Parser
 
             assert(parser.hasCommentsOnStack());
             assert(parser.getCommentCount() == 2);
+        }
+        catch(TError e)
+        {
+            assert(false);
+        }
+
+        sourceCode = `module myCommentedModule;
+
+        void function()
+        {
+            /*Hello */
+            /* Hello */
+            // Hello
+            //Hello
+        }
+        `;
+
+        currentLexer = new BasicLexer(sourceCode);
+        (cast(BasicLexer)currentLexer).performLex();
+        parser = new Parser(currentLexer);
+    
+        try
+        {
+            Module modulle = parser.parse();
+
+            assert(parser.hasCommentsOnStack());
+            assert(parser.getCommentCount() == 4);
         }
         catch(TError e)
         {
@@ -2838,6 +2924,8 @@ int thing()
 {
     int discardExpr = function(&j);
     int** l;
+
+    return 0;
 }
 `;
     LexerInterface currentLexer = new BasicLexer(sourceCode);
@@ -2888,7 +2976,7 @@ int thing()
         Container funcThingContainer = cast(Container)funcThing;
         assert(funcThingContainer);
         Statement[] funcThingStatements = funcThingContainer.getStatements();
-        assert(funcThingStatements.length == 2);
+        assert(funcThingStatements.length == 3);
 
         // TODO: Finish this
         // TODO: Add a check for the Statement types in the bodies, the arguments and the parameters
@@ -3114,6 +3202,53 @@ void function()
         // TODO: @Tristan Add this
     }
     catch(TError e)
+    {
+        assert(false);
+    }
+}
+
+/**
+ * Function test case
+ *
+ * Test: A function of a non-void return type
+ * must have a return statement
+ */
+unittest
+{
+    string sourceCode = `
+module myModule;
+
+int wrongFunction()
+{
+
+}
+`;
+
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        (cast(BasicLexer)currentLexer).performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    
+    Parser parser = new Parser(currentLexer);
+    
+    try
+    {
+        Module modulle = parser.parse();
+
+        assert(false);
+    }
+    catch(ParserException)
+    {
+        assert(true);
+    }
+    catch(TError)
     {
         assert(false);
     }
