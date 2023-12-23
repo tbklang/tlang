@@ -700,12 +700,6 @@ private void goggaWithLineInfo(string message, string[] lineInfo = [__DATE__, to
     gprintln(lineInfo[2]~":"~lineInfo[1]~" "~message);
 }
 
-unittest
-{
-    shout();
-    *(cast(byte*)0) = 2;
-}
-
 /* Test input: `hello "world";` */
 unittest
 {
