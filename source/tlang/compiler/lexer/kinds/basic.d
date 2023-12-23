@@ -684,15 +684,9 @@ public final class BasicLexer : LexerInterface
     }
 }
 
-private int rolled = 0;
-private int roll()
+private void shout(int i = __LINE__, string mod = __MODULE__, string func = __FUNCTION__)
 {
-    return rolled++;
-}
-
-private void shout(int i = __LINE__)
-{
-    gprintln("Unittest ("~to!(string)(roll())~") at "~to!(string)(i));
+    gprintln("Unittest at "~to!(string)(i)~" in "~func~" (within module "~mod~")");
 }
 
 /* Test input: `hello "world";` */
