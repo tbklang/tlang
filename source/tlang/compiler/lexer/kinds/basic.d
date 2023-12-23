@@ -336,11 +336,13 @@ public final class BasicLexer : LexerInterface
                 if (!doNumber()) {
                     break;
                 }
+                currentToken = currentToken.replace("_", "");
             }
             else if (currentChar == LS.BACKSLASH)
             {
                 throw new LexerException(this, "Escape sequences can only be used within strings");
             } else {
+                throw new LexerException(this, "Unsupported Character in this position");
                 //gprintln("Fuck " ~ " me col" ~ to!(string)(column));
             }
         }
@@ -695,21 +697,10 @@ private int roll()
     return rolled++;
 }
 
-private void shout(string lineNu = to!(string)(__LINE__))
+private void shout(int i = __LINE__)
 {
-    gprintln("Unittest ("~to!(string)(roll())~") at "~lineNu);
+    gprintln("Unittest ("~to!(string)(roll())~") at "~to!(string)(i));
 }
-
-// private void goggaWithLineInfo(string message, string[] lineInfo = [__DATE__, to!(string)(__LINE__), __MODULE__, __PRETTY_FUNCTION__])
-// {
-//     gprintln(lineInfo[2]~":"~lineInfo[1]~" "~message);
-// }
-// 
-// unittest
-// {
-// shout();
-//     goggaWithLineInfo("halo");
-// }
 
 /* Test input: `hello "world";` */
 unittest

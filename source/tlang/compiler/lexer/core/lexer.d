@@ -104,6 +104,8 @@ public enum LexerSymbols: char {
     SINGLE_QUOTE =  '\'' ,
     BACKSLASH =  '\\' ,
     UNDERSCORE =  '_' ,
+    LESS_THAN =  '<' ,
+    BIGGER_THAN =  '>' ,
 
     ESC_NOTHING =  '0' ,
     ESC_CARRIAGE_RETURN =  'r' ,
