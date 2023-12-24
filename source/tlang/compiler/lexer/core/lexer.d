@@ -223,3 +223,14 @@ public bool isValidEscape_String(char character)
            character == LS.ESC_NOTHING || character == LS.ESC_NEWLINE  || character == LS.ESC_CARRIAGE_RETURN ||
            character == LS.TAB || character == LS.ESC_BELL;
 }
+
+/**
+ * Given a character return whether it is valid entry
+ * for preceding a '.'.
+ *
+ * Returns: `true` if so, otherwise `false`
+ */
+public bool isValidDotPrecede(char character)
+{
+    return character == LS.R_PAREN || character == LS.R_BRACK; // || isAlpha(character) || isDigit(character);
+}
