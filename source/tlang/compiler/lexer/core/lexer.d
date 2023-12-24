@@ -128,7 +128,10 @@ public enum LexerSymbols : char
     ENC_SIGNED =  'S' ,
 }
 
-private alias LS = LexerSymbols;
+/** 
+ * Alias to `LexerSymbols`
+ */
+public alias LS = LexerSymbols;
 
 /** 
  * Checks if the provided character is an operator

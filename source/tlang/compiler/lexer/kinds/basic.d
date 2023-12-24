@@ -10,7 +10,6 @@ import std.conv : to;
 import std.ascii : isDigit, isAlpha, isWhite;
 import tlang.compiler.lexer.core;
 
-alias LS = LexerSymbols;
 enum EMPTY = "";
 
 /** 
