@@ -698,22 +698,6 @@ public final class BasicLexer : LexerInterface
         currentChar = sourceCode[position];
         return true;
     }
-
-   
-
-    /**
-     * Given a character return whether it is valid entry
-     * for preceding a '.'.
-     *
-     * Returns: `true` if so, otherwise `false`
-     */
-    private bool isValidDotPrecede(char character)
-    {
-        return character == LS.R_PAREN || character == LS.R_BRACK; // || isAlpha(character) || isDigit(character);
-    }
-
-    
-
 }
 
 /** 
