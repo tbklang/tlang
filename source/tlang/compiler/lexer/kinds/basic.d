@@ -714,10 +714,12 @@ private void shout(int i = __LINE__, string mod = __MODULE__, string func = __FU
     gprintln("Unittest at "~to!(string)(i)~" in "~func~" (within module "~mod~")");
 }
 
-/* Test input: `hello "world";` */
+/**
+ * Test input: `hello "world";`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\";";
@@ -730,10 +732,12 @@ shout();
         ]);
 }
 
-/* Test input: `hello \n "world";` */
+/**
+ * Test input: `hello \n "world";`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \n \"world\";";
@@ -746,10 +750,12 @@ shout();
         ]);
 }
 
-/* Test input: `hello "wo\nrld";` */
+/**
+ * Test input: `hello "wo\nrld";`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"wo\nrld\";";
@@ -762,10 +768,12 @@ shout();
     }
 }
 
-/* Test input: `hello "world"|| ` */
+/**
+ * Test input: `hello "world"|| `
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\"|| ";
@@ -778,10 +786,12 @@ shout();
         ]);
 }
 
-/* Test input: `hello "world"&& ` */
+/**
+ * Test input: `hello "world"&& `
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\"&& ";
@@ -794,10 +804,12 @@ shout();
         ]);
 }
 
-/* Test input: `hello "wooorld"||` */
+/**
+ * Test input: `hello "wooorld"||`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"wooorld\"||";
@@ -810,10 +822,12 @@ shout();
         ]);
 }
 
-/* Test input: `hello "world"|` */
+/**
+ * Test input: `hello "world"|`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\";|";
@@ -826,10 +840,12 @@ shout();
         ]);
 }
 
-/* Test input: `     hello` */
+/**
+ * Test input: `     hello`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = " hello";
@@ -839,10 +855,12 @@ shout();
     assert(currentLexer.getTokens() == [new Token("hello", 0, 0)]);
 }
 
-/* Test input: `//trist` */
+/**
+ * Test input: `//trist`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "//trist";
@@ -852,10 +870,12 @@ shout();
     assert(currentLexer.getTokens() == [new Token("//trist", 0, 0)]);
 }
 
-/* Test input: `/*trist\*\/` */
+/**
+ * Test input: `/*trist\*\/`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "/*trist*/";
@@ -865,10 +885,12 @@ shout();
     assert(currentLexer.getTokens() == [new Token("/*trist*/", 0, 0)]);
 }
 
-/* Test input: `/*t\nr\ni\ns\nt\*\/` */
+/**
+ * Test input: `/*t\nr\ni\ns\nt\*\/`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "/*t\nr\ni\ns\nt*/";
@@ -878,10 +900,12 @@ shout();
     assert(currentLexer.getTokens() == [new Token("/*t\nr\ni\ns\nt*/", 0, 0)]);
 }
 
-/* Test input: `/*t\nr\ni\ns\nt\*\/ ` */
+/**
+ * Test input: `/*t\nr\ni\ns\nt\*\/ `
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "/*t\nr\ni\ns\nt*/ ";
@@ -891,10 +915,12 @@ shout();
     assert(currentLexer.getTokens() == [new Token("/*t\nr\ni\ns\nt*/", 0, 0)]);
 }
 
-/* Test input: `//trist \n hello` */
+/**
+ * Test input: `//trist \n hello`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "//trist \n hello";
@@ -907,10 +933,12 @@ shout();
         ]);
 }
 
-/* Test input: `hello;` */
+/**
+ * Test input: `hello;`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = " hello;";
@@ -922,10 +950,12 @@ shout();
         ]);
 }
 
-/* Test input: `5+5` */
+/**
+ * Test input: `5+5`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "5+5";
@@ -939,10 +969,12 @@ shout();
         ]);
 }
 
-/* Test input: `hello "world\""` */
+/**
+ * Test input: `hello "world\""`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "hello \"world\\\"\"";
@@ -954,10 +986,12 @@ shout();
         ]);
 }
 
-/* Test input: `'c'` */
+/**
+ * Test input: `'c'`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "'c'";
@@ -967,10 +1001,12 @@ shout();
     assert(currentLexer.getTokens() == [new Token("'c'", 0, 0)]);
 }
 
-/* Test input: `2121\n2121` */
+/**
+ * Test input: `2121\n2121`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "2121\n2121";
@@ -983,11 +1019,11 @@ shout();
 }
 
 /**
-* Test `=`` and `==` handling
-*/
+ * Test `=`` and `==` handling
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = " =\n";
@@ -1049,13 +1085,13 @@ shout();
 }
 
 /**
-* Test: Literal value encoding
-*
-* Tests validity
-*/
+ * Test: Literal value encoding
+ *
+ * Tests validity
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode;
@@ -1115,10 +1151,12 @@ shout();
         ]);
 }
 
-/* Test input: `1.5` */
+/**
+ * Test input: `1.5`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "1.5";
@@ -1129,14 +1167,14 @@ shout();
 }
 
 /**
-* Test correct handling of dot-operator for
-* non-floating point cases
-*
-* Input: `new A().l.p.p;`
-*/
+ * Test correct handling of dot-operator for
+ * non-floating point cases
+ *
+ * Input: `new A().l.p.p;`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "new A().l.p.p;";
@@ -1155,11 +1193,11 @@ shout();
 }
 
 /**
-* Tab testing
-*/
+ * Tab testing
+ */
 unittest
 {
-shout();
+    shout();
     /**
     * Test tab dropping in front of a float.
     * Test calssification: Valid
@@ -1264,15 +1302,15 @@ shout();
 }
 
 /**
-* Test correct handling of dot-operator for
-* non-floating point cases where whitespace has been inserted before and after.
-* Test Classification: Invalid
-*
-* Input: `new A() .l.p.p;`
-*/
+ * Test correct handling of dot-operator for
+ * non-floating point cases where whitespace has been inserted before and after.
+ * Test Classification: Invalid
+ *
+ * Input: `new A() .l.p.p;`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     bool didFail = false;
@@ -1290,15 +1328,15 @@ shout();
 }
 
 /**
-* Test correct handling of dot-operator for
-* non-floating point cases where whitespace has been inserted before and after.
-* Test Classification: Invalid
-*
-* Input: `new A() . l.p.p;`
-*/
+ * Test correct handling of dot-operator for
+ * non-floating point cases where whitespace has been inserted before and after.
+ * Test Classification: Invalid
+ *
+ * Input: `new A() . l.p.p;`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     bool didFail = false;
@@ -1317,7 +1355,7 @@ shout();
 
 unittest
 {
-shout();
+    shout();
 
     /**
     * Test dot for fail on dot operator with no buildup and invalid lead
@@ -1392,13 +1430,13 @@ shout();
 }
 
 /**
-* Test newlines 
-* Test Classification: Valid
-* Input: `\n\n\n\n`
-*/
+ * Test newlines 
+ * Test Classification: Valid
+ * Input: `\n\n\n\n`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "\n\n\n\n";
@@ -1409,13 +1447,13 @@ shout();
 }
 
 /**
-* Test for character escape codes
-*
-* Input: `'\\'`
-*/
+ * Test for character escape codes
+ *
+ * Input: `'\\'`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "'\\\\'";
@@ -1428,13 +1466,13 @@ shout();
 }
 
 /**
-* Test for character escape codes
-*
-* Input: `'\a'`
-*/
+ * Test for character escape codes
+ *
+ * Input: `'\a'`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "'\\a'";
@@ -1446,13 +1484,14 @@ shout();
         ]);
 }
 
+/**
+ * Test for invalid escape sequence
+ * Input: `'\f'`
+ */
 unittest
 {
-shout();
-    /**
-    * Test for invalid escape sequence
-    * Input: `'\f'`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "\\f";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1467,13 +1506,14 @@ shout();
     assert(didFail);
 }
 
+/**
+ * Test for invalid char in ident
+ * Input: `hello$k`
+ */
 unittest
 {
-shout();
-    /**
-    * Test for invalid char in ident
-    * Input: `hello$k`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "hello$k";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1488,13 +1528,14 @@ shout();
     assert(didFail);
 }
 
+/**
+ * Test for invalid char in ident
+ * Input: `$`
+ */
 unittest
 {
-shout();
-    /**
-    * Test for invalid char in ident
-    * Input: `$`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "$";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1509,15 +1550,14 @@ shout();
     assert(didFail);
 }
 
-
 /**
-* Testing Underscores in numbers
-*
-* Input: `1_ 1_2 1_2.3 1_2.3_ 1__2 1__2.3 1__.23__`
-*/
+ * Testing Underscores in numbers
+ *
+ * Input: `1_ 1_2 1_2.3 1_2.3_ 1__2 1__2.3 1__.23__`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "1_ 1_2 1_2.3 1_2.3_ 1__2 1__2.3 1__.23__";
@@ -1536,13 +1576,13 @@ shout();
 }
 
 /**
-* Testing Comparison in numbers
-*
-* Input: `<= >= ==`
-*/
+ * Testing Comparison in numbers
+ *
+ * Input: `<= >= ==`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "<= >= =< => == != < > ^";
@@ -1563,13 +1603,13 @@ shout();
 }
 
 /**
-* Testing Chars
-*
-* Input: `'a'`
-*/
+ * Testing Chars
+ *
+ * Input: `'a'`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "'a'";
@@ -1581,14 +1621,14 @@ shout();
         ]);
 }
 
-
+/**
+ * Test for invalid ident
+ * Input: `hello. `
+ */
 unittest
 {
-shout();
-    /**
-    * Test for invalid ident
-    * Input: `hello. `
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "hello. ";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1603,13 +1643,14 @@ shout();
     assert(didFail);
 }
 
+/**
+ * Test for invalid ident
+ * Input: `hello.`
+ */
 unittest
 {
-shout();
-    /**
-    * Test for invalid ident
-    * Input: `hello.`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "hello.";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1624,13 +1665,14 @@ shout();
     assert(didFail);
 }
 
+/**
+ * Testing Chars
+ * Input: `'`
+ */
 unittest
 {
-shout();
-    /**
-    * Testing Chars
-    * Input: `'`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "'";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1645,13 +1687,14 @@ shout();
     assert(didFail);
 }
 
+/**
+ * Testing Chars
+ * Input: `'a`
+ */
 unittest
 {
-shout();
-    /**
-    * Testing Chars
-    * Input: `'a`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "'a";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1666,13 +1709,14 @@ shout();
     assert(didFail);
 }
 
+/**
+ * Testing Chars
+ * Input: `'aa`
+ */
 unittest
 {
-shout();
-    /**
-    * Testing Chars
-    * Input: `'aa`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "'aa";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1687,14 +1731,14 @@ shout();
     assert(didFail);
 }
 
-
+/**
+ * Testing String EOF
+ * Input: `"a`
+ */
 unittest
 {
-shout();
-    /**
-    * Testing String EOF
-    * Input: `"a`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "\"a";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1709,13 +1753,14 @@ shout();
     assert(didFail);
 }
 
+/**
+ * Testing String EOF
+ * Input: `"a`
+ */
 unittest
 {
-shout();
-    /**
-    * Testing String EOF
-    * Input: `"a`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "\"";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1730,14 +1775,14 @@ shout();
     assert(didFail);
 }
 
-
+/**
+ * Testing String EOF
+ * Input: `"\`
+ */
 unittest
 {
-shout();
-    /**
-    * Testing String EOF
-    * Input: `"\`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "\"\\";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1752,13 +1797,14 @@ shout();
     assert(didFail);
 }
 
+/**
+ * Testing Comment EOF
+ * Input: `/*`
+ */
 unittest
 {
-shout();
-    /**
-    * Testing Comment EOF
-    * Input: `/*`
-    */
+    shout();
+   
     bool didFail = false;
     string sourceCode = "/*";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1773,13 +1819,14 @@ shout();
     assert(didFail);
 }
 
+/**
+ * Testing Comment EOF
+ * Input: `/* `
+ */
 unittest
 {
-shout();
-    /**
-    * Testing Comment EOF
-    * Input: `/* `
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "/* ";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1801,7 +1848,7 @@ shout();
 */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "//";
@@ -1813,13 +1860,14 @@ shout();
         ]);
 }
 
+/**
+ * Testing invalid Escape Code
+ * Input: `\p`
+ */
 unittest
 {
-shout();
-    /**
-    * Testing invalid Escape Code
-    * Input: `\p`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "\"\\p";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1834,13 +1882,14 @@ shout();
     assert(didFail);
 }
 
+/**
+ * Testing invalid Escape Code
+ * Input: `\p`
+ */
 unittest
 {
-shout();
-    /**
-    * Testing invalid Escape Code
-    * Input: `\p`
-    */
+    shout();
+    
     bool didFail = false;
     string sourceCode = "\\p";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
@@ -1856,13 +1905,13 @@ shout();
 }
 
 /**
-* Testing comment
-*
-* Input: `'a' `
-*/
+ * Testing comment
+ *
+ * Input: `'a' `
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "'a' ";
@@ -1875,13 +1924,13 @@ shout();
 }
 
 /**
-* Testing comment
-*
-* Input: `// \n`
-*/
+ * Testing comment
+ *
+ * Input: `// \n`
+ */
 unittest
 {
-shout();
+    shout();
     import std.algorithm.comparison;
 
     string sourceCode = "// \n";
