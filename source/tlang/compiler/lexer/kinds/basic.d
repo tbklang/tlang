@@ -702,7 +702,10 @@ public final class BasicLexer : LexerInterface
    
 
     /**
-     * Given a character return whether it is valid entry for preceding a '.'.
+     * Given a character return whether it is valid entry
+     * for preceding a '.'.
+     *
+     * Returns: `true` if so, otherwise `false`
      */
     private bool isValidDotPrecede(char character)
     {
