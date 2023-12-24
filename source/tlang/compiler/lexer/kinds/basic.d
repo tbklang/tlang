@@ -137,6 +137,13 @@ public final class BasicLexer : LexerInterface
     /* The tokens */
     private Token[] tokens;
 
+    /** 
+     * Constructs a new lexer with the given
+     * source code of which is should tokenize
+     *
+     * Params:
+     *   sourceCode = the source text
+     */
     this(string sourceCode)
     {
         this.sourceCode = sourceCode;
@@ -155,14 +162,21 @@ public final class BasicLexer : LexerInterface
     /**
     * Returns true if we have a token being built
     * false otherwise
+    *
+    * Returns: `true` if we have a token built-up,
+    * `false` otherwise
     */
     private bool hasToken()
     {
         return currentToken.length != 0;
     }
 
-    /* Perform the lexing process */
-    /* TODO: Use return value */
+    /** 
+     * Performs the lexing process
+     *
+     * Throws:
+     *  LexerException on error tokenizing
+     */
     public void performLex()
     {
 
@@ -345,6 +359,11 @@ public final class BasicLexer : LexerInterface
         tokens = currentTokens;
     }
 
+    /** 
+     * Processes an ident with or without a dot-path
+     *
+     * Returns: `true` if characters left in buffer, else `false`
+     */
     private bool doIdentOrPath () {
         if (!buildAdvance()) {
             flush();
@@ -374,25 +393,38 @@ public final class BasicLexer : LexerInterface
         }
     }
 
-    private bool doChar() {
-        if (!buildAdvance()) {
+    /** 
+     * Tokenizes a character
+     *
+     * Returns: `true` if characters left in buffer, else `false`
+     */
+    private bool doChar()
+    {
+        if(!buildAdvance())
+        {
             throw new LexerException(this, "Expected character,  but got EOF");
         }
         /* Character literal must be next */
         bool valid;
-        if (currentChar == LS.BACKSLASH) {
+        if(currentChar == LS.BACKSLASH)
+        {
             valid = doEscapeCode();
-        } else {
+        }
+        else
+        {
             valid = buildAdvance();
         }
-        if (!valid) {
+        if(!valid)
+        {
             throw new LexerException(this, "Expected ''',  but got EOF");
         }
 
-        if (currentChar != LS.SINGLE_QUOTE) {
+        if(currentChar != LS.SINGLE_QUOTE)
+        {
             throw new LexerException(this, "Expected ''',  but got EOF");
         }
-        if (!buildAdvance()) {
+        if(!buildAdvance())
+        {
             flush();
             return false;
         }
@@ -400,10 +432,18 @@ public final class BasicLexer : LexerInterface
         return true;
     }
 
-    private bool doString() {
-        if (!buildAdvance()) {
+    /** 
+     * Tokenizes a string
+     *
+     * Returns: `true` if characters left in buffer, else `false`
+     */
+    private bool doString()
+    {
+        if(!buildAdvance())
+        {
             throw new LexerException(this, "Expected closing \", but got EOF");
         }
+
         while (true) {
             if (currentChar == LS.DOUBLE_QUOTE) {
                 if (!buildAdvance) {
@@ -426,11 +466,13 @@ public final class BasicLexer : LexerInterface
     }
 
     /** 
-     * Lex a comment, start by consuming the '/' and setting a flag for multilLine based
-     * on the next character and consume.
-     * Enter a loop that looks for the end of the comment and if not builds up the comment.
+     * Lex a comment, start by consuming the '/' and setting a flag for
+     * multi-line based on the next character and consume.
+     *
+     * Enters a loop that looks for the end of the comment and if not
+     * builds up the comment.
      * 
-     * Returns: true if characters left in buffer, else false
+     * Returns: `true` if characters left in buffer, else `false`
      */
     private bool doComment() {
         buildAdvance();
@@ -479,7 +521,7 @@ public final class BasicLexer : LexerInterface
     /** 
      * Lex an escape code. If valid one id found, add it to the token, else throw Excecption
      * 
-     * Returns: true if characters left in buffer, else false
+     * Returns: `true` if characters left in buffer, else `false`
      */
     private bool doEscapeCode() {
         if (!buildAdvance()) {
@@ -499,7 +541,7 @@ public final class BasicLexer : LexerInterface
      * Lex a number, this method lexes a plain number, float or numerically encoded.
      * The Float and numerically encoded numbers are deferred to other methods.
      * 
-     * Returns: true if characters left in buffer, else false
+     * Returns: `true` if characters left in buffer, else `false`
      */
     private bool doNumber() {
         while (true) {
@@ -523,7 +565,7 @@ public final class BasicLexer : LexerInterface
      * Lex a numberical encoder, looks for Signage follwed by Size, or if there is
      * no signage, jsut the size.
      * 
-     * Returns: true if characters left in buffer, else false
+     * Returns: `true` if characters left in buffer, else `false`
      */
     private bool doEncoder() {
         if (isNumericalEncoder_Signage(currentChar)) {
@@ -549,7 +591,7 @@ public final class BasicLexer : LexerInterface
      * Lex a floating point, the initial part of the number is lexed by the doNumber
      * method. Here we consume the '.' and consume digits until a splitter is reached.
      * 
-     * Returns: true if characters left in buffer, else false
+     * Returns: `true` if characters left in buffer, else `false`
      */
     private bool doFloat() {
         if (!buildAdvance()) {
@@ -592,30 +634,48 @@ public final class BasicLexer : LexerInterface
     /** 
      * Flush the current token to the token buffer.
      */
-    private void flush() {
+    private void flush()
+    {
         currentTokens ~= new Token(currentToken, line, column);
         currentToken = EMPTY;
     }
 
     /** 
-     * Consume the current char into the current char
+     * Consume the current char into the current token
+     *
+     * Returns: `true` if characters left in buffer, else `false`
      */
-    private bool buildAdvance() {
+    private bool buildAdvance()
+    {
         currentToken ~= currentChar;
         return improvedAdvance();
     }
 
-    private bool improvedAdvance(int inc = 1, bool shouldFlush = false) {
-        if (currentChar == LS.NEWLINE) {
+    /** 
+     * Advances the source code pointer
+     *
+     * Params:
+     *   inc = advancement counter, default 1  
+     *   shouldFlush = whether or not to flush, default is `false`
+     * Returns: `true` if characters left in buffer, else `false`
+     */
+    private bool improvedAdvance(int inc = 1, bool shouldFlush = false)
+    {
+        if (currentChar == LS.NEWLINE)
+        {
             shouldFlush && flush();
             line++;
             column = 1;
             position++;
-        } else {
+        }
+        else
+        {
             column += inc;
             position += inc;
         }
-        if (position >= sourceCode.length) {
+
+        if (position >= sourceCode.length)
+        {
             return false;
         }
         currentChar = sourceCode[position];
@@ -624,65 +684,119 @@ public final class BasicLexer : LexerInterface
 
     /** 
      * Advance the position, line and current token, reset the column to 1.
-     * Returns: true if characters left in buffer, else false
+     *
+     * Returns: `true` if characters left in buffer, else `false`
      */
-    private bool advanceLine(){
+    private bool advanceLine()
+    {
         column = 1;
         line++;
         position++;
-        if (position >= sourceCode.length) {
+        if (position >= sourceCode.length)
+        {
             return false;
         }
         currentChar = sourceCode[position];
         return true;
     }
 
-    private bool isOperator(char c) {
+    /** 
+     * Checks if the provided character is an operator
+     *
+     * Params:
+     *   c = the character to check
+     * Returns: `true` if it is a character, `false`
+     * otherwise
+     */
+    private bool isOperator(char c)
+    {
         return c == LS.PLUS || c == LS.TILDE || c == LS.MINUS ||
-            c == LS.STAR || c == LS.FORWARD_SLASH || c == LS.AMPERSAND ||
-            c == LS.CARET || c == LS.EXCLAMATION || c == LS.SHEFFER_STROKE || c == LS.LESS_THAN || c == LS.BIGGER_THAN;
+               c == LS.STAR || c == LS.FORWARD_SLASH || c == LS.AMPERSAND ||
+               c == LS.CARET || c == LS.EXCLAMATION || c == LS.SHEFFER_STROKE ||
+               c == LS.LESS_THAN || c == LS.BIGGER_THAN;
     }
 
+    /** 
+     * Checks if the provided character is a splitter
+     *
+     * Params:
+     *   c = the character to check
+     * Returns: `true` if it is a splitter, `false`
+     * otherwise
+     */
     private bool isSplitter(char c)
     {
         return c == LS.SEMI_COLON || c == LS.COMMA || c == LS.L_PAREN ||
-            c == LS.R_PAREN || c == LS.L_BRACK || c == LS.R_BRACK ||
-            c == LS.PERCENT || c == LS.L_BRACE || c == LS.R_BRACE ||
-            c == LS.EQUALS || c == LS.DOT || c == LS.COLON ||
-            isOperator(c) || isWhite(c);
+               c == LS.R_PAREN || c == LS.L_BRACK || c == LS.R_BRACK ||
+               c == LS.PERCENT || c == LS.L_BRACE || c == LS.R_BRACE ||
+               c == LS.EQUALS || c == LS.DOT || c == LS.COLON ||
+               isOperator(c) || isWhite(c);
     }
 
     /**
-    * Given a character return whether it is valid entry for preceding a '.'.
-    */
+     * Given a character return whether it is valid entry for preceding a '.'.
+     */
     private bool isValidDotPrecede(char character)
     {
         return character == LS.R_PAREN || character == LS.R_BRACK; // || isAlpha(character) || isDigit(character);
     }
 
+    /** 
+     * Checks if the provided character is
+     * either a numerical size encoder
+     * or signage encoder
+     *
+     * Params:
+     *   character = the character to check
+     * Returns: `true` if so, `false` otherwise
+     */
     private bool isNumericalEncoder(char character)
     {
         return isNumericalEncoder_Size(character) ||
             isNumericalEncoder_Signage(character);
     }
 
+    /** 
+     * Checks if the provided character is a
+     * numerical size encoder
+     *
+     * Params:
+     *   character = the character to check
+     * Returns: `true` if so, `false` otheriwse
+     */
     private bool isNumericalEncoder_Size(char character)
     {
         return character == LS.ENC_BYTE || character == LS.ENC_WORD ||
-            character == LS.ENC_INT || character == LS.ENC_LONG;
+               character == LS.ENC_INT || character == LS.ENC_LONG;
     }
 
+    /** 
+     * Checks if the provided character is a
+     * numerical signage encoder
+     *
+     * Params:
+     *   character = the character to check
+     * Returns: `true` if so, `false` otherwise
+     */
     private bool isNumericalEncoder_Signage(char character)
     {
         return character == LS.ENC_SIGNED || character == LS.ENC_UNSIGNED;
     }
 
-    /* Supported escapes \" */
+    /** 
+     * Checks if the given character is a valid
+     * escape character (something which would 
+     * have followed a `\`)
+     *
+     * Params:
+     *   character = the character to check
+     * Returns: `true` if so, `false` otherwise
+     */
     public bool isValidEscape_String(char character)
     {
-        return character == LS.BACKSLASH || character == LS.DOUBLE_QUOTE || character == LS.SINGLE_QUOTE
-        || character == LS.ESC_NOTHING || character == LS.ESC_NEWLINE 
-        || character == LS.ESC_CARRIAGE_RETURN || character == LS.TAB || character == LS.ESC_BELL;
+        return character == LS.BACKSLASH || character == LS.DOUBLE_QUOTE || character == LS.SINGLE_QUOTE ||
+               character == LS.ESC_NOTHING || character == LS.ESC_NEWLINE  || character == LS.ESC_CARRIAGE_RETURN ||
+               character == LS.TAB || character == LS.ESC_BELL;
     }
 }
 
