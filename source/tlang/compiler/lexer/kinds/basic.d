@@ -518,7 +518,7 @@ public final class BasicLexer : LexerInterface
     }
 
     /** 
-     * Lex an escape code. If valid one id found, add it to the token, else throw Excecption
+     * Lex an escape code. If valid one id found, add it to the token, else throw Exception
      * 
      * Returns: `true` if characters left in buffer, else `false`
      */
@@ -561,8 +561,8 @@ public final class BasicLexer : LexerInterface
     }
 
     /** 
-     * Lex a numberical encoder, looks for Signage follwed by Size, or if there is
-     * no signage, jsut the size.
+     * Lex a numerical encoder, looks for Signage followed by Size, or if there is
+     * no signage, just the size.
      * 
      * Returns: `true` if characters left in buffer, else `false`
      */
@@ -587,7 +587,7 @@ public final class BasicLexer : LexerInterface
     }
 
     /** 
-     * Lex a floating point, the initial part of the number is lexed by the doNumber
+     * Lex a floating point, the initial part of the number is lexed by the `doNumber()`
      * method. Here we consume the '.' and consume digits until a splitter is reached.
      * 
      * Returns: `true` if characters left in buffer, else `false`
