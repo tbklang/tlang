@@ -194,6 +194,21 @@ public bool isNumericalEncoder_Signage(char character)
 }
 
 /** 
+ * Checks if the provided character is
+ * either a numerical size encoder
+ * or signage encoder
+ *
+ * Params:
+ *   character = the character to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isNumericalEncoder(char character)
+{
+    return isNumericalEncoder_Size(character) ||
+           isNumericalEncoder_Signage(character);
+}
+
+/** 
  * Checks if the given character is a valid
  * escape character (something which would 
  * have followed a `\`)

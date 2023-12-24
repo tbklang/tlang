@@ -699,38 +699,7 @@ public final class BasicLexer : LexerInterface
         return true;
     }
 
-    /** 
-     * Checks if the provided character is an operator
-     *
-     * Params:
-     *   c = the character to check
-     * Returns: `true` if it is a character, `false`
-     * otherwise
-     */
-    private bool isOperator(char c)
-    {
-        return c == LS.PLUS || c == LS.TILDE || c == LS.MINUS ||
-               c == LS.STAR || c == LS.FORWARD_SLASH || c == LS.AMPERSAND ||
-               c == LS.CARET || c == LS.EXCLAMATION || c == LS.SHEFFER_STROKE ||
-               c == LS.LESS_THAN || c == LS.BIGGER_THAN;
-    }
-
-    /** 
-     * Checks if the provided character is a splitter
-     *
-     * Params:
-     *   c = the character to check
-     * Returns: `true` if it is a splitter, `false`
-     * otherwise
-     */
-    private bool isSplitter(char c)
-    {
-        return c == LS.SEMI_COLON || c == LS.COMMA || c == LS.L_PAREN ||
-               c == LS.R_PAREN || c == LS.L_BRACK || c == LS.R_BRACK ||
-               c == LS.PERCENT || c == LS.L_BRACE || c == LS.R_BRACE ||
-               c == LS.EQUALS || c == LS.DOT || c == LS.COLON ||
-               isOperator(c) || isWhite(c);
-    }
+   
 
     /**
      * Given a character return whether it is valid entry for preceding a '.'.
@@ -740,63 +709,8 @@ public final class BasicLexer : LexerInterface
         return character == LS.R_PAREN || character == LS.R_BRACK; // || isAlpha(character) || isDigit(character);
     }
 
-    /** 
-     * Checks if the provided character is
-     * either a numerical size encoder
-     * or signage encoder
-     *
-     * Params:
-     *   character = the character to check
-     * Returns: `true` if so, `false` otherwise
-     */
-    private bool isNumericalEncoder(char character)
-    {
-        return isNumericalEncoder_Size(character) ||
-            isNumericalEncoder_Signage(character);
-    }
+    
 
-    /** 
-     * Checks if the provided character is a
-     * numerical size encoder
-     *
-     * Params:
-     *   character = the character to check
-     * Returns: `true` if so, `false` otheriwse
-     */
-    private bool isNumericalEncoder_Size(char character)
-    {
-        return character == LS.ENC_BYTE || character == LS.ENC_WORD ||
-               character == LS.ENC_INT || character == LS.ENC_LONG;
-    }
-
-    /** 
-     * Checks if the provided character is a
-     * numerical signage encoder
-     *
-     * Params:
-     *   character = the character to check
-     * Returns: `true` if so, `false` otherwise
-     */
-    private bool isNumericalEncoder_Signage(char character)
-    {
-        return character == LS.ENC_SIGNED || character == LS.ENC_UNSIGNED;
-    }
-
-    /** 
-     * Checks if the given character is a valid
-     * escape character (something which would 
-     * have followed a `\`)
-     *
-     * Params:
-     *   character = the character to check
-     * Returns: `true` if so, `false` otherwise
-     */
-    public bool isValidEscape_String(char character)
-    {
-        return character == LS.BACKSLASH || character == LS.DOUBLE_QUOTE || character == LS.SINGLE_QUOTE ||
-               character == LS.ESC_NOTHING || character == LS.ESC_NEWLINE  || character == LS.ESC_CARRIAGE_RETURN ||
-               character == LS.TAB || character == LS.ESC_BELL;
-    }
 }
 
 /** 
