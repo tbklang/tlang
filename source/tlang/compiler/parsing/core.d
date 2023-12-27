@@ -2702,6 +2702,7 @@ public final class Parser
             {
                 // TODO: Figure out exactly what to do
                 parseImport();
+            }
             /* If it is a kind-of comment */
             else if(symbol == SymbolType.SINGLE_LINE_COMMENT || symbol == SymbolType.MULTI_LINE_COMMENT)
             {
