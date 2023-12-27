@@ -295,6 +295,16 @@ public enum SymbolType
      */
     IMPORT,
 
+    /**
+     * Multi-line comment (frwd-slash-star)
+     */
+    MULTI_LINE_COMMENT,
+
+    /**
+     * Singleiline comment (frwd-slash-slash)
+     */
+    SINGLE_LINE_COMMENT,
+
     /** 
      * Unknown symbol
      */
@@ -789,6 +799,16 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(token[0] == '*')
     {
         return SymbolType.STAR;
+    }
+    /* Multi-line comment (fwrd-slash-star) check */
+    else if(token[0] == '/' && token.length >= 2 && token[1]=='*')
+    {
+        return SymbolType.MULTI_LINE_COMMENT;
+    }
+    /* Single-line comment (fwrd-slash-slash) check */
+    else if(token[0] == '/' && token.length >= 2 && token[1]=='/')
+    {
+        return SymbolType.SINGLE_LINE_COMMENT;
     }
     /* Divide `/` operator check  */
     else if(token[0] == '/')
