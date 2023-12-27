@@ -2008,6 +2008,124 @@ public final class Parser
         return statement;
     }
 
+    import std.container.slist : SList;
+    private SList!(Token) commentStack;
+    private void pushComment(Token commentToken)
+    {
+        // Sanity check
+        assert(getSymbolType(commentToken) == SymbolType.SINGLE_LINE_COMMENT ||
+               getSymbolType(commentToken) == SymbolType.MULTI_LINE_COMMENT
+              );
+
+        // Push it onto top of stack
+        commentStack.insertFront(commentToken);        
+    }
+    //TODO: Add a popToken() (also think if we want a stack-based mechanism)
+    private bool hasCommentsOnStack()
+    {
+        return getCommentCount() != 0;
+    }
+
+    private ulong getCommentCount()
+    {
+        import std.range : walkLength;
+        return walkLength(commentStack[]);
+    }
+
+    private void parseComment()
+    {
+        gprintln("parseComment(): Enter", DebugType.WARNING);
+
+        Token curCommentToken = lexer.getCurrentToken();
+
+        pushComment(curCommentToken);
+
+        // TODO: Do something here like placing it on some kind of stack
+        gprintln("Comment is: '"~curCommentToken.getToken()~"'");
+        lexer.nextToken(); // Move off comment
+
+        gprintln("parseComment(): Leave", DebugType.WARNING);
+    }
+
+    /** 
+     * Tests the handling of comments
+     */
+    unittest
+    {
+        import tlang.compiler.lexer.kinds.arr : ArrLexer;
+
+        string sourceCode = `module myCommentModule;
+        // Hello`;
+
+        LexerInterface currentLexer = new BasicLexer(sourceCode);
+        (cast(BasicLexer)currentLexer).performLex();
+
+        Parser parser = new Parser(currentLexer);
+    
+        try
+        {
+            Module modulle = parser.parse();
+
+            assert(parser.hasCommentsOnStack());
+            assert(parser.getCommentCount() == 1);
+        }
+        catch(TError e)
+        {
+            assert(false);
+        }
+
+        sourceCode = `module myCommntedModule;
+        /*Hello */
+        
+        /* Hello*/`;
+
+        currentLexer = new BasicLexer(sourceCode);
+        (cast(BasicLexer)currentLexer).performLex();
+        parser = new Parser(currentLexer);
+    
+        try
+        {
+            Module modulle = parser.parse();
+
+            assert(parser.hasCommentsOnStack());
+            assert(parser.getCommentCount() == 2);
+        }
+        catch(TError e)
+        {
+            assert(false);
+        }
+
+        sourceCode = `module myCommentedModule;
+
+        void function()
+        {
+            /*Hello */
+            /* Hello */
+            // Hello
+            //Hello
+        }
+        `;
+
+        currentLexer = new BasicLexer(sourceCode);
+        (cast(BasicLexer)currentLexer).performLex();
+        parser = new Parser(currentLexer);
+    
+        try
+        {
+            Module modulle = parser.parse();
+
+            assert(parser.hasCommentsOnStack());
+            assert(parser.getCommentCount() == 4);
+        }
+        catch(TError e)
+        {
+            assert(false);
+        }
+    }
+
+    // TODO: We need to add `parseComment()`
+    // support here (see issue #84)
+    // TODO: This ic currently dead code and ought to be used/implemented
     private Statement parseStatement(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
     {
         gprintln("parseStatement(): Enter", DebugType.WARNING);
@@ -2079,6 +2197,12 @@ public final class Parser
         else if(symbol == SymbolType.STAR)
         {
             statement = parseDerefAssignment();
+        }
+        /* If it is a kind-of comment */
+        else if(symbol == SymbolType.SINGLE_LINE_COMMENT || symbol == SymbolType.MULTI_LINE_COMMENT)
+        {
+            gprintln("COMMENTS NOT YET PROPERLY SUPOORTED", DebugType.ERROR);
+            parseComment();
         }
         /* Error out */
         else
@@ -2302,6 +2426,12 @@ public final class Parser
                 ExternStmt externStatement = parseExtern();
 
                 modulle.addStatement(externStatement);
+            }
+            /* If it is a kind-of comment */
+            else if(symbol == SymbolType.SINGLE_LINE_COMMENT || symbol == SymbolType.MULTI_LINE_COMMENT)
+            {
+                gprintln("COMMENTS NOT YET PROPERLY SUPOORTED", DebugType.ERROR);
+                parseComment();
             }
             else
             {

@@ -4,6 +4,7 @@
 module tlang.compiler.lexer.core.lexer;
 
 import tlang.compiler.lexer.core.tokens : Token;
+import std.ascii : isDigit, isAlpha, isWhite;
 
 /** 
  * Defines the interface a lexer must provide
@@ -73,4 +74,163 @@ public interface LexerInterface
      * Returns: a `Token[]` containing all tokens
      */
     public Token[] getTokens();
+}
+
+/** 
+ * Human-readable names assigned
+ * to commonly used character
+ * constants
+ */
+public enum LexerSymbols : char
+{
+    L_PAREN = '(',
+    R_PAREN = ')',
+    SEMI_COLON = ';',
+    COMMA = ',',
+    L_BRACK =  '[' ,
+    R_BRACK =  ']' ,
+    PLUS =  '+' ,
+    MINUS =  '-' ,
+    FORWARD_SLASH =  '/' ,
+    PERCENT =  '%' ,
+    STAR =  '*' ,
+    AMPERSAND =  '&' ,
+    L_BRACE =  '{' ,
+    R_BRACE =  '}' ,
+    EQUALS =  '=' ,
+    SHEFFER_STROKE =  '|' ,
+    CARET =  '^' ,
+    EXCLAMATION =  '!' ,
+    TILDE =  '~' ,
+    DOT =  '.' ,
+    COLON =  ':',
+    SPACE = ' ',
+    TAB = '\t',
+    NEWLINE = '\n',
+    DOUBLE_QUOTE = '"',
+    SINGLE_QUOTE =  '\'' ,
+    BACKSLASH =  '\\' ,
+    UNDERSCORE =  '_' ,
+    LESS_THAN =  '<' ,
+    BIGGER_THAN =  '>' ,
+
+    ESC_NOTHING =  '0' ,
+    ESC_CARRIAGE_RETURN =  'r' ,
+    ESC_TAB =  't' ,
+    ESC_NEWLINE =  'n' ,
+    ESC_BELL=  'a' ,
+
+    ENC_BYTE =  'B' ,
+    ENC_INT =  'I' ,
+    ENC_LONG =  'L' ,
+    ENC_WORD =  'W' ,
+    ENC_UNSIGNED =  'U' ,
+    ENC_SIGNED =  'S' ,
+}
+
+/** 
+ * Alias to `LexerSymbols`
+ */
+public alias LS = LexerSymbols;
+
+/** 
+ * Checks if the provided character is an operator
+ *
+ * Params:
+ *   c = the character to check
+ * Returns: `true` if it is a character, `false`
+ * otherwise
+ */
+public bool isOperator(char c)
+{
+    return c == LS.PLUS || c == LS.TILDE || c == LS.MINUS ||
+           c == LS.STAR || c == LS.FORWARD_SLASH || c == LS.AMPERSAND ||
+           c == LS.CARET || c == LS.EXCLAMATION || c == LS.SHEFFER_STROKE ||
+           c == LS.LESS_THAN || c == LS.BIGGER_THAN;
+}
+
+/** 
+ * Checks if the provided character is a splitter
+ *
+ * Params:
+ *   c = the character to check
+ * Returns: `true` if it is a splitter, `false`
+ * otherwise
+ */
+public bool isSplitter(char c)
+{
+    return c == LS.SEMI_COLON || c == LS.COMMA || c == LS.L_PAREN ||
+           c == LS.R_PAREN || c == LS.L_BRACK || c == LS.R_BRACK ||
+           c == LS.PERCENT || c == LS.L_BRACE || c == LS.R_BRACE ||
+           c == LS.EQUALS || c == LS.DOT || c == LS.COLON ||
+           isOperator(c) || isWhite(c);
+}
+
+/** 
+ * Checks if the provided character is a
+ * numerical size encoder
+ *
+ * Params:
+ *   character = the character to check
+ * Returns: `true` if so, `false` otheriwse
+ */
+public bool isNumericalEncoder_Size(char character)
+{
+    return character == LS.ENC_BYTE || character == LS.ENC_WORD ||
+           character == LS.ENC_INT || character == LS.ENC_LONG;
+}
+
+/** 
+ * Checks if the provided character is a
+ * numerical signage encoder
+ *
+ * Params:
+ *   character = the character to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isNumericalEncoder_Signage(char character)
+{
+    return character == LS.ENC_SIGNED || character == LS.ENC_UNSIGNED;
+}
+
+/** 
+ * Checks if the provided character is
+ * either a numerical size encoder
+ * or signage encoder
+ *
+ * Params:
+ *   character = the character to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isNumericalEncoder(char character)
+{
+    return isNumericalEncoder_Size(character) ||
+           isNumericalEncoder_Signage(character);
+}
+
+/** 
+ * Checks if the given character is a valid
+ * escape character (something which would 
+ * have followed a `\`)
+ *
+ * Params:
+ *   character = the character to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isValidEscape_String(char character)
+{
+    return character == LS.BACKSLASH || character == LS.DOUBLE_QUOTE || character == LS.SINGLE_QUOTE ||
+           character == LS.ESC_NOTHING || character == LS.ESC_NEWLINE  || character == LS.ESC_CARRIAGE_RETURN ||
+           character == LS.TAB || character == LS.ESC_BELL;
+}
+
+/**
+ * Given a character return whether it is valid entry
+ * for preceding a '.'.
+ *
+ * Returns: `true` if so, otherwise `false`
+ */
+public bool isValidDotPrecede(char character)
+{
+    return character == LS.R_PAREN || character == LS.R_BRACK; // || isAlpha(character) || isDigit(character);
 }
