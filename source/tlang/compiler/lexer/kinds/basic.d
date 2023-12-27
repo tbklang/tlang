@@ -148,12 +148,30 @@ public final class BasicLexer : LexerInterface
         this.sourceCode = sourceCode;
     }
 
+    /** 
+     * Checks whether or not we could shift our
+     * source text pointer forward if it would
+     * be within the boundries of the source text
+     * or not
+     *
+     * Returns: `true` if within the boundries,
+     * `false` otherwise
+     */
     private bool isForward()
     {
         return position + 1 < sourceCode.length;
     }
 
-    public bool isBackward()
+    /** 
+     * Checks whether or not we could shift our
+     * source text pointer backwards and it it
+     * would be within the boundries of the source
+     * text or not
+     *
+     * Returns: `true` if within the boundries,
+     * `false` otherwise
+     */
+    private bool isBackward()
     {
         return position - 1 < sourceCode.length;
     }
