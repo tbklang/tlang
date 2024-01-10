@@ -196,6 +196,25 @@ public class Compiler
         this.typeChecker.beginCheck();
     }
 
+    /** 
+     * Returns the type checker instance of
+     * this compiler
+     *
+     * Returns: the type checker
+     * Throws:
+     *    CompilerException if you have not
+     * called `doTypeCheck()` yet
+     */
+    public TypeChecker getTypeChecker()
+    {
+        if(typeChecker is null)
+        {
+            throw new CompilerException(CompilerError.TYPECHECK_NOT_YET_PERFORMED);
+        }
+
+        return this.typeChecker;
+    }
+
     /* Perform code emitting */
     public void doEmit()
     {
@@ -255,7 +274,7 @@ public class Compiler
  *   sourceFile = the path to the file to open
  * Returns: the source data
  */
-private string gibFileData(string sourceFile)
+public string gibFileData(string sourceFile)
 {
     File sourceFileFile;
     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */

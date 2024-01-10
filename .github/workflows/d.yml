@@ -382,6 +382,11 @@ jobs:
           else
               exit 1
           fi
+
+      - name: Unused variables check (positive case)
+        run: ./tlang typecheck source/tlang/testing/unused_vars.t --unusedVars true
+      - name: Unused variables check (negative case)
+        run: ./tlang typecheck source/tlang/testing/unused_vars_none.t --unusedVars true
         
   emit:
     needs: [build, unittests]
