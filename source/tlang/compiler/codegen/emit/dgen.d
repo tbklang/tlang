@@ -809,9 +809,36 @@ public final class DCodeEmitter : CodeEmitter
 
     public override void emit()
     {
+        // TODO: We must figure out how we decide to generate
+        // multiple emits here for the many modules within the
+        // `Program`
+        import tlang.compiler.symbols.data : Program;
+        import tlang.compiler.symbols.containers : Module;
+        Program program = this.typeChecker.getProgram();
+        Module[] programsModules = program.getModules();
+        gprintln("emit() has found modules '"~to!(string)(programsModules)~"'", DebugType.INFO);
+
+        foreach(Module curMod; programsModules)
+        {
+            gprintln("Begin emit process for module '"~to!(string)(curMod)~"'...");
+
+            File modOut;
+            modOut.open(curMod.getName());
+
+            // FIXME: Remove below test
+            modOut.writeln("This file is a placeholder for emitted code for module '"~curMod.getName()~"'");
+            modOut.close();
+
+            // TODO: Implement me here
+
+            gprintln("Emit for '"~to!(string)(curMod)~"'");
+        }
+
+
+
+
         // Emit header comment (NOTE: Change this to a useful piece of text)
         emitHeaderComment("Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
-
         // Emit standard integer header import
         emitStdint();
 
@@ -1287,6 +1314,9 @@ int main()
         {
             string systemCompiler = config.getConfig("dgen:compiler").getText();
             gprintln("Using system C compiler '"~systemCompiler~"' for compilation");
+
+            // TODO: Do for-each generation of `.o` files here with `-c`
+            // TODO: After this do linking of all `.o`'s
 
             string[] compileArgs = [systemCompiler, "-o", "tlang.out", file.name()];
 
