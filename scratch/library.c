@@ -1,4 +1,4 @@
 int myFunc(int x)
 {
-	return x*2;
+	return x*4;
 }

@@ -1,9 +1,9 @@
 library:
-	gcc library.c -shared -o library.o
+	gcc -c library.c -o library.o
 
 clean:
 	rm library.o
 	rm main
 
 main:
-	gcc main.c library.o -o main
+	gcc main.c library.o -o main 
