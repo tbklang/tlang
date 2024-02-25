@@ -1,5 +1,7 @@
 module tlang.compiler.codegen.mapper.api;
 
+import tlang.compiler.symbols.data : Entity;
+
 /** 
  * The symbol mapping interface
  * that any symbol mapper must
