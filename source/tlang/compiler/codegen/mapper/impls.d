@@ -65,9 +65,17 @@ public class HashMapper : SymbolMapperV2
         }
         else
         {
-            // TODO: Implement me
-            // TODO: May need to take in a `Container` (for top-level)
-            // path = tc.getResolver().generateName()
+            // Determine the module this entity is contained within
+            Module modCon = cast(Module)this.tc.getResolver().findContainerOfType(Module.classinfo, item);
+
+            // Generate absolute path (but without the `<moduleName>.[..]`)
+            // rather only everything after the first dot
+            string p = tc.getResolver().generateName(modCon, item);
+            import std.string : split, join;
+            string[] components = split(p, ".")[1..$];
+            
+            // Join them back up with periods
+            path = join(components, ".");
         }
 
         // Generate the name as `_<hex(<path>)>`
