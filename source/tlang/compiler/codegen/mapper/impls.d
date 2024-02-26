@@ -3,6 +3,7 @@ module tlang.compiler.codegen.mapper.impls;
 import tlang.compiler.codegen.mapper.api;
 import tlang.compiler.typecheck.core : TypeChecker;
 import tlang.compiler.symbols.data : Entity;
+import tlang.compiler.symbols.containers : Module;
 
 public class LebanonMapper : SymbolMapperV2
 {
@@ -23,9 +24,17 @@ public class LebanonMapper : SymbolMapperV2
         }
         else
         {
-            // TODO: Implement me
-            // TODO: May need to take in a `Container` (for top-level)
-            // path = tc.getResolver().generateName()
+            // Determine the module this entity is contained within
+            Module modCon = cast(Module)this.tc.getResolver().findContainerOfType(Module.classinfo, item);
+
+            // Generate absolute path (but without the `<moduleName>.[..]`)
+            // rather only everything after the first dot
+            string p = tc.getResolver().generateName(modCon, item);
+            import std.string : split, join;
+            string[] components = split(p, ".")[1..$];
+            
+            // Join them back up with underscores
+            path = join(components, "_");
         }
         
 
