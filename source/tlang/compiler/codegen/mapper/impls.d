@@ -33,8 +33,8 @@ public class LebanonMapper : SymbolMapperV2
             import std.string : split, join;
             string[] components = split(p, ".")[1..$];
             
-            // Join them back up with underscores
-            path = join(components, "_");
+            // Join them back up with periods
+            path = join(components, ".");
         }
         
 
