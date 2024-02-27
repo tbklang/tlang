@@ -240,6 +240,11 @@ public class DNode
         return name;
     }
 
+    void forceName(string name)
+    {
+        this.name = name;
+    }
+
     /**
     * Should be overriden or have something set
     * inherited variable, this should make the
@@ -514,17 +519,37 @@ public class DNodeGenerator
 
     public DNode generate()
     {
-        /* Start at the top-level container, the module */
-        Module modulle = tc.getModule();
+        DNode[] moduleDNodes;
 
-        /* Recurse downwards */
-        Context context = new Context(modulle, InitScope.STATIC);
-        DNode moduleDNode = generalPass(modulle, context);
+        Module[] modules = tc.getProgram().getModules();
+        foreach(Module curMod; modules)
+        {
+            /* Start at the top-level container, the module */
+            Module modulle = curMod;
+
+            /* Recurse downwards */
+            Context context = new Context(modulle, InitScope.STATIC);
+            DNode moduleDNode = generalPass(modulle, context);
+            moduleDNodes ~= moduleDNode;
+        }
+
+        
 
         /* Print tree */
         // gprintln("\n"~moduleDNode.print());
 
-        return moduleDNode;
+        // FIXME: Ensure that this never crashes
+        // FIXME: See how we will process this
+        // on the other side
+        DNode programNode = new DNode(this, null);
+        programNode.forceName("program depNode");
+        foreach(m; moduleDNodes)
+        {
+            programNode.needs(m);
+        }
+        
+
+        return programNode; // TODO: Fix me, make it all or something
     }
 
     private DNode pool(Statement entity)
@@ -817,7 +842,7 @@ public class DNodeGenerator
                     * be declared (atleast for basic examples as like now) in
                     * the module level
                     */
-                    Context cont = new Context(tc.getModule(), InitScope.STATIC);
+                    Context cont = new Context(tc.getResolver().findContainerOfType(Module.classinfo, funcHandle), InitScope.STATIC);
                     // cont.container = tc.getModule();
                     // cont.
                     funcHandle.setContext(cont);
@@ -1566,7 +1591,7 @@ public class DNodeGenerator
         else if(cast(Function)namedContainer)
         {
             ignoreInitScope=false;
-            root=pool(tc.getModule());
+            root=pool(cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, namedContainer));
         }
 
 

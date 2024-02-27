@@ -19,6 +19,8 @@ import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.configuration : CompilerConfiguration;
+import tlang.compiler.symbols.containers : Module;
+import std.format : format;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -823,42 +825,106 @@ public final class DCodeEmitter : CodeEmitter
             gprintln("Begin emit process for module '"~to!(string)(curMod)~"'...");
 
             File modOut;
-            modOut.open(curMod.getName());
+            modOut.open(format("%s.c", curMod.getName()), "w");
 
-            // FIXME: Remove below test
-            modOut.writeln("This file is a placeholder for emitted code for module '"~curMod.getName()~"'");
+            // Emit header comment (NOTE: Change this to a useful piece of text)
+            emitHeaderComment(modOut, curMod, "Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
+            // Emit standard integer header import
+            emitStdint(modOut, curMod);
+
+            // Emit static allocation code
+            emitStaticAllocations(modOut, curMod);
+
+            // Emit globals
+            emitCodeQueue(modOut, curMod);
+
+            // Emit function definitions
+            emitFunctionPrototypes(modOut, curMod);
+            emitFunctionDefinitions(modOut, curMod);
+
+            // Close (and flush anything not yet written)
             modOut.close();
-
-            // TODO: Implement me here
-
             gprintln("Emit for '"~to!(string)(curMod)~"'");
         }
-
-
-
-
-        // Emit header comment (NOTE: Change this to a useful piece of text)
-        emitHeaderComment("Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
-        // Emit standard integer header import
-        emitStdint();
-
-        // Emit static allocation code
-        emitStaticAllocations();
-
-        // Emit globals
-        emitCodeQueue();
-
-        // Emit function definitions
-        emitFunctionPrototypes();
-        emitFunctionDefinitions();
-
         
         // If enabled (default: yes) then emit entry point (TODO: change later)
-        if(config.getConfig("dgen:emit_entrypoint_test").getBoolean())
+        Module mainModule;
+        Function mainFunction;
+        if(findEntrypoint(mainModule, mainFunction))
         {
-            //TODO: Emit main (entry point)
-            emitEntryPoint();
+            File entryModOut;
+            entryModOut.open(format("%s.c",mainModule.getName()), "w");
+
+            // Emit entry point
+            emitEntrypoint(entryModOut, mainModule);
+
+            entryModOut.close();
         }
+        else
+        {
+            // If enabled (default: yes) then emit a testing
+            // entrypoint (if one if available for the given
+            // test case)
+            //
+            // In such test cases we assume that the first module
+            // is the one we care about
+            if(config.getConfig("dgen:emit_entrypoint_test").getBoolean())
+            {
+                gprintln("Generating a testcase entrypoint for this program", DebugType.WARNING);
+
+                Module firstMod = programsModules[0];
+                File firstModOut;
+                firstModOut.open(format("%s.c", firstMod.getName()), "a");
+                
+                // Emit testing entrypoint
+                emitTestingEntrypoint(firstModOut, firstMod);
+
+                firstModOut.close();
+            }
+            else
+            {
+                gprintln("Could not find an entry point module and function", DebugType.ERROR);
+            }
+        }   
+    }
+
+    /** 
+     * Attempts to find an entry point within the `Program`,
+     * when it is found the ref parameters are filled in
+     * and `true` is returned, else they are left untouched
+     * and `false` is returned
+     *
+     * Params:
+     *   mainModule = the found main `Module` (if any)
+     *   mainFunc = the found main `Function` (if any)
+     * Returns: `true` if an entrypoint is found, else
+     * `false`
+     */
+    private bool findEntrypoint(ref Module mainModule, ref Function mainFunc)
+    {
+        import tlang.compiler.symbols.data : Program, Entity;
+        import tlang.compiler.typecheck.resolution : Resolver;
+        Program program = this.typeChecker.getProgram();
+        Resolver resolver = this.typeChecker.getResolver();
+        foreach(Module curMod; program.getModules())
+        {
+            Entity potentialMain = resolver.resolveWithin(curMod, "main");
+
+            if(potentialMain !is null)
+            {
+                Function potentialMainFunc = cast(Function)potentialMain;
+                if(potentialMainFunc !is null)
+                {
+                    // TODO: Ensure that it is void or int? (Our decision)
+                    // TODO: Ensure arguments (choose what we allow)
+                    mainModule = curMod;
+                    mainFunc = potentialMainFunc;
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /** 
@@ -866,50 +932,59 @@ public final class DCodeEmitter : CodeEmitter
      * file and the generated code file
      *
      * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
      *   headerPhrase = Optional additional string information to add to the header comment
      */
-    private void emitHeaderComment(string headerPhrase = "")
+    private void emitHeaderComment(File modFile, Module mod, string headerPhrase = "")
     {
         // NOTE: We could maybe fetch input fiel info too? Although it would have to be named similiarly in any case
         // so perhaps just appending a `.t` to the module name below would be fine
-        string moduleName = typeChecker.getResolver().generateName(typeChecker.getModule(), typeChecker.getModule()); //TODO: Lookup actual module name (I was lazy)
-        string outputCFilename = file.name();
+        string moduleName = typeChecker.getResolver().generateName(mod, mod); //TODO: Lookup actual module name (I was lazy)
+        string outputCFilename = modFile.name();
 
-        file.write(`/**
+        modFile.write(`/**
  * TLP compiler generated code
  *
  * Module name: `);
-        file.writeln(moduleName);
-        file.write(" * Output C file: ");
-        file.writeln(outputCFilename);
+        modFile.writeln(moduleName);
+        modFile.write(" * Output C file: ");
+        modFile.writeln(outputCFilename);
 
         if(headerPhrase.length)
         {
-            file.write(wrap(headerPhrase, 40, " *\n * ", " * "));
+            modFile.write(wrap(headerPhrase, 40, " *\n * ", " * "));
         }
         
-        file.write(" */\n");
+        modFile.write(" */\n");
     }
 
     /** 
      * Emits the static allocations provided
      *
      * Params:
-     *   initQueue = The allocation queue to emit static allocations from
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
      */
-    private void emitStaticAllocations()
+    private void emitStaticAllocations(File modOut, Module mod)
     {
+        // FIXME: Select queue with module as well
         selectQueue(QueueType.ALLOC_QUEUE);
         gprintln("Static allocations needed: "~to!(string)(getQueueLength()));
 
-        file.writeln();
+        modOut.writeln();
     }
 
     /** 
      * Emits the function prototypes
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
      */
-    private void emitFunctionPrototypes()
+    private void emitFunctionPrototypes(File modOut, Module mod)
     {
+        // FIXME: Select queue with module as well
         gprintln("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount()));
 
         Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues();
@@ -920,16 +995,21 @@ public final class DCodeEmitter : CodeEmitter
 
         foreach(string currentFunctioName; functionNames)
         {
-            emitFunctionPrototype(currentFunctioName);
-            file.writeln();
+            emitFunctionPrototype(modOut, mod, currentFunctioName);
+            modOut.writeln();
         }
     }
 
     /** 
      * Emits the function definitions
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
      */
-    private void emitFunctionDefinitions()
+    private void emitFunctionDefinitions(File modOut, Module mod)
     {
+        // FIXME: Select queue with module as well
         gprintln("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount()));
 
         Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues();
@@ -940,8 +1020,8 @@ public final class DCodeEmitter : CodeEmitter
 
         foreach(string currentFunctioName; functionNames)
         {
-            emitFunctionDefinition(currentFunctioName);
-            file.writeln();
+            emitFunctionDefinition(modOut, mod, currentFunctioName);
+            modOut.writeln();
         }
     }
 
@@ -998,38 +1078,58 @@ public final class DCodeEmitter : CodeEmitter
 
     }
 
-    private void emitFunctionPrototype(string functionName)
+    /** 
+     * Emits the function prototype for the `Function`
+     * of the given name
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
+     *   functionName = the name of the function
+     */
+    private void emitFunctionPrototype(File modOut, Module mod, string functionName)
     {
+        // FIXME: Select queue with module as well
         selectQueue(QueueType.FUNCTION_DEF_QUEUE, functionName);
 
         gprintln("emotFunctionDefinition(): Function: "~functionName~", with "~to!(string)(getSelectedQueueLength())~" many instructions");
     
         //TODO: Look at nested definitions or nah? (Context!!)
         //TODO: And what about methods defined in classes? Those should technically be here too
-        Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(typeChecker.getModule(), functionName); //TODO: Remove `auto`
+        Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(mod, functionName); //TODO: Remove `auto`
         
         // Emit the function signature
-        file.writeln(generateSignature(functionEntity)~";");
+        modOut.writeln(generateSignature(functionEntity)~";");
     }
 
-    private void emitFunctionDefinition(string functionName)
+    /** 
+     * Emits the function definition for the `Function`
+     * of the given name
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
+     *   functionName = the name of the function
+     */
+    private void emitFunctionDefinition(File modOut, Module mod, string functionName)
     {
+        // FIXME: Select queue with module as well
         selectQueue(QueueType.FUNCTION_DEF_QUEUE, functionName);
 
         gprintln("emotFunctionDefinition(): Function: "~functionName~", with "~to!(string)(getSelectedQueueLength())~" many instructions");
     
         //TODO: Look at nested definitions or nah? (Context!!)
         //TODO: And what about methods defined in classes? Those should technically be here too
-        Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(typeChecker.getModule(), functionName); //TODO: Remove `auto`
+        Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(mod, functionName); //TODO: Remove `auto`
         
         // If the Entity is NOT external then emit the signature+body
         if(!functionEntity.isExternal())
         {
             // Emit the function signature
-            file.writeln(generateSignature(functionEntity));
+            modOut.writeln(generateSignature(functionEntity));
 
             // Emit opening curly brace
-            file.writeln(getCharacter(SymbolType.OCURLY));
+            modOut.writeln(getCharacter(SymbolType.OCURLY));
 
             // Emit body
             while(hasInstructions())
@@ -1038,13 +1138,13 @@ public final class DCodeEmitter : CodeEmitter
 
                 string emit = transform(curFuncBodyInstr);
                 gprintln("emitFunctionDefinition("~functionName~"): Emit: "~emit);
-                file.writeln("\t"~emit);
+                modOut.writeln("\t"~emit);
                 
                 nextInstruction();
             }
 
             // Emit closing curly brace
-            file.writeln(getCharacter(SymbolType.CCURLY));
+            modOut.writeln(getCharacter(SymbolType.CCURLY));
         }
         // If the Entity IS external then don't emit anything as the signature would have been emitted via a prorotype earlier with `emitPrototypes()`
         else
@@ -1053,35 +1153,59 @@ public final class DCodeEmitter : CodeEmitter
         }
     }
 
-    private void emitCodeQueue()
+    /** 
+     * Emits the code queue of the given `Module`
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
+     */
+    private void emitCodeQueue(File modOut, Module mod)
     {
+        // FIXME: Select queue with module as well
         selectQueue(QueueType.GLOBALS_QUEUE);
         gprintln("Code emittings needed: "~to!(string)(getQueueLength()));
 
         while(hasInstructions())
         {
             Instruction currentInstruction = getCurrentInstruction();
-            file.writeln(transform(currentInstruction));
+            modOut.writeln(transform(currentInstruction));
 
             nextInstruction();
         }
 
-        file.writeln();
+        modOut.writeln();
     }
 
-    private void emitStdint()
+    /** 
+     * Emits the standard imports of the given
+     * `Module`
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
+     */
+    private void emitStdint(File modOut, Module mod)
     {
-        file.writeln("#include<stdint.h>");
+        modOut.writeln("#include<stdint.h>");
     }
 
-    private void emitEntryPoint()
+    private void emitEntrypoint(File modOut, Module mod)
+    {
+        gprintln("IMPLEMENT ME", DebugType.ERROR);
+        gprintln("IMPLEMENT ME", DebugType.ERROR);
+        gprintln("IMPLEMENT ME", DebugType.ERROR);
+        gprintln("IMPLEMENT ME", DebugType.ERROR);
+    }
+
+    private void emitTestingEntrypoint(File modOut, Module mod)
     {
         // TODO: Implement me
 
         // Test for `simple_functions.t` (function call testing)
-        if(cmp(typeChecker.getModule().getName(), "simple_functions") == 0)
+        if(cmp(mod.getName(), "simple_functions") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1097,9 +1221,9 @@ int main()
 }`);
         }
         // Test for `simple_function_recursion_factorial.t` (recursive function call testing)
-        else if(cmp(typeChecker.getModule().getName(), "simple_function_recursion_factorial") == 0)
+        else if(cmp(mod.getName(), "simple_function_recursion_factorial") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1112,9 +1236,9 @@ int main()
 }`);
         }
         // Test for `simple_direct_func_call.t` (statement-level function call)
-        else if(cmp(typeChecker.getModule().getName(), "simple_direct_func_call") == 0)
+        else if(cmp(mod.getName(), "simple_direct_func_call") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1131,9 +1255,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_while") == 0)
+        else if(cmp(mod.getName(), "simple_while") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1145,9 +1269,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_for_loops") == 0)
+        else if(cmp(mod.getName(), "simple_for_loops") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1159,9 +1283,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_pointer") == 0)
+        else if(cmp(mod.getName(), "simple_pointer") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1173,9 +1297,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_array_syntax") == 0)
+        else if(cmp(mod.getName(), "simple_pointer_array_syntax") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1187,9 +1311,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_cast_le") == 0)
+        else if(cmp(mod.getName(), "simple_pointer_cast_le") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1201,9 +1325,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_malloc") == 0)
+        else if(cmp(mod.getName(), "simple_pointer_malloc") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1215,9 +1339,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_extern") == 0)
+        else if(cmp(mod.getName(), "simple_extern") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1229,9 +1353,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_stack_array_coerce") == 0)
+        else if(cmp(mod.getName(), "simple_stack_array_coerce") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1243,9 +1367,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "complex_stack_array_coerce") == 0)
+        else if(cmp(mod.getName(), "complex_stack_array_coerce") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1260,9 +1384,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_stack_array_coerce_ptr_syntax") == 0)
+        else if(cmp(mod.getName(), "simple_stack_array_coerce_ptr_syntax") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1274,9 +1398,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_stack_arrays4") == 0)
+        else if(cmp(mod.getName(), "simple_stack_arrays4") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1287,9 +1411,9 @@ int main()
     return 0;
 }`);
         }
-        else
+        else if(cmp(mod.getName(), "simple_variables_decls_ass") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 int main()
 {
     return 0;
@@ -1298,27 +1422,64 @@ int main()
         }
     }
 
-
-
-
-
-
-
-
-
-
-
+    /** 
+     * Performs the compilation step
+     *
+     * This requires that the `emit()`
+     * step must have already been completed
+     */
     public override void finalize()
     {
+        import tlang.compiler.symbols.data : Program;
+        Program program = this.typeChecker.getProgram();
+        Module[] programModules = program.getModules();
+
+        string[] srcFiles;
+        string[] objectFiles;
+
+        // import tlang.compiler.configuration;
+        // config.addConfig(ConfigEntry("dgen:afterexit:clean_c_files", true));
+        // config.addConfig(ConfigEntry("dgen:afterexit:clean_obj_files", true));
+
+        scope(exit)
+        {
+            // Clean up all generated C files
+            if(config.hasConfig("dgen:afterexit:clean_c_files") && config.getConfig("dgen:afterexit:clean_c_files").getBoolean())
+            {
+                foreach(string srcFile; srcFiles)
+                {
+                    gprintln("Cleaning up source file '"~srcFile~"'...");
+                    import std.stdio : remove;
+                    remove(srcFile.ptr);
+
+                    if(!remove(srcFile.ptr))
+                    {
+                        gprintln("There was an error cleaning up source file '"~srcFile~"'"); // TODO: Add error code
+                    }
+                }
+            }
+
+            // Clean up all generates object files
+            if(config.hasConfig("dgen:afterexit:clean_obj_files") && config.getConfig("dgen:afterexit:clean_obj_files").getBoolean())
+            {
+                foreach(string objFile; objectFiles)
+                {
+                    gprintln("Cleaning up object file '"~objFile~"'...");
+                    import std.stdio : remove;
+                    remove(objFile.ptr);
+
+                    if(!remove(objFile.ptr))
+                    {
+                        gprintln("There was an error cleaning up object file '"~objFile~"'"); // TODO: Add error code
+                    }
+                }
+            }
+        }
+
         try
         {
             string systemCompiler = config.getConfig("dgen:compiler").getText();
             gprintln("Using system C compiler '"~systemCompiler~"' for compilation");
-
-            // TODO: Do for-each generation of `.o` files here with `-c`
-            // TODO: After this do linking of all `.o`'s
-
-            string[] compileArgs = [systemCompiler, "-o", "tlang.out", file.name()];
 
             // Check for object files to be linked in
             string[] objectFilesLink;
@@ -1331,9 +1492,58 @@ int main()
             {
                 gprintln("No files to link in");
             }
-            
-            Pid ccPID = spawnProcess(compileArgs~objectFilesLink);
 
+
+            // TODO: Do for-each generation of `.o` files here with `-c`
+            foreach(Module curMod; programModules)
+            {
+                string modFileSrcPath = format("%s.c", curMod.getName());
+                srcFiles ~= modFileSrcPath;
+                string modFileObjPath = format("%s.o", curMod.getName());
+
+                string[] args = [systemCompiler, "-c", modFileSrcPath, "-o", modFileObjPath];
+
+                gprintln("Compiling now with arguments: "~to!(string)(args));
+
+                Pid ccPID = spawnProcess(args);
+                int code = wait(ccPID);
+                if(code)
+                {
+                    //NOTE: Make this a TLang exception
+                    throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
+                }
+
+                // Only add it to the list of files if it was generated
+                // (this guards against the clean up routines spitting out errors
+                // for object files which were never generated in the first place)
+                objectFiles ~= modFileObjPath;
+            }
+
+            // Now determine the entry point module
+            // Module entryModule;
+            // Function _;
+            // if(findEntrypoint(entryModule, _))
+            // {
+                
+            // }
+
+            // Perform linking
+            string[] args = [systemCompiler];
+
+            // Tack on all generated object files
+            args ~= objectFiles;
+
+            // Tack on any objects to link that were specified in Config
+            args ~= objectFilesLink;
+
+            // Tack on the output filename (TODO: Fix the output file name)
+            args ~= ["-o", "./tlang.out"]; 
+
+            
+
+            // Now link all object files (the `.o`'s) together
+            // and perform linking
+            Pid ccPID = spawnProcess(args);
             int code = wait(ccPID);
 
             if(code)
