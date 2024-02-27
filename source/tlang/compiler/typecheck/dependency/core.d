@@ -446,7 +446,7 @@ public class DNodeGenerator
         // FIXME: Ensure that this never crashes
         // FIXME: See how we will process this
         // on the other side
-        DNode programNode = new DNode(this, null);
+        DNode programNode = new DNode(null);
         programNode.forceName("program depNode");
         foreach(m; moduleDNodes)
         {
