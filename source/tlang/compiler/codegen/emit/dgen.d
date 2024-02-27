@@ -1411,7 +1411,7 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(mod.getName(), "simple_variables_decls_ass") == 0)
+        else
         {
             modOut.writeln(`
 int main()
