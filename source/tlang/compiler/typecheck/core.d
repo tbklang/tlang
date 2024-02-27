@@ -30,38 +30,29 @@ import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
 public final class TypeChecker
 {
     /** 
+     * The compiler instance
+     */
+    private Compiler compiler;
+
+    /** 
      * The compiler configuration
      */
     private CompilerConfiguration config;
 
+    /** 
+     * The container of the program
+     */
+    private Program program;
 
-    // TODO: Remove this
-    private Module modulle;
-
-    /* The name resolver */
+    /** 
+     * The name resolver
+     */
     private Resolver resolver;
 
     /** 
      * The meta-programming processor
      */
     private MetaProcessor meta;
-
-    // TODO: Remove this
-    public Module deprecated_getModule()
-    {
-        // return modulle;
-        return this.program.getModules()[0];
-    }
-
-    public Program getProgram()
-    {
-        return this.program;
-    }
-
-    private Compiler compiler;
-    private Program program;
-
-    // TODO: Do we need the config then?
 
     /** 
      * Constructs a new `TypeChecker` with the given
@@ -88,6 +79,16 @@ public final class TypeChecker
     public CompilerConfiguration getConfig()
     {
         return config;
+    }
+
+    /** 
+     * Returns the program instance
+     *
+     * Returns: the `Program`
+     */
+    public Program getProgram()
+    {
+        return this.program;
     }
 
     /** 
@@ -1427,19 +1428,19 @@ public final class TypeChecker
                     Type literalEncodingType;
                     if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_INTEGER)
                     {
-                        literalEncodingType = getType(modulle, "int");
+                        literalEncodingType = getType(this.program, "int");
                     }
                     else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_INTEGER)
                     {
-                        literalEncodingType = getType(modulle, "uint");
+                        literalEncodingType = getType(this.program, "uint");
                     }
                     else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_LONG)
                     {
-                        literalEncodingType = getType(modulle, "long");
+                        literalEncodingType = getType(this.program, "long");
                     }
                     else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_LONG)
                     {
-                        literalEncodingType = getType(modulle, "ulong");
+                        literalEncodingType = getType(this.program, "ulong");
                     }
                     assert(literalEncodingType);
 
@@ -2115,7 +2116,7 @@ public final class TypeChecker
             string variableName;
             VariableAssignmentNode varAssignDNode = cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
             Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
-            variableName = resolver.generateName(modulle, assignTo);
+            variableName = resolver.generateName(this.program, assignTo);
             gprintln("VariableAssignmentNode: "~to!(string)(variableName));
 
             /* Get the Context of the Variable Assigmnent */
@@ -2216,7 +2217,7 @@ public final class TypeChecker
         {
             /* Extract the class node and create a static allocation instruction out of it */
             Clazz clazzPNode = cast(Clazz)dnode.getEntity();
-            string clazzName = resolver.generateName(modulle, clazzPNode);
+            string clazzName = resolver.generateName(this.program, clazzPNode);
             ClassStaticInitAllocate clazzStaticInitAllocInstr = new ClassStaticInitAllocate(clazzName);
 
             /* Add this static initialization to the list of global allocations required */
@@ -3029,10 +3030,6 @@ public final class TypeChecker
 
         foreach (Entity entity; entities)
         {
-            // (MODMAN) Don't use `modulle` - as it would be null
-            gprintln("Is modulle null?: "~to!(string)(modulle is null));
-
-
             // (MODMAN) TODO: We need to loop through each module and make
             // ... sure its name doesn't match with any of them
             foreach(Module curMod; program.getModules())
@@ -3225,10 +3222,10 @@ public final class TypeChecker
             */
             if (resolver.resolveUp(c, clazz.getName()) != clazz)
             {
-                expect("Cannot define class \"" ~ resolver.generateName(modulle,
-                        clazz) ~ "\" as one with same name, \"" ~ resolver.generateName(modulle,
+                expect("Cannot define class \"" ~ resolver.generateName(this.program,
+                        clazz) ~ "\" as one with same name, \"" ~ resolver.generateName(this.program,
                         resolver.resolveUp(c, clazz.getName())) ~ "\" exists in container \"" ~ resolver.generateName(
-                        modulle, containerEntity) ~ "\"");
+                        this.program, containerEntity) ~ "\"");
             }
             else
             {
@@ -3240,9 +3237,9 @@ public final class TypeChecker
                 // {
                 if (cmp(containerEntity.getName(), clazz.getName()) == 0)
                 {
-                    expect("Class \"" ~ resolver.generateName(modulle,
+                    expect("Class \"" ~ resolver.generateName(this.program,
                             clazz) ~ "\" cannot be defined within container with same name, \"" ~ resolver.generateName(
-                            modulle, containerEntity) ~ "\"");
+                            this.program, containerEntity) ~ "\"");
                 }
 
                 /* TODO: Loop througn Container ENtitys here */
