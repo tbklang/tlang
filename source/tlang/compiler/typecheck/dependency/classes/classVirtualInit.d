@@ -13,11 +13,23 @@ import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
 import tlang.compiler.typecheck.dependency.core;
+import std.conv : to;
+
 
 public class ClassVirtualInit : DNode
 {
-    this(DNodeGenerator dnodegen, Clazz clazz)
+    private Clazz clazz;
+
+    this(Clazz clazz)
     {
-        super(dnodegen, clazz);
+        super(clazz);
+
+        this.clazz = clazz;
+        initName();
+    }
+
+    private void initName()
+    {
+        name = "ClassVirtualInit: "~to!(string)(clazz);
     }
 }

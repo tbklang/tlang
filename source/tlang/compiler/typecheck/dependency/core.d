@@ -13,6 +13,8 @@ import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
 import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
+import tlang.compiler.typecheck.dependency.pool.interfaces;
+import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
 
 
@@ -107,18 +109,13 @@ public class DNode
 
     protected string name;
 
-    protected DNodeGenerator dnodegen;
-    protected Resolver resolver;
-
     private bool visited;
     private bool complete;
     private DNode[] dependencies;
 
-    this(DNodeGenerator dnodegen, Statement entity)
+    this(Statement entity)
     {
         this.entity = entity;
-        this.dnodegen = dnodegen;
-        this.resolver = dnodegen.resolver;
 
         initName();
     }
@@ -343,9 +340,9 @@ public final class DFunctionInnerGenerator : DNodeGenerator
 {
     private Function func;
 
-    this(TypeChecker tc, IFuncDefStore funcDefStore, Function func)
+    this(TypeChecker tc, IPoolManager poolManager, IFuncDefStore funcDefStore, Function func)
     {
-        super(tc, funcDefStore);
+        super(tc, poolManager, funcDefStore);
         this.func = func;
     }
 
@@ -378,23 +375,23 @@ public class DNodeGenerator
 
     private IFuncDefStore funcDefStore;
 
+    /** 
+     * Dependency node pooling
+     * management
+     */
+    private IPoolManager poolManager;
 
-    /**
-    * DNode pool
-    *
-    * This holds unique pool entries
-    */
-    private static DNode[] nodePool;
-
-    this(TypeChecker tc, IFuncDefStore funcDefStore)
+    this(TypeChecker tc, IPoolManager poolManager, IFuncDefStore funcDefStore)
     {
         // /* NOTE: NEW STUFF 1st Oct 2022 */
         // Module modulle = tc.getModule();
         // Context context = new Context(modulle, InitScope.STATIC);
         // super(tc, context, context.getContainer().getStatements());
 
-
-
+        // TODO: See if we can pass it in rather, but
+        // ... because this needs a this we must make
+        // ... it here
+        this.poolManager = poolManager;
 
         this.tc = tc;
         this.resolver = tc.getResolver();
@@ -437,23 +434,7 @@ public class DNodeGenerator
 
     private DNode pool(Statement entity)
     {
-        foreach(DNode dnode; nodePool)
-        {
-            if(dnode.getEntity() == entity)
-            {
-                return dnode;
-            }
-        }
-
-        /**
-        * If no DNode is found that is associated with
-        * the provided Entity then create a new one and
-        * pool it
-        */
-        DNode newDNode = new DNode(this, entity);
-        nodePool ~= newDNode;
-
-        return newDNode;
+        return this.poolManager.pool(entity);
     }
 
     /**
@@ -463,23 +444,27 @@ public class DNodeGenerator
     */
     private DNodeType poolT(DNodeType, EntityType)(EntityType entity)
     {
-        foreach(DNode dnode; nodePool)
+        static if(__traits(isSame, DNodeType, ExpressionDNode))
         {
-            if(dnode.getEntity() == entity)
-            {
-                return cast(DNodeType)dnode;
-            }
+            return this.poolManager.poolExpression(cast(Expression)entity);
         }
-
-        /**
-        * If no DNode is found that is associated with
-        * the provided Entity then create a new one and
-        * pool it
-        */
-        DNodeType newDNode = new DNodeType(this, entity);
-        nodePool ~= newDNode;
-
-        return newDNode;
+        else static if(__traits(isSame, DNodeType, VariableNode))
+        {
+            return this.poolManager.poolVariable(cast(Variable)entity);
+        }
+        else static if(__traits(isSame, DNodeType, StaticVariableDeclaration))
+        {
+            return this.poolManager.poolStaticVariable(cast(Variable)entity);
+        }
+        else static if(__traits(isSame, DNodeType, FuncDecNode))
+        {
+            return this.poolManager.poolFuncDec(cast(Function)entity);
+        }
+        else
+        {
+            pragma(msg, "This is an invalid case");
+            static assert(false);
+        }
     }
 
 
@@ -509,7 +494,7 @@ public class DNodeGenerator
     {
         /* We don't pool anything here - a constructor call is unique */
         
-        ObjectInitializationNode node = new ObjectInitializationNode(this, clazz, newExpression);
+        ObjectInitializationNode node = new ObjectInitializationNode(clazz, newExpression);
 
 
         /* TODO: Call a virtual pass over the class */
@@ -941,23 +926,7 @@ public class DNodeGenerator
     import tlang.compiler.typecheck.dependency.variables;
     private ModuleVariableDeclaration pool_module_vardec(Variable entity)
     {
-        foreach(DNode dnode; nodePool)
-        {
-            if(dnode.getEntity() == entity)
-            {
-                return cast(ModuleVariableDeclaration)dnode;
-            }
-        }
-
-        /**
-        * If no DNode is found that is associated with
-        * the provided Entity then create a new one and
-        * pool it
-        */
-        ModuleVariableDeclaration newDNode = new ModuleVariableDeclaration(this, entity);
-        nodePool ~= newDNode;
-
-        return newDNode;
+        return this.poolManager.poolModuleVariableDeclaration(entity);
     }
 
     // TODO: Work in progress
@@ -1535,25 +1504,7 @@ public class DNodeGenerator
             // assert(clazz.getModifierType() == InitScope.STATIC);
         }
         
-
-        foreach(DNode dnode; nodePool)
-        {
-            Statement entity = dnode.getEntity();
-            if(entity == clazz && cast(ClassStaticNode)dnode)
-            {
-                return cast(ClassStaticNode)dnode;
-            }
-        }
-
-        /**
-        * If no DNode is found that is associated with
-        * the provided Entity then create a new one and
-        * pool it
-        */
-        ClassStaticNode newDNode = new ClassStaticNode(this, clazz);
-        nodePool ~= newDNode;
-
-        return newDNode;
+        return this.poolManager.poolClassStatic(clazz);
     }
 
     /**

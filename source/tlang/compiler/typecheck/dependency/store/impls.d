@@ -8,6 +8,7 @@ import tlang.compiler.typecheck.dependency.store.interfaces;
 import tlang.compiler.symbols.data : Function;
 import tlang.compiler.typecheck.dependency.core : FunctionData, DFunctionInnerGenerator;
 import tlang.compiler.typecheck.core : TypeChecker;
+import tlang.compiler.typecheck.dependency.pool.interfaces : IPoolManager;
 
 /** 
  * An implementation of the `IFuncDefStore`
@@ -28,6 +29,11 @@ public final class FuncDefStore : IFuncDefStore
     private TypeChecker tc;
 
     /** 
+     * The pool management
+     */
+    private IPoolManager poolManager;
+
+    /** 
      * Constructs a new function
      * definition store with
      * the provided type
@@ -35,10 +41,12 @@ public final class FuncDefStore : IFuncDefStore
      *
      * Params:
      *   typeChecker = the `TypeChecker`
+     *   poolManager = the `IPoolManager`
      */
-    this(TypeChecker typeChecker)
+    this(TypeChecker typeChecker, IPoolManager poolManager)
     {
         this.tc = typeChecker;
+        this.poolManager = poolManager;
     }
 
     /** 
@@ -70,7 +78,7 @@ public final class FuncDefStore : IFuncDefStore
         * context etc.
         */
         FunctionData funcData;
-        funcData.ownGenerator = new DFunctionInnerGenerator(tc, this, func);
+        funcData.ownGenerator = new DFunctionInnerGenerator(tc, this.poolManager, this, func);
         // TODO: Should we not generate a HELLA long name rather, to avoid duplication problems and overwrites of key values
 
         funcData.name = tc.getResolver().generateName(tc.getModule(), func);
