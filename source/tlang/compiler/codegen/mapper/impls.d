@@ -121,7 +121,11 @@ public class HashMapper : SymbolMapperV2
 
         version(unittest) { writeln(format("hashMapper, prior to hashing the symbol name is: '%s'", path)); }
 
-        string mappedSymbol = toHexString!(LetterCase.lower)(md5Of(path));
+        // FIXME: Needs dup, somewhere this is allocating KAK!
+        // Some bizarre stack-allocation (maybe) and then returning that in [len, stackPtr]?
+        string mappedSymbol = toHexString!(LetterCase.lower)(md5Of(path)).dup;
+
+        version(unittest) { writeln(format("hashMapper, AFTER hashing symbol name is: '%s'", mappedSymbol)); }
 
         return mappedSymbol;
     }
@@ -148,6 +152,7 @@ unittest
     
     string withModPath = hashMapper.map(variable, ScopeType.GLOBAL);
     writeln(format("withModPath: '%s'", withModPath));
+    writeln("withModPath", withModPath);
     assert(cmp(withModPath, "ecec68ed63440cb8a3eeb8ced54dfd14") == 0);
 
     string withoutModPath = hashMapper.map(variable, ScopeType.LOCAL);
