@@ -73,7 +73,7 @@ public final class FuncDefStore : IFuncDefStore
         funcData.ownGenerator = new DFunctionInnerGenerator(tc, this, func);
         // TODO: Should we not generate a HELLA long name rather, to avoid duplication problems and overwrites of key values
 
-        funcData.name = tc.getResolver().generateName(tc.getModule(), func);
+        funcData.name = tc.getResolver().generateName(tc.getProgram(), func);
 
         funcData.name = func.getName();
         funcData.func = func;
