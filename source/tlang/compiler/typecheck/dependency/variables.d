@@ -2,6 +2,7 @@ module tlang.compiler.typecheck.dependency.variables;
 
 import tlang.compiler.typecheck.dependency.core;
 import tlang.compiler.symbols.data;
+import std.conv : to;
 
 /**
 * This module holds types related to variable declarations
@@ -15,9 +16,9 @@ public class VariableNode : DNode
 {
     private Variable variable;
 
-    this(DNodeGenerator dnodegen, Variable variable)
+    this(Variable variable)
     {
-        super(dnodegen, variable);
+        super(variable);
 
         this.variable = variable;
 
@@ -26,60 +27,55 @@ public class VariableNode : DNode
 
     private void initName()
     {
-        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        name = to!(string)(variable);
     }
-
-    
 }
 
 public class FuncDecNode : DNode
 {
     private Function funcHandle;
 
-    this(DNodeGenerator dnodegen, Function funcHandle)
+    this(Function funcHandle)
     {
-        super(dnodegen, funcHandle);
+        super(funcHandle);
 
         this.funcHandle = funcHandle;
-
         initName();
     }
 
     private void initName()
     {
-        name = "FuncHandle:"~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        name = "FuncHandle:"~to!(string)(funcHandle);
     }
-
-    
 }
 
 public class ModuleVariableDeclaration : VariableNode
 {
-    this(DNodeGenerator dnodegen, Variable variable)
+    this(Variable variable)
     {
-        super(dnodegen, variable);
+        super(variable);
 
         initName();
     }
 
     private void initName()
     {
-        name = "(S) "~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        name = "(S) "~to!(string)(variable);
     }
 }
 
 public class StaticVariableDeclaration : VariableNode
 {
-    this(DNodeGenerator dnodegen, Variable variable)
+    this(Variable variable)
     {
-        super(dnodegen, variable);
+        super(variable);
 
         initName();
     }
 
     private void initName()
     {
-        name = "(S) "~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
+        name = "(S) "~to!(string)(variable);
     }
 }
 
@@ -87,12 +83,11 @@ public class VariableAssignmentNode : DNode
 {
     private VariableAssignment variableAssignment;
 
-    this(DNodeGenerator dnodegen, VariableAssignment variableAssignment)
+    this(VariableAssignment variableAssignment)
     {
-        super(dnodegen, variableAssignment);
+        super(variableAssignment);
 
         this.variableAssignment = variableAssignment;
-
         initName();
     }
 
@@ -101,6 +96,6 @@ public class VariableAssignmentNode : DNode
         /* get the associated variable */
         Variable associatedVariable = variableAssignment.getVariable();
 
-        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), associatedVariable)~" (assignment)";
+        name = to!(string)(associatedVariable)~" (assignment)";
     }
 }

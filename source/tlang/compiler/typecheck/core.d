@@ -136,10 +136,16 @@ public final class TypeChecker
         * non-cyclic
         *
         */
-
         
-        IFuncDefStore funcDefStore = new FuncDefStore(this);
-        DNodeGenerator dNodeGenerator = new DNodeGenerator(this, funcDefStore);
+        // Create a pooling mechanism
+        import tlang.compiler.typecheck.dependency.pool.interfaces;
+        import tlang.compiler.typecheck.dependency.pool.impls;
+        
+
+        /* Create the dependency generator */
+        IPoolManager poolManager = new PoolManager();
+        IFuncDefStore funcDefStore = new FuncDefStore(this, poolManager);
+        DNodeGenerator dNodeGenerator = new DNodeGenerator(this, poolManager, funcDefStore);
 
         /* Generate the dependency tree */
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */

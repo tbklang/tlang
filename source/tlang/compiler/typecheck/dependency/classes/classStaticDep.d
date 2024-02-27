@@ -13,19 +13,22 @@ import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
 import tlang.compiler.typecheck.dependency.core;
+import std.conv : to;
 
 public class ClassStaticNode : DNode
 {
+    private Clazz entity;
 
-    this(DNodeGenerator dnodegen, Clazz entity)
+    this(Clazz entity)
     {
-        super(dnodegen, entity);
+        super(entity);
 
+        this.entity = entity;
         initName();
     }
 
     private void initName()
     {
-        name = "ClassStaticInit: "~resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);   
+        name = "ClassStaticInit: "~to!(string)(entity);
     }
 }
