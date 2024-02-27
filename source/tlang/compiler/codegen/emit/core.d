@@ -129,7 +129,6 @@ public abstract class CodeEmitter
         return functionBodyInstrs.keys();
     }
 
-    // TODO: Add allow for custom symbol mapper, use an interface or rather base class mechanism for it
     this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
         this.typeChecker = typeChecker;
