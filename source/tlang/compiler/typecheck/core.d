@@ -17,6 +17,8 @@ import std.algorithm : reverse;
 import tlang.compiler.typecheck.meta;
 import tlang.compiler.configuration;
 import tlang.compiler.core;
+import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
+import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
 
 /**
 * The Parser only makes sure syntax
@@ -125,14 +127,6 @@ public final class TypeChecker
             checkClassInherit(cast(Module)curModule);
         }
 
-        // TODO: Issue 88: Don't use static state
-        scope(exit)
-        {
-            /* Clear the FunctionData map (for next compilation) */
-            clearFuncDefs(); 
-        }
-
-
         /**
         * Dependency tree generation
         *
@@ -142,9 +136,10 @@ public final class TypeChecker
         * non-cyclic
         *
         */
-        
 
-        DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
+        
+        IFuncDefStore funcDefStore = new FuncDefStore(this);
+        DNodeGenerator dNodeGenerator = new DNodeGenerator(this, funcDefStore);
 
         /* Generate the dependency tree */
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
@@ -175,7 +170,7 @@ public final class TypeChecker
         assert(codeQueue.empty() == true);
 
         /* Grab functionData ??? */
-        FunctionData[string] functionDefinitions = grabFunctionDefs();
+        FunctionData[string] functionDefinitions = funcDefStore.grabFunctionDefs();
         gprintln("Defined functions: "~to!(string)(functionDefinitions));
 
         foreach(FunctionData funcData; functionDefinitions.values)
@@ -226,8 +221,6 @@ public final class TypeChecker
 
             gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
         }
-
-        // NOTE: Check scope guard for "exit routines" which run here
     }
 
 
