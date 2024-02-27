@@ -400,11 +400,11 @@ public final class TypeChecker
         TypeChecker tc = new TypeChecker(dummyCompiler);
 
         /* To type is `t1` */
-        Type t1 = getBuiltInType(tc, "uint");
+        Type t1 = getBuiltInType(tc, tc.getProgram(), "uint");
         assert(t1);
 
         /* We will comapre `t2` to `t1` */
-        Type t2 = getBuiltInType(tc, "ubyte");
+        Type t2 = getBuiltInType(tc, tc.getProgram(), "ubyte");
         assert(t2);
         Value v2 = new LiteralValue("25", t2);
         
@@ -423,8 +423,8 @@ public final class TypeChecker
         {
             Type expectedType = mismatch.getExpectedType();
             Type attemptedType = mismatch.getAttemptedType();
-            assert(tc.isSameType(expectedType, getBuiltInType(tc, "uint")));
-            assert(tc.isSameType(attemptedType, getBuiltInType(tc, "ubyte")));
+            assert(tc.isSameType(expectedType, getBuiltInType(tc, tc.getProgram(), "uint")));
+            assert(tc.isSameType(attemptedType, getBuiltInType(tc, tc.getProgram(), "ubyte")));
         }
 
 
@@ -454,11 +454,11 @@ public final class TypeChecker
         TypeChecker tc = new TypeChecker(dummyCompiler);
 
         /* To type is `t1` */
-        Type t1 = getBuiltInType(tc, "uint");
+        Type t1 = getBuiltInType(tc, tc.getProgram(), "uint");
         assert(t1);
 
         /* We will comapre `t2` to `t1` */
-        Type t2 = getBuiltInType(tc, "uint");
+        Type t2 = getBuiltInType(tc, tc.getProgram(), "uint");
         assert(t2);
         Value v2 = new LiteralValue("25", t2);
         
@@ -3414,8 +3414,8 @@ unittest
         Module modulle = program.getModules()[0];
 
         /* Setup testing variables */
-        Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-        Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.a.b.c.y");
+        Entity container = typeChecker.getResolver().resolveBest(modulle, "y");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(modulle, "y.a.b.c.y");
 
         /* Make sure the member y.a.b.c.y collided with root container (module) y */
         assert(e.defined == container);
@@ -3457,8 +3457,8 @@ unittest
         Module modulle = program.getModules()[0];
 
         /* Setup testing variables */
-        Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c");
-        Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c.c");
+        Entity container = typeChecker.getResolver().resolveBest(modulle, "a.b.c");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(modulle, "a.b.c.c");
 
         /* Make sure the member a.b.c.c collided with a.b.c container */
         assert(e.defined == container);
@@ -3500,7 +3500,7 @@ unittest
         Module modulle = program.getModules()[0];
 
         /* Setup testing variables */
-        Entity memberFirst = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b");
+        Entity memberFirst = typeChecker.getResolver().resolveBest(modulle, "a.b");
 
         /* Make sure the member a.b.c.c collided with a.b.c container */
         assert(e.attempted != memberFirst);
@@ -3542,7 +3542,7 @@ unittest
         Module modulle = program.getModules()[0];
 
         /* Setup testing variables */
-        Entity ourClassA = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a");
+        Entity ourClassA = typeChecker.getResolver().resolveBest(modulle, "a");
 
         /* Make sure the member attempted was Variable and defined was Clazz */
         assert(cast(Variable)e.attempted);
@@ -3586,8 +3586,8 @@ unittest
         Module modulle = program.getModules()[0];
 
         /* Setup testing variables */
-        Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-        Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
+        Entity container = typeChecker.getResolver().resolveBest(modulle, "y");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(modulle, "y.y");
 
         /* Make sure the member y.y collided with root container (module) y */
         assert(e.defined == container);
