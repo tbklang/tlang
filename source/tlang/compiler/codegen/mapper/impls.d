@@ -54,6 +54,7 @@ version(unittest)
     import std.string : cmp, format;
     import std.stdio : writeln;
 }
+
 unittest
 {
     File dummyOut;
@@ -117,8 +118,39 @@ public class HashMapper : SymbolMapperV2
         // Generate the name as `_<hex(<path>)>`
         import std.digest : toHexString, LetterCase;
         import std.digest.md : md5Of;
+
+        version(unittest) { writeln(format("hashMapper, prior to hashing the symbol name is: '%s'", path)); }
+
         string mappedSymbol = toHexString!(LetterCase.lower)(md5Of(path));
 
         return mappedSymbol;
     }
+}
+
+unittest
+{
+    File dummyOut;
+    Compiler compiler = new Compiler("", "", dummyOut);
+
+    Program program = new Program();
+    compiler.setProgram(program);
+
+    Module mod = new Module("modA");
+    program.addModule(mod);
+
+    Variable variable = new Variable("int", "varA");
+    variable.parentTo(mod);
+    mod.addStatement(variable);
+
+    TypeChecker tc = new TypeChecker(compiler);
+
+    SymbolMapperV2 hashMapper = new HashMapper(tc);
+    
+    string withModPath = hashMapper.map(variable, ScopeType.GLOBAL);
+    writeln(format("withModPath: '%s'", withModPath));
+    assert(cmp(withModPath, "ecec68ed63440cb8a3eeb8ced54dfd14") == 0);
+
+    string withoutModPath = hashMapper.map(variable, ScopeType.LOCAL);
+    writeln(format("withoutModPath: '%s'", withoutModPath));
+    assert(cmp(withoutModPath, "6afa5299740148c1e32a213f880cec3b") == 0);
 }
