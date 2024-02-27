@@ -46,6 +46,42 @@ public class LebanonMapper : SymbolMapperV2
     }
 }
 
+version(unittest)
+{
+    import std.stdio : File;
+    import tlang.compiler.core : Compiler;
+    import tlang.compiler.symbols.data : Program, Module, Variable;
+    import std.string : cmp, format;
+    import std.stdio : writeln;
+}
+unittest
+{
+    File dummyOut;
+    Compiler compiler = new Compiler("", "", dummyOut);
+
+    Program program = new Program();
+    compiler.setProgram(program);
+
+    Module mod = new Module("modA");
+    program.addModule(mod);
+
+    Variable variable = new Variable("int", "varA");
+    variable.parentTo(mod);
+    mod.addStatement(variable);
+
+    TypeChecker tc = new TypeChecker(compiler);
+
+    SymbolMapperV2 lebMapper = new LebanonMapper(tc);
+    
+    string withModPath = lebMapper.map(variable, ScopeType.GLOBAL);
+    writeln(format("withModPath: '%s'", withModPath));
+    assert(cmp(withModPath, "modA_varA") == 0);
+
+    string withoutModPath = lebMapper.map(variable, ScopeType.LOCAL);
+    writeln(format("withoutModPath: '%s'", withoutModPath));
+    assert(cmp(withoutModPath, "varA") == 0);
+}
+
 public class HashMapper : SymbolMapperV2
 {
     private TypeChecker tc;
