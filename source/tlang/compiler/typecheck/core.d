@@ -19,6 +19,8 @@ import tlang.compiler.configuration;
 import tlang.compiler.core;
 import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
 import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
+import tlang.compiler.typecheck.dependency.pool.interfaces;
+import tlang.compiler.typecheck.dependency.pool.impls;
 
 /**
 * The Parser only makes sure syntax
@@ -116,16 +118,16 @@ public final class TypeChecker
     {
         // TODO: Ensure this is CORRECT! (MODMAN)
         /* Check declaration and definition types */
-        foreach(Statement curModule; this.program.getModules())
+        foreach(Module curModule; this.program.getModules())
         {
-            checkDefinitionTypes(cast(Module)curModule);
+            checkDefinitionTypes(curModule);
         }
         
         // TODO: Ensure this is CORRECT! (MODMAN)
         /* TODO: Implement me */
-        foreach(Statement curModule; this.program.getModules())
+        foreach(Module curModule; this.program.getModules())
         {
-            checkClassInherit(cast(Module)curModule);
+            checkClassInherit(curModule);
         }
 
         /**
@@ -137,11 +139,6 @@ public final class TypeChecker
         * non-cyclic
         *
         */
-        
-        // Create a pooling mechanism
-        import tlang.compiler.typecheck.dependency.pool.interfaces;
-        import tlang.compiler.typecheck.dependency.pool.impls;
-        
 
         /* Create the dependency generator */
         IPoolManager poolManager = new PoolManager();
