@@ -371,13 +371,10 @@ public class DNodeGenerator
     private TypeChecker tc;
     private Resolver resolver;
 
-
-    /**
-    * Supporting string -> DNode map for `saveFunctionDefinitionNode`
-    * and `retrieveFunctionDefintionNode`
-    */
-    private DNode[string] functionDefinitions;
-
+    /** 
+     * Management of function
+     * definitions
+     */
     private IFuncDefStore funcDefStore;
 
     /** 
