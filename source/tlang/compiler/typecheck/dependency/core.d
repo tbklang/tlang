@@ -436,6 +436,11 @@ public class DNodeGenerator
             /* Recurse downwards */
             Context context = new Context(modulle, InitScope.STATIC);
             DNode moduleDNode = generalPass(modulle, context);
+            
+            /* Set nice name */
+            moduleDNode.forceName(format("Module (name: %s)", modulle.getName()));
+
+            /* Tack on */
             moduleDNodes ~= moduleDNode;
         }
 
