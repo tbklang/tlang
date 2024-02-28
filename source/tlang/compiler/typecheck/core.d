@@ -229,17 +229,6 @@ public final class TypeChecker
 
 
     /** 
-     * Function definitions
-     *
-     * Holds their action lists which are to be used for the
-     * (later) emitting of their X-lang emit code
-     */
-     //FUnctionDeifnition should couple `linearizedList` but `functionEntity`
-    // private FunctionDefinition[string] functionDefinitions2; //TODO: Use this
-
-
-
-    /** 
      * Concrete queues
      *
      * These queues below are finalized and not used as a scratchpad.
@@ -353,18 +342,6 @@ public final class TypeChecker
     {
         return codeQueue.empty;
     }
-    
-    // public Instruction[] getCodeQueue()
-    // {
-    //     Instruction[] codeQueueConcrete;
-
-    //     foreach(Instruction currentInstruction; codeQueue)
-    //     {
-    //         codeQueueConcrete~=currentInstruction;
-    //     }
-
-    //     return codeQueueConcrete;
-    // }
 
     /*
     * Prints the current contents of the code-queue
