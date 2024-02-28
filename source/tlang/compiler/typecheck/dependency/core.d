@@ -303,6 +303,22 @@ public class DNode
     {
         return "[DNode: "~to!(string)(entity)~"]";
     }
+
+    ulong getDepCount()
+    {
+        return this.dependencies.length;
+    }
+
+    /** 
+     * Returns this dependency node's
+     * attached dependencies
+     *
+     * Returns: the `DNode[]`
+     */
+    public DNode[] getDeps()
+    {
+        return this.dependencies;
+    }
 }
 
 
@@ -431,15 +447,14 @@ public class DNodeGenerator
         // FIXME: Ensure that this never crashes
         // FIXME: See how we will process this
         // on the other side
-        DNode programNode = new DNode(null);
-        programNode.forceName("program depNode");
+        import tlang.compiler.typecheck.dependency.prog : ProgramDepNode;
+        DNode programDNode = new ProgramDepNode(tc.getProgram());
         foreach(m; moduleDNodes)
         {
-            programNode.needs(m);
+            programDNode.needs(m);
         }
         
-
-        return programNode; // TODO: Fix me, make it all or something
+        return programDNode; // TODO: Fix me, make it all or something
     }
 
     private DNode pool(Statement entity)
