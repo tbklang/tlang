@@ -369,7 +369,7 @@ public class DNodeGenerator
     * Type checking utilities
     */
     private TypeChecker tc;
-    public Resolver resolver;
+    private Resolver resolver;
 
 
     /**
@@ -388,22 +388,10 @@ public class DNodeGenerator
 
     this(TypeChecker tc, IPoolManager poolManager, IFuncDefStore funcDefStore)
     {
-        // /* NOTE: NEW STUFF 1st Oct 2022 */
-        // Module modulle = tc.getModule();
-        // Context context = new Context(modulle, InitScope.STATIC);
-        // super(tc, context, context.getContainer().getStatements());
-
-        // TODO: See if we can pass it in rather, but
-        // ... because this needs a this we must make
-        // ... it here
-        this.poolManager = poolManager;
-
         this.tc = tc;
-        this.resolver = tc.getResolver();
+        this.poolManager = poolManager;
         this.funcDefStore = funcDefStore;
-
-        /* TODO: Make this call in the TypeChecker instance */
-        //generate();
+        this.resolver = tc.getResolver();
     }
 
     /** 
