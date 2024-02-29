@@ -852,8 +852,9 @@ public final class DCodeEmitter : CodeEmitter
         Function mainFunction;
         if(findEntrypoint(mainModule, mainFunction))
         {
+            // FIXME: Disable (needed "a", because "w" overwrote previous writes)
             File entryModOut;
-            entryModOut.open(format("%s.c",mainModule.getName()), "w");
+            entryModOut.open(format("%s.c", mainModule.getName()), "a");
 
             // Emit entry point
             emitEntrypoint(entryModOut, mainModule);
@@ -883,7 +884,7 @@ public final class DCodeEmitter : CodeEmitter
             }
             else
             {
-                gprintln("Could not find an entry point module and function", DebugType.ERROR);
+                gprintln("Could not find an entry point module and function. Missing a main() maybe?", DebugType.ERROR);
             }
         }   
     }
@@ -968,8 +969,9 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitStaticAllocations(File modOut, Module mod)
     {
-        // FIXME: Select queue with module as well
-        selectQueue(QueueType.ALLOC_QUEUE);
+        // Select the static initializations code queue for
+        // the given module
+        selectQueue(mod, QueueType.ALLOC_QUEUE);
         gprintln("Static allocations needed: "~to!(string)(getQueueLength()));
 
         modOut.writeln();
@@ -984,12 +986,11 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitFunctionPrototypes(File modOut, Module mod)
     {
-        // FIXME: Select queue with module as well
-        gprintln("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount()));
+        gprintln("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount(mod)));
 
-        Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues();
-
-        string[] functionNames = getFunctionDefinitionNames();
+        // Get complete map (should we bypass anything in CodeEmitter for this? Guess it is fair?)
+        Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues(mod);
+        string[] functionNames = getFunctionDefinitionNames(mod);
 
         gprintln("WOAH: "~to!(string)(functionNames));
 
@@ -1009,12 +1010,12 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitFunctionDefinitions(File modOut, Module mod)
     {
-        // FIXME: Select queue with module as well
-        gprintln("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount()));
+        gprintln("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount(mod)));
 
-        Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues();
+        // Get the function definitions of the current module
+        Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues(mod);
 
-        string[] functionNames = getFunctionDefinitionNames();
+        string[] functionNames = getFunctionDefinitionNames(mod);
 
         gprintln("WOAH: "~to!(string)(functionNames));
 
@@ -1089,8 +1090,9 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitFunctionPrototype(File modOut, Module mod, string functionName)
     {
-        // FIXME: Select queue with module as well
-        selectQueue(QueueType.FUNCTION_DEF_QUEUE, functionName);
+        // Select the function definition code queue by module and function name
+        // TODO: Is this needed for protptype def? I think not (REMOVE PLEASE)
+        selectQueue(mod, QueueType.FUNCTION_DEF_QUEUE, functionName);
 
         gprintln("emotFunctionDefinition(): Function: "~functionName~", with "~to!(string)(getSelectedQueueLength())~" many instructions");
     
@@ -1113,8 +1115,8 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitFunctionDefinition(File modOut, Module mod, string functionName)
     {
-        // FIXME: Select queue with module as well
-        selectQueue(QueueType.FUNCTION_DEF_QUEUE, functionName);
+        // Select the function definition code queue by module and function name
+        selectQueue(mod, QueueType.FUNCTION_DEF_QUEUE, functionName);
 
         gprintln("emotFunctionDefinition(): Function: "~functionName~", with "~to!(string)(getSelectedQueueLength())~" many instructions");
     
@@ -1162,8 +1164,8 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitCodeQueue(File modOut, Module mod)
     {
-        // FIXME: Select queue with module as well
-        selectQueue(QueueType.GLOBALS_QUEUE);
+        // Select the global code queue of the current module
+        selectQueue(mod, QueueType.GLOBALS_QUEUE);
         gprintln("Code emittings needed: "~to!(string)(getQueueLength()));
 
         while(hasInstructions())
@@ -1196,6 +1198,18 @@ public final class DCodeEmitter : CodeEmitter
         gprintln("IMPLEMENT ME", DebugType.ERROR);
         gprintln("IMPLEMENT ME", DebugType.ERROR);
         gprintln("IMPLEMENT ME", DebugType.ERROR);
+        gprintln("We have NOT YET implemented the init method", DebugType.ERROR);
+
+        // modOut.writeln("fok");
+
+        // TODO: In future, for runtime init,
+        // I will want to co-opt main(int, args)
+        // for use for runtime init to then
+        // call ANOTHER REAL main (specified)
+        // by the user
+
+        // Therefore there must be some sort
+        // of renaming stage somewhere
     }
 
     private void emitTestingEntrypoint(File modOut, Module mod)
