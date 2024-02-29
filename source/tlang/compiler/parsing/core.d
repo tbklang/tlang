@@ -1884,6 +1884,32 @@ public final class Parser
             expect("Expected one of the following: (, ; or =");
         }
 
+        /**
+         * If this is a function or variable declaration
+         * then optional AccessModifier is allowed
+         */
+        if(hasModifierItems())
+        {
+            ModifierItem modItem = popModifierFront();
+
+            if(modItem.isAccessModifier())
+            {
+                if(cast(Variable)generated || cast(Function)generated)
+                {
+                    Entity ent = cast(Entity)generated;
+                    ent.setAccessorType(modItem.getAccessModifier());
+                }
+                else
+                {
+                    expect("Cannot apply an access modifier to something that is not a variable or function");
+                }
+            }
+            else
+            {
+                expect("Can only apply an access modifier here");
+            }
+        }
+
         gprintln("parseTypedDeclaration(): Leave", DebugType.WARNING);
 
         return generated;
