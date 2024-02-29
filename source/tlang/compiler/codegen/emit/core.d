@@ -43,23 +43,28 @@ public abstract class CodeEmitter
 
     private ulong queueCursor = 0;
 
-    public final void selectQueue(QueueType queueType, string funcDefName = "")
+    public final void selectQueue(Module owner, QueueType queueType, string funcDefName = "")
     {
         // Move the cursor back to the starting position
         resetCursor();
 
         if(queueType == QueueType.ALLOC_QUEUE)
         {
-            selectedQueue = initQueue;
+            selectedQueue = this.typeChecker.getInitQueue(owner);
         }
         else if(queueType == QueueType.GLOBALS_QUEUE)
         {
-            selectedQueue = globalCodeQueue;
+            selectedQueue = this.typeChecker.getGlobalCodeQueue(owner);
         }
         else
         {
             //TODO: Ensure valid name by lookup via tc
 
+            // Get the function definitions of the current module
+            functionBodyInstrs = this.typeChecker.getFunctionBodyCodeQueues(owner);
+
+            // Select the function definition by name from it
+            // and make that the current code queue
             selectedQueue = functionBodyInstrs[funcDefName];
         }
     }
@@ -109,41 +114,31 @@ public abstract class CodeEmitter
     }
     
     /**
-    * Required queues
-    */
-    private Instruction[] initQueue;
-    private Instruction[] globalCodeQueue;
-
-    /**
     * Required queues (maps to them)
     */
     private Instruction[][string] functionBodyInstrs;
 
-    public final ulong getFunctionDefinitionsCount()
+    public final ulong getFunctionDefinitionsCount(Module owner)
     {
+        // Get the function definitions of the current module
+        functionBodyInstrs = this.typeChecker.getFunctionBodyCodeQueues(owner);
+
         return functionBodyInstrs.keys().length;
     }
 
-    public final string[] getFunctionDefinitionNames()
+    public final string[] getFunctionDefinitionNames(Module owner)
     {
+        // Get the function definitions of the current module
+        functionBodyInstrs = this.typeChecker.getFunctionBodyCodeQueues(owner);
+
         return functionBodyInstrs.keys();
     }
 
     this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
         this.typeChecker = typeChecker;
-
-        /* Extract the allocation queue, the code queue */
-        initQueue = typeChecker.getInitQueue();
-        globalCodeQueue = typeChecker.getGlobalCodeQueue();
-
-        /* Extract the function definitions string-queue mapping */
-        functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues();
-        gprintln("CodeEmitter: Got number of function defs: "~to!(string)(functionBodyInstrs));
-        
         this.file = file;
         this.config = config;
-
         this.mapper = mapper;
     }
 
