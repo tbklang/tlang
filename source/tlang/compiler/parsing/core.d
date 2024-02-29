@@ -908,7 +908,25 @@ public final class Parser
         this.modifiers.insertAfter(this.modifiers[], modItem);
     }
 
+    private ModifierItem peek()
+    {
+        return this.modifiers.front();
+    }
+
+    private ModifierItem popFront()
+    {
+        ModifierItem front = peek();
+        this.modifiers.removeFront();
+        return front;
+    }
+
+    private bool hasModifierItenms()
+    {
+        return walkLength(this.modifiers) != 0;
+    }
+
     import std.container.slist : SList;
+    import std.range : walkLength;
 
     /** 
      * Queue of modifiers placed here
