@@ -565,7 +565,7 @@ public final class Parser
             if (symbolType == SymbolType.IDENT_TYPE)
             {
                 /* Might be a function definition or variable declaration */
-                structMember = parseTypedDeclaration();
+                structMember = parseTypedDeclaration(true, true, true, false, true);
                 
                 /* Should have a semi-colon and consume it */
                 expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
@@ -2086,7 +2086,7 @@ public final class Parser
             if (symbolType == SymbolType.IDENT_TYPE)
             {
                 /* Might be a function definition or variable declaration */
-                structMember = parseTypedDeclaration();
+                structMember = parseTypedDeclaration(true, true, true, false, true);
                 
                 /* Should have a semi-colon and consume it */
                 expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
