@@ -564,8 +564,12 @@ public final class Parser
             /* If it is a type */
             if (symbolType == SymbolType.IDENT_TYPE)
             {
-                /* Might be a function, might be a variable, or assignment */
-                structMember = parseName();
+                /* Might be a function definition or variable declaration */
+                structMember = parseTypedDeclaration();
+                
+                /* Should have a semi-colon and consume it */
+                expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+                lexer.nextToken();
             }
             /* If it is an accessor */
             else if (isAccessor(lexer.getCurrentToken()))
@@ -2081,8 +2085,12 @@ public final class Parser
             /* If it is a type */
             if (symbolType == SymbolType.IDENT_TYPE)
             {
-                /* Might be a function, might be a variable, or assignment */
-                structMember = parseName();
+                /* Might be a function definition or variable declaration */
+                structMember = parseTypedDeclaration();
+                
+                /* Should have a semi-colon and consume it */
+                expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+                lexer.nextToken();
             }
             /* If it is a class */
             else if(symbolType == SymbolType.CLASS)
