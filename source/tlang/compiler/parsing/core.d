@@ -920,9 +920,9 @@ public final class Parser
         return front;
     }
 
-    private bool hasModifierItenms()
+    private bool hasModifierItems()
     {
-        return walkLength(this.modifiers) != 0;
+        return walkLength(this.modifiers[]) != 0;
     }
 
     import std.container.slist : SList;
