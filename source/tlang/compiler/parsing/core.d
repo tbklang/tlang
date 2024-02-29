@@ -574,7 +574,8 @@ public final class Parser
             /* If is is a modifier */
             else if(isModifier(lexer.getCurrentToken()))
             {
-                structMember = parseInitScope();
+                parseInitScope();
+                continue;
             }
             /* If closing brace then exit */
             else if(symbolType == SymbolType.CCURLY)
@@ -772,21 +773,23 @@ public final class Parser
     }
 
 
-    /* STATUS: Not being used yet */
     /**
     * Called in an occurence of the: `static x`
     */
     /* TODO: Anything that isn't static, is non-static => the false boolean should imply non-static */
-    private Entity parseInitScope()
+    private void parseInitScope()
     {
-        Entity entity;
-
-        /* Save and consume the init-scope */
+        /* Obtain the modifier type */
         InitScope initScope = getInitScope(lexer.getCurrentToken());
+
+        /* Push onto queue */
+        pushModifier(ModifierItem(initScope));
+
+        /* Consume accessor */
         lexer.nextToken();
 
         /* Get the current token's symbol type */
-        SymbolType symbolType = getSymbolType(lexer.getCurrentToken());
+        // SymbolType symbolType = getSymbolType(lexer.getCurrentToken());
 
         /**
         * TODO
@@ -808,38 +811,38 @@ public final class Parser
         * Journal entry also describes this (/journal/static_keyword_addition/)
         */
         /* If class */
-        if(symbolType == SymbolType.CLASS)
-        {
-            /* TODO: Set accessor on returned thing */
-            entity = parseClass();
-        }
-        /* If struct */
-        else if(symbolType == SymbolType.STRUCT)
-        {
-            /* TODO: Set accessor on returned thing */
-            entity = parseStruct();
-            gprintln("Poes"~to!(string)(entity));
-        }
-        /* If typed-definition (function or variable) */
-        else if(symbolType == SymbolType.IDENT_TYPE)
-        {
-            /* TODO: Set accesor on returned thing */
-            entity = cast(Entity)parseName();
+        // if(symbolType == SymbolType.CLASS)
+        // {
+        //     /* TODO: Set accessor on returned thing */
+        //     entity = parseClass();
+        // }
+        // /* If struct */
+        // else if(symbolType == SymbolType.STRUCT)
+        // {
+        //     /* TODO: Set accessor on returned thing */
+        //     entity = parseStruct();
+        //     gprintln("Poes"~to!(string)(entity));
+        // }
+        // /* If typed-definition (function or variable) */
+        // else if(symbolType == SymbolType.IDENT_TYPE)
+        // {
+        //     /* TODO: Set accesor on returned thing */
+        //     entity = cast(Entity)parseName();
 
-            if(!entity)
-            {
-                expect("Accessor got func call when expecting var/func def");
-            }
-        }
-        /* Error out */
-        else
-        {
-            expect("Expected either function definition, variable declaration, struct definition or class definition");
-        }
+        //     if(!entity)
+        //     {
+        //         expect("Accessor got func call when expecting var/func def");
+        //     }
+        // }
+        // /* Error out */
+        // else
+        // {
+        //     expect("Expected either function definition, variable declaration, struct definition or class definition");
+        // }
 
-        entity.setModifierType(initScope);
+        // entity.setModifierType(initScope);
 
-        return entity;
+        // return entity;
     }
 
     private enum ModifierType
@@ -876,6 +879,12 @@ public final class Parser
         {
             this.type = ModifierType.ACC_MOD;
             this.value.accessModifier = accMod;
+        }
+
+        this(InitScope initScope)
+        {
+            this.type = ModifierType.INIT_MOD;
+            this.value.initScope = initScope;
         }
 
         public ModifierType getType()
@@ -1971,7 +1980,8 @@ public final class Parser
             /* If is is a modifier */
             else if(isModifier(lexer.getCurrentToken()))
             {
-                structMember = parseInitScope();
+                parseInitScope();
+                continue;
             }
             /* If closing brace then exit */
             else if(symbolType == SymbolType.CCURLY)
