@@ -148,86 +148,248 @@ public final class TypeChecker
         /* Generate the dependency tree */
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
 
-        /* Perform the linearization to the dependency tree */
-        rootNode.performLinearization();
-
-        /* Print the tree */
-        string tree = rootNode.getTree();
-        gprintln(tree);
-
-        /* Get the action-list (linearised bottom up graph) */
-        DNode[] actionList = rootNode.getLinearizedNodes();
-        doTypeCheck(actionList);
-
-        /**
-         * After processing globals executions the instructions will
-         * be placed into `codeQueue`, therefore copy them from the temporary
-         * scratchpad queue into `globalCodeQueue`.
-         *
-         * Then clean the codeQueue for next use
+        /** 
+         * TODO: Because we get a `Program` DNode out
+         * of this we should perform linearization on
+         * each sub-node and then process those seperately
          */
-        foreach(Instruction curGlobInstr; codeQueue)
+        foreach(DNode modDep; rootNode.getDeps())
         {
-            globalCodeQueue~=curGlobInstr;
-        }
-        codeQueue.clear();
-        assert(codeQueue.empty() == true);
+            Module mod = cast(Module)modDep.getEntity();
+            assert(mod);
+            gprintln(format("Dependency node entry point mod: %s", modDep));
 
-        /* Grab functionData ??? */
-        FunctionData[string] functionDefinitions = funcDefStore.grabFunctionDefs();
-        gprintln("Defined functions: "~to!(string)(functionDefinitions));
+            // Linearize this module's dependencies
+            modDep.performLinearization();
 
-        foreach(FunctionData funcData; functionDefinitions.values)
-        {
+            // Print the dep tree
+            string modTree = modDep.getTree();
+            gprintln(format("\n%s", modTree));
+
+            // Get the linerization
+            DNode[] modActions = modDep.getLinearizedNodes();
+
+            // Perform typecheck/codegen for this
+            doTypeCheck(modActions);
+
+            /** 
+             * After having done the typecheck/codegen
+             * there would be instructions in the
+             * `codeQueue`. We must extract these
+             * now, clear the `codeQueue` and save
+             * the extracted stuff to something
+             * which maps `Module -> Instruction[]`
+             */
+            scratchToModQueue(mod);
             assert(codeQueue.empty() == true);
 
-            /* Generate the dependency tree */
-            DNode funcNode = funcData.generate();
-            
-            /* Perform the linearization to the dependency tree */
-            funcNode.performLinearization();
-
-            /* Get the action-list (linearised bottom up graph) */
-            DNode[] actionListFunc = funcNode.getLinearizedNodes();
-
-            //TODO: Would this not mess with our queues?
-            doTypeCheck(actionListFunc);
-            gprintln(funcNode.getTree());
-
-            // The current code queue would be the function's body instructions
-            // a.k.a. the `codeQueue`
-            // functionBodies[funcData.name] = codeQueue;
-
-
-            // The call to `doTypeCheck()` above adds to this queue
-            // so we should clean it out before the next run
-            //
-            // NOTE: Static allocations in? Well, we don't clean init queue
-            // so is it fine then? We now have seperate dependency trees,
-            // we should make checking methods that check the `initQueue`
-            // whenever we come past a `ClassStaticNode` for example
-            // codeQueue.clear();
-
             /**
-             * Copy over the function code queue into
-             * the function code queue respective key.
-             *
-             * Then clear the scratchpad code queue
+             * We must now find the function
+             * definitions that belong to this
+             * `Module` and process those
+             * by generating the dependencies
+             * for them
              */
-            functionBodyCodeQueues[funcData.name]=[];
-            foreach(Instruction curFuncInstr; codeQueue)
+            FunctionData[string] modFuncDefs = funcDefStore.grabFunctionDefs(mod);
+            gprintln(format("Defined functions for module '%s': %s", mod, modFuncDefs));
+            foreach(FunctionData curFD; modFuncDefs.values)
             {
-                //TODO: Think about class funcs? Nah
-                functionBodyCodeQueues[funcData.name]~=curFuncInstr;
-                gprintln("FuncDef ("~funcData.name~"): Adding body instruction: "~to!(string)(curFuncInstr));
-            }
-            codeQueue.clear();
+                assert(codeQueue.empty() == true);
 
-            gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
+                /* Generate the dependency tree */
+                DNode funcNode = curFD.generate();
+                
+                /* Perform the linearization to the dependency tree */
+                funcNode.performLinearization();
+
+                /* Get the action-list (linearised bottom up graph) */
+                DNode[] actionListFunc = funcNode.getLinearizedNodes();
+
+                //TODO: Would this not mess with our queues?
+                doTypeCheck(actionListFunc);
+                gprintln(funcNode.getTree());
+
+                // The current code queue would be the function's body instructions
+                // a.k.a. the `codeQueue`
+                // functionBodies[funcData.name] = codeQueue;
+
+
+                // The call to `doTypeCheck()` above adds to this queue
+                // so we should clean it out before the next run
+                //
+                // NOTE: Static allocations in? Well, we don't clean init queue
+                // so is it fine then? We now have seperate dependency trees,
+                // we should make checking methods that check the `initQueue`
+                // whenever we come past a `ClassStaticNode` for example
+                // codeQueue.clear();
+
+                /**
+                 * Copy over the current function's
+                 * instructions which make part of
+                 * its definition, clear the scratchpad
+                 * `codeQueue` and map to these
+                 * instructions to the `ModuleQueue`
+                 */
+                funcScratchToModQueue(mod, curFD);
+                assert(codeQueue.empty() == true);
+            }
+
+            /** 
+             * Copy the `initQueue` instructions over
+             * to the `ModuleQueue` for the current
+             * module and clear the queue for the
+             * next module round
+             */
+            initsScratchToModQueue(mod);
         }
     }
 
+    /** 
+     * Associates various instruction
+     * sets with a given `Module`
+     */
+    private struct ModuleQueue
+    {
+        private Module owner;
+        private Instruction[] codeInstrs;
+        private Instruction[][string] functionBodyCodeQueues;
+        private Instruction[] initInstrs;
 
+        this(Module owner)
+        {
+            this.owner = owner;
+        }
+
+        public void setCode(Instruction[] instructions)
+        {
+            this.codeInstrs = instructions;
+        }
+
+        public Instruction[] getCode()
+        {
+            return this.codeInstrs;
+        }
+
+        public void setFunctionDeclInstr(string functionName, Instruction[] bodyInstrs)
+        {
+            this.functionBodyCodeQueues[functionName] = bodyInstrs;
+        }
+
+        public Instruction[][string] getFunctionDefinitions()
+        {
+            return this.functionBodyCodeQueues;
+        }
+
+        public void setInit(Instruction[] instructions)
+        {
+            this.initInstrs = instructions;
+        }
+
+        public Instruction[] getInitInstrs()
+        {
+            return this.initInstrs;
+        }
+    }
+
+    private ModuleQueue[Module] moduleQueues;
+
+    /** 
+     * Gets the `ModuleQueue*` for the given
+     * `Module` and creates one if it does
+     * not yet already exist
+     *
+     * Params:
+     *   owner = the `Module`
+     * Returns: a `ModuleQueue*`
+     */
+    private ModuleQueue* getModQueueFor(Module owner)
+    {
+        // Find entry
+        ModuleQueue* modQ = owner in this.moduleQueues;
+
+        // If not there, make it
+        if(!modQ)
+        {
+            this.moduleQueues[owner] = ModuleQueue(owner);
+            return getModQueueFor(owner);
+        }
+
+        return modQ;
+    }
+
+    /** 
+     * Takes the current scratchpad `codeQueue`,
+     * copies its instructions, clears it
+     * and then creates a new `ModuleQueue`
+     * entry for it and adds it to the
+     * `moduleQueues` array
+     *
+     * Params:
+     *   owner = the owner `Module` to
+     * associat with the current code
+     * queue
+     */
+    private void scratchToModQueue(Module owner)
+    {
+        // Extract a copy
+        Instruction[] copyQueue;
+        foreach(Instruction instr; this.codeQueue)
+        {
+            copyQueue ~= instr;
+        }
+
+        // Clear the scratchpad `codeQueue`
+        this.codeQueue.clear();
+
+        // Get the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
+
+        // Set the `code` instructions
+        modQ.setCode(copyQueue);
+    }
+
+    private void funcScratchToModQueue(Module owner, FunctionData fd)
+    {
+        // Extract a copy
+        Instruction[] copyQueue;
+        foreach(Instruction instr; this.codeQueue)
+        {
+            copyQueue ~= instr;
+            gprintln(format("FuncDef (%s): Adding body instruction: %s", fd.getName(), instr));
+        }
+
+        // Clear the scratchpad `codeQueue`
+        this.codeQueue.clear();
+
+        // Get the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
+
+        // Set this function definition's instructions
+        modQ.setFunctionDeclInstr(fd.getName(), copyQueue);
+    }
+
+    private void initsScratchToModQueue(Module owner)
+    {
+        // Extract a copy
+        Instruction[] copyQueue;
+        foreach(Instruction instr; this.initQueue)
+        {
+            copyQueue ~= instr;
+        }
+
+        // Clear the scratchpad `initQueue`
+        this.initQueue.clear();
+
+        // Get the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
+
+        // Set the `init` instructions
+        modQ.setInit(copyQueue);
+    }
+    
     /** 
      * Concrete queues
      *
@@ -241,14 +403,22 @@ public final class TypeChecker
     private Instruction[] globalCodeQueue;
     private Instruction[][string] functionBodyCodeQueues;
 
-    public Instruction[] getGlobalCodeQueue()
+    public Instruction[] getGlobalCodeQueue(Module owner)
     {
-        return globalCodeQueue;
+        // Find the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
+
+        return modQ.getCode();
     }
 
-    public Instruction[][string] getFunctionBodyCodeQueues()
+    public Instruction[][string] getFunctionBodyCodeQueues(Module owner)
     {
-        return functionBodyCodeQueues;
+        // Find the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
+
+        return modQ.getFunctionDefinitions();
     }
 
 
@@ -263,16 +433,13 @@ public final class TypeChecker
 
 
     //TODO: CHange to oneshot in the function
-    public Instruction[] getInitQueue()
+    public Instruction[] getInitQueue(Module owner)
     {
-        Instruction[] initQueueConcrete;
+        // Find the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
 
-        foreach(Instruction currentInstruction; initQueue)
-        {
-            initQueueConcrete~=currentInstruction;
-        }
-
-        return initQueueConcrete;
+        return modQ.getInitInstrs();
     }
 
     /* Adds an initialization instruction to the initialization queue (at the back) */
