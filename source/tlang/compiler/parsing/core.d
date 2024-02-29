@@ -10,6 +10,8 @@ import core.stdc.stdlib;
 import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
 
+import std.string : format;
+
 // TODO: Technically we could make a core parser etc
 public final class Parser
 {
@@ -901,6 +903,16 @@ public final class Parser
         {
             return getType() == ModifierType.INIT_MOD;
         }
+
+        public AccessorType getAccessModifier()
+        {
+            return this.value.accessModifier;
+        }
+
+        public InitScope getInitScope()
+        {
+            return this.value.initScope;
+        }
     }
 
     private void pushModifier(ModifierItem modItem)
@@ -908,14 +920,14 @@ public final class Parser
         this.modifiers.insertAfter(this.modifiers[], modItem);
     }
 
-    private ModifierItem peek()
+    private ModifierItem peekModifier()
     {
         return this.modifiers.front();
     }
 
-    private ModifierItem popFront()
+    private ModifierItem popModifierFront()
     {
-        ModifierItem front = peek();
+        ModifierItem front = peekModifier();
         this.modifiers.removeFront();
         return front;
     }
@@ -2047,6 +2059,31 @@ public final class Parser
 
         /* Parent each Statement to the container */
         parentToContainer(generated, statements);
+
+
+        /* Optional AccessModifier modifier check-and-apply */
+        if(hasModifierItems())
+        {
+            ModifierItem modItem = popModifierFront();
+            if(modItem.isAccessModifier())
+            {
+                generated.setAccessorType(modItem.getAccessModifier());
+            }
+        }
+
+        /* Optional InitScope modifier check-and-apply anything ELSE is not allowed */
+        if(hasModifierItems())
+        {
+            ModifierItem modItem = popModifierFront();
+            if(modItem.isAccessModifier())
+            {
+                generated.setAccessorType(modItem.getAccessModifier());
+            }
+            else
+            {
+                expect(format("Cannot specify anything but an initscope here, we got '%s'", modItem.getType()));
+            }
+        }
 
         /* Pop off the ending `}` */
         lexer.nextToken();
