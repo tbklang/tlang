@@ -517,7 +517,7 @@ public final class Parser
     }
 
     /* TODO: Implement me, and call me */
-    private Struct parseStruct()
+    private Struct parseStruct(bool allowsInitScopeOnDec = false)
     {
         gprintln("parseStruct(): Enter", DebugType.WARNING);
 
@@ -644,6 +644,27 @@ public final class Parser
             if(modItem.isAccessModifier())
             {
                 generatedStruct.setAccessorType(modItem.getAccessModifier());
+            }
+        }
+
+        /* Optional InitScope modifier check-and-apply */
+        if(hasModifierItems())
+        {
+            ModifierItem modItem = popModifierFront();
+            if(modItem.isInitScope())
+            {
+                if(allowsInitScopeOnDec)
+                {
+                    generatedStruct.setModifierType(modItem.getInitScope());
+                }
+                else
+                {
+                    expect("Initscope cannot be applied to struct declaration in this context");
+                }
+            }
+            else
+            {
+                expect("Only an initscope is allowed here");
             }
         }
 
