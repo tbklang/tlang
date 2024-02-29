@@ -637,6 +637,15 @@ public final class Parser
         /* Consume the closing curly brace */
         lexer.nextToken();
 
+        /* Optional AccessModifier modifier check-and-apply */
+        if(hasModifierItems())
+        {
+            ModifierItem modItem = popModifierFront();
+            if(modItem.isAccessModifier())
+            {
+                generatedStruct.setAccessorType(modItem.getAccessModifier());
+            }
+        }
 
         gprintln("parseStruct(): Leave", DebugType.WARNING);
 
