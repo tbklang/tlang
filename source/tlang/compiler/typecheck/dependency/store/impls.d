@@ -5,7 +5,7 @@
 module tlang.compiler.typecheck.dependency.store.impls;
 
 import tlang.compiler.typecheck.dependency.store.interfaces;
-import tlang.compiler.symbols.data : Function;
+import tlang.compiler.symbols.data : Function, Module;
 import tlang.compiler.typecheck.dependency.core : FunctionData, DFunctionInnerGenerator;
 import tlang.compiler.typecheck.core : TypeChecker;
 import tlang.compiler.typecheck.dependency.pool.interfaces : IPoolManager;
@@ -54,12 +54,14 @@ public final class FuncDefStore : IFuncDefStore
      * to the store
      *
      * Params:
+     *   owner = the `Module` wherein
+     * this function is declared
      *   func = the function to add
      * Throws:
      *   FuncDefStoreException if the function
      * has already been added
      */
-    public void addFunctionDef(Function func)
+    public void addFunctionDef(Module owner, Function func)
     {
         /* (Sanity Check) This should never be called again */
         foreach(string cFuncKey; functions.keys())
@@ -82,10 +84,9 @@ public final class FuncDefStore : IFuncDefStore
         // TODO: Should we not generate a HELLA long name rather, to avoid duplication problems and overwrites of key values
 
         funcData.name = tc.getResolver().generateName(tc.getProgram(), func);
-
         funcData.name = func.getName();
         funcData.func = func;
-
+        funcData.setOwner(owner);
 
         functions[funcData.name] = funcData;
     }
@@ -93,13 +94,31 @@ public final class FuncDefStore : IFuncDefStore
     /** 
      * Grabs all of the function 
      * definitions currently stored
+     * in relation to those declared
+     * in the given module
+     *
+     * Params:
+     *  owner = the `Module` to
+     * search
      *
      * Returns: a `FunctionData[string]`
      * map
      */
-    public FunctionData[string] grabFunctionDefs()
+    public FunctionData[string] grabFunctionDefs(Module owner)
     {
-        return this.functions.dup;
+        // Find all functions which have an owner matching
+        // the provided one and construct a new map from
+        // that
+        FunctionData[string] ofOwner;
+        foreach(FunctionData fd; this.functions)
+        {
+            if(fd.getOwner() is owner)
+            {
+                ofOwner[fd.getName()] = fd;
+            }
+        }
+
+        return ofOwner;
     }
 
     /** 
@@ -107,17 +126,27 @@ public final class FuncDefStore : IFuncDefStore
      * name
      *
      * Params:
+     *   owner = the `Module` wherein the
+     * function is declared
      *   name = the name of the function
      * Returns: the `FunctionData`
      * Throws:
      *   FuncDefStoreException if the function
      * could not be found
      */
-    public FunctionData grabFunctionDef(string name)
+    public FunctionData grabFunctionDef(Module owner, string name)
     {
-        if(name in this.functions)
+        FunctionData* potential = name in this.functions;
+        if(potential)
         {
-            return this.functions[name];
+            if(potential.getOwner() is owner)
+            {
+                return *potential;
+            }
+            else
+            {
+                throw new FuncDefStoreException("We found a function with name '"~name~"' HOWEVER not in owner '"~owner.getName()~"'");
+            }
         }
         else
         {
