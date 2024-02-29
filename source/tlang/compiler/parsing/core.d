@@ -568,7 +568,8 @@ public final class Parser
             /* If it is an accessor */
             else if (isAccessor(lexer.getCurrentToken()))
             {
-                structMember = parseAccessor();
+                parseAccessor();
+                continue;
             }
             /* If is is a modifier */
             else if(isModifier(lexer.getCurrentToken()))
@@ -841,59 +842,127 @@ public final class Parser
         return entity;
     }
 
-    /* STATUS: Not being used yet */
-    private Entity parseAccessor()
+    private enum ModifierType
     {
-        Entity entity;
+        /** 
+         * Access modifiers
+         */
+        ACC_MOD,
 
-        /* Save and consume the accessor */
+        /** 
+         * Initializer type
+         */
+        INIT_MOD
+    }
+
+    private union ModifierUnion
+    {
+        private AccessorType accessModifier;
+        private InitScope initScope;
+    }
+
+    private struct ModifierItem
+    {
+        private ModifierType type;
+        private ModifierUnion value;
+
+        this(ModifierType type, ModifierUnion value)
+        {
+            this.type = type;
+            this.value = value;
+        }
+
+        this(AccessorType accMod)
+        {
+            this.type = ModifierType.ACC_MOD;
+            this.value.accessModifier = accMod;
+        }
+
+        public ModifierType getType()
+        {
+            return this.type;
+        }
+
+        public bool isAccessModifier()
+        {
+            return getType() == ModifierType.ACC_MOD;
+        }
+
+        public bool isInitScope()
+        {
+            return getType() == ModifierType.INIT_MOD;
+        }
+    }
+
+    private void pushModifier(ModifierItem modItem)
+    {
+        this.modifiers.insertAfter(this.modifiers[], modItem);
+    }
+
+    import std.container.slist : SList;
+
+    /** 
+     * Queue of modifiers placed here
+     * awaiting popping
+     */
+    private SList!(ModifierItem) modifiers;
+
+    /** 
+     * Parses an access modifier such
+     * those found in `AccessorType`
+     */
+    private void parseAccessor()
+    {
+        /* Obtain the accesscor type*/
         AccessorType accessorType = getAccessorType(lexer.getCurrentToken());
+
+        /* Push onto queue */
+        pushModifier(ModifierItem(accessorType));
+
+        /* Consume accessor */
         lexer.nextToken();
 
-        /* TODO: Only allow, private, public, protected */
-        /* TODO: Pass this to call for class prsewr or whatever comes after the accessor */
+        // /* Get the current token's symbol type */
+        // SymbolType symbolType = getSymbolType(lexer.getCurrentToken());
 
-        /* Get the current token's symbol type */
-        SymbolType symbolType = getSymbolType(lexer.getCurrentToken());
+        // /* If class */
+        // if(symbolType == SymbolType.CLASS)
+        // {
+        //     /* TODO: Set accessor on returned thing */
+        //     entity = parseClass();
+        // }
+        // /* If struct */
+        // else if(symbolType == SymbolType.STRUCT)
+        // {
+        //     /* TODO: Set accessor on returned thing */
+        //     entity = parseStruct();
+        //     gprintln("Poes"~to!(string)(entity));
+        // }
+        // /* If typed-definition (function or variable) */
+        // else if(symbolType == SymbolType.IDENT_TYPE)
+        // {
+        //     /* TODO: Set accesor on returned thing */
+        //     entity = cast(Entity)parseName();
 
-        /* If class */
-        if(symbolType == SymbolType.CLASS)
-        {
-            /* TODO: Set accessor on returned thing */
-            entity = parseClass();
-        }
-        /* If struct */
-        else if(symbolType == SymbolType.STRUCT)
-        {
-            /* TODO: Set accessor on returned thing */
-            entity = parseStruct();
-            gprintln("Poes"~to!(string)(entity));
-        }
-        /* If typed-definition (function or variable) */
-        else if(symbolType == SymbolType.IDENT_TYPE)
-        {
-            /* TODO: Set accesor on returned thing */
-            entity = cast(Entity)parseName();
+        //     if(!entity)
+        //     {
+        //         expect("Accessor got func call when expecting var/func def");
+        //     }
+        // }
+        // /* If static */
+        // else if(symbolType == SymbolType.STATIC)
+        // {
+        //     entity = parseInitScope();
+        // }
+        // /* Error out */
+        // else
+        // {
+        //     expect("Expected either function definition, variable declaration, struct definition or class definition");
+        // }
 
-            if(!entity)
-            {
-                expect("Accessor got func call when expecting var/func def");
-            }
-        }
-        /* If static */
-        else if(symbolType == SymbolType.STATIC)
-        {
-            entity = parseInitScope();
-        }
-        /* Error out */
-        else
-        {
-            expect("Expected either function definition, variable declaration, struct definition or class definition");
-        }
+        // entity.setAccessorType(accessorType);
 
-        entity.setAccessorType(accessorType);
-
-        return entity;
+        // return entity;
     }
 
     private void parseFunctionArguments()
@@ -1896,7 +1965,8 @@ public final class Parser
             /* If it is an accessor */
             else if (isAccessor(lexer.getCurrentToken()))
             {
-                structMember = parseAccessor();
+                parseAccessor();
+                continue;
             }
             /* If is is a modifier */
             else if(isModifier(lexer.getCurrentToken()))
@@ -2144,16 +2214,16 @@ public final class Parser
             /* Might be a function, might be a variable, or assignment */
             statement = parseName(terminatingSymbol);
         }
-        /* If it is an accessor */
-        else if(isAccessor(tok))
-        {
-            statement = parseAccessor();
-        }
-        /* If it is a modifier */
-        else if(isModifier(tok))
-        {
-            statement = parseInitScope();
-        }
+        // /* If it is an accessor */
+        // else if(isAccessor(tok))
+        // {
+        //     statement = parseAccessor();
+        // }
+        // /* If it is a modifier */
+        // else if(isModifier(tok))
+        // {
+        //     statement = parseInitScope();
+        // }
         /* If it is a branch */
         else if(symbol == SymbolType.IF)
         {
@@ -2390,13 +2460,8 @@ public final class Parser
             /* If it is an accessor */
             else if (isAccessor(tok))
             {
-                Entity entity = parseAccessor();
-
-                /* Everything at the Module level is static */
-                entity.setModifierType(InitScope.STATIC);
-
-                /* TODO: Tets case has classes which null statement, will crash */
-                modulle.addStatement(entity);
+                parseAccessor();
+                continue;
             }
             /* If it is a class */
             else if (symbol == SymbolType.CLASS)
