@@ -87,10 +87,41 @@ public struct FunctionData
     public string name;
     public DNodeGenerator ownGenerator;
     public Function func;
+    private Module belongsTo;
 
     public DNode generate()
     {
         return ownGenerator.generate();
+    }
+
+    /** 
+     * Sets the module to which
+     * this function is declared
+     * within
+     *
+     * Params:
+     *   mod = the `Module`
+     */
+    public void setOwner(Module mod)
+    {
+        this.belongsTo = mod;
+    }
+
+    /** 
+     * Gets the module this
+     * function is declared
+     * within
+     *
+     * Returns: the `Module`
+     */
+    public Module getOwner()
+    {
+        return this.belongsTo;
+    }
+
+    public string getName()
+    {
+        return this.name;
     }
 }
 
@@ -1186,8 +1217,9 @@ public class DNodeGenerator
             func.context = context;
 
             /* Add funtion definition */
-            gprintln("Hello");
-            this.funcDefStore.addFunctionDef(func);
+            gprintln("Hello"); // TODO: Check `root`, just use findContainerOfType
+            // Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func));
+            this.funcDefStore.addFunctionDef(cast(Module)root.entity, func);
 
             return null;
         }
