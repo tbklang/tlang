@@ -1638,7 +1638,14 @@ public final class Parser
     
 
     // TODO: Update to `Statement` as this can return an ArrayAssignment now
-    private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true, bool onlyType = false)
+    private Statement parseTypedDeclaration
+    (
+        bool wantsBody = true,
+        bool allowVarDec = true,
+        bool allowFuncDef = true,
+        bool onlyType = false,
+        bool allowsInitScopeOnDec = false
+    )
     {
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
 
@@ -1940,6 +1947,36 @@ public final class Parser
             }
         }
 
+        /* Optional InitScope modifier check-and-apply */
+        if(hasModifierItems())
+        {
+            ModifierItem modItem = popModifierFront();
+            if(modItem.isInitScope())
+            {
+                if(cast(Variable)generated || cast(Function)generated)
+                {
+                    Entity ent = cast(Entity)generated;
+
+                    if(allowsInitScopeOnDec)
+                    {    
+                        ent.setModifierType(modItem.getInitScope());
+                    }
+                    else
+                    {
+                        expect("Initscope cannot be applied to variable are function decleration in this context");
+                    }
+                }
+                else
+                {
+                    expect("Cannot apply an initscope to something that is not a variable or function");
+                }
+            }
+            else
+            {
+                expect("Only an initscope is allowed here");
+            }
+        }
+
         gprintln("parseTypedDeclaration(): Leave", DebugType.WARNING);
 
         return generated;
@@ -2055,7 +2092,7 @@ public final class Parser
             /* If it is a struct */
             else if(symbolType == SymbolType.STRUCT)
             {
-                structMember = parseStruct();
+                structMember = parseStruct(true);
             }
             /* If it is an accessor */
             else if (isAccessor(lexer.getCurrentToken()))
