@@ -431,8 +431,21 @@ public final class Parser
         return assignment;
     }
 
-    public Statement parseName(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
+    public Statement parseName
+    (
+        SymbolType terminatingSymbol = SymbolType.SEMICOLON,
+        bool allowsInitScopeOnDec = false,
+        bool allowModifiers = false
+    )
     {
+        mixin FuncDebug!(parseName, &funxDebugPrint);
+        enter(true);
+
+        scope(exit)
+        {
+            leave();
+        }
+
         Statement ret;
 
         /* Save the name or type */
@@ -470,7 +483,15 @@ public final class Parser
         else if(type == SymbolType.IDENT_TYPE || type == SymbolType.STAR || type == SymbolType.OBRACKET)
         {
             lexer.previousToken();
-            ret = parseTypedDeclaration();
+
+            // bool wantsBody = true,
+            // bool allowVarDec = true,
+            // bool allowFuncDef = true,
+            // bool onlyType = false,
+            // bool allowsInitScopeOnDec = false
+            // TODO: When calling make use of this please: https://dlang.org/phobos/std_traits.html#ParameterDefaults
+            // ... and modify the tuple if need be
+            ret = parseTypedDeclaration(true, true, true, false, allowsInitScopeOnDec, allowModifiers);
 
             /* If it is a function definition, then do nothing */
             if(cast(Function)ret)
@@ -712,9 +733,25 @@ public final class Parser
         return returnStatement;
     }
 
-    private Statement[] parseBody()
+    import niknaks.debugging : FuncDebug;
+
+    private static void funxDebugPrint(string msg)
     {
-        gprintln("parseBody(): Enter", DebugType.WARNING);
+        gprintln(msg, DebugType.WARNING);
+    }
+
+    private Statement[] parseBody(bool allowModifiers = false)
+    {
+        // gprintln("parseBody(): Enter", DebugType.WARNING);
+
+        mixin FuncDebug!(parseBody, &funxDebugPrint);
+        enter(true);
+
+        scope(exit)
+        {
+            leave();
+        }
+
 
         /* TODO: Implement body parsing */
         Statement[] statements;
@@ -761,7 +798,7 @@ public final class Parser
             }
             else
             {
-                statements ~= parseStatement();
+                statements ~= parseStatement(SymbolType.SEMICOLON, allowModifiers);
             }
         }
 
@@ -962,6 +999,15 @@ public final class Parser
     private ModifierItem popModifierFront()
     {
         ModifierItem front = peekModifier();
+
+        version(unittest)
+        {
+            scope(exit)
+            {
+                gprintln(format("Popping off ModifierItem '%s'", front));
+            }
+        }
+
         this.modifiers.removeFront();
         return front;
     }
@@ -969,6 +1015,20 @@ public final class Parser
     private bool hasModifierItems()
     {
         return walkLength(this.modifiers[]) != 0;
+    }
+
+    version(unittest)
+    {
+        import niknaks.debugging;
+        private void debugModifiersQueue()
+        {
+            ModifierItem[] modifiers;
+            foreach(m; this.modifiers[])
+            {
+                modifiers ~= m;
+            }
+            writeln(format("Modifiers %s", dumpArray!(modifiers)));
+        }
     }
 
     import std.container.slist : SList;
@@ -1132,7 +1192,7 @@ public final class Parser
             expect(SymbolType.OCURLY, lexer.getCurrentToken());
 
             /* Parse the body (and it leaves ONLY when it gets the correct symbol, no expect needed) */
-            statements = parseBody();
+            statements = parseBody(false);
 
             /* TODO: We should now run through the statements in the body and check for return */
             for(ulong i = 0; i < statements.length; i++)
@@ -1648,9 +1708,18 @@ public final class Parser
         bool allowVarDec = true,
         bool allowFuncDef = true,
         bool onlyType = false,
-        bool allowsInitScopeOnDec = false
+        bool allowsInitScopeOnDec = false,
+        bool allowModifiers = false
     )
     {
+        mixin FuncDebug!(parseTypedDeclaration, &funxDebugPrint);
+        enter(true);
+
+        scope(exit)
+        {
+            leave();
+        }
+
         gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
 
 
@@ -1783,6 +1852,75 @@ public final class Parser
         gprintln("ParseTypedDec: SymbolType=" ~ to!(string)(symbolType));
         if (symbolType == SymbolType.LBRACE)
         {
+            /** 
+             * Function definitions (with and without bodies)
+             * are allowed to have modifiers, so we check what
+             * we can get from the modifier queue here and then
+             * pop-and-save them.
+             *
+             * We will apply them to the generated entity
+             * later.
+             *
+             * We do still respect `allowModifiers` and `allowInitScopes`
+             * however, as a general rule.
+             *
+             * We also ensure it is in the order or [ACC_MOD, INIT_SCOPE]
+             */
+            Entity funcEntity;
+            AccessorType potAccMod = AccessorType.UNKNOWN;
+            InitScope potInitScp = InitScope.UNKNOWN;
+
+            if(hasModifierItems())
+            {
+                ModifierItem moditem = peekModifier();
+
+                if(moditem.isAccessModifier())
+                {
+                    if(allowModifiers)
+                    {
+                        potAccMod = popModifierFront().getAccessModifier();
+                    }
+                    else
+                    {
+                        expect("Access modifiers are not allowed on functions in this context");
+                    }
+                }
+                else if(moditem.isInitScope())
+                {
+                    if(allowsInitScopeOnDec)
+                    {
+                        potInitScp = popModifierFront().getInitScope();
+                    }
+                    else
+                    {
+                        expect("Init scopes are not allowed on functions in this context");
+                    }
+                }
+
+                // Only allow something to follow if we have [ACC_MOD, ...]
+                // where we are the `...`
+                if(hasModifierItems() && potAccMod != AccessorType.UNKNOWN)
+                {
+                    moditem = peekModifier();
+
+                    if(moditem.isInitScope())
+                    {
+                        if(allowsInitScopeOnDec)
+                        {
+                            potInitScp = popModifierFront().getInitScope();
+                        }
+                        else
+                        {
+                            expect("Init scopes are not allowed on functions in this context");
+                        }
+                    }
+                    else
+                    {
+                        expect("An initscope is expected after an access modifier");
+                    }
+                }
+            }
+
             // Only continue is function definitions are allowed
             if(allowFuncDef)
             {
@@ -1792,6 +1930,7 @@ public final class Parser
                 
 
                 generated = new Function(identifier, type, pair.bodyStatements, pair.params);
+                funcEntity = cast(Entity)generated;
 
                 /**
                  * If this function definition has a body (i.e. `wantsBody == true`)
@@ -1823,6 +1962,22 @@ public final class Parser
             {
                 expect("Function definitions not allowed");
             }
+
+            /**
+             * Set any ACC_MOD and INIT_SCOPE
+             */
+            if(potAccMod != AccessorType.UNKNOWN)
+            {
+                gprintln(format("Setting explict access modifier of %s to %s", potAccMod, funcEntity));
+                funcEntity.setAccessorType(potAccMod);
+            }
+            if(potInitScp != InitScope.UNKNOWN)
+            {
+                gprintln(format("Setting explicit init scope modifier of %s to %s", potInitScp, funcEntity));
+                funcEntity.setModifierType(potInitScp);
+            }
+
+            
         }
         /* Check for semi-colon (var dec) */
         else if (symbolType == SymbolType.SEMICOLON)
@@ -1925,61 +2080,69 @@ public final class Parser
             expect("Expected one of the following: (, ; or =");
         }
 
-        /**
-         * If this is a function or variable declaration
-         * then optional AccessModifier is allowed
-         */
-        if(hasModifierItems())
-        {
-            ModifierItem modItem = popModifierFront();
+        // /**
+        //  * If this is a function or variable declaration
+        //  * then optional AccessModifier is allowed
+        //  */
+        // if(hasModifierItems())
+        // {
+        //     ModifierItem modItem = popModifierFront();
 
-            if(modItem.isAccessModifier())
-            {
-                if(cast(Variable)generated || cast(Function)generated)
-                {
-                    Entity ent = cast(Entity)generated;
-                    ent.setAccessorType(modItem.getAccessModifier());
-                }
-                else
-                {
-                    expect("Cannot apply an access modifier to something that is not a variable or function");
-                }
-            }
-            else
-            {
-                expect("Can only apply an access modifier here");
-            }
-        }
+        //     if(modItem.isAccessModifier())
+        //     {
+        //         if(cast(Variable)generated || cast(Function)generated)
+        //         {
+        //             Entity ent = cast(Entity)generated;
 
-        /* Optional InitScope modifier check-and-apply */
-        if(hasModifierItems())
-        {
-            ModifierItem modItem = popModifierFront();
-            if(modItem.isInitScope())
-            {
-                if(cast(Variable)generated || cast(Function)generated)
-                {
-                    Entity ent = cast(Entity)generated;
+        //             if(allowModifiers)
+        //             {
+        //                 ent.setAccessorType(modItem.getAccessModifier());
+        //             }
+        //             else
+        //             {
+        //                 expect("Access modifiers cannot be applied to variable are function decleration in this context");
+        //             }
+        //         }
+        //         else
+        //         {
+        //             expect("Cannot apply an access modifier to something that is not a variable or function");
+        //         }
+        //     }
+        //     else
+        //     {
+        //         expect("Can only apply an access modifier here");
+        //     }
+        // }
 
-                    if(allowsInitScopeOnDec)
-                    {    
-                        ent.setModifierType(modItem.getInitScope());
-                    }
-                    else
-                    {
-                        expect("Initscope cannot be applied to variable are function decleration in this context");
-                    }
-                }
-                else
-                {
-                    expect("Cannot apply an initscope to something that is not a variable or function");
-                }
-            }
-            else
-            {
-                expect("Only an initscope is allowed here");
-            }
-        }
+        // /* Optional InitScope modifier check-and-apply */
+        // if(hasModifierItems())
+        // {
+        //     ModifierItem modItem = popModifierFront();
+        //     if(modItem.isInitScope())
+        //     {
+        //         if(cast(Variable)generated || cast(Function)generated)
+        //         {
+        //             Entity ent = cast(Entity)generated;
+
+        //             if(allowsInitScopeOnDec)
+        //             {    
+        //                 ent.setModifierType(modItem.getInitScope());
+        //             }
+        //             else
+        //             {
+        //                 expect("Initscope cannot be applied to variable are function decleration in this context");
+        //             }
+        //         }
+        //         else
+        //         {
+        //             expect("Cannot apply an initscope to something that is not a variable or function");
+        //         }
+        //     }
+        //     else
+        //     {
+        //         expect("Only an initscope is allowed here");
+        //     }
+        // }
 
         gprintln("parseTypedDeclaration(): Leave", DebugType.WARNING);
 
@@ -2162,29 +2325,29 @@ public final class Parser
         parentToContainer(generated, statements);
 
 
-        /* Optional AccessModifier modifier check-and-apply */
-        if(hasModifierItems())
-        {
-            ModifierItem modItem = popModifierFront();
-            if(modItem.isAccessModifier())
-            {
-                generated.setAccessorType(modItem.getAccessModifier());
-            }
-        }
+        // /* Optional AccessModifier modifier check-and-apply */
+        // if(hasModifierItems())
+        // {
+        //     ModifierItem modItem = popModifierFront();
+        //     if(modItem.isAccessModifier())
+        //     {
+        //         generated.setAccessorType(modItem.getAccessModifier());
+        //     }
+        // }
 
-        /* Optional InitScope modifier check-and-apply anything ELSE is not allowed */
-        if(hasModifierItems())
-        {
-            ModifierItem modItem = popModifierFront();
-            if(modItem.isAccessModifier())
-            {
-                generated.setAccessorType(modItem.getAccessModifier());
-            }
-            else
-            {
-                expect(format("Cannot specify anything but an initscope here, we got '%s'", modItem.getType()));
-            }
-        }
+        // /* Optional InitScope modifier check-and-apply anything ELSE is not allowed */
+        // if(hasModifierItems())
+        // {
+        //     ModifierItem modItem = popModifierFront();
+        //     if(modItem.isAccessModifier())
+        //     {
+        //         generated.setAccessorType(modItem.getAccessModifier());
+        //     }
+        //     else
+        //     {
+        //         expect(format("Cannot specify anything but an initscope here, we got '%s'", modItem.getType()));
+        //     }
+        // }
 
         /* Pop off the ending `}` */
         lexer.nextToken();
@@ -2362,9 +2525,21 @@ public final class Parser
     // TODO: We need to add `parseComment()`
     // support here (see issue #84)
     // TODO: This ic currently dead code and ought to be used/implemented
-    private Statement parseStatement(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
+    private Statement parseStatement
+    (
+        SymbolType terminatingSymbol = SymbolType.SEMICOLON,
+        bool allowModifiers = false
+    )
     {
         gprintln("parseStatement(): Enter", DebugType.WARNING);
+
+        mixin FuncDebug!(parseStatement, &funxDebugPrint);
+        enter(true);
+
+        scope(exit)
+        {
+            leave();
+        }
 
         /* Get the token */
         Token tok = lexer.getCurrentToken();
@@ -2378,18 +2553,32 @@ public final class Parser
         if(symbol == SymbolType.IDENT_TYPE)
         {
             /* Might be a function, might be a variable, or assignment */
-            statement = parseName(terminatingSymbol);
+            statement = parseName(terminatingSymbol, allowModifiers);
         }
-        // /* If it is an accessor */
-        // else if(isAccessor(tok))
-        // {
-        //     statement = parseAccessor();
-        // }
-        // /* If it is a modifier */
-        // else if(isModifier(tok))
-        // {
-        //     statement = parseInitScope();
-        // }
+        /* If it is an accessor */
+        else if(isAccessor(tok))
+        {
+            if(allowModifiers)
+            {
+                parseAccessor();
+            }
+            else
+            {
+                expect("Access modifiers are not allowed here");
+            }
+        }
+        /* If it is a modifier */
+        else if(isModifier(tok))
+        {
+            if(allowModifiers)
+            {
+                parseInitScope();
+            }
+            else
+            {
+                expect("Init scope modifiers are not allowed here");
+            }
+        }
         /* If it is a branch */
         else if(symbol == SymbolType.IF)
         {
@@ -2609,7 +2798,7 @@ public final class Parser
             if (symbol == SymbolType.IDENT_TYPE)
             {
                 /* Might be a function, might be a variable, or assignment */
-                Statement statement = parseName();
+                Statement statement = parseName(SymbolType.SEMICOLON, false, true);
                 
                 /**
                 * If it is an Entity then mark it as static
@@ -3483,4 +3672,116 @@ int wrongFunction()
     {
         assert(false);
     }
+}
+
+/**
+ * Access modifiers, init scope modifiers
+ * etc. testing
+ */
+unittest
+{
+    string sourceCode = `
+module mod;
+
+private void func_a()
+{
+    int a = 0;
+}
+
+protected void func_b()
+{
+    int b = 0;
+}
+
+public void func_c()
+{
+    int c = 0;
+}
+
+void func_d()
+{
+    int c = 0;
+}
+
+public int i = 2;
+`;
+
+
+    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        (cast(BasicLexer)currentLexer).performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    
+    Parser parser = new Parser(currentLexer);
+    
+    try
+    {
+        Module modulle = parser.parse();
+
+        parser.debugModifiersQueue();
+
+        TypeChecker tc = new TypeChecker(modulle);
+
+        writeln("Oh god why");
+        writeln(parser.hasModifierItems());
+
+        
+        /* Find the function named `a` and make sure it is private */
+        Entity func = tc.getResolver().resolveBest(modulle, "func_a");
+        assert(func);
+        assert(cast(Function)func); // Ensure it is a Function
+        assert(func.getAccessorType() == AccessorType.PRIVATE);
+
+        /* Find the function named `b` and make sure it is protected */
+        func = tc.getResolver().resolveBest(modulle, "func_b");
+        assert(func);
+        assert(cast(Function)func); // Ensure it is a Function
+        assert(func.getAccessorType() == AccessorType.PROTECTED);
+
+        /* Find the function named `c` and make sure it is public */
+        func = tc.getResolver().resolveBest(modulle, "func_c");
+        assert(func);
+        assert(cast(Function)func); // Ensure it is a Function
+        assert(func.getAccessorType() == AccessorType.PUBLIC);
+
+        /* Find the function named `d` and make sure it is public */
+        func = tc.getResolver().resolveBest(modulle, "func_d");
+        assert(func);
+        assert(cast(Function)func); // Ensure it is a Function
+        assert(func.getAccessorType() == AccessorType.PUBLIC);
+    }
+    catch(TError e)
+    {
+        stderr.writeln(e);
+        assert(false);
+    }
+
+    sourceCode = `
+module mod;
+
+private void func_a()
+{
+    int a = 0;
+}
+
+protected void func_b()
+{
+    int b = 0;
+}
+
+public void func_c()
+{
+    int c = 0;
+}
+
+public int i = 2;
+`;
+
 }

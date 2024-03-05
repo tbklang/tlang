@@ -166,6 +166,7 @@ public class Assignment : Statement
 public class Entity : Statement
 {
     /* Accessor type */
+    // TODO: Should this really be set here? I mean it's a lot safer here
     private AccessorType accessorType = AccessorType.PUBLIC;
 
     /* Function/Modifier type */
