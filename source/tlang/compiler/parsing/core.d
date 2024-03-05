@@ -3766,22 +3766,40 @@ public int i = 2;
     sourceCode = `
 module mod;
 
-private void func_a()
+public void func_c()
 {
-    int a = 0;
+    private int c = 0;
 }
 
 protected void func_b()
 {
     int b = 0;
 }
-
-public void func_c()
-{
-    int c = 0;
-}
-
-public int i = 2;
 `;
+
+    currentLexer = new BasicLexer(sourceCode);
+    try
+    {
+        (cast(BasicLexer)currentLexer).performLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    
+    parser = new Parser(currentLexer);
+    
+    try
+    {
+        Module modulle = parser.parse();
+        assert(false);
+    }
+    catch(TError e)
+    {
+        stderr.writeln(e);
+        assert(true);
+    }
 
 }
