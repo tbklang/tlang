@@ -802,43 +802,4 @@ public final class Resolver
             return findContainerOfType(containerType, cast(Statement)startingNode.parentOf());
         }
     }
-
-
-    // TODO: Below method should be moved out of here and
-    // into DGen where it is required
-    /** 
-     * Derives a closure predicate which captires
-     * the provided access modifier type and will
-     * apply a logic which disregards any non-`Function`
-     * `Entity`, however if a `Function`-typed entity
-     * IS found then it will determine if its access
-     * modifier matches that of the provided one
-     *
-     * Params:
-     *   accModType = the access modifier to filter
-     * by
-     *
-     * Returns: a `Predicate!(Entity)`
-     */
-    private static Predicate!(Entity) derive_functionAccMod(AccessorType accModType)
-    {
-        bool match(Entity entity)
-        {
-            Function func = cast(Function)entity;
-
-            // Disregard any non-Function
-            if(func is null)
-            {
-                return false;
-            }
-            // Onyl care about those with a matching
-            // modifier
-            else
-            {
-                return func.getAccessorType() == accModType;
-            }
-        }
-
-        return &match;
-    }
 }
