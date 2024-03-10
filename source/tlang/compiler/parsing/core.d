@@ -1867,7 +1867,7 @@ public final class Parser
              * We also ensure it is in the order or [ACC_MOD, INIT_SCOPE]
              */
             Entity funcEntity;
-            AccessorType potAccMod = AccessorType.UNKNOWN;
+            AccessorType potAccMod = AccessorType.PRIVATE;
             InitScope potInitScp = InitScope.UNKNOWN;
 
             if(hasModifierItems())
@@ -3751,11 +3751,11 @@ public int i = 2;
         assert(cast(Function)func); // Ensure it is a Function
         assert(func.getAccessorType() == AccessorType.PUBLIC);
 
-        /* Find the function named `d` and make sure it is public */
+        /* Find the function named `d` and make sure it is private (default) */
         func = tc.getResolver().resolveBest(modulle, "func_d");
         assert(func);
         assert(cast(Function)func); // Ensure it is a Function
-        assert(func.getAccessorType() == AccessorType.PUBLIC);
+        assert(func.getAccessorType() == AccessorType.PRIVATE);
     }
     catch(TError e)
     {
