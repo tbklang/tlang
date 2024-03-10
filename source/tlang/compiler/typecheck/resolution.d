@@ -6,7 +6,18 @@ import tlang.compiler.symbols.data;
 import std.string;
 import std.conv : to;
 import tlang.compiler.core;
+import std.string : format;
+import niknaks.functional : Predicate, predicateOf;
 
+/** 
+ * The resolver provides a mechanism to
+ * search the AST tree for all named
+ * entities.
+ *
+ * It provides various different lookup
+ * strategies for resolvbing recursively
+ * at various different levels etc.
+ */
 public final class Resolver
 {
     /** 
@@ -222,20 +233,32 @@ public final class Resolver
         }
     }
 
-    public Entity resolveWithin(Container currentContainer, string name)
+    /** 
+     * Performs a horizontal-level search of the given
+     * `Container`, returning a found `Entity` when
+     * the predicate supplied returns a positive
+     * verdict on said entity, else returns `null`
+     *
+     * Params:
+     *   currentContainer = the container to search
+     * within
+     *   predicate = the predicate to use
+     * Returns: an `Entity` or `null`
+     */
+    public Entity resolveWithin(Container currentContainer, Predicate!(Entity) predicate)
     {
         Statement[] statements = currentContainer.getStatements();
 
-        foreach (Statement statement; statements)
+        foreach(Statement statement; statements)
         {
             /* TODO: Only acuse parser not done yet */
-            if (statement !is null)
+            if(statement !is null)
             {
                 Entity entity = cast(Entity) statement;
 
-                if (entity)
+                if(entity)
                 {
-                    if (cmp(entity.getName(), name) == 0)
+                    if(predicate(entity))
                     {
                         return entity;
                     }
@@ -246,22 +269,106 @@ public final class Resolver
         return null;
     }
 
-    public Entity resolveUp(Container currentContainer, string name)
+    /** 
+     * Creates a closure that captures the name
+     * requested and encodes a name-matching based
+     * logic in it
+     *
+     * Params:
+     *   nameToMatch = the name the closure predicate
+     * should match to
+     *
+     * Returns: a `Predicate!(Entity)`
+     */
+    private static Predicate!(Entity) derive_nameMatch(string nameToMatch)
     {
-        // /* If given container is null */
-        // if(!currentContainer)
+        /**
+         * A name-based search is simply something
+         * that would use the below closure as
+         * the searching predicate
+         */
+        bool nameMatch(Entity entity)
+        {
+            return cmp(entity.getName(), nameToMatch) == 0;
+        }
+
+        // TODO: Double check but yeah sure this will now
+        // allocate `name` on heap to prevent stack overwrite
+        // when called
+
+        return &nameMatch;
+    }
+
+    /** 
+     * Performs a horizontal-based search of then
+     * provided `Container`, searching for any
+     * `Entity` which matches the given name.
+     *
+     * Params:
+     *   currentContainer = the container to
+     * search within
+     *   name = the name to search for
+     * Returns: the `Entity` if found, else
+     * `null`
+     */
+    public Entity resolveWithin(Container currentContainer, string name)
+    {
+        // Apply search with custom name-based matching predicate
+        return resolveWithin(currentContainer, derive_nameMatch(name));
+
+
+        // Statement[] statements = currentContainer.getStatements();
+
+        // foreach (Statement statement; statements)
         // {
-        //     return null;
+        //     /* TODO: Only acuse parser not done yet */
+        //     if (statement !is null)
+        //     {
+        //         Entity entity = cast(Entity) statement;
+
+        //         if (entity)
+        //         {
+        //             if (cmp(entity.getName(), name) == 0)
+        //             {
+        //                 return entity;
+        //             }
+        //         }
+        //     }
         // }
 
-        /* Try find the Entity within the current Contaier */
-        gprintln("resolveUp("~to!(string)(currentContainer)~", "~name~")");
-        Entity entity = resolveWithin(currentContainer, name);
-        gprintln("Certified 2008 financial crisis moment");
-        gprintln(entity);
+        // return null;
+    }
+
+    /** 
+     * Performs a horizontal-based search of the given
+     * `Container`, returning the first `Entity` found
+     * when a posotive verdict is returned from having
+     * the provided predicate applied to it.
+     *
+     * If the verdict is `false` then we do not give
+     * up immediately but rather recurse up the parental
+     * tree searching the container of the current
+     * container and applying the same logic.
+     *
+     * The stopping condition is when the current
+     * container has no ancestral parent, then
+     * we return `null`.
+     *
+     * Params:
+     *   currentContainer = the starting container
+     * to begin the search from
+     *   predicate = the predicate to apply
+     * Returns: an `Entity` or `null`
+     */
+    public Entity resolveUp(Container currentContainer, Predicate!(Entity) predicate)
+    {
+        /* Try to find the Entity wthin the current Container */
+        gprintln(format("resolveUp(c=%s, pred=%s)", currentContainer, predicate));
+        Entity entity = resolveWithin(currentContainer, predicate);
+        gprintln(format("resolveUp(c=%s, pred=%s) within-search returned '%s'", currentContainer, predicate, entity));
 
         /* If we found it return it */
-        if (entity)
+        if(entity)
         {
             return entity;
         }
@@ -278,19 +385,69 @@ public final class Resolver
             */
             assert(cast(Entity) currentContainer);
             Container possibleParent = (cast(Entity) currentContainer).parentOf();
+            gprintln(format("resolveUp(c=%s, pred=%s) possible parent: %s", currentContainer, predicate, possibleParent));
 
             /* Can we go up */
-            if (possibleParent)
+            if(possibleParent)
             {
-                return resolveUp(possibleParent, name);
+                return resolveUp(possibleParent, predicate);
             }
             /* If the current container has no parent container */
             else
             {
-                gprintln("Simply not found");
+                gprintln(format("resolveUp(c=%s, pred=%s) Simply not found ", currentContainer, predicate));
                 return null;
             }
         }
+    }
+
+    public Entity resolveUp(Container currentContainer, string name)
+    {
+        return resolveUp(currentContainer, derive_nameMatch(name));
+
+        // // /* If given container is null */
+        // // if(!currentContainer)
+        // // {
+        // //     return null;
+        // // }
+
+        // /* Try find the Entity within the current Contaier */
+        // gprintln("resolveUp("~to!(string)(currentContainer)~", "~name~")");
+        // Entity entity = resolveWithin(currentContainer, name);
+        // gprintln("Certified 2008 financial crisis moment");
+        // gprintln(entity);
+
+        // /* If we found it return it */
+        // if (entity)
+        // {
+        //     return entity;
+        // }
+        // /* If we didn't then try go up a container */
+        // else
+        // {
+        //     /**
+        //     * TODO: Make sure this condition holds
+        //     *
+        //     * So far all objects we have being used
+        //     * of which are kind-of Containers are also
+        //     * and ONLY also kind-of Entity's hence the
+        //     * cast should never fail
+        //     */
+        //     assert(cast(Entity) currentContainer);
+        //     Container possibleParent = (cast(Entity) currentContainer).parentOf();
+
+        //     /* Can we go up */
+        //     if (possibleParent)
+        //     {
+        //         return resolveUp(possibleParent, name);
+        //     }
+        //     /* If the current container has no parent container */
+        //     else
+        //     {
+        //         gprintln("Simply not found");
+        //         return null;
+        //     }
+        // }
     }
 
     unittest
@@ -321,6 +478,23 @@ public final class Resolver
         assert(path.length == 0);
     }
 
+    public Entity resolveBest(Container c, Predicate!(Entity) d)
+    {
+        // TODO: See how we would go about this
+
+        /** 
+         * For smething like this to work we must
+         * extract the non-name-related logic from
+         * below and code that.
+         *
+         * I believe what that would be is effectively,
+         * a method which applies the predicate
+         */
+
+
+
+        return null;
+    }
 
     /**
     * Resolves dot-paths and non-dot paths
@@ -533,6 +707,67 @@ public final class Resolver
         }
     }
 
+    private struct SearchCtx
+    {
+        private Container ctnr;
+        private Statement stmt;
+
+        public Container container()
+        {
+            return this.ctnr;
+        }
+
+        public Statement statement()
+        {
+            return this.stmt;
+        }
+    }
+
+
+    public auto findFrom(string what)(SearchCtx ctx, Predicate!(SearchCtx) predicate)
+    {
+        // // If starting node is `null`, return `null`
+        // if(startingNode is null)
+        // {
+        //     return null;
+        // }
+
+
+        // // Construct context
+        // // SearchCtx ctx = SearchCtx(startingNode.parentOf(), startingNode);
+        // gprintln(format("ctx is: %s", ctx));
+
+        // // If predicate is true then return
+        // // what was requested
+        // if(predicate(ctx))
+        // {
+        //     static if(what == "ctxStatement")
+        //     {
+        //         return ctx.statement();
+        //     }
+        //     else static if(what == "ctxContainer")
+        //     {
+        //         return ctx.container();
+        //     }
+        //     else
+        //     {
+        //         pragma(msg, "Unsupported requested return type '"~what~"'");
+        //         static assert(false);
+        //     }
+        // }
+        // // If predicate is false, then we should
+        // // swim upwards
+        // else
+        // {
+
+        //     SearchCtx ctxNew = SearchCtx()
+        //     return findFrom!(what)(ctx.container(), predicate);
+        // }
+
+        
+        return null;
+    }
+
     /** 
      * Given a type-of `Container` and a starting `Statement` (AST node) this will
      * swim upwards to try and find the first matching parent of which is of the given
@@ -566,5 +801,44 @@ public final class Resolver
             gprintln("parent of "~to!(string)(startingNode)~" is "~to!(string)(startingNode.parentOf()));
             return findContainerOfType(containerType, cast(Statement)startingNode.parentOf());
         }
+    }
+
+
+    // TODO: Below method should be moved out of here and
+    // into DGen where it is required
+    /** 
+     * Derives a closure predicate which captires
+     * the provided access modifier type and will
+     * apply a logic which disregards any non-`Function`
+     * `Entity`, however if a `Function`-typed entity
+     * IS found then it will determine if its access
+     * modifier matches that of the provided one
+     *
+     * Params:
+     *   accModType = the access modifier to filter
+     * by
+     *
+     * Returns: a `Predicate!(Entity)`
+     */
+    private static Predicate!(Entity) derive_functionAccMod(AccessorType accModType)
+    {
+        bool match(Entity entity)
+        {
+            Function func = cast(Function)entity;
+
+            // Disregard any non-Function
+            if(func is null)
+            {
+                return false;
+            }
+            // Onyl care about those with a matching
+            // modifier
+            else
+            {
+                return func.getAccessorType() == accModType;
+            }
+        }
+
+        return &match;
     }
 }
