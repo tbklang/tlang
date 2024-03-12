@@ -663,67 +663,6 @@ public final class Resolver
         }
     }
 
-    private struct SearchCtx
-    {
-        private Container ctnr;
-        private Statement stmt;
-
-        public Container container()
-        {
-            return this.ctnr;
-        }
-
-        public Statement statement()
-        {
-            return this.stmt;
-        }
-    }
-
-
-    public auto findFrom(string what)(SearchCtx ctx, Predicate!(SearchCtx) predicate)
-    {
-        // // If starting node is `null`, return `null`
-        // if(startingNode is null)
-        // {
-        //     return null;
-        // }
-
-
-        // // Construct context
-        // // SearchCtx ctx = SearchCtx(startingNode.parentOf(), startingNode);
-        // gprintln(format("ctx is: %s", ctx));
-
-        // // If predicate is true then return
-        // // what was requested
-        // if(predicate(ctx))
-        // {
-        //     static if(what == "ctxStatement")
-        //     {
-        //         return ctx.statement();
-        //     }
-        //     else static if(what == "ctxContainer")
-        //     {
-        //         return ctx.container();
-        //     }
-        //     else
-        //     {
-        //         pragma(msg, "Unsupported requested return type '"~what~"'");
-        //         static assert(false);
-        //     }
-        // }
-        // // If predicate is false, then we should
-        // // swim upwards
-        // else
-        // {
-
-        //     SearchCtx ctxNew = SearchCtx()
-        //     return findFrom!(what)(ctx.container(), predicate);
-        // }
-
-        
-        return null;
-    }
-
     /** 
      * Given a type-of `Container` and a starting `Statement` (AST node) this will
      * swim upwards to try and find the first matching parent of which is of the given
