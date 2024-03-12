@@ -379,53 +379,31 @@ public final class Resolver
         }
     }
 
+    /** 
+     * Performs a horizontal-based search of the given
+     * `Container`, returning the first `Entity` found
+     * when such ne is found with a name matching the
+     * one provided
+     *
+     * If not found within the given container then we
+     * do not give up immediately but rather recurse
+     * up the parental tree searching the container
+     * of the current container and applying the same logic.
+     *
+     * The stopping condition is when the current
+     * container has no ancestral parent, then
+     * we return `null`.
+     *
+     * Params:
+     *   currentContainer = the starting container
+     * to begin the search from
+     *   name = the name of the `Entity` to search
+     * for
+     * Returns: an `Entity` or `null`
+     */
     public Entity resolveUp(Container currentContainer, string name)
     {
         return resolveUp(currentContainer, derive_nameMatch(name));
-
-        // // /* If given container is null */
-        // // if(!currentContainer)
-        // // {
-        // //     return null;
-        // // }
-
-        // /* Try find the Entity within the current Contaier */
-        // gprintln("resolveUp("~to!(string)(currentContainer)~", "~name~")");
-        // Entity entity = resolveWithin(currentContainer, name);
-        // gprintln("Certified 2008 financial crisis moment");
-        // gprintln(entity);
-
-        // /* If we found it return it */
-        // if (entity)
-        // {
-        //     return entity;
-        // }
-        // /* If we didn't then try go up a container */
-        // else
-        // {
-        //     /**
-        //     * TODO: Make sure this condition holds
-        //     *
-        //     * So far all objects we have being used
-        //     * of which are kind-of Containers are also
-        //     * and ONLY also kind-of Entity's hence the
-        //     * cast should never fail
-        //     */
-        //     assert(cast(Entity) currentContainer);
-        //     Container possibleParent = (cast(Entity) currentContainer).parentOf();
-
-        //     /* Can we go up */
-        //     if (possibleParent)
-        //     {
-        //         return resolveUp(possibleParent, name);
-        //     }
-        //     /* If the current container has no parent container */
-        //     else
-        //     {
-        //         gprintln("Simply not found");
-        //         return null;
-        //     }
-        // }
     }
 
     unittest
