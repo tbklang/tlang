@@ -1004,7 +1004,8 @@ public final class DCodeEmitter : CodeEmitter
             return funcAccPred(entity) || varAccPred(entity);
         }
 
-        Entity[] entities = resolver.resolveWithin(mod, &allPubFuncsAndVars);
+        Entity[] entities;
+        resolver.resolveWithin(mod, &allPubFuncsAndVars, entities);
 
 
 

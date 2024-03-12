@@ -237,15 +237,15 @@ public final class Resolver
      * Performs a horizontal-level search of the given
      * `Container`, returning a found `Entity` when
      * the predicate supplied returns a positive
-     * verdict on said entity, else returns `null`
+     * verdict on said entity then we add an entry
+     * to the ref parameter
      *
      * Params:
      *   currentContainer = the container to search
      * within
      *   predicate = the predicate to use
-     * Returns: an `Entity` or `null`
      */
-    public Entity resolveWithin(Container currentContainer, Predicate!(Entity) predicate)
+    public void resolveWithin(Container currentContainer, Predicate!(Entity) predicate, ref Entity[] collection)
     {
         Statement[] statements = currentContainer.getStatements();
 
@@ -260,13 +260,31 @@ public final class Resolver
                 {
                     if(predicate(entity))
                     {
-                        return entity;
+                        collection ~= entity;               
                     }
                 }
             }
         }
+    }
 
-        return null;
+    /** 
+     * Performs a horizontal-level search of the given
+     * `Container`, returning a found `Entity` when
+     * the predicate supplied returns a positive
+     * verdict on said entity then we return it.
+     *
+     * Params:
+     *   currentContainer = the container to search
+     * within
+     *   predicate = the predicate to use
+     * Returns: an `Entity` if found else `null`
+     */
+    public Entity resolveWithin(Container currentContainer, Predicate!(Entity) predicate)
+    {
+        Entity[] foundEnts;
+        resolveWithin(currentContainer, predicate, foundEnts);
+
+        return foundEnts.length ? foundEnts[0] : null;
     }
 
     /** 
@@ -303,13 +321,15 @@ public final class Resolver
      * Performs a horizontal-based search of then
      * provided `Container`, searching for any
      * `Entity` which matches the given name.
+     * When a match is found we return
+     * immediately.
      *
      * Params:
      *   currentContainer = the container to
      * search within
      *   name = the name to search for
-     * Returns: the `Entity` if found, else
-     * `null`
+     * Returns: the found `Entity` or
+     * `null` nothing was found
      */
     public Entity resolveWithin(Container currentContainer, string name)
     {
