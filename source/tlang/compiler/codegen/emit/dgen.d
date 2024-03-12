@@ -829,6 +829,10 @@ public final class DCodeEmitter : CodeEmitter
 
             // Emit header comment (NOTE: Change this to a useful piece of text)
             emitHeaderComment(modOut, curMod, "Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
+
+            // Emit make-available's (externs)
+            emitExterns(modOut, curMod);
+
             // Emit standard integer header import
             emitStdint(modOut, curMod);
 
@@ -958,6 +962,83 @@ public final class DCodeEmitter : CodeEmitter
         }
         
         modFile.write(" */\n");
+    }
+
+    /** 
+     * Generates a bunch of extern statements
+     * for symbols such as variables and
+     * function which are to be exposed
+     * in the generated object file such
+     * that they can be linked externally
+     * to other object files.
+     *
+     * The method for this is to resolve
+     * all `Entity`(s) which are either
+     * a `Function` or `Variable` which
+     * have an access modifier of `public`
+     * and lastly which are only at the
+     * module-level in terms of declaration
+     *
+     * Params:
+     *   modOut = the `File` to write the
+     * emitted source code to
+     *   mod = the current `Module` being
+     * processed
+     */
+    private void emitExterns(File modOut, Module mod)
+    {
+        gprintln(format("Generating extern statements for module '%s'", mod.getName()));
+
+        Function[] allPubFunc;
+        Variable[] allPubVar;
+
+        import tlang.compiler.typecheck.resolution : Resolver;
+
+        Resolver resolver = this.typeChecker.getResolver();
+
+        auto funcAccPred = derive_functionAccMod(AccessorType.PUBLIC);
+        auto varAccPred = derive_variableAccMod(AccessorType.PUBLIC);
+
+        bool allPubFuncsAndVars(Entity entity)
+        {
+            return funcAccPred(entity) || varAccPred(entity);
+        }
+
+        Entity[] entities = resolver.resolveWithin(mod, &allPubFuncsAndVars);
+
+
+
+        string externGroupBody;
+        foreach(Entity entity; entities)
+        {
+            gprintln(format("Generating extern for '%s'...", entity));
+
+            if(cast(Variable)entity)
+            {
+                Variable variable = cast(Variable)entity;
+            }
+            else if(cast(Function)entity)
+            {
+                Function func = cast(Function)entity;
+            }
+            else
+            {
+                gprintln("EXTERN EMIT: Not possible for a non function or variable, CHECK PREDICATE!");
+                assert(false);
+            }
+        }
+
+
+
+        import std.string : format;
+        modOut.writeln
+        (
+            format
+            (
+                "// Extern emits\n%s",
+                externGroupBody
+            )
+        );
     }
 
     /** 
@@ -1607,6 +1688,42 @@ private Predicate!(Entity) derive_functionAccMod(AccessorType accModType)
         else
         {
             return func.getAccessorType() == accModType;
+        }
+    }
+
+    return &match;
+}
+
+/** 
+ * Derives a closure predicate which captires
+ * the provided access modifier type and will
+ * apply a logic which disregards any non-`Variable`
+ * `Entity`, however if a `Variable`-typed entity
+ * IS found then it will determine if its access
+ * modifier matches that of the provided one
+ *
+ * Params:
+ *   accModType = the access modifier to filter
+ * by
+ *
+ * Returns: a `Predicate!(Entity)`
+ */
+private Predicate!(Entity) derive_variableAccMod(AccessorType accModType)
+{
+    bool match(Entity entity)
+    {
+        Variable var = cast(Variable)entity;
+
+        // Disregard any non-Variable
+        if(var is null)
+        {
+            return false;
+        }
+        // Onyl care about those with a matching
+        // modifier
+        else
+        {
+            return var.getAccessorType() == accModType;
         }
     }
 
