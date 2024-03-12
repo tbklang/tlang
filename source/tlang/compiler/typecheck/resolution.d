@@ -315,28 +315,6 @@ public final class Resolver
     {
         // Apply search with custom name-based matching predicate
         return resolveWithin(currentContainer, derive_nameMatch(name));
-
-
-        // Statement[] statements = currentContainer.getStatements();
-
-        // foreach (Statement statement; statements)
-        // {
-        //     /* TODO: Only acuse parser not done yet */
-        //     if (statement !is null)
-        //     {
-        //         Entity entity = cast(Entity) statement;
-
-        //         if (entity)
-        //         {
-        //             if (cmp(entity.getName(), name) == 0)
-        //             {
-        //                 return entity;
-        //             }
-        //         }
-        //     }
-        // }
-
-        // return null;
     }
 
     /** 
