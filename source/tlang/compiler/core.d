@@ -14,9 +14,8 @@ import core.stdc.stdlib;
 import tlang.compiler.codegen.emit.core;
 import tlang.compiler.codegen.emit.dgen;
 import misc.exceptions;
-import tlang.compiler.codegen.mapper.core : SymbolMapper;
-import tlang.compiler.codegen.mapper.hashmapper : HashMapper;
-import tlang.compiler.codegen.mapper.lebanese : LebaneseMapper;
+import tlang.compiler.codegen.mapper.api : SymbolMapperV2;
+import tlang.compiler.codegen.mapper.impls : HashMapper, LebanonMapper;
 import std.string : cmp;
 import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
 import tlang.compiler.modman;
@@ -269,7 +268,7 @@ public class Compiler
             throw new CompilerException(CompilerError.CONFIG_ERROR, "Missing a symbol mapper");
         }
         
-        SymbolMapper mapper;
+        SymbolMapperV2 mapper;
         string mapperType = config.getConfig("dgen:mapper").getText();
 
         if(cmp(mapperType, "hashmapper") == 0)
@@ -278,7 +277,7 @@ public class Compiler
         }
         else if(cmp(mapperType, "lebanese") == 0)
         {
-            mapper = new LebaneseMapper(typeChecker);
+            mapper = new LebanonMapper(typeChecker);
         }
         else
         {
