@@ -45,7 +45,15 @@ public final class Resolver
     }
 
     /** 
-     * Generate the absolute full path of the given Entity
+     * Generate the absolute full path of the given
+     * entity without specifying which anchor point
+     * to use.
+     *
+     * This will climb the AST tree until it finds
+     * the containing `Module` of the given entity
+     * and then it will generate the name using
+     * that as the anchor - hence giving you the
+     * absolute path.
      *
      * Params:
      *   entity = The Entity to generate the full absolute path for
@@ -54,30 +62,15 @@ public final class Resolver
      */
     public string generateNameBest(Entity entity)
     {
-        string absoluteFullPath;
-        
         assert(entity);
 
-        /** 
-         * Search till we get to the top-most Container
-         * then generate a name relative to that with `generateName(topMostContainer, entity)`
-         */
-        Entity parentingEntity = entity;
+        // Easiest way to do this is to find the
+        // given entity's nearest container which
+        // is a Module and then generate from there
+        // as the anchor point
+        Container entityMod = findContainerOfType(Module.classinfo, entity);
 
-        while(true)
-        {
-            parentingEntity = cast(Entity)parentingEntity.parentOf();
-
-            if(parentingEntity.parentOf() is null)
-            {
-                break;
-            }
-        }
-
-        absoluteFullPath = generateName(cast(Container)parentingEntity, entity);
-
-
-        return absoluteFullPath;
+        return generateName(entityMod, entity);
     }
 
 
@@ -182,10 +175,17 @@ public final class Resolver
         }
     }
 
-    /**
-    * Returns true if Entity e is C or is within
-    * (contained under c), false otherwise
-    */
+    /** 
+     * Returns `true` entity `e` is `c` or is within 
+     * (contained under `c`), `false` otherwise
+     *
+     * Params:
+     *   c = the `Container` to check against
+     *   e = the `Entity` to check if it belongs
+     * to the container `c` either directly or
+     * indirectly (or if it IS the container `c`)
+     * Returns: `true` if so, `false` otherwise
+     */
     public bool isDescendant(Container c, Entity e)
     {
         /**
@@ -206,26 +206,30 @@ public final class Resolver
             {
                 gprintln("c isdecsenat: "~to!(string)(c));
                 gprintln("currentEntity: "~to!(string)(currentEntity));
-                gprintln("currentEntity(parent): "~to!(string)(currentEntity.parentOf()));
 
-                /**
-                * TODO: Make sure this condition holds
-                *
-                * So far all objects we have being used
-                * of which are kind-of Containers are also
-                * and ONLY also kind-of Entity's hence the
-                * cast should never fail
-                */
-                assert(cast(Entity) currentEntity.parentOf());
-                // FIXME: Enable this below whenever we have any sort of crash
-                // (There is a case where we have it fail on `Variable (Ident: p, Type: int)`)
-                gprintln("AssertFail Check: "~to!(string)(currentEntity));
-                currentEntity = cast(Entity)(currentEntity.parentOf());
+                Container parentOfCurrent = currentEntity.parentOf();
+                gprintln("currentEntity(parent): "~to!(string)(parentOfCurrent));
 
-                if (currentEntity == c)
+                // If the parent of the currentEntity
+                // is what we were seraching for, then
+                // yes, we found it to be a descendant
+                // of it
+                if(parentOfCurrent == c)
                 {
                     return true;
                 }
+
+                // Every other case, use current entity's parent
+                // as starting point and keep climbing
+                //
+                // This would also be null (and stop the seasrch
+                // if we reached the end of the tree in a case
+                // where the given container to anchor by iss
+                // the `Program` BUT was not that of a valid one
+                // that actually belonged to the same tree as
+                // the starting node. This becomes `null` because
+                // remember that a `Program` is not a kind-of `Entity`
+                currentEntity = cast(Entity)(parentOfCurrent);
             }
             while (currentEntity);
 
@@ -528,6 +532,14 @@ public final class Resolver
 
             // If you were asking just for the module
             // e.g. `simple_module`
+            //
+            // Note that this won't consider doing
+            // a find of the entity in any other module
+            // if the path = ['g']. The reason for that is
+            // because a search rooted at the `Program`
+            // could find such an entity in ANY of the
+            // modules if we added such support but that
+            // would be kind of useless
             if(path.length == 1)
             {
                 string moduleRequested = name;
@@ -540,7 +552,7 @@ public final class Resolver
                     }
                 }
 
-                gprintln("resolveBest(Program root): Could not find module for DIRECT access", DebugType.ERROR);
+                gprintln("resolveBest(moduleHoritontal) We found nothing and will not go down from Program to any Module[]. You probably did a rooted search on the Program for a bnon-Module entity, didn't ya?", DebugType.ERROR);
                 return null;
             }
             // If you were asking for some entity
@@ -744,5 +756,100 @@ public final class Resolver
             gprintln("parent of "~to!(string)(startingNode)~" is "~to!(string)(startingNode.parentOf()));
             return findContainerOfType(containerType, cast(Statement)startingNode.parentOf());
         }
+    }
+}
+
+version(unittest)
+{
+    import std.file;
+    import std.stdio;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.kinds.basic : BasicLexer;
+    import tlang.compiler.typecheck.core;
+    import misc.exceptions : TError;
+}
+
+
+/**
+ * Tests out various parts of the
+ * `Resolver`
+ */
+unittest
+{
+    string sourceCode = `
+module resolution_test_1;
+
+int g;
+`;
+
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+    try
+    {
+        compiler.doLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    try
+    {
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
+
+        /* Module name must be resolution_test_1 */
+        assert(cmp(modulle.getName(), "resolution_test_1")==0);
+        TypeChecker tc = new TypeChecker(compiler);
+
+        // Now try to find the variable `d` by starting at the program-level
+        // this SHOULD fail as it should NOT be allowed
+        Entity var = tc.getResolver().resolveBest(program, "g");
+        assert(var is null);
+
+        // Try to find the variable `d` by starting at the module-level
+        var = tc.getResolver().resolveBest(modulle, "g");
+        assert(var);
+        assert(cast(Variable)var); // Ensure it is a variable
+
+        // We should be able to do a rooted search for a module, however,
+        // at the Program level
+        Entity myModule = tc.getResolver().resolveBest(program, "resolution_test_1");
+        assert(myModule);
+        assert(cast(Module)myModule); // Ensure it is a Module
+
+        // The `g` should be a descendant of the module and the module of the program
+        assert(tc.getResolver().isDescendant(cast(Container)myModule, var));
+        assert(tc.getResolver().isDescendant(cast(Container)program, myModule));
+
+        // Lookup `resolution_test_1.g` but anchored from the `Program`
+        Entity varAgain = tc.getResolver().resolveBest(program, "resolution_test_1.g");
+        assert(varAgain);
+        assert(cast(Variable)varAgain); // Ensure it is a Variable
+
+
+        // Generate the name from the program as the anchor
+        string nameFromProgram = tc.getResolver().generateName(program, var);
+        gprintln(format("nameFromProgram: %s", nameFromProgram));
+        assert(nameFromProgram == "resolution_test_1.g");
+
+        // Generate the name from the module as the anchor (should be same as above)
+        string nameFromModule = tc.getResolver().generateName(cast(Container)myModule, var);
+        gprintln(format("nameFromModule: %s", nameFromModule));
+        assert(nameFromModule == "resolution_test_1.g");
+
+        // Generate absolute path of the entity WITHOUT an anchor point
+        string bestName = tc.getResolver().generateNameBest(var);
+        gprintln(format("bestName: %s", bestName));
+        assert(bestName == "resolution_test_1.g");
+    }
+    catch(TError e)
+    {
+        assert(false);
     }
 }
