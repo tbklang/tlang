@@ -1973,7 +1973,8 @@ public final class TypeChecker
 
 
                 /* TODO: Pass in FUnction, so we get function's body for calling too */
-                FuncCallInstr funcCallInstr = new FuncCallInstr(func.getName(), paremeters.length);
+                gprintln(format("funcCall.getName() %s", funcCall.getName()));
+                FuncCallInstr funcCallInstr = new FuncCallInstr(funcCall.getName(), paremeters.length);
                 gprintln("Name of func call: "~func.getName(), DebugType.ERROR);
 
                 /* If there are paremeters for this function (as per definition) */
