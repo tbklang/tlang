@@ -109,6 +109,10 @@ public final class Program : Container
         this.modsMap[ent.getName()] = mod;
         this.insertOrds ~= mod;
         this.modules ~= mod;
+
+        // Parent the given Module to the Program
+        mod.parentTo(this);
+        // (TODO: Should this not be explctly done within the parser)
     }
 
     // TODO: Clean up

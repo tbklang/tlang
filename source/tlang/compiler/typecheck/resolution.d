@@ -247,7 +247,9 @@ public final class Resolver
      */
     public void resolveWithin(Container currentContainer, Predicate!(Entity) predicate, ref Entity[] collection)
     {
+        gprintln(format("resolveWithin(cntnr=%s) entered", currentContainer));
         Statement[] statements = currentContainer.getStatements();
+        gprintln(format("resolveWithin(cntnr=%s) container has statements %s", currentContainer, statements));
 
         foreach(Statement statement; statements)
         {
@@ -283,6 +285,7 @@ public final class Resolver
     {
         Entity[] foundEnts;
         resolveWithin(currentContainer, predicate, foundEnts);
+        gprintln(format("foundEnts: %s", foundEnts));
 
         return foundEnts.length ? foundEnts[0] : null;
     }
@@ -307,7 +310,9 @@ public final class Resolver
          */
         bool nameMatch(Entity entity)
         {
-            return cmp(entity.getName(), nameToMatch) == 0;
+            bool result = cmp(entity.getName(), nameToMatch) == 0;
+            gprintln(format("nameMatch(left=%s, right=%s) result: %s", nameToMatch, entity.getName(), result));
+            return result;
         }
 
         // TODO: Double check but yeah sure this will now
@@ -334,6 +339,7 @@ public final class Resolver
     public Entity resolveWithin(Container currentContainer, string name)
     {
         // Apply search with custom name-based matching predicate
+        gprintln(format("resolveWithin(cntnr=%s, name=%s) entering with predicate", currentContainer, name));
         return resolveWithin(currentContainer, derive_nameMatch(name));
     }
 
@@ -370,19 +376,36 @@ public final class Resolver
         {
             return entity;
         }
+        /**
+         * If nothing was found (and current container is `Program`)
+         * then there is no further up we can go and we must end the
+         * search with no result
+         */
+        else if(cast(Program)currentContainer)
+        {
+            gprintln
+            (
+                format
+                (
+                    "resolveUp(cntr=%s, pred=%s) Entity was not found and we cannot crawl any further up as we are at the Program container now",
+                    currentContainer,
+                    predicate
+                )
+            );
+
+            return null;
+        }
         /* If we didn't then try go up a container */
         else
         {
             /**
-            * TODO: Make sure this condition holds
-            *
-            * So far all objects we have being used
-            * of which are kind-of Containers are also
-            * and ONLY also kind-of Entity's hence the
-            * cast should never fail
+            * We will ONLY ever have a `Container`
+            * here of which is ALSO an `Entity`.
             */
-            assert(cast(Entity) currentContainer);
+            assert(cast(Entity)currentContainer);
             Container possibleParent = (cast(Entity) currentContainer).parentOf();
+
+            gprintln(format("resolveUp(c=%s, pred=%s) cur container typeid: %s", currentContainer, predicate, currentContainer));
             gprintln(format("resolveUp(c=%s, pred=%s) possible parent: %s", currentContainer, predicate, possibleParent));
 
             /* Can we go up */
@@ -483,6 +506,7 @@ public final class Resolver
     */
     public Entity resolveBest(Container c, string name)
     {
+        gprintln(format("resolveBest(cntnr=%s, name=%s) Entered", c, name));
         string[] path = split(name, '.');
         assert(path.length); // We must have _something_ here
 
@@ -563,6 +587,8 @@ public final class Resolver
         */
         Entity containerEntity = cast(Entity) c;
         assert(containerEntity);
+
+        gprintln(format("resolveBest(cntr=%s,name=%s) path = %s", c, name, path));
 
         /**
         * If no dot
@@ -651,6 +677,7 @@ public final class Resolver
                 {
                     if(cmp(curModule.getName(), path[0]) == 0)
                     {
+                        gprintln(format("About to search for name='%s' in module %s", name, curModule));
                         return resolveBest(curModule, name);
                     }
                 }
@@ -668,6 +695,7 @@ public final class Resolver
                     }
                     else
                     {
+                        gprintln("also a kill me");
                         return null;
                     }
                 }
