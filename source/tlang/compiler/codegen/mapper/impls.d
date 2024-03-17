@@ -4,6 +4,7 @@ import tlang.compiler.codegen.mapper.api;
 import tlang.compiler.typecheck.core : TypeChecker;
 import tlang.compiler.symbols.data : Entity;
 import tlang.compiler.symbols.containers : Module;
+import std.string : format;
 
 public class LebanonMapper : SymbolMapperV2
 {
@@ -123,7 +124,7 @@ public class HashMapper : SymbolMapperV2
 
         // FIXME: Needs dup, somewhere this is allocating KAK!
         // Some bizarre stack-allocation (maybe) and then returning that in [len, stackPtr]?
-        string mappedSymbol = toHexString!(LetterCase.lower)(md5Of(path)).dup;
+        string mappedSymbol = format("t_%s", toHexString!(LetterCase.lower)(md5Of(path)).dup);
 
         version(unittest) { writeln(format("hashMapper, AFTER hashing symbol name is: '%s'", mappedSymbol)); }
 
@@ -153,9 +154,9 @@ unittest
     string withModPath = hashMapper.map(variable, ScopeType.GLOBAL);
     writeln(format("withModPath: '%s'", withModPath));
     writeln("withModPath", withModPath);
-    assert(cmp(withModPath, "ecec68ed63440cb8a3eeb8ced54dfd14") == 0);
+    assert(cmp(withModPath, "t_ecec68ed63440cb8a3eeb8ced54dfd14") == 0);
 
     string withoutModPath = hashMapper.map(variable, ScopeType.LOCAL);
     writeln(format("withoutModPath: '%s'", withoutModPath));
-    assert(cmp(withoutModPath, "6afa5299740148c1e32a213f880cec3b") == 0);
+    assert(cmp(withoutModPath, "t_6afa5299740148c1e32a213f880cec3b") == 0);
 }
