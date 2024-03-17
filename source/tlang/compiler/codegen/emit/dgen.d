@@ -13,7 +13,7 @@ import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
-import tlang.compiler.codegen.mapper.core : SymbolMapper;
+import tlang.compiler.codegen.mapper.api;
 import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;
@@ -31,7 +31,7 @@ public final class DCodeEmitter : CodeEmitter
     private bool symbolMapping;
 
     // NOTE: In future store the mapper in the config please
-    this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
+    this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapperV2 mapper)
     {
         super(typeChecker, file, config, mapper);
 
@@ -175,7 +175,8 @@ public final class DCodeEmitter : CodeEmitter
             /* If it is not external */
             if(!typedEntityVariable.isExternal())
             {
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                // FIXME: Set proper scope type
+                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
 
                 emmmmit = renamedSymbol~" = "~transform(varAs.data)~";";
             }
@@ -205,7 +206,8 @@ public final class DCodeEmitter : CodeEmitter
                 //NOTE: We may need to create a symbol table actually and add to that and use that as these names
                 //could get out of hand (too long)
                 // NOTE: Best would be identity-mapping Entity's to a name
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                // FIXME: Set proper scope type
+                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
 
 
                 // Check if the type is a stack-based array
@@ -261,7 +263,8 @@ public final class DCodeEmitter : CodeEmitter
                 //TODO: THis is giving me kak (see issue #54), it's generating name but trying to do it for the given container, relative to it
                 //TODO: We might need a version of generateName that is like generatenamebest (currently it acts like generatename, within)
 
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                // FIXME: Set proper scope type
+                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
 
                 emmmmit = renamedSymbol;
             }
@@ -725,7 +728,8 @@ public final class DCodeEmitter : CodeEmitter
             Variable arrayVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), array.varName);
 
             /* Perform symbol mapping */
-            string arrayName = mapper.symbolLookup(arrayVariable);
+            // FIXME: Set proper scope type
+            string arrayName = mapper.map(arrayVariable, ScopeType.GLOBAL);
 
             /* Obtain the index expression */
             Value indexInstr = stackArrInstr.getIndexInstr();
@@ -766,7 +770,8 @@ public final class DCodeEmitter : CodeEmitter
             Variable arrayVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), arrayName);
 
             /* Perform symbol mapping */
-            string arrayNameMapped = mapper.symbolLookup(arrayVariable);
+            // FIXME: Set proper scope type
+            string arrayNameMapped = mapper.map(arrayVariable, ScopeType.GLOBAL);
 
             /* Obtain the index expression */
             Value indexInstr = stackArrAssInstr.getIndexInstr();
@@ -830,11 +835,11 @@ public final class DCodeEmitter : CodeEmitter
             // Emit header comment (NOTE: Change this to a useful piece of text)
             emitHeaderComment(modOut, curMod, "Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
 
-            // Emit make-available's (externs)
-            emitExterns(modOut, curMod);
-
             // Emit standard integer header import
             emitStdint(modOut, curMod);
+
+            // Emit make-available's (externs)
+            emitExterns(modOut, curMod);
 
             // Emit static allocation code
             emitStaticAllocations(modOut, curMod);
@@ -964,7 +969,75 @@ public final class DCodeEmitter : CodeEmitter
         modFile.write(" */\n");
     }
 
+    private struct ModuleExternSet
+    {
+        private Module originator;
+        private Variable[] pubVars;
+        private Function[] pubFns;
+
+        this(Module originator, Variable[] publicVars, Function[] publicFunctions)
+        {
+            this.originator = originator;
+            this.pubVars = publicVars;
+            this.pubFns =  publicFunctions;
+        }
+
+        public Variable[] vars()
+        {
+            return this.pubVars;
+        }
+
+        public Function[] funcs()
+        {
+            return this.pubFns;
+        }
+
+        public Module mod()
+        {
+            return this.originator;
+        }
+    }
+
+    private ModuleExternSet generateExternsForModule(Module mod)
+    {
+        gprintln(format("Generating extern statements for module '%s'", mod.getName()));
+
+        Entity[] allPubFunc;
+        Entity[] allPubVar;
+
+        import tlang.compiler.typecheck.resolution : Resolver;
+
+        Resolver resolver = this.typeChecker.getResolver();
+
+        auto funcAccPred = derive_functionAccMod(AccessorType.PUBLIC);
+        auto varAccPred = derive_variableAccMod(AccessorType.PUBLIC);
+
+        bool allPubFuncsAndVars(Entity entity)
+        {
+            return funcAccPred(entity) || varAccPred(entity);
+        }
+
+        Entity[] entities;
+        resolver.resolveWithin(mod, &allPubFuncsAndVars, entities);
+        gprintln(format("Got %d many entities needing extern statements emitted", entities.length));
+        import niknaks.arrays : filter;
+        import niknaks.functional : predicateOf;
+
+        // Filter variables
+        bool onlyVar(Entity entity) { return cast(Variable)entity !is null; }
+        filter!(Entity)(entities, predicateOf!(onlyVar), allPubVar);
+
+        // Filter functions
+        bool onlyFunc(Entity entity) { return cast(Function)entity !is null; }
+        filter!(Entity)(entities, predicateOf!(onlyFunc), allPubFunc);
+        
+        ModuleExternSet modExtSet = ModuleExternSet(mod, cast(Variable[])allPubVar, cast(Function[])allPubFunc);
+        return modExtSet;
+    }
+
     /** 
+     * TODO: Re-do
+     *
      * Generates a bunch of extern statements
      * for symbols such as variables and
      * function which are to be exposed
@@ -987,59 +1060,86 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitExterns(File modOut, Module mod)
     {
-        gprintln(format("Generating extern statements for module '%s'", mod.getName()));
-
-        Function[] allPubFunc;
-        Variable[] allPubVar;
-
+        // Find all modules except ourselves
         import tlang.compiler.typecheck.resolution : Resolver;
+        import niknaks.arrays : filter;
+        Module[] everyoneElse;
+        bool justNotMe(Module modI) { return modI !is mod; }
+        filter!(Module)(this.typeChecker.getProgram().getModules(), predicateOf!(justNotMe), everyoneElse);
 
-        Resolver resolver = this.typeChecker.getResolver();
-
-        auto funcAccPred = derive_functionAccMod(AccessorType.PUBLIC);
-        auto varAccPred = derive_variableAccMod(AccessorType.PUBLIC);
-
-        bool allPubFuncsAndVars(Entity entity)
+        // Now grab each other modules' extern data
+        ModuleExternSet[] externSets;
+        foreach(Module omod; everyoneElse)
         {
-            return funcAccPred(entity) || varAccPred(entity);
+            externSets ~= generateExternsForModule(omod);
         }
 
-        Entity[] entities;
-        resolver.resolveWithin(mod, &allPubFuncsAndVars, entities);
-
-
-
-        string externGroupBody;
-        foreach(Entity entity; entities)
+        /**
+         * Emit for each
+         */
+        foreach(ModuleExternSet mos; externSets)
         {
-            gprintln(format("Generating extern for '%s'...", entity));
+            gprintln(format("Emitting extern(...) statements for module %s...", mos.mod()));
 
-            if(cast(Variable)entity)
+            // Emit public functions
+            foreach(Function func; mos.funcs())
             {
-                Variable variable = cast(Variable)entity;
+                string externEmit = format("extern %s;", generateSignature(func));
+
+                gprintln(format("FuncExternEmit: '%s'", externEmit));
+                modOut.writeln(externEmit);
             }
-            else if(cast(Function)entity)
-            {
-                Function func = cast(Function)entity;
-            }
-            else
-            {
-                gprintln("EXTERN EMIT: Not possible for a non function or variable, CHECK PREDICATE!");
-                assert(false);
-            }
+
+            // Emit public variables
+            // TODO: Implement me
+            
         }
 
+        /** 
+        //  * Only emit if there are entities
+        //  * needing an emit
+        //  *
+        //  * FIXME: Emit for every other module than current one
+        //  * must rather collect these
+        //  */
+        // if(externSets.length)
+        // {
+        //     string externGroupBody;
+        //     foreach(Entity entity; entities)
+        //     {
+                
+
+        //         if(cast(Variable)entity)
+        //         {
+        //             Variable variable = cast(Variable)entity;
+
+        //             // FIXME: Add a generateSignature for Variable
+        //         }
+        //         else if(cast(Function)entity)
+        //         {
+        //             Function func = cast(Function)entity;
+
+                    
+        //         }
+        //         else
+        //         {
+        //             gprintln("EXTERN EMIT: Not possible for a non function or variable, CHECK PREDICATE!");
+        //             assert(false);
+        //         }
+        //     }
 
 
-        import std.string : format;
-        modOut.writeln
-        (
-            format
-            (
-                "// Extern emits\n%s",
-                externGroupBody
-            )
-        );
+
+        //     import std.string : format;
+        //     modOut.writeln
+        //     (
+        //         format
+        //         (
+        //             "// Extern emits\n%s",
+        //             externGroupBody
+        //         )
+        //     );
+        // }
     }
 
     /** 
@@ -1133,7 +1233,8 @@ public final class DCodeEmitter : CodeEmitter
 
                 // Generate the symbol-mapped names for the parameters
                 Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(func, currentParameter.getName()); //TODO: Remove `auto`
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                // FIXME: Set proper scope type
+                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
 
 
                 // Generate <type> <parameter-name (symbol mapped)>
