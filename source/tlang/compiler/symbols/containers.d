@@ -127,6 +127,7 @@ public class Module : Entity, Container
 
     public Statement[] getStatements()
     {
+        // TODO: Holy naai this is expensive
         return weightReorder(statements);
     }
 
@@ -227,6 +228,7 @@ public class Struct : Type, Container, MCloneable
 
     public Statement[] getStatements()
     {
+        // TODO: Holy naai this is expensive
         return weightReorder(statements);
     }
 
@@ -392,6 +394,7 @@ public class Clazz : Type, Container
 
     public Statement[] getStatements()
     {
+        // TODO: Holy naai this is expensive
         return weightReorder(statements);
     }
 
