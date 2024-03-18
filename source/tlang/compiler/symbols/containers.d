@@ -104,6 +104,79 @@ public interface Container : MStatementSearchable, MStatementReplaceable
     public bool insertAt(ulong index, Statement statement);
 }
 
+public mixin template ContainerCommonImpl(ElementType, alias bodySrc)
+// if() // TODO: Check for `this.statements`
+{
+    public long indexOf(ElementType statement)
+    {
+        long idx = 0;
+
+        foreach(ElementType curStmt; bodySrc)
+        {
+            if(statement is curStmt)
+            {
+                return idx;
+            }
+            idx++;
+        }
+
+        return -1;
+    }
+
+    public bool removeAt(ulong index)
+    {
+        // Out of bounds
+        if(!(index < bodySrc.length))
+        {
+            return false;
+        }
+
+        import std.algorithm.mutation : remove;        
+        
+        // Remove will return a new range
+        // with a range of `len-1`
+        bodySrc = remove(bodySrc, index);
+
+        return true;
+    }
+
+    public bool insertAt(ulong index, ElementType statement)
+    {
+        // Out of bounds
+        if(index > bodySrc.length)
+        {
+            return false;
+        }
+
+        //current=[a,b,c]
+        //index=1 [d]
+        // current (new): [a,d,b,c]
+
+        ElementType[] newArray;
+        newArray.length++;
+
+        // Copy up to, but excluding, the index
+        ulong cnt = 0;
+        for(ulong srcIdx = 0; srcIdx < index; srcIdx++)
+        {
+            newArray[srcIdx] = bodySrc[srcIdx];
+            cnt++;
+        }
+
+        // Copy the new one in
+        newArray ~= statement;
+
+        // Copy from 1 onwards
+        for(ulong srcIdx = cnt; srcIdx < bodySrc.length; srcIdx++)
+        {
+            newArray ~= bodySrc[srcIdx];
+        }
+
+        bodySrc = newArray;
+        return true;
+    }
+}
+
 
 public class Module : Entity, Container
 {
@@ -130,6 +203,9 @@ public class Module : Entity, Container
         // TODO: Holy naai this is expensive
         return weightReorder(statements);
     }
+
+    // Bring in regularly used implementations
+    mixin ContainerCommonImpl!(Statement, this.statements);
 
     public override Statement[] search(TypeInfo_Class clazzType)
     {
@@ -231,6 +307,9 @@ public class Struct : Type, Container, MCloneable
         // TODO: Holy naai this is expensive
         return weightReorder(statements);
     }
+
+    // Bring in regularly used implementations
+    mixin ContainerCommonImpl!(Statement, this.statements);
 
     this(string name)
     {
@@ -397,6 +476,9 @@ public class Clazz : Type, Container
         // TODO: Holy naai this is expensive
         return weightReorder(statements);
     }
+
+    // Bring in regularly used implementations
+    mixin ContainerCommonImpl!(Statement, this.statements);
 
     public override Statement[] search(TypeInfo_Class clazzType)
     {
