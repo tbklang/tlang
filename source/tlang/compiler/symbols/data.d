@@ -317,6 +317,9 @@ public class Function : TypedEntity, Container
         return weightReorder(bodyStatements);
     }
 
+    // Bring in regularly used implementations
+    mixin ContainerCommonImpl!(Statement, this.bodyStatements);
+
     /**
     * This will sift through all the `Statement[]`'s in held
     * within this Function and will find those which are Variable
@@ -1096,6 +1099,9 @@ public final class IfStatement : Entity, Container
         return cast(Statement[])branches;
     }
 
+    // Bring in regularly used implementations
+    mixin ContainerCommonImpl!(Branch, this.branches);
+
     public override string toString()
     {
         return "IfStmt";
@@ -1228,6 +1234,37 @@ public final class WhileLoop : Entity, Container
         return cast(Statement[])[branch];
     }
 
+    public override long indexOf(Statement statement)
+    {
+        return statement is this.branch ? 0 : -1;
+    }
+
+    public override bool removeAt(ulong index)
+    {
+        if(index != 0)
+        {
+            return false;
+        }
+
+        this.branch = null;
+        return true;
+    }
+
+    public bool insertAt(ulong index, Statement statement)
+    {
+        if(index != 0)
+        {
+            return false;
+        }
+        else if(this.branch !is null)
+        {
+            return false;
+        }
+
+        this.branch = statement;
+        return true;
+    }
+
     public override string toString()
     {
         return "WhileLoop";
@@ -1343,6 +1380,45 @@ public final class ForLoop : Entity, Container
         assert(branch is null);
 
         branch = (cast(Branch[])statements)[0];
+    }
+
+    public override long indexOf(Statement statement)
+    {
+        if(statement is this.preLoopStatement)
+        {
+            return 0;
+        }
+        else if(statement is this.branch)
+        {
+            return 1;
+        }
+        else
+        {
+            return -1;    
+        }
+    }
+
+    public override bool removeAt(ulong index)
+    {
+        if(index == 0 && this.preLoopStatement !is null)
+        {
+            return true;
+        }
+        else if(index == 1 && this.branch !is null)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public override bool insertAt(ulong index, Statement statement)
+    {
+        // if(index == 0)
+        // TODO: Are we really going to implement this?
+        return false;
     }
 
     public override Statement[] getStatements()
@@ -1500,6 +1576,9 @@ public final class Branch : Entity, Container
     {
         return branchBody;
     }
+
+    // Bring in regularly used implementations
+    mixin ContainerCommonImpl!(Statement, this.branchBody);
 
     public override string toString()
     {
