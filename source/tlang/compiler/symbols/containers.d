@@ -64,6 +64,44 @@ public interface Container : MStatementSearchable, MStatementReplaceable
      * Returns: a `Statement[]`
      */
     public Statement[] getStatements();
+
+    /** 
+     * Returns the index of the given
+     * statement within this container,
+     * and -1 if not found
+     *
+     * Params:
+     *   statement = the `Statement`
+     * to search for
+     * Returns: the index if found,
+     * or -1 if not
+     */
+    public long indexOf(Statement statement);
+    
+    /** 
+     * Removes the item at the given
+     * index, returning if the removal
+     * succeeded or not
+     *
+     * Params:
+     *   index = the index
+     * Returns: `true` if the removal
+     * succeeded, `false` otheriwse
+     */
+    public bool removeAt(ulong index);
+
+    /** 
+     * Inserts the given statement
+     * at the given index
+     *
+     * Params:
+     *   index = the index to insert
+     * at
+     *   statement = 
+     * Returns: `true` if the insert
+     * succeeded, `false` otherwise
+     */
+    public bool insertAt(ulong index, Statement statement);
 }
 
 
