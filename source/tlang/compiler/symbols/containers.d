@@ -36,10 +36,33 @@ public Statement[] weightReorder(Statement[] statements)
 // AND MCloneable
 public interface Container : MStatementSearchable, MStatementReplaceable
 {
+    /** 
+     * Appends the given statement to
+     * this container's body
+     *
+     * Params:
+     *   statement = the `Statement`
+     * to add
+     */
     public void addStatement(Statement statement);
 
+    /** 
+     * Appends the list of statemnets
+     * (in order) to this container's
+     * body
+     *
+     * Params:
+     *   statements = the `Statement[]`
+     * to add
+     */
     public void addStatements(Statement[] statements);
 
+    /** 
+     * Returns the body of this
+     * container
+     *
+     * Returns: a `Statement[]`
+     */
     public Statement[] getStatements();
 }
 
