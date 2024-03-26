@@ -106,7 +106,6 @@ public class Compiler
 
     /* The parser */
     private Parser parser;
-    private Module modulle;
 
     /* The typechecker/code generator */
     private TypeChecker typeChecker;
@@ -213,7 +212,7 @@ public class Compiler
             /* Spawn a new parser with the provided tokens */
             this.parser = new Parser(lexer, this);
 
-            modulle = parser.parse(this.inputFilePath);
+            Module modulle = parser.parse(this.inputFilePath);
 
             // TODO: We should add this entry point module now to the front of it?
             ModuleEntry entryModEnt = ModuleEntry(this.inputFilePath, modulle.getName());
@@ -225,11 +224,6 @@ public class Compiler
         // gprintln("Module ongod: "~to!(string)(this.program.getOMods()));
         this.program.debugDumpOrds();
         this.program.debugDump(); 
-    }
-
-    public Module getModule()
-    {
-        return modulle;
     }
 
     /** 
