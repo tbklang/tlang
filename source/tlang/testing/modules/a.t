@@ -5,6 +5,6 @@ import b;
 
 int main()
 {
-	b.doThing();
-	return 0;
+	int value = b.doThing();
+	return value;
 }
