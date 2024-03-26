@@ -161,8 +161,6 @@ struct compileCommand
 
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
 
             /* Perform typechecking/codegen */
             compiler.doTypeCheck();
@@ -274,8 +272,6 @@ struct parseCommand
 
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
         }
         catch(TError t)
         {
@@ -323,8 +319,6 @@ struct typecheckCommand
 
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
 
             /* Perform typechecking/codegen */
             compiler.doTypeCheck();
