@@ -10,6 +10,7 @@ import core.stdc.stdlib;
 import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
 import tlang.compiler.core : Compiler;
+import std.string : format;
 
 // TODO: Technically we could make a core parser etc
 public final class Parser
@@ -2595,7 +2596,7 @@ public final class Parser
     * one to define classes within functions
     */
     /* TODO: Variables should be allowed to have letters in them and underscores */
-    public Module parse(string moduleFilePath = "")
+    public Module parse(string moduleFilePath = "", bool isEntrypoint = false)
     {
         gprintln("parse(): Enter", DebugType.WARNING);
 
@@ -2622,17 +2623,18 @@ public final class Parser
         /* Store it globally */
         this.curModule = modulle;
 
-        // // TODO: Set our module as visited
-        // ModuleEntry curModEnt = ModuleEntry(moduleFilePath, moduleName);
-        // Program prog = this.compiler.getProgram(); // THIS: Will crash in unit tests, so we better fix that
+        // If this is an entrypoint module (i.e. one specified
+        // on the command-line) then store it as visited
+        if(isEntrypoint)
+        {
+            gprintln(format("parse(): Yes, this IS your entrypoint module '%s' about to be parsed", moduleName));
 
-        // // If another module imports us
-        // if(!prog.isModulePresent(curModEnt))
-        // {
-        //     prog.markAsVisited(curModEnt);
-        //     prog.setModule(curModEnt, modulle);
-        // }
-        
+            ModuleEntry curModEnt = ModuleEntry(moduleFilePath, moduleName);
+            Program prog = this.compiler.getProgram();
+
+            prog.markAsVisited(curModEnt); // TODO: Could not call?
+            prog.setModule(curModEnt, modulle);
+        }
 
         /* TODO: do `lexer.hasTokens()` check */
         /* TODO: We should add `lexer.hasTokens()` to the `lexer.nextToken()` */
