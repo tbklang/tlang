@@ -212,11 +212,11 @@ public class Compiler
             /* Spawn a new parser with the provided tokens */
             this.parser = new Parser(lexer, this);
 
-            Module modulle = parser.parse(this.inputFilePath);
-
-            // TODO: We should add this entry point module now to the front of it?
-            ModuleEntry entryModEnt = ModuleEntry(this.inputFilePath, modulle.getName());
-            this.program.setModule(entryModEnt, modulle);
+            // It is easier to grab the module
+            // name from inside hence we should probably
+            // have a default parameter isEntrypoint=false
+            // and then add it from within
+            Module modulle = parser.parse(this.inputFilePath, true);
         }
 
         // Print out module tree
