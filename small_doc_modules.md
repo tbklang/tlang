@@ -31,6 +31,11 @@ module a;
 import niks.c;
 import b;
 
+int ident(int i)
+{
+	return i;
+}
+
 int main()
 {
 	int value = b.doThing();
@@ -51,17 +56,17 @@ int doThing()
 
     for(int i = 0; i < 10; i=i+1)
     {
-        local = local +i;
+        local = local + a.ident(i);
     }
 
     return local;
 }
 ```
 
-##### Module `niks.c` at file `niks/c.t`
+##### Module `c` at file `niks/c.t`
 
 ```d
-module niks.c;
+module c;
 
 import a;
 
