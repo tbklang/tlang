@@ -1711,7 +1711,7 @@ int main()
                     //NOTE: Make this a TLang exception
                     throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
                 }
-                gprintln(format("Compiled %s in %s", curMod.getName(), watch.peek()));
+                gprintln(format("Compiled %s in %sms", curMod.getName(), watch.peek().total!("msecs")()));
 
                 // Only add it to the list of files if it was generated
                 // (this guards against the clean up routines spitting out errors
