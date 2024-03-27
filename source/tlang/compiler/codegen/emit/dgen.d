@@ -21,6 +21,8 @@ import tlang.compiler.symbols.typing.core;
 import tlang.compiler.configuration : CompilerConfiguration;
 import tlang.compiler.symbols.containers : Module;
 import std.format : format;
+import std.datetime.stopwatch : StopWatch, AutoStart;
+import std.datetime.stopwatch : Duration, dur;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -1690,6 +1692,8 @@ int main()
                 gprintln("No files to link in");
             }
 
+            // Total compilation time
+            Duration total = Duration.zero();
 
             // TODO: Do for-each generation of `.o` files here with `-c`
             foreach(Module curMod; programModules)
@@ -1702,7 +1706,6 @@ int main()
 
                 gprintln("Compiling now with arguments: "~to!(string)(args));
 
-                import std.datetime.stopwatch : StopWatch, AutoStart;
                 StopWatch watch = StopWatch(AutoStart.yes);
                 Pid ccPID = spawnProcess(args);
                 int code = wait(ccPID);
@@ -1711,13 +1714,18 @@ int main()
                     //NOTE: Make this a TLang exception
                     throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
                 }
-                gprintln(format("Compiled %s in %sms", curMod.getName(), watch.peek().total!("msecs")()));
+
+                Duration compTime = watch.peek();
+                gprintln(format("Compiled %s in %sms", curMod.getName(), compTime.total!("msecs")()));
+                total = dur!("msecs")(total.total!("msecs")()+compTime.total!("msecs")());
 
                 // Only add it to the list of files if it was generated
                 // (this guards against the clean up routines spitting out errors
                 // for object files which were never generated in the first place)
                 objectFiles ~= modFileObjPath;
             }
+
+            gprintln(format("Total compilation time took %s", total));
 
             // Now determine the entry point module
             // Module entryModule;
