@@ -1702,6 +1702,8 @@ int main()
 
                 gprintln("Compiling now with arguments: "~to!(string)(args));
 
+                import std.datetime.stopwatch : StopWatch, AutoStart;
+                StopWatch watch = StopWatch(AutoStart.yes);
                 Pid ccPID = spawnProcess(args);
                 int code = wait(ccPID);
                 if(code)
@@ -1709,6 +1711,7 @@ int main()
                     //NOTE: Make this a TLang exception
                     throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
                 }
+                gprintln(format("Compiled %s in %s", curMod.getName(), watch.peek()));
 
                 // Only add it to the list of files if it was generated
                 // (this guards against the clean up routines spitting out errors
