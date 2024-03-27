@@ -203,3 +203,18 @@ public struct ModuleEntry
 ```
 
 The above definition is all you really need to know about this type, this simple is a tuple of sorts with some helper methods to extract the two tuple values of $(module_{name}, module_{path})$ and doing validation of these values.
+
+### The module manager
+
+The *module manager* defined in the `ModuleManager` type, it contains the following constructor method:
+
+| Constructor      | Description |
+|------------------|-------------|
+| `this(Compiler)` | Constructs a new `ModuleManager` using the given `Compiler` instance. This will automatically add the search paths from the `"modman:path"` configuration entry to the module manager during construction. |
+
+TODO: Add
+
+
+It then also contains the following methods:
+
+TODO: Add
