@@ -2,6 +2,7 @@ module tlang.compiler.modman.modman;
 
 import gogga;
 import std.file : isDir;
+import std.path : isAbsolute;
 
 // TODO: We may want to throw an exception whilst searching
 // ... as to which path is invalid
@@ -28,23 +29,54 @@ public struct ModuleEntry
      */
     private string moduleName;
 
+    /** 
+     * Constructs a new module entry
+     * from the given name and absolute
+     * path to the module file itself
+     *
+     * Params:
+     *   filename = the absolute opath
+     * of the module itself
+     *   moduleName = the module's name
+     */
     this(string filename, string moduleName)
     {
         this.filename = filename;
         this.moduleName = moduleName;
     }
     
+    /** 
+     * Checks if the module entry
+     * is valid which checks that
+     * both the file path and name
+     * have a length greater than `0`
+     * and that the filepath is
+     * an absolute path
+     *
+     * Returns: `true` if valid,
+     * `false` otherwise
+     */
     public bool isValid()
     {
-        import std.path : isAbsolute;
         return moduleName.length && filename.length && isAbsolute(filename);
     }
 
+    /** 
+     * Obtains the oath to
+     * the module's file
+     *
+     * Returns: the path
+     */
     public string getPath()
     {
         return this.filename;
     }
 
+    /** 
+     * Ontains the module's name
+     *
+     * Returns: the name
+     */
     public string getName()
     {
         return this.moduleName;
