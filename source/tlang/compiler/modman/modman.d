@@ -73,7 +73,7 @@ public struct ModuleEntry
     }
 
     /** 
-     * Ontains the module's name
+     * Obtains the module's name
      *
      * Returns: the name
      */
