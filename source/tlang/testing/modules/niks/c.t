@@ -1,8 +1,8 @@
-module niks.c;
+module c;
 
 import a;
 
 void k()
 {
-    
+
 }
