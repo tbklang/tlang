@@ -99,14 +99,6 @@ echo $?
 
 > Note, the module you specify on the command-line will have its directory used as the base search path for the rest of the modules. Therefore specifying `a.t` or `b.t` is fine as they reside in the same directory whereby `niks/` can be found ut this is not true if you compiles `niks/c.t` as that would only see the search directory from `niks/` downwards - upwards searching does **not** occur
 
-## Structure of a program
-
-The *program*, as mentioned prior, is what holds all the associated *modules*. We shall now take a look at some of the internals of this type.
-
-## Structure of a Module
-
-TODO: Not sure if this should be here, but eh, maybe worth it
-
 ## Module management
 
 The *module manager* is responsible for maintaining a list of so-called *search paths* and being able to take a query for a given module (by name) and attempt to find it within said *paths*.
