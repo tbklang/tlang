@@ -136,6 +136,14 @@ public final class ModuleManager
         this.compiler = compiler;
     }
 
+    /** 
+     * Adds each of the provided paths
+     * to the set of search paths
+     *
+     * Params:
+     *   paths = the search path(s)
+     * to add
+     */
     public void addSearchPaths(string[] paths)
     {
         // Add each path
@@ -145,7 +153,13 @@ public final class ModuleManager
         }
     }
 
-
+    /** 
+     * Adds the given path to the set
+     * of search paths
+     *
+     * Params:
+     *   path = the path to add
+     */
     public void addSearchPath(string path)
     {
         // Obtain absolute path
@@ -189,10 +203,22 @@ public final class ModuleManager
         return find(this.searchPaths, modName, found);
     }
 
-    public static string[] findAllTFilesShallow(string directory)
+    /** 
+     * Given a path to a directory this will
+     * do a shallow search (stay within the directory)
+     * for all files ending in `.t`, therefore
+     * returning an array of all the absolute
+     * paths to such files
+     *
+     * Params:
+     *   directory = the directory path to search
+     * Returns: an `string[]`
+     */
+    private static string[] findAllTFilesShallow(string directory)
     {
         string[] allTFiles;
 
+        // TODO: Ensure we are given a directory path
 
         // Enumrate all directory entries in `directory`
         foreach(DirEntry entry; dirEntries!()(directory, SpanMode.shallow))
@@ -208,7 +234,19 @@ public final class ModuleManager
         return allTFiles;
     }
 
-    public bool find(string[] directories, string modName, ref ModuleEntry found, bool isDirect = true)
+    private static string tailEndGet(string dottedPath)
+    {
+        // Replace all `.`s with `/` such that we
+        // can use the path splitter
+        auto splitter = pathSplitter(replace(dottedPath, ".", "/"));
+
+        // Get the tail-end side of the split
+        string tailEnd = splitter.back();
+
+        return tailEnd;
+    }
+
+    private bool find(string[] directories, string modName, ref ModuleEntry found, bool isDirect = true)
     {
         gprintln("Request to find module '"~modName~"' in directories: "~to!(string)(directories));
 
@@ -253,6 +291,36 @@ public final class ModuleManager
         // Only if not tried already (else recursion)
         if(isDirect)
         {
+            /** 
+             * Only consider searching in a nested
+             * manner if the provided `modName`
+             * contains `.`s in its name as these
+             * are what will be used to perform the
+             * nested search.
+             *
+             * If this is not the case then return
+             * with nothing, else continue and calculate
+             * the module's new short name by taking
+             * the tail end of its name.
+             */
+            import niknaks.arrays : isPresent;
+            import std.string : format;
+            if(!isPresent(modName, '.'))
+            {
+                gprintln
+                (
+                    format
+                    (
+                        "Couldn't find the module named '%s' and no dots so nested search not being done",
+                        modName
+                    )
+                );
+                return false;
+            }
+            
+            string newModName = tailEndGet(modName);
+            gprintln("New module name "~newModName);
+
             /**
             * Now before giving up we must consider
             * using the module name's which have
@@ -264,56 +332,37 @@ public final class ModuleManager
             * the relative path to each
             */
             string[] newPaths;
-            string newModName;
             foreach(string directory; directories)
             {
-                // Only consider module names with dots in them
-                import niknaks.arrays : isPresent;
-                if(isPresent(modName, '.'))
+                /** 
+                 * Replace `bruh.c` into `bruh/c`
+                 *
+                 * First replace all `.`'s with `/`.
+                 * 
+                 * Set new module name to `c` (`back()`)
+                 * and make relativeDir `bruh/` (`popBack()`)
+                 */
+                import std.string : replace;
+                auto splitter = pathSplitter(replace(modName, ".", "/"));
+                splitter.popBack();
+
+
+                string relativeDir;
+                foreach(string element; splitter)
                 {
-                    // Construct relative directory (replace `.` with `/`)
-                    // and also remove the file part
-
-                    /** 
-                     * Replace `bruh.c` into `bruh/c`
-                     *
-                     * First replace all `.`'s with `/`.
-                     * 
-                     * Set new module name to `c` (`back()`)
-                     * and make relativeDir `bruh/` (`popBack()`)
-                     */
-                    import std.string : replace;
-                    auto splitter = pathSplitter(replace(modName, ".", "/"));
-
-                    newModName = splitter.back();
-                    gprintln("New module name (ultra-back): "~newModName);
-
-                    splitter.popBack();
-
-
-                    string relativeDir;
-                    foreach(string element; splitter)
-                    {
-                        relativeDir ~= element ~"/";
-                    }
-                    
-
-                    gprintln("Relative dir (generated): "~relativeDir);
-
-                    // Construct the directory to search
-                    string newSearchPath = directory~"/"~relativeDir;
-                    gprintln("New search path (consideration): "~newSearchPath);
-
-                    newPaths ~= newSearchPath;
+                    relativeDir ~= element ~"/";
                 }
-                
+                gprintln("Relative dir (generated): "~relativeDir);
+
+                // Construct the directory to search
+                string newSearchPath = directory~"/"~relativeDir;
+                gprintln("New search path (consideration): "~newSearchPath);
+
+                newPaths ~= newSearchPath;
             }
 
             return find(newPaths, newModName, found, false);
         }
-
-        
-
 
         return false;
     }
@@ -322,7 +371,7 @@ public final class ModuleManager
     import tlang.compiler.symbols.check : SymbolType, getSymbolType;
     import tlang.compiler.lexer.core : Token;
 
-    public static expect(SymbolType expected, Token got)
+    private static expect(SymbolType expected, Token got)
     {
         SymbolType actualType = getSymbolType(got);
 
@@ -400,7 +449,8 @@ public final class ModuleManager
 
     import std.stdio;
     import std.exception : ErrnoException;
-    public static bool readModuleData(ModuleEntry ent, ref string source)
+    
+    private static bool readModuleData(ModuleEntry ent, ref string source)
     {
         File modFile;
 
@@ -452,7 +502,7 @@ public final class ModuleManager
      * Returns: `true` if all paths are valid,
      * `false` otherwise
      */
-    public static bool validate(string[] searchPaths)
+    private static bool validate(string[] searchPaths)
     {
         foreach(string searchPath; searchPaths)
         {
@@ -474,7 +524,7 @@ public final class ModuleManager
      * Returns: `true` if the search path is valid,
      * `false` otherwise
      */
-    public static bool validate(string searchPath)
+    private static bool validate(string searchPath)
     {
         // Path cannot be empty
         if(searchPath.length == 0)
