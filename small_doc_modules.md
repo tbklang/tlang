@@ -233,13 +233,13 @@ This method is at the core of searching, most other methods are either called _f
 
 ##### Parameters
 
-Firstly this method takes in a `string[]` of absolute paths to directories. Normally this will be passed a `this.searchPaths`, meaning that effectively the way this method is used is that it will be performing searches from those paths.
+* Firstly this method takes in a `string[]` of absolute paths to directories. Normally this will be passed a `this.searchPaths`, meaning that effectively the way this method is used is that it will be performing searches from those paths.
 
-Secondly we have the `modName` parameter. This one is rather self-explanatory - it is the _module's name_ we are searching for.
+* Secondly we have the `modName` parameter. This one is rather self-explanatory - it is the _module's name_ we are searching for.
 
-Next we have the `found` parameter, which takes in a pointer to a `ModuleEntry` struct variable. This is only set when a module with the name of `modName` is actually found.
+* Next we have the `found` parameter, which takes in a pointer to a `ModuleEntry` struct variable. This is only set when a module with the name of `modName` is actually found.
 
-Lastly, we have the `isDirect` parameter which has a default value of `true`. This controls whether a further search is done if the module being searched for is not found during the shallow search.
+* Lastly, we have the `isDirect` parameter which has a default value of `true`. This controls whether a further search is done if the module being searched for is not found during the shallow search.
 
 ##### Return value
 
@@ -260,8 +260,6 @@ source/tlang/testing/modules/
 Now if we were searching for the modules named `a` or `b` and gave the `directories` of `["source/tlang/testing/modules/"]` then we would find those tow modules (ins separate calls of course) immediately within the shallow search performed.
 
 However, if we searched for a module named `niks.c` with the same directories provided we would **not** find a file named `c.t` within the directory of `source/tlang/testing/modules/`. Now, if `isDirect` is set to `true` then what happens is as follows:
-
-TODO: We should do check here for . in `modName` and then enter loop and calculate
 
 1. First we check if the given `modName` contains any periods (`.`s) in its name. We need this as they indicate the directory structure of the new search paths we will need to calculate. If it has none then we return immediately with `false` as the module cannot be found (and there is no reasonable way to find it with a nested search).
 2. We then calculate a `newModName` by the incoming `modName`, for example `niks.c`, and just popping off the tail such that we then have `"c"` as the value of `newModName` - we will need this later.
