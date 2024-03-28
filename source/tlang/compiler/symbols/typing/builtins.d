@@ -10,6 +10,7 @@ import std.string : cmp, indexOf, lastIndexOf;
 import gogga;
 import tlang.compiler.typecheck.core;
 import std.conv : to;
+import tlang.compiler.symbols.data : Container;
 
 /**
 * TODO: We should write spec here like I want int and stuff of proper size so imma hard code em
@@ -25,10 +26,11 @@ import std.conv : to;
  *
  * Params:
  *   tc = the associated `TypeChecker` required for lookups
+ *   container = the container to do any searches from
  *   typeString = the type string to test
  * Returns: the `Type` found, if not found then `null`
  */
-public Type getBuiltInType(TypeChecker tc, string typeString)
+public Type getBuiltInType(TypeChecker tc, Container container, string typeString)
 {
     gprintln("getBuiltInType("~typeString~")");
 
@@ -117,7 +119,7 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
 
         gprintln("typeString: "~typeString);
 
-        stackArray = new StackArray(tc.getType(tc.getModule(), componentTypeString), arraySize);
+        stackArray = new StackArray(tc.getType(container, componentTypeString), arraySize);
 
         gprintln("Stack-based array types are still being implemented", DebugType.ERROR);
         // assert(false);
@@ -148,7 +150,7 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
         gprintln("TypeStr: "~typeString);
         gprintln("Pointer to '"~ptrType~"'", DebugType.ERROR);
 
-        return new Pointer(tc.getType(tc.getModule(), ptrType));
+        return new Pointer(tc.getType(container, ptrType));
     }
     
     

@@ -14,11 +14,11 @@ import core.stdc.stdlib;
 import tlang.compiler.codegen.emit.core;
 import tlang.compiler.codegen.emit.dgen;
 import misc.exceptions;
-import tlang.compiler.codegen.mapper.core : SymbolMapper;
-import tlang.compiler.codegen.mapper.hashmapper : HashMapper;
-import tlang.compiler.codegen.mapper.lebanese : LebaneseMapper;
+import tlang.compiler.codegen.mapper.api : SymbolMapperV2;
+import tlang.compiler.codegen.mapper.impls : HashMapper, LebanonMapper;
 import std.string : cmp;
 import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
+import tlang.compiler.modman;
 
 // TODO: Add configentry unittests
 
@@ -95,6 +95,9 @@ public class Compiler
     /* The input source code */
     private string inputSource;
 
+    /* Input file path */
+    private string inputFilePath;
+
     /* The lexer */
     private LexerInterface lexer;
 
@@ -103,7 +106,6 @@ public class Compiler
 
     /* The parser */
     private Parser parser;
-    private Module modulle;
 
     /* The typechecker/code generator */
     private TypeChecker typeChecker;
@@ -121,19 +123,59 @@ public class Compiler
         return config;
     }
 
+    /* The program */
+    private Program program;
+
+    public Program getProgram()
+    {
+        return this.program;
+    }
+
+    public void setProgram(Program program)
+    {
+        this.program = program;
+    }
+
+    /* The module manager */
+    private ModuleManager modMan;
+
+    public ModuleManager getModMan()
+    {
+        return this.modMan;
+    }
+
     /** 
      * Create a new compiler instance to compile the given
      * source code
+     *
      * Params:
      *   sourceCode = the source code to compile
+     * Throws:
+     *   ModuleManagerError = if the provided search
+     * paths are not all valid
+     *
      */
-    this(string sourceCode, File emitOutFile)
+    this(string sourceCode, string inputFilePath, File emitOutFile)
     {
         this.inputSource = sourceCode;
+        this.inputFilePath = inputFilePath;
         this.emitOutFile = emitOutFile;
-
+        
         /* Get the default config */
         this.config = CompilerConfiguration.defaultConfig();
+
+        /* Create the base program */
+        this.program = new Program();
+
+        /* Create a module manager */
+        this.modMan = new ModuleManager(this);
+
+        /**
+         * Add all the containing directories of
+         * the modules specified on the command-line
+         */
+        import std.path : dirName;
+        this.modMan.addSearchPath(dirName(inputFilePath));
     }
 
     /* Setup the lexer and begin lexing */
@@ -168,15 +210,20 @@ public class Compiler
         else
         {
             /* Spawn a new parser with the provided tokens */
-            this.parser = new Parser(lexer);
+            this.parser = new Parser(lexer, this);
 
-            modulle = parser.parse();
+            // It is easier to grab the module
+            // name from inside hence we should probably
+            // have a default parameter isEntrypoint=false
+            // and then add it from within
+            Module modulle = parser.parse(this.inputFilePath, true);
         }
-    }
 
-    public Module getModule()
-    {
-        return modulle;
+        // Print out module tree
+        gprintln("Module tree: "~to!(string)(this.program.getMods()));
+        // gprintln("Module ongod: "~to!(string)(this.program.getOMods()));
+        this.program.debugDumpOrds();
+        this.program.debugDump(); 
     }
 
     /** 
@@ -190,10 +237,16 @@ public class Compiler
             throw new CompilerException(CompilerError.PARSE_NOT_YET_PERFORMED);
         }
 
-        this.typeChecker = new TypeChecker(modulle, config);
+        this.typeChecker = new TypeChecker(this);
 
         /* Perform typechecking/codegen */
         this.typeChecker.beginCheck();
+    }
+
+    public TypeChecker getTypeChecker()
+    {
+        // TODO: Should we do a check for if `doTypeCheck()` was called or not?
+        return this.typeChecker;
     }
 
     /* Perform code emitting */
@@ -209,7 +262,7 @@ public class Compiler
             throw new CompilerException(CompilerError.CONFIG_ERROR, "Missing a symbol mapper");
         }
         
-        SymbolMapper mapper;
+        SymbolMapperV2 mapper;
         string mapperType = config.getConfig("dgen:mapper").getText();
 
         if(cmp(mapperType, "hashmapper") == 0)
@@ -218,7 +271,7 @@ public class Compiler
         }
         else if(cmp(mapperType, "lebanese") == 0)
         {
-            mapper = new LebaneseMapper(typeChecker);
+            mapper = new LebanonMapper(typeChecker);
         }
         else
         {
@@ -247,6 +300,8 @@ public class Compiler
     }
 }
 
+// TODO: Move the below to utils
+// TODO: Make it do error checking on the  path provided and file-access rights
 /** 
  * Opens the source file at the given path, reads the data
  * and returns it
@@ -255,7 +310,7 @@ public class Compiler
  *   sourceFile = the path to the file to open
  * Returns: the source data
  */
-private string gibFileData(string sourceFile)
+public string gibFileData(string sourceFile)
 {
     File sourceFileFile;
     sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
@@ -297,7 +352,7 @@ void beginCompilation(string[] sourceFiles)
         outFile.open("tlangout.c", "w");
 
         /* Create a new compiler */
-        Compiler compiler = new Compiler(cast(string)fileBytes, outFile);
+        Compiler compiler = new Compiler(cast(string)fileBytes, sourceFile, outFile);
     
         /* Perform the compilation */
         compiler.compile();
@@ -434,7 +489,7 @@ unittest
         {
             File tmpFile;
             tmpFile.open("/tmp/bruh", "wb");
-            Compiler compiler = new Compiler(sourceText, tmpFile);
+            Compiler compiler = new Compiler(sourceText, testFileGood, tmpFile);
 
             // Lex
             compiler.doLex();
@@ -455,6 +510,7 @@ unittest
         // On Error
         catch(Exception e)
         {
+            gprintln("Yo: "~e.toString(), DebugType.ERROR);
             gprintln("Yo, we should not be getting this but rather ONLY TErrors, this is a bug to be fixed", DebugType.ERROR);
             assert(false);
         }
@@ -494,7 +550,7 @@ unittest
         {
             File tmpFile;
             tmpFile.open("/tmp/bruh", "wb");
-            Compiler compiler = new Compiler(sourceText, tmpFile);
+            Compiler compiler = new Compiler(sourceText, testFileFail, tmpFile);
 
             // Lex
             compiler.doLex();

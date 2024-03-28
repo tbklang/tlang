@@ -229,6 +229,16 @@ public final class CompilerConfiguration
             config.addConfig(ConfigEntry("types:max_width", 8));
         }
 
+        /**
+         * Set the default search paths to be searched
+         *
+         * These paths are, namely: (TODO) 
+         */
+        import std.file;
+        string[] searchPaths = [getcwd()];
+        searchPaths = []; // TODO: Disabling for now
+        config.addConfig(ConfigEntry("modman:path", searchPaths));
+
         return config;
     }
 }

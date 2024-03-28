@@ -1,4 +1,4 @@
-#1/bin/sh
+#!/bin/sh
 
 # Compile C to object file as library to link in
 gcc source/tlang/testing/file_io.c -c -o file_io.o

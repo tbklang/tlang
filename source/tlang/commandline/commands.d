@@ -38,7 +38,7 @@ public enum VerbosityLevel
 mixin template BaseCommand()
 {
     @ArgPositional("source file", "The source file to compile")
-    string sourceFile;
+    string sourceFile; // TODO: Should accept a list in the future maybe
 
     @ArgNamed("verbose|v", "Verbosity level")
     @(ArgConfig.optional)
@@ -149,7 +149,7 @@ struct compileCommand
             /* Begin lexing process */
             File outFile;
             outFile.open(outputFilename, "w");
-            Compiler compiler = new Compiler(sourceText, outFile);
+            Compiler compiler = new Compiler(sourceText, sourceFile, outFile);
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
@@ -161,8 +161,6 @@ struct compileCommand
 
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
 
             /* Perform typechecking/codegen */
             compiler.doTypeCheck();
@@ -217,7 +215,7 @@ struct lexCommand
             file.close();
 
             /* Begin lexing process */
-            Compiler compiler = new Compiler(sourceText, File());
+            Compiler compiler = new Compiler(sourceText, sourceFile, File());
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
@@ -263,7 +261,7 @@ struct parseCommand
             file.close();
 
             /* Begin lexing process */
-            Compiler compiler = new Compiler(sourceText, File());
+            Compiler compiler = new Compiler(sourceText, sourceFile, File());
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
@@ -274,8 +272,6 @@ struct parseCommand
 
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
         }
         catch(TError t)
         {
@@ -312,7 +308,7 @@ struct typecheckCommand
             file.close();
 
             /* Begin lexing process */
-            Compiler compiler = new Compiler(sourceText, File());
+            Compiler compiler = new Compiler(sourceText, sourceFile, File());
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
@@ -323,8 +319,6 @@ struct typecheckCommand
 
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
 
             /* Perform typechecking/codegen */
             compiler.doTypeCheck();

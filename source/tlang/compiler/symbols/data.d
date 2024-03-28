@@ -10,78 +10,151 @@ import gogga;
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
 
-/**
-* TODO: Implement the blow and use them
-*
-* These are just to use for keeping track of what
-* valid identifiers are.
-*
-* Actually it might be, yeah it will
-*/
-
-public class Program
+/** 
+ * Represents a program made up of one or more
+ * module(s)
+ */
+public final class Program : Container
 {
-    private string moduleName;
-    private Program[] importedModules;
+    /** 
+     * Modules this program is made up of
+     */
+    private Module[] modules;
 
-    private Statement[] statements;
-
-    this(string moduleName)
+    this()
     {
-        this.moduleName = moduleName;
+
+    }
+
+    /** 
+     * Adds a new `Module` to this program
+     *
+     * Params:
+     *   newModule = the new `Module` to add
+     */
+    public void addModule(Module newModule)
+    {
+        this.modules ~= newModule;
+    }
+
+    /** 
+     * Returns the list of all modules which
+     * make up this program
+     *
+     * Returns: the array of modules
+     */
+    public Module[] getModules()
+    {
+        return this.modules;
+    }
+
+    public Statement[] search(TypeInfo_Class clazzType)
+    {
+        // TODO: Implement me
+        return [];
+    }
+
+    public bool replace(Statement thiz, Statement that)
+    {
+        // TODO: Implement me
+        return false;
     }
 
     public void addStatement(Statement statement)
     {
-        statements ~= statement;
+        assert(cast(Module)statement);
+        this.modules ~= cast(Module)statement;
     }
 
-    public static StatementType[] getAllOf(StatementType)(StatementType, Statement[] statements)
+    public void addStatements(Statement[] statements)
     {
-        StatementType[] statementsMatched;
-
         foreach(Statement statement; statements)
         {
-            /* TODO: Remove null, this is for unimpemented */
-            if(statement !is null && cast(StatementType)statement)
-            {
-                statementsMatched ~= cast(StatementType)statement;
-            }
+            addStatement(statement);
         }
-
-        return statementsMatched;
     }
 
-    public Variable[] getGlobals()
-    {
-        Variable[] variables;
-
-        foreach(Statement statement; statements)
-        {
-            if(typeid(statement) == typeid(Variable))
-            {
-                variables ~= cast(Variable)statement;
-            }
-        }
-
-        return variables;
-    }
-
-    /* TODO: Make this use weights */
     public Statement[] getStatements()
     {
-        /* Re-ordered by lowest wieght first */
-        Statement[] stmntsRed;
+        return cast(Statement[])this.modules;
+    }
 
-        bool wCmp(Statement lhs, Statement rhs)
+
+    // TODO: Clean up
+    import tlang.compiler.modman : ModuleEntry;
+    public bool isModulePresent(ModuleEntry ent)
+    {
+        foreach(string key; this.modsMap.keys())
         {
-            return lhs.weight < rhs.weight;
+            if(key == ent.getName())
+            {
+                return true;
+            }
         }
-        import std.algorithm.sorting;
-        stmntsRed = sort!(wCmp)(statements).release;
-    
 
-        return stmntsRed;
+        return false;
+    }
+
+    // TODO: Clean up
+    private Module[string] modsMap;
+    public void markAsVisited(ModuleEntry ent)
+    {
+        this.modsMap[ent.getName()] = null; // TODO: You should then call set when done
+    }
+
+    // TODO: Clean up
+    public void setModule(ModuleEntry ent, Module mod)
+    {
+        // TODO: Sanity check for already present?
+        this.modsMap[ent.getName()] = mod;
+        this.insertOrds ~= mod;
+        this.modules ~= mod;
+
+        // Parent the given Module to the Program
+        mod.parentTo(this);
+        // (TODO: Should this not be explctly done within the parser)
+    }
+
+    // TODO: Clean up
+    public Module[] getMods()
+    {
+        return this.modsMap.values();
+    }
+
+    // TODO: Remove (this is just for testing the order of insertion)
+    private Module[] insertOrds;
+    public Module[] getOMods()
+    {
+        return this.insertOrds;
+    }
+
+    public void debugDumpOrds()
+    {
+        import niknaks.debugging : dumpArray;
+        import std.stdio : writeln;
+        Module[] insertOrds = this.insertOrds;
+        writeln(dumpArray!(insertOrds));
+    }
+
+    public void debugDump()
+    {
+        gprintln("Dumping modules imported into program:");
+        import niknaks.debugging : dumpArray;
+        import std.stdio : writeln;
+        Module[] modulesImported = this.modules;
+        writeln(dumpArray!(modulesImported));
+    }
+
+    /** 
+     * Returns an informative string about the
+     * program's details along with the modules
+     * it is made up of
+     *
+     * Returns: a string
+     */
+    public override string toString()
+    {
+        return "Program [name: TODO, modules: "~to!(string)(this.modules)~"]";
     }
 }
 

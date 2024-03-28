@@ -1,0 +1,3 @@
+module alone;
+
+int k;
