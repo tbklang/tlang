@@ -4,6 +4,10 @@ import gogga;
 import std.file : isDir;
 import std.path : isAbsolute;
 
+import niknaks.arrays : isPresent;
+import std.string : format;
+import std.string : replace;
+
 // TODO: We may want to throw an exception whilst searching
 // ... as to which path is invalid
 import tlang.compiler.modman.exceptions;
@@ -303,8 +307,6 @@ public final class ModuleManager
              * the module's new short name by taking
              * the tail end of its name.
              */
-            import niknaks.arrays : isPresent;
-            import std.string : format;
             if(!isPresent(modName, '.'))
             {
                 gprintln
@@ -342,7 +344,6 @@ public final class ModuleManager
                  * Set new module name to `c` (`back()`)
                  * and make relativeDir `bruh/` (`popBack()`)
                  */
-                import std.string : replace;
                 auto splitter = pathSplitter(replace(modName, ".", "/"));
                 splitter.popBack();
 
