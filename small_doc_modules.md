@@ -240,7 +240,7 @@ This method is at the core of searching, most other methods are either called _f
 
 ##### Parameters
 
-Firstly this method takes in a `string[]` of absolute paths to directories. Normally this will be passed a `this.searchPaths`, meaning that effectievly the way this method is used is that it will be perfortming searches from those paths.
+Firstly this method takes in a `string[]` of absolute paths to directories. Normally this will be passed a `this.searchPaths`, meaning that effectively the way this method is used is that it will be performing searches from those paths.
 
 Secondly we have the `modName` parameter. This one is rather self-explanatory - it is the _module's name_ we are searching for.
 
@@ -250,7 +250,7 @@ Lastly, we have the `isDirect` parameter which has a default value of `true`. Th
 
 ##### Return value
 
-The return value is a `bool` and is `true` when a `MdouleEntry` is found, `falsde` otherwise. This is just so you know whether or not the referebnce parwemetert `found` was updated or not; i.e. if a modukle by the given name was found or nmot.
+The return value is a `bool` and is `true` when a `ModuleEntry` is found, `false` otherwise. This is just so you know whether or not the reference parameter `found` was updated or not; i.e. if a module by the given name was found or not.
 
 ---
 
@@ -264,7 +264,7 @@ source/tlang/testing/modules/
 │   └── c.t
 ```
 
-Now if we were searching for the modules named `a` or `b` and gave the `directories` of `["source/tlang/testing/modukes/"]` then we would find those tow modules (ins eeprate calls of couirse) immediately within the shallow search performed.
+Now if we were searching for the modules named `a` or `b` and gave the `directories` of `["source/tlang/testing/modukes/"]` then we would find those tow modules (ins separate calls of course) immediately within the shallow search performed.
 
 However, if we searched for a module named `niks.c` with the same directories provided we would **not** find a file named `c.t` within the directory of `source/tlang/testing/modules/`. Now, if `isDirect` is set to `true` then what happens is as follows:
 
@@ -277,8 +277,8 @@ TODO: We should do check here for . in `modName` and then enter loop and calcula
     b. We then take the module's name, say `niks.c` and replace the `.`s with `/`s. Now we have `niks/c`.
     c. We then remove the tail end such that we just have `bruh/`. Let's call this `relativeDir`.
     d. Now we construct a new search path by combining the following `directory` + "/" + `relativeDir`. Call this result `newSearchPath`.
-2. Each iteration of the above stores their respective `newSearchPath` into an array called `newPaths`. We currently do **NOT** (TODO: Optimize it later) stop when we found a file which exists, so technically all of these `newSearchPath`(s) are constructed to only be checked for avlidity later. This checking is performed later.
-3. Now we do a recursive call to `find(...)` with `newPaths` as the search directories, the module name we search for is then that of `newModName`. Following the example that means we are searcvhing for a module named `c` in the search `directories` calculated, in this case, as `["source/tlang/testing/modules/niks"]`. Importantly, however, we pass `isDirect=false` for this call because we have calculated all possible paths just from the `modName` provided, so we just need to do one nested call to search a modified `modName` (see `newModName`) in the modified search directories (see `newPaths`).
+2. Each iteration of the above stores their respective `newSearchPath` into an array called `newPaths`. We currently do **NOT** (TODO: Optimize it later) stop when we found a file which exists, so technically all of these `newSearchPath`(s) are constructed to only be checked for validity later. This checking is performed later.
+3. Now we do a recursive call to `find(...)` with `newPaths` as the search directories, the module name we search for is then that of `newModName`. Following the example that means we are searching for a module named `c` in the search `directories` calculated, in this case, as `["source/tlang/testing/modules/niks"]`. Importantly, however, we pass `isDirect=false` for this call because we have calculated all possible paths just from the `modName` provided, so we just need to do one nested call to search a modified `modName` (see `newModName`) in the modified search directories (see `newPaths`).
 
 TODFO
 
