@@ -17,6 +17,21 @@ import tlang.compiler.modman.exceptions;
 
 import tlang.compiler.core;
 
+import tlang.compiler.parsing.exceptions : SyntaxError;
+import tlang.compiler.symbols.check : SymbolType, getSymbolType;
+import tlang.compiler.lexer.core : Token;
+
+import tlang.compiler.lexer.core;
+import tlang.compiler.lexer.kinds.basic : BasicLexer;
+
+import std.stdio : File;
+import std.exception : ErrnoException;
+
+import std.path;
+import std.file : dirEntries, DirEntry, SpanMode;
+import std.conv : to;
+import std.string : endsWith, strip, replace;
+
 /** 
  * Represents the module-name to
  * file path mapping
@@ -416,10 +431,23 @@ public final class ModuleManager
         return false;
     }
 
-    import tlang.compiler.parsing.exceptions : SyntaxError;
-    import tlang.compiler.symbols.check : SymbolType, getSymbolType;
-    import tlang.compiler.lexer.core : Token;
-
+    
+    /** 
+     * Given an expected symbol and the
+     * actual token that was received
+     * this compares the types of both
+     * to one another, if equal
+     * then nothing is done, otherwise
+     * and exception is thrown
+     *
+     * Params:
+     *   expected = the expected
+     * `SymbolType`
+     *   got = the received `Token`\
+     * Throws:
+     *   SyntaxError if there is a
+     * mismatch
+     */
     private static expect(SymbolType expected, Token got)
     {
         SymbolType actualType = getSymbolType(got);
@@ -444,9 +472,6 @@ public final class ModuleManager
      */
     private bool skimModuleDeclaredName(string modulePath, ref string skimmedName)
     {
-        import tlang.compiler.lexer.core;
-        import tlang.compiler.lexer.kinds.basic : BasicLexer;
-
         gprintln("Begin skim for: "~modulePath);
 
         try
@@ -481,7 +506,17 @@ public final class ModuleManager
         }
     }
 
-
+    /** 
+     * Given a mdoule entry this
+     * will read all of its bytes
+     *
+     * Params:
+     *   ent = the module entry
+     * Returns: the contents
+     * Throws:
+     *   ModuleManagerError if no
+     * such module could be opened
+     */
     public string readModuleData_throwable(ModuleEntry ent)
     {
         string source;
@@ -495,10 +530,17 @@ public final class ModuleManager
             throw new ModuleManagerError(this, "Could not open module '"~ent.moduleName~"' at '"~ent.filename~"' for reading");
         }
     }
-
-    import std.stdio;
-    import std.exception : ErrnoException;
     
+    /** 
+     * Given a module entry this
+     * will read all of its bytes
+     *
+     * Params:
+     *   ent = the module entry
+     *   source = the retrieved bytes
+     * Returns: `true` if the read
+     * succeeded, `false` otherwise
+     */
     private static bool readModuleData(ModuleEntry ent, ref string source)
     {
         File modFile;
@@ -528,17 +570,21 @@ public final class ModuleManager
             return false;
         }
     }
-
-    import std.path;
-    import std.file : dirEntries, DirEntry, SpanMode;
-    import std.conv : to;
-    import std.string : endsWith, strip, replace;
     
+    /** 
+     * Converts all slashes to
+     * dots
+     *
+     * Params:
+     *   strIn = the string to
+     * process
+     * Returns: tghe translated
+     * string
+     */
     private static string slashToDot(string strIn)
     {
         return replace(strIn, "/", ".");
     }
-
 
     /** 
      * Validates the given paths, and only
