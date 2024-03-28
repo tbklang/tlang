@@ -219,6 +219,7 @@ It then also contains the following methods:
 | `addSearchPath(string)`  | `void`      | Adds the given path to the set of search paths |
 | `addSearchPaths(string[])` | `void`    | Adds each of the provided paths to the set of search paths |
 | `find(string)`           | `ModuleEntry`| This searches all search paths for a _module file_ with the given _module name_ and then returns the `ModuleEntry` for it if found, else a `ModuleManagerError` is thrown |
+| `findAllTFilesShallow(string)` | `string[]` | Searches the directory at the given path and returns the absolute paths of all files ending in `.t` |
 
 #### How searching works
 
@@ -264,7 +265,7 @@ source/tlang/testing/modules/
 │   └── c.t
 ```
 
-Now if we were searching for the modules named `a` or `b` and gave the `directories` of `["source/tlang/testing/modukes/"]` then we would find those tow modules (ins separate calls of course) immediately within the shallow search performed.
+Now if we were searching for the modules named `a` or `b` and gave the `directories` of `["source/tlang/testing/modules/"]` then we would find those tow modules (ins separate calls of course) immediately within the shallow search performed.
 
 However, if we searched for a module named `niks.c` with the same directories provided we would **not** find a file named `c.t` within the directory of `source/tlang/testing/modules/`. Now, if `isDirect` is set to `true` then what happens is as follows:
 
@@ -278,8 +279,6 @@ TODO: We should do check here for . in `modName` and then enter loop and calcula
     c. We then remove the tail end such that we just have `bruh/`. Let's call this `relativeDir`.
     d. Now we construct a new search path by combining the following `directory` + "/" + `relativeDir`. Call this result `newSearchPath`.
 2. Each iteration of the above stores their respective `newSearchPath` into an array called `newPaths`. We currently do **NOT** (TODO: Optimize it later) stop when we found a file which exists, so technically all of these `newSearchPath`(s) are constructed to only be checked for validity later. This checking is performed later.
-3. Now we do a recursive call to `find(...)` with `newPaths` as the search directories, the module name we search for is then that of `newModName`. Following the example that means we are searching for a module named `c` in the search `directories` calculated, in this case, as `["source/tlang/testing/modules/niks"]`. Importantly, however, we pass `isDirect=false` for this call because we have calculated all possible paths just from the `modName` provided, so we just need to do one nested call to search a modified `modName` (see `newModName`) in the modified search directories (see `newPaths`).
+3. Now we do a recursive call to `find(...)` with `newPaths` as the search directories, the module name we search for is then that of `newModName`. Following the example that means we are searching for a module named `c` in the search `directories` calculated, in this case, as `["source/tlang/testing/modules/niks"]`. Importantly, however, we pass `isDirect=false` for this call because we have calculated all possible paths just from the `modName` provided, so we just need to do one nested call to search a modified `modName` (see `newModName`) in the modified search directories (see `newPaths`). Basically, we have no need to let the inner recursive call to try find the module if it cannot it should either find it in the inner call's shallow search or not at all.
 
-TODFO
-
-| `findAllTFilesShallow(string)` | `string[]` | Searches the directory at the given path and returns the absolute paths of all files ending in `.t` |
+> Point `3` basically shows how we used recursion to reduce code bloat and offload work for validation searching - we could have implemented it without recursion and validated on the fly but we didn't.
