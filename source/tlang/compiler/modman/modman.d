@@ -664,16 +664,3 @@ unittest
     bool res = ModuleManager.validate(badPaths);
     assert(!res);
 }
-
-
-/**
- * Pretend that we importing modules
- * from a module `source/tlang/testing/modules/a.t`
- *
- * Let's see how we would resolve modules
- * from its point of view
- */
-unittest
-{
-    
-}
