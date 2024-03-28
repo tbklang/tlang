@@ -188,6 +188,19 @@ public final class ModuleManager
         this.searchPaths ~= absPath;
     }
 
+    /** 
+     * Searches for a module entry
+     * by the given name
+     *
+     * Params:
+     *   modName = the name to search
+     * for
+     * Returns: a `ModuleEntry`
+     * Throws:
+     *    ModuleManagerError if no
+     * such module entry could be
+     * found
+     */
     public ModuleEntry find(string modName)
     {
         ModuleEntry foundEntry;
@@ -202,6 +215,18 @@ public final class ModuleManager
         }
     }
 
+    /** 
+     * Searches for a module entry
+     * by the given name
+     *
+     * Params:
+     *   modName = the name to search
+     * for
+     *   found = the `ModuleEntry` found
+     * (if so)
+     * Returns: `true` if found, otherwise
+     * `false`
+     */
     public bool find(string modName, ref ModuleEntry found)
     {
         return find(this.searchPaths, modName, found);
@@ -238,6 +263,15 @@ public final class ModuleManager
         return allTFiles;
     }
 
+    /** 
+     * Given a dotted path this will
+     * extract the last element
+     *
+     * Params:
+     *   dottedPath = the dotted path
+     * to derive from
+     * Returns: the tail end
+     */
     private static string tailEndGet(string dottedPath)
     {
         // Replace all `.`s with `/` such that we
@@ -250,6 +284,20 @@ public final class ModuleManager
         return tailEnd;
     }
 
+    /** 
+     * Searches the given directories 
+     * Params:
+     *   directories = paths to search
+     *   modName = the module name
+     * to search for
+     *   found = the found `ModuleEntry`
+     *   isDirect = in the case of not
+     * finding the module in a shallow search
+     * this controls if a nested search
+     * should be conducted (default: `true`)
+     * Returns: `true` if found, otherwise
+     * `false`
+     */
     private bool find(string[] directories, string modName, ref ModuleEntry found, bool isDirect = true)
     {
         gprintln("Request to find module '"~modName~"' in directories: "~to!(string)(directories));
