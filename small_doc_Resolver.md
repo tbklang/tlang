@@ -39,10 +39,9 @@ Let us quickly provide a breakdown of what methods the `Container` interface typ
 
 The _program_ holds a bunch of _modules_ as its _body statements_ (hence being a `Container` type). A program,, unlike a module, is not an `Entity` - meaning it has no name associated with it **but** it is the root of the AST tree.
 
-TODO: Method table
-
 | Method                                | Return type | Description           |
 |---------------------------------------|-------------|-----------------------|
+| `getModules()`                        | `Module[]`  | Returns the list of all modules which make up this program. |
 | `setEntryModule(ModuleEntry, Module)` | `void`      | Given a module entry this will assign (map) a module to it. Along with doing this the incoming module shall be added to the body of this `Program` and this module will have its parent set to said `Program`. |
 | `markEntryAsVisited(ModuleEntry)`     | `void`      | Marks the given entry as present. This effectively means simply adding the name of the incoming module entry as a key to the internal map but without it mapping to a module in particular. |
 | `isEntryPresent(ModuleEntry)`         | `bool`      | Check if the given module entry is present. This is based on whether a module entry within the internal map is present which has a name equal to the incoming entry. |
