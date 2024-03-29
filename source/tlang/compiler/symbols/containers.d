@@ -34,6 +34,17 @@ public Statement[] weightReorder(Statement[] statements)
 
 // TODO: Honestly all contains should be a kind-of `MStatementSearchable` and `MStatementReplaceable`
 // AND MCloneable
+/** 
+ * Represents any sort of type
+ * that can store `Statement`(s)
+ * (AST nodes) and retrieve them
+ * again at a later stage
+ *
+ * Additionally also means that
+ * the `MStatementSearchable` and
+ * `MStatementReplaceable` types
+ * are implemented
+ */
 public interface Container : MStatementSearchable, MStatementReplaceable
 {
     /** 
