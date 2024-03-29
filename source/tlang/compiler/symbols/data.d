@@ -48,7 +48,7 @@ public final class Program : Container
      * Params:
      *   newModule = the new `Module` to add
      */
-    private void addModule(Module newModule)
+    public void addModule(Module newModule)
     {
         addStatement(newModule);
     }
