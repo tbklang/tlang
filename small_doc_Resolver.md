@@ -37,6 +37,21 @@ Let us quickly provide a breakdown of what methods the `Container` interface typ
 
 #### Program API
 
+The _program_ holds a bunch of _modules_ as its _body statements_ (hence being a `Container` type). A program,, unlike a module, is not an `Entity` - meaning it has no name associated with it **but** it is the root of the AST tree.
+
+TODO: Method table
+
+| Method                                | Return type | Description           |
+|---------------------------------------|-------------|-----------------------|
+| `setEntryModule(ModuleEntry, Module)` | `void`      | Given a module entry this will assign (map) a module to it. Along with doing this the incoming module shall be added to the body of this `Program` and this module will have its parent set to said `Program`. |
+| `markEntryAsVisited(ModuleEntry)`     | `void`      | Marks the given entry as present. This effectively means simply adding the name of the incoming module entry as a key to the internal map but without it mapping to a module in particular. |
+| `isEntryPresent(ModuleEntry)`         | `bool`      | Check if the given module entry is present. This is based on whether a module entry within the internal map is present which has a name equal to the incoming entry. |
+
+
+Some of the methods above are related to the `Container`-side of the `Program` type. These methods are useful once the `Program` is already fully constructed, i.e. all parsing has been completed.
+
+Some of the _other_ methods relating to the `markEntryAsVisited(ModuleEntry)` and so forth have to do with the mechanism by which the parser adds new modules to the program during parsing and ensures that no cycles are traversed (i.e. when a module is already being visited it should not be visited again).
+
 ### Resolution API
 
 We may as well jump right into the API because it is, for the most part, relatively simple
