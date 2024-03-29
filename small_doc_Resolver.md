@@ -127,7 +127,7 @@ do
     );
 
     // If the parent of the currentEntity
-    // is what we were seraching for, then
+    // is what we were searching for, then
     // yes, we found it to be a descendant
     // of it
     if(parentOfCurrent == c)
