@@ -53,4 +53,42 @@ Some of the _other_ methods relating to the `markEntryAsVisited(ModuleEntry)` an
 
 ### Resolution API
 
-We may as well jump right into the API because it is, for the most part, relatively simple
+Now that we have a good idea of the types involved we can take a look at the API which the resolver has to offer and how it may be used in order to perform the resolution of _entities_.
+
+Let's first take a look at the constructor that the `Resolver` has:
+
+```d
+this
+(
+    Program program,
+    TypeChecker typeChecker
+)
+```
+
+This constructs a new resolver with the given root program and the type checking instance. This implies you must have performed parsing, constructed a `TypeChecker` and **only then** could you instantiate a resolver.
+
+Now that we know how to construct a resolver, let's see what methods it makes available to every component from the `TypeChecker` (as it is constructed here) and onwards:
+
+| Method                    | Return type | Description                           |
+|---------------------------|-------------|---------------------------------------|
+| `generateNameBest(Entity)`| `string`    | Generate the absolute full path of the given entity without specifying which anchor point to use. |
+| 
+
+
+#### How `generateNameBest(Entity)` works
+
+The definition of this method is suspiciously simple:
+
+```d
+public string generateNameBest(Entity entity)
+{
+    assert(entity);
+    return generateName(this.program, entity);
+}
+```
+
+So what's going on? Well...
+
+What this will do is call `generateName(Container, Entity)` with the container set to the `Program`, this will therefore cause the intended behavior described above - see the aforementioned method for the reason as to why this works out.
+ 
+This will climb the AST tree until it finds the containing `Module` of the given entity and then it will generate the name using that as the anchor - hence giving you the absolute path (because remember, a `Program` has no name, next best is the `Module`).
