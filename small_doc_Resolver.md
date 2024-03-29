@@ -71,9 +71,10 @@ Now that we know how to construct a resolver, let's see what methods it makes av
 
 | Method                    | Return type | Description                           |
 |---------------------------|-------------|---------------------------------------|
+| `isDescendant(Container, Entity)` | `bool` | Returns `true` entity `e` is `c` or is within  (contained under `c`), `false` otherwise |
+| `generateName0(Container, Entity)` | `string[]` | Generates the components of the path from a given entity up to (and including) the given container. The latter implies that the given `Container` must also be a kind-of `Entity` such that a name can be generated from it. |
 | `generateNameBest(Entity)`| `string`    | Generate the absolute full path of the given entity without specifying which anchor point to use. |
-| 
-
+| `generateName(Container, Entity)` | `string` |  Given an entity and a container this will generate the entity's full path relative to the given container. If the container is a `Program` then the absolute name of the entity is derived. |
 
 #### How `generateNameBest(Entity)` works
 
@@ -92,3 +93,81 @@ So what's going on? Well...
 What this will do is call `generateName(Container, Entity)` with the container set to the `Program`, this will therefore cause the intended behavior described above - see the aforementioned method for the reason as to why this works out.
  
 This will climb the AST tree until it finds the containing `Module` of the given entity and then it will generate the name using that as the anchor - hence giving you the absolute path (because remember, a `Program` has no name, next best is the `Module`).
+
+#### How `generateName(Container, Entity)` works
+
+The definition of this method is where the real complexity is housed. THis also accounts for how the previous method, `generateNameBest(Entity)`, is implemented.
+
+TODO: Add this
+
+#### How `generateName0(Container, Entity)` works
+
+Let's first look at how `generateName0(Container relativeTo, Entity entity)` is implemented. The idea behind this method is to generate an array of strings, i.e. `string[]`, which contains the highest node in the hierachy to the lowest node (then given entity) from left to right respectively.
+
+
+As mentioned the given container, `relativeTo`, has to be a kind-of `Entity` as well such that a name can be generated for it, hence we ensure that the developer is not misusing it with the first check:
+
+```d
+Entity containerEntity = cast(Entity) relativeTo;
+assert(containerEntity);
+```
+
+**Steps**:
+
+1. The first check we then do is to see whether or not the `relativeTo == entity`
+    a. _If so_, then we simply return a singular path element of `containerEntity.getName()`
+2. The next check is to check whether or not the given entity is a descendant, either directly or indirectly, of the given container
+    a. _If so_, then we begin generating the elements by swimming up the ancestor tree, stopping once the `relativeTo` is reached
+3. The last check, if neither checks $1$ or $2$ were true, is to return `null` (an empty array)
+
+
+The above steps are shown now below in their code form:
+
+```d
+/**
+ * If the Entity and Container are the same then
+ * just returns its name
+ */
+if (relativeTo == entity)
+{
+    return [containerEntity.getName()];
+}
+/**
+ * If the Entity is contained within the Container
+ */
+else if (isDescendant(relativeTo, entity))
+{
+    string[] items;
+
+    Entity currentEntity = entity;
+    do
+    {
+        items ~= currentEntity.getName();
+
+        /**
+         * So far all objects we have being used
+         * of which are kind-of Containers are also
+         * and ONLY also kind-of Entity's hence the
+         * cast should never fail.
+         * 
+         * This method is never called with,
+         * for example, a `Program` relativeTo.
+         */
+        assert(cast(Entity) currentEntity.parentOf());
+        currentEntity = cast(Entity)(currentEntity.parentOf());
+    }
+    while (currentEntity != relativeTo);
+
+    /* Add the relative to container */
+    items ~= containerEntity.getName();
+
+    return items;
+}
+/** 
+ * If not
+ */
+else
+{
+    return null;
+}
+```
