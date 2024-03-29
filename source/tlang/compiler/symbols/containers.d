@@ -47,7 +47,7 @@ public interface Container : MStatementSearchable, MStatementReplaceable
     public void addStatement(Statement statement);
 
     /** 
-     * Appends the list of statemnets
+     * Appends the list of statements
      * (in order) to this container's
      * body
      *
