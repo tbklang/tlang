@@ -301,7 +301,7 @@ The second set of methods relate to the resolution facilities made available whi
 | `resolveWithin(Container, Predicate!(Entity), ref Entity[])` | `void` | Performs a horizontal-level search of the given `Container`, returning a found `Entity` when the predicate supplied returns a positive verdict on said entity then we add an entry to the ref parameter |
 | `resolveWithin(Container, Predicate!(Entity))` | `Entity` | Performs a horizontal-level search of the given `Container`, returning a found `Entity` when the predicate supplied returns a positive verdict on said entity then we return it. |
 | `resolveUp(Container, Predicate!(Entity))` | `Entity` | Performs a horizontal-based search of the given `Container`, returning the first `Entity` found when a positive verdict is returned from having the provided predicate applied to it. If the verdict is `false` then we do not give up immediately but rather recurse up the parental tree searching the container of the current container and applying the same logic. |
-| `resolveBest(Container, string)` | `Entity` | TODO: Add me |
+| `resolveBest(Container, string)` | `Entity` | This will do a best effort search starting for an entity with the given name. The search will start from the given container and perform a search within it, in the case no such entity is found there then it will recurse upwards, stopping when you reach the program-level. This also handles special cases such as dotted-paths, it can decode them and follow the trail to the intended entity. In the case that the container given is a `Program` then each name must either be solely a module name or a dotted-path beginning with one. In this mode nothing else is accepted, it effectively an absolute downwards (rather than potentially upwards search). |
 
 Only the important methods here will be mentioned. Methods pertaining to certain single-item return and predicate generation will not. For those please go examine the source code; see `resolution.d` for those codes.
 
@@ -442,6 +442,10 @@ else
     return null;
 }
 ```
+
+#### How _best-effort_ resolution works
+
+TODO: Add this
 
 ### Worked examples
 
