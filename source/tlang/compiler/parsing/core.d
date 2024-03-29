@@ -2553,14 +2553,14 @@ public final class Parser
         
         // TODO: Check here if already present
         Program prog = this.compiler.getProgram();
-        if(prog.isModulePresent(foundEnt))
+        if(prog.isEntryPresent(foundEnt))
         {
             // TODO: Skip?
             return;
         }
 
         // Mark it as visited
-        prog.markAsVisited(foundEnt);
+        prog.markEntryAsVisited(foundEnt);
 
         // Read in the module's contents
         string moduleSource = modMan.readModuleData_throwable(foundEnt);
@@ -2574,7 +2574,7 @@ public final class Parser
         Module pMod = parser.parse(foundEnt.getPath()); // TODO: This SHOULD cycle soon (as we haven't added correct checks yet)
 
         // TODO: Add entry and what else do we do?
-        prog.setModule(foundEnt, pMod);
+        prog.setEntryModule(foundEnt, pMod);
 
         gprintln("parseImport(): Leave", DebugType.WARNING);
     }
@@ -2632,8 +2632,8 @@ public final class Parser
             ModuleEntry curModEnt = ModuleEntry(moduleFilePath, moduleName);
             Program prog = this.compiler.getProgram();
 
-            prog.markAsVisited(curModEnt); // TODO: Could not call?
-            prog.setModule(curModEnt, modulle);
+            prog.markEntryAsVisited(curModEnt); // TODO: Could not call?
+            prog.setEntryModule(curModEnt, modulle);
         }
 
         /* TODO: do `lexer.hasTokens()` check */

@@ -220,9 +220,6 @@ public class Compiler
         }
 
         // Print out module tree
-        gprintln("Module tree: "~to!(string)(this.program.getMods()));
-        // gprintln("Module ongod: "~to!(string)(this.program.getOMods()));
-        this.program.debugDumpOrds();
         this.program.debugDump(); 
     }
 

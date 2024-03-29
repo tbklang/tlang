@@ -10,17 +10,33 @@ import gogga;
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
 
+// Module entry management
+import tlang.compiler.modman : ModuleEntry;
+
 /** 
- * Represents a program made up of one or more
- * module(s)
+ * The _program_ holds a bunch of _modules_ as
+ * its _body statements_ (hence being a `Container` type).
+ * A program, unlike a module, is not an `Entity` - meaning
+ * it has no name associated with it **but** it is the root
+  * of the AST tree.
  */
 public final class Program : Container
 {
+    /** 
+     * Module entry to module mappings
+     *
+     * Used for visitation marking
+     */
+    private Module[string] modsMap;
+
     /** 
      * Modules this program is made up of
      */
     private Module[] modules;
 
+    /** 
+     * Constructs a new empty `Program`
+     */
     this()
     {
 
@@ -32,9 +48,9 @@ public final class Program : Container
      * Params:
      *   newModule = the new `Module` to add
      */
-    public void addModule(Module newModule)
+    private void addModule(Module newModule)
     {
-        this.modules ~= newModule;
+        addStatement(newModule);
     }
 
     /** 
@@ -45,6 +61,7 @@ public final class Program : Container
      */
     public Module[] getModules()
     {
+        // TODO: Should this not use the modmap.values()?
         return this.modules;
     }
 
@@ -62,7 +79,9 @@ public final class Program : Container
 
     public void addStatement(Statement statement)
     {
+        // Should only be adding modules to a program
         assert(cast(Module)statement);
+
         this.modules ~= cast(Module)statement;
     }
 
@@ -79,10 +98,19 @@ public final class Program : Container
         return cast(Statement[])this.modules;
     }
 
-
-    // TODO: Clean up
-    import tlang.compiler.modman : ModuleEntry;
-    public bool isModulePresent(ModuleEntry ent)
+    /** 
+     * Check if the given module entry
+     * is present. This is based on whether
+     * a module entry within the internal
+     * map is present which has a name equal
+     * to the incoming entry
+     *
+     * Params:
+     *   ent = the module entry to test
+     * Returns: `true` if such an entry
+     * is present, otherwise `false`
+     */
+    public bool isEntryPresent(ModuleEntry ent)
     {
         foreach(string key; this.modsMap.keys())
         {
@@ -95,47 +123,48 @@ public final class Program : Container
         return false;
     }
 
-    // TODO: Clean up
-    private Module[string] modsMap;
-    public void markAsVisited(ModuleEntry ent)
+    /** 
+     * Marks the given entry as present.
+     * This effectively means simply adding
+     * the name of the incoming module entry
+     * as a key to the internal map but
+     * without it mapping to a module 
+     * in particular
+     *
+     * Params:
+     *   ent = the module entry to mark
+     */
+    public void markEntryAsVisited(ModuleEntry ent)
     {
         this.modsMap[ent.getName()] = null; // TODO: You should then call set when done
     }
 
-    // TODO: Clean up
-    public void setModule(ModuleEntry ent, Module mod)
+    /** 
+     * Given a module entry this will assign
+     * (map) a module to it. Along with doing
+     * this the incoming module shall be added
+     * to the body of this `Program` and this
+     * module will have its parent set to said
+     * `Program`.
+     *
+     * Params:
+     *   ent = the module entry
+     *   mod = the module itself
+     */
+    public void setEntryModule(ModuleEntry ent, Module mod)
     {
         // TODO: Sanity check for already present?
         this.modsMap[ent.getName()] = mod;
-        this.insertOrds ~= mod;
-        this.modules ~= mod;
+
+        // Add module to body
+        addModule(mod);
 
         // Parent the given Module to the Program
         mod.parentTo(this);
         // (TODO: Should this not be explctly done within the parser)
     }
 
-    // TODO: Clean up
-    public Module[] getMods()
-    {
-        return this.modsMap.values();
-    }
-
-    // TODO: Remove (this is just for testing the order of insertion)
-    private Module[] insertOrds;
-    public Module[] getOMods()
-    {
-        return this.insertOrds;
-    }
-
-    public void debugDumpOrds()
-    {
-        import niknaks.debugging : dumpArray;
-        import std.stdio : writeln;
-        Module[] insertOrds = this.insertOrds;
-        writeln(dumpArray!(insertOrds));
-    }
-
+    // TODO: Make this part of debug option
     public void debugDump()
     {
         gprintln("Dumping modules imported into program:");
@@ -154,7 +183,7 @@ public final class Program : Container
      */
     public override string toString()
     {
-        return "Program [name: TODO, modules: "~to!(string)(this.modules)~"]";
+        return "Program [modules: "~to!(string)(this.modules)~"]";
     }
 }
 
