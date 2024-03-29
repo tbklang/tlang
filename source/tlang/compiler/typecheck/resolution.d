@@ -31,7 +31,7 @@ public final class Resolver
     private TypeChecker typeChecker;
 
     /** 
-     * Comnstructs a new resolver with the gievn
+     * Constructs a new resolver with the given
      * root program and the type checking instance
      *
      * Params:
@@ -49,11 +49,19 @@ public final class Resolver
      * entity without specifying which anchor point
      * to use.
      *
+     * What this will do is call `generateName(Container, Entity)`
+     * with the container set to the `Program`,
+     * this will therefore cause the intended
+     * behavior described above - see the aforementioned
+     * method for the reason as to why this works
+     * out.
+     *
      * This will climb the AST tree until it finds
      * the containing `Module` of the given entity
      * and then it will generate the name using
      * that as the anchor - hence giving you the
-     * absolute path.
+     * absolute path (because remember, a `Program`
+     * has no name, next best is the `Module`).
      *
      * Params:
      *   entity = The Entity to generate the full absolute path for
@@ -63,36 +71,37 @@ public final class Resolver
     public string generateNameBest(Entity entity)
     {
         assert(entity);
-
-        // Easiest way to do this is to find the
-        // given entity's nearest container which
-        // is a Module and then generate from there
-        // as the anchor point
-        Container entityMod = findContainerOfType(Module.classinfo, entity);
-
-        return generateName(entityMod, entity);
+        return generateName(this.program, entity);
     }
 
-
-    /**
-    * Given an Entity generate it's full path relative to a given
-    * container, this is akin to `generateNameWithin()` in the
-    * sense that it will fail if the entity prvided is not
-    * contained by `relativeTo` - returning null
-    */
+    /** 
+     * Given an entity and a container this will
+     * generate the entity's full path relative
+     * to the given container.
+     *
+     * A special case is when the container is a
+     * `Program`, in that case the entity's containing
+     * `Module` will be found and the name will be
+     * generated relative to that. Since `Program`'s
+     * have no names, doing such a call gives you
+     * the absolute (full path) of the entity within
+     * the entire program as the `Module` is the
+     * second highest in the AST tree and first
+     * `Entity`-typed object, meaning first "thing"
+     * with a name.
+     *
+     * Params:
+     *   relativeTo = the container to generate relative
+     * to
+     *   entity = the entity to generate a name for
+     * Returns: the generated path
+     */
     public string generateName(Container relativeTo, Entity entity)
     {
-        // FIXME: (MODMAN) The relativeTo here (if we ever call with)
-        // ... a program will obviously cause the assertion to fail
-        // ... because Program's are not Entity(s) - the assertion
-        // ... is in the inner call
-        //
-        // For that we must have a `getRoot` (use `findContainerOfType`
-        // with the type set to `Module`) which resolves till it stops
-        // at the top of the parenthood tree of `entity`, then we should
-        // just early return `generateName_Internal(foundMod, entity)`
-        //
-        // Because as I said, a Program is not an Entity - IT HAS NO NAME!
+        assert(relativeTo);
+        assert(entity);
+
+        // Special case (see doc)
         if(cast(Program)relativeTo)
         {
             Container potModC = findContainerOfType(Module.classinfo, entity);
@@ -103,7 +112,7 @@ public final class Resolver
             return generateName(potMod, entity);
         }
 
-        string[] name = generateName_Internal(relativeTo, entity);
+        string[] name = generateName0(relativeTo, entity);
         string path;
         for (ulong i = 0; i < name.length; i++)
         {
@@ -118,28 +127,40 @@ public final class Resolver
         return path;
     }
 
-    private string[] generateName_Internal(Container relativeTo, Entity entity)
+    /** 
+     * Generates the components of the path from
+     * a given entity up to (and including) the
+     * given container. The latter implies that
+     * the given `Container` must also be a kind-of
+     * `Entity` such that a name can be generated
+     * from it.
+     *
+     * Params:
+     *   relativeTo = the container to generate
+     * up to (inclusively)
+     *   entity = the entity to start at
+     * Returns: an array of the named segments
+     * from the container-to-entity appearing in
+     * a left-to-right fashion. `null` is returned
+     * in the case that the given entity has no
+     * relation at all to the given container.
+     */
+    private string[] generateName0(Container relativeTo, Entity entity)
     {
-        /**
-        * TODO: Always make sure this holds
-        *
-        * All objects that implement Container so far
-        * are also Entities (hence they have a name)
-        */
         Entity containerEntity = cast(Entity) relativeTo;
         assert(containerEntity);
 
         /**
-        * If the Entity and Container are the same then
-        * just returns its name
-        */
+         * If the Entity and Container are the same then
+         * just returns its name
+         */
         if (relativeTo == entity)
         {
             return [containerEntity.getName()];
         }
         /**
-        * If the Entity is contained within the Container
-        */
+         * If the Entity is contained within the Container
+         */
         else if (isDescendant(relativeTo, entity))
         {
             string[] items;
@@ -150,13 +171,14 @@ public final class Resolver
                 items ~= currentEntity.getName();
 
                 /**
-                * TODO: Make sure this condition holds
-                *
-                * So far all objects we have being used
-                * of which are kind-of Containers are also
-                * and ONLY also kind-of Entity's hence the
-                * cast should never fail
-                */
+                 * So far all objects we have being used
+                 * of which are kind-of Containers are also
+                 * and ONLY also kind-of Entity's hence the
+                 * cast should never fail.
+                 * 
+                 * This method is never called with,
+                 * for example, a `Program` relativeTo.
+                 */
                 assert(cast(Entity) currentEntity.parentOf());
                 currentEntity = cast(Entity)(currentEntity.parentOf());
             }
@@ -167,10 +189,11 @@ public final class Resolver
 
             return items;
         }
-        /* If not */
+        /** 
+         * If not
+         */
         else
         {
-            //TODO: technically an assert should be here and the one in isDescdant removed
             return null;
         }
     }
@@ -189,29 +212,38 @@ public final class Resolver
     public bool isDescendant(Container c, Entity e)
     {
         /**
-        * If they are the same
-        */
+         * If they are the same
+         */
         if (c == e)
         {
             return true;
         }
         /**
-        * If not, check descendancy
-        */
+         * If not, check descendancy
+         */
         else
         {
             Entity currentEntity = e;
 
             do
             {
-                gprintln("c isdecsenat: "~to!(string)(c));
-                gprintln("currentEntity: "~to!(string)(currentEntity));
+                gprintln
+                (
+                    format("c isdecsenat: %s", c)
+                );
+                gprintln
+                (
+                    format("currentEntity: %s", currentEntity)
+                );
 
                 Container parentOfCurrent = currentEntity.parentOf();
-                gprintln("currentEntity(parent): "~to!(string)(parentOfCurrent));
+                gprintln
+                (
+                    format("currentEntity(parent): %s", parentOfCurrent)
+                );
 
                 // If the parent of the currentEntity
-                // is what we were seraching for, then
+                // is what we were searching for, then
                 // yes, we found it to be a descendant
                 // of it
                 if(parentOfCurrent == c)
@@ -222,9 +254,9 @@ public final class Resolver
                 // Every other case, use current entity's parent
                 // as starting point and keep climbing
                 //
-                // This would also be null (and stop the seasrch
+                // This would also be null (and stop the search
                 // if we reached the end of the tree in a case
-                // where the given container to anchor by iss
+                // where the given container to anchor by is
                 // the `Program` BUT was not that of a valid one
                 // that actually belonged to the same tree as
                 // the starting node. This becomes `null` because
