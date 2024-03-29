@@ -51,7 +51,7 @@ Some of the methods above are related to the `Container`-side of the `Program` t
 
 Some of the _other_ methods relating to the `markEntryAsVisited(ModuleEntry)` and so forth have to do with the mechanism by which the parser adds new modules to the program during parsing and ensures that no cycles are traversed (i.e. when a module is already being visited it should not be visited again).
 
-### Resolution API
+### The _resolver_
 
 Now that we have a good idea of the types involved we can take a look at the API which the resolver has to offer and how it may be used in order to generate names of _entities_ and perform the resolution of _entities_.
 
@@ -67,6 +67,8 @@ this
 
 This constructs a new resolver with the given root program and the type checking instance. This implies you must have performed parsing, constructed a `TypeChecker` and **only then** could you instantiate a resolver.
 
+### Name resolution
+
 Now that we know how to construct a resolver, let's see what methods it makes available to every component from the `TypeChecker` (as it is constructed here) and onwards.
 
 The first set of methods relate to the name generation of entities in the AST tree.
@@ -77,12 +79,6 @@ The first set of methods relate to the name generation of entities in the AST tr
 | `generateName0(Container, Entity)` | `string[]` | Generates the components of the path from a given entity up to (and including) the given container. The latter implies that the given `Container` must also be a kind-of `Entity` such that a name can be generated from it. |
 | `generateNameBest(Entity)`| `string`    | Generate the absolute full path of the given entity without specifying which anchor point to use. |
 | `generateName(Container, Entity)` | `string` |  Given an entity and a container this will generate the entity's full path relative to the given container. If the container is a `Program` then the absolute name of the entity is derived. |
-
-The second set of methods relate to the resolution facilities made available which allow one to search for entities based on various different sorts of custom _predicates_ and by name.
-
-| Method                    | Return type | Description                           |
-|---------------------------|-------------|---------------------------------------|
-| 
 
 #### How `isDescendant(Container, Entity)` works
 
@@ -291,6 +287,118 @@ else if (isDescendant(relativeTo, entity))
  */
 else
 {
+    return null;
+}
+```
+
+
+### Entity resolution
+
+The second set of methods relate to the resolution facilities made available which allow one to search for entities based on various different sorts of custom _predicates_ and by name.
+
+| Method                    | Return type | Description                           |
+|---------------------------|-------------|---------------------------------------|
+| `resolveWithin(Container, Predicate!(Entity), ref Entity[])` | `void` | Performs a horizontal-level search of the given `Container`, returning a found `Entity` when the predicate supplied returns a positive verdict on said entity then we add an entry to the ref parameter |
+| `resolveWithin(Container, Predicate!(Entity))` | `Entity` | Performs a horizontal-level search of the given `Container`, returning a found `Entity` when the predicate supplied returns a positive verdict on said entity then we return it. |
+| `resolveUp(Container, Predicate!(Entity))` | `Entity` | Performs a horizontal-based search of the given `Container`, returning the first `Entity` found when a positive verdict is returned from having the provided predicate applied to it. If the verdict is `false` then we do not give up immediately but rather recurse up the parental tree searching the container of the current container and applying the same logic. |
+| `resolveBest(Container, string)` | `Entity` | TODO: Add me |
+
+Only the important methods here will be mentioned. Methods pertaining to certain single-item return and predicate generation will not. For those please go examine the source code; see `resolution.d` for those codes.
+
+#### How resolution _within_ works
+
+The method `resolveWithin(Container, Predicate!(Entity), ref Entity[] collection)` is responsible for providing a facility where by a given predicate can be applied to all entities available at the immediate level of the given container.
+ 
+With this understanding one can imagine that the implementation if rather simple then:
+
+```d
+gprintln(format("resolveWithin(cntnr=%s) entered", currentContainer));
+Statement[] statements = currentContainer.getStatements();
+gprintln(format("resolveWithin(cntnr=%s) container has statements %s", currentContainer, statements));
+
+foreach(Statement statement; statements)
+{
+    Entity entity = cast(Entity) statement;
+
+    if(entity)
+    {
+        if(predicate(entity))
+        {
+            collection ~= entity;               
+        }
+    }
+}
+```
+
+Simply iterate over all _statements_ present within the container (immediately, not considering nested one) and apply the predicate to each. If a match is found then add it to the `collection`, otherwise continue iterating.
+
+#### How resolving _upwards_ works
+
+The method `resolveUp(Container currentContainer, Predicate!(Entity) predicate)` performs a horizontal-based search of the given `Container`, returning the first `Entity` found when a positive verdict is returned from having the provided predicate applied to it. We can see this below:
+
+```d
+/* Try to find the Entity wthin the current Container */
+gprintln(format("resolveUp(c=%s, pred=%s)", currentContainer, predicate));
+Entity entity = resolveWithin(currentContainer, predicate);
+gprintln(format("resolveUp(c=%s, pred=%s) within-search returned '%s'", currentContainer, predicate, entity));
+
+/* If we found it return it */
+if(entity)
+{
+    return entity;
+}
+```
+
+If the verdict is `false` _and_ the `currentContainer` is a kind-of `Program` then it means that there is no further up we can go and we must return `null`:
+
+```d
+else if(cast(Program)currentContainer)
+{
+    gprintln
+    (
+        format
+        (
+            "resolveUp(cntr=%s, pred=%s) Entity was not found and we cannot crawl any further up as we are at the Program container now",
+            currentContainer,
+            predicate
+        )
+    );
+
+    return null;
+}
+```
+
+However if the verdict is `false` but the `currentContainer` _is **not**_ a kind-of `Program` then we do not give up immediately but rather recurse up the parental tree searching the container of the current container and applying the same logic.
+
+```d
+/**
+ * We will ONLY ever have a `Container`
+ * here of which is ALSO an `Entity`.
+ */
+assert(cast(Entity)currentContainer);
+Container possibleParent = (cast(Entity) currentContainer).parentOf();
+
+gprintln
+(
+    format("resolveUp(c=%s, pred=%s) cur container typeid: %s", currentContainer, predicate, currentContainer)
+);
+gprintln
+(
+    format("resolveUp(c=%s, pred=%s) possible parent: %s", currentContainer, predicate, possibleParent)
+);
+
+/* Can we go up */
+if(possibleParent)
+{
+    return resolveUp(possibleParent, predicate);
+}
+/* If the current container has no parent container */
+else
+{
+    gprintln
+    (
+        format("resolveUp(c=%s, pred=%s) Simply not found ", currentContainer, predicate)
+    );
     return null;
 }
 ```
