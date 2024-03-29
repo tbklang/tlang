@@ -76,6 +76,82 @@ Now that we know how to construct a resolver, let's see what methods it makes av
 | `generateNameBest(Entity)`| `string`    | Generate the absolute full path of the given entity without specifying which anchor point to use. |
 | `generateName(Container, Entity)` | `string` |  Given an entity and a container this will generate the entity's full path relative to the given container. If the container is a `Program` then the absolute name of the entity is derived. |
 
+### How `isDescendant(Container, Entity)` works
+
+The first check we do is an obvious one, check if the provided entity is equal to that of the provided container, in that case it is a descendant by the rule.
+
+```d
+/**
+ * If they are the same
+ */
+if (c == e)
+{
+    return true;
+}
+```
+
+If this is _not_ the case then we check the ancestral relationship by traversing from the entity upwards.
+
+We start off with this loop variable for our do-while loop:
+
+```d
+Entity currentEntity = e;
+```
+
+**Steps**:
+
+The process of checking for descendance is now described and the actual implementation will follow.
+
+1. At each iteration we obtain `currentEntity`'s parent by using `parentOf()`, we store this as `parentOfCurrent`
+2. _If_ the `parentOfCurrent` is equal to the given container then we exit and return `true`. This is the case whereby the  direct parent is found.
+3. _If not_, then...
+    a. Every other case, use current entity's parent as starting point and keep climbing
+    b. If no match is found in the intermediary we will eventually climb to the `Program` node. Since a `Program` _is_ a `Container` but _is **not**_ an `Entity` it will fail to cast and `currentEntity` will be `null`, hence exiting the loop and returning with `false`.
+
+```d
+do
+{
+    gprintln
+    (
+        format("c isdecsenat: %s", c)
+    );
+    gprintln
+    (
+        format("currentEntity: %s", currentEntity)
+    );
+
+    Container parentOfCurrent = currentEntity.parentOf();
+    gprintln
+    (
+        format("currentEntity(parent): %s", parentOfCurrent)
+    );
+
+    // If the parent of the currentEntity
+    // is what we were seraching for, then
+    // yes, we found it to be a descendant
+    // of it
+    if(parentOfCurrent == c)
+    {
+        return true;
+    }
+
+    // Every other case, use current entity's parent
+    // as starting point and keep climbing
+    //
+    // This would also be null (and stop the search
+    // if we reached the end of the tree in a case
+    // where the given container to anchor by is
+    // the `Program` BUT was not that of a valid one
+    // that actually belonged to the same tree as
+    // the starting node. This becomes `null` because
+    // remember that a `Program` is not a kind-of `Entity`
+    currentEntity = cast(Entity)(parentOfCurrent);
+}
+while (currentEntity);
+
+return false;
+```
+
 #### How `generateNameBest(Entity)` works
 
 The definition of this method is suspiciously simple:
