@@ -402,3 +402,103 @@ else
     return null;
 }
 ```
+
+### Worked examples
+
+Given a program with a single module `resolution_test_1` as follows:
+
+```d
+string sourceCode = `
+module resolution_test_1;
+
+int g;
+`
+```
+
+We then setup such a relationship (for the sake of the test):
+
+```d
+File dummyFile;
+Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+compiler.doLex();
+compiler.doParse();
+
+Program program = compiler.getProgram();
+
+// There is only a single module in this program
+Module modulle = program.getModules()[0];
+
+/* Module name must be resolution_test_1 */
+assert(cmp(modulle.getName(), "resolution_test_1")==0);
+TypeChecker tc = new TypeChecker(compiler);
+```
+
+We first try and search for an entity named `g` using the program as the anchoring container:
+
+```d
+// Now try to find the variable `d` by starting at the program-level
+// this SHOULD fail as it should NOT be allowed
+Entity var = tc.getResolver().resolveBest(program, "g");
+assert(var is null);
+```
+
+This would _fail_ because any search anchored at the program-level will only be able to resolve names of the form `<moduleName>.<entity... `, hence the `assert(var is null)`.
+ 
+After this we then try to find the variable `d` by starting at the module-level:
+
+```d
+// Try to find the variable `d` by starting at the module-level
+var = tc.getResolver().resolveBest(modulle, "g");
+assert(var);
+assert(cast(Variable)var); // Ensure it is a variable
+```
+
+This passes, compared to the last, because the search is anchored at a non-program container and there is an entity named `"g"` within the module `modulle`.
+
+After this we should be able to do a rooted search for a module, however, at the Program level for a module name:
+
+```d
+Entity myModule = tc.getResolver().resolveBest(program, "resolution_test_1");
+assert(myModule);
+assert(cast(Module)myModule); // Ensure it is a Module
+```
+
+This _passes_ because, as stated earlier, only module names and (dotted-paths starting with them) are allowed when using `resolveBest` with a program anchor container.
+
+We then do some tests with descendancy:
+
+```d
+// The `g` should be a descendant of the module and the module of the program
+assert(tc.getResolver().isDescendant(cast(Container)myModule, var));
+assert(tc.getResolver().isDescendant(cast(Container)program, myModule));
+```
+
+We can also do a full path resolution including a _dotterd-path_, as we alluded to earlier. In this case we resolve using the program as the anchoring container and request resolution for the name `"resolution_test_1.g"`:
+
+```d
+// Lookup `resolution_test_1.g` but anchored from the `Program`
+Entity varAgain = tc.getResolver().resolveBest(program, "resolution_test_1.g");
+assert(varAgain);
+assert(cast(Variable)varAgain); // Ensure it is a Variable
+```
+
+---
+
+The last few are just related to doing name generation, similarly though, with differing anchoring points and methods:
+
+```d
+// Generate the name from the program as the anchor
+string nameFromProgram = tc.getResolver().generateName(program, var);
+gprintln(format("nameFromProgram: %s", nameFromProgram));
+assert(nameFromProgram == "resolution_test_1.g");
+
+// Generate the name from the module as the anchor (should be same as above)
+string nameFromModule = tc.getResolver().generateName(cast(Container)myModule, var);
+gprintln(format("nameFromModule: %s", nameFromModule));
+assert(nameFromModule == "resolution_test_1.g");
+
+// Generate absolute path of the entity WITHOUT an anchor point
+string bestName = tc.getResolver().generateNameBest(var);
+gprintln(format("bestName: %s", bestName));
+assert(bestName == "resolution_test_1.g");
+```
