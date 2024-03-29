@@ -312,9 +312,15 @@ The method `resolveWithin(Container, Predicate!(Entity), ref Entity[] collection
 With this understanding one can imagine that the implementation if rather simple then:
 
 ```d
-gprintln(format("resolveWithin(cntnr=%s) entered", currentContainer));
+gprintln
+(
+    format("resolveWithin(cntnr=%s) entered", currentContainer)
+);
 Statement[] statements = currentContainer.getStatements();
-gprintln(format("resolveWithin(cntnr=%s) container has statements %s", currentContainer, statements));
+gprintln
+(
+    format("resolveWithin(cntnr=%s) container has statements %s", currentContainer, statements)
+);
 
 foreach(Statement statement; statements)
 {
