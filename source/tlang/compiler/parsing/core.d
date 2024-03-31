@@ -2501,6 +2501,53 @@ public final class Parser
     }
 
     /** 
+     * Performs an import of the given
+     * module by its name
+     *
+     * Params:
+     *   moduleName = name of the module
+     * to import
+     */
+    private void doImport(string moduleName)
+    {
+        // Print out some information about the currebt program
+        gprintln("Program currently: '"~compiler.getProgram().toString()~"'");
+
+        // Get the module manager
+        ModuleManager modMan = compiler.getModMan();
+
+        // Search for the module entry
+        gprintln("Module wanting to be imported: "~moduleName);
+        ModuleEntry foundEnt = modMan.find(moduleName);
+        gprintln("Found module entry: "~to!(string)(foundEnt));
+        
+        // Check here if already present, if so,
+        // then return early
+        Program prog = this.compiler.getProgram();
+        if(prog.isEntryPresent(foundEnt))
+        {
+            return;
+        }
+
+        // Mark it as visited
+        prog.markEntryAsVisited(foundEnt);
+
+        // Read in the module's contents
+        string moduleSource = modMan.readModuleData_throwable(foundEnt);
+        gprintln("Module has "~to!(string)(moduleSource.length)~" many bytes");
+
+        // Parse the module
+        import tlang.compiler.lexer.kinds.basic : BasicLexer;
+        LexerInterface lexerInterface = new BasicLexer(moduleSource);
+        (cast(BasicLexer)lexerInterface).performLex();
+        Parser parser = new Parser(lexerInterface, this.compiler);
+        Module pMod = parser.parse(foundEnt.getPath()); // TODO: This SHOULD cycle soon (as we haven't added correct checks yet)
+
+        // Map parsed module to its entry
+        prog.setEntryModule(foundEnt, pMod);
+    }
+
+    /** 
      * Parses module import statements
      */
     private void parseImport()
@@ -2539,43 +2586,9 @@ public final class Parser
         lexer.nextToken();
 
         // TODO: Add support for multi-imports on one line (i.e. `import <module1>, <module2>;`)
-        // TODO: <<<< All below code should be in a `doImport()` method
 
-        // Print out some information about the currebt program
-        gprintln("Program currently: '"~compiler.getProgram().toString()~"'");
-
-        // Get the module manager
-        ModuleManager modMan = compiler.getModMan();
-
-        // Search for the module entry
-        gprintln("Module wanting to be imported: "~moduleName);
-        ModuleEntry foundEnt = modMan.find(moduleName);
-        gprintln("Found module entry: "~to!(string)(foundEnt));
-        
-        // Check here if already present, if so,
-        // then return early
-        Program prog = this.compiler.getProgram();
-        if(prog.isEntryPresent(foundEnt))
-        {
-            return;
-        }
-
-        // Mark it as visited
-        prog.markEntryAsVisited(foundEnt);
-
-        // Read in the module's contents
-        string moduleSource = modMan.readModuleData_throwable(foundEnt);
-        gprintln("Module has "~to!(string)(moduleSource.length)~" many bytes");
-
-        // Parse the module
-        import tlang.compiler.lexer.kinds.basic : BasicLexer;
-        LexerInterface lexerInterface = new BasicLexer(moduleSource);
-        (cast(BasicLexer)lexerInterface).performLex();
-        Parser parser = new Parser(lexerInterface, this.compiler);
-        Module pMod = parser.parse(foundEnt.getPath()); // TODO: This SHOULD cycle soon (as we haven't added correct checks yet)
-
-        // Map parsed module to its entry
-        prog.setEntryModule(foundEnt, pMod);
+        /* Perform the actual import */
+        doImport(moduleName);
 
         gprintln("parseImport(): Leave", DebugType.WARNING);
     }
