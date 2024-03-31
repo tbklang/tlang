@@ -515,6 +515,17 @@ jobs:
           ./tlang compile source/tlang/testing/simple_pointer_array_syntax.t
           ./tlang.out
 
+      - name: Multi-module test that returns 45
+        run:
+          set +e
+          ./tlang compile source/tlang/testing/modules/a.t
+          if [ $? = 45 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
 
 
 ##################################
