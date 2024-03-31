@@ -302,6 +302,7 @@ The second set of methods relate to the resolution facilities made available whi
 | `resolveWithin(Container, Predicate!(Entity))` | `Entity` | Performs a horizontal-level search of the given `Container`, returning a found `Entity` when the predicate supplied returns a positive verdict on said entity then we return it. |
 | `resolveUp(Container, Predicate!(Entity))` | `Entity` | Performs a horizontal-based search of the given `Container`, returning the first `Entity` found when a positive verdict is returned from having the provided predicate applied to it. If the verdict is `false` then we do not give up immediately but rather recurse up the parental tree searching the container of the current container and applying the same logic. |
 | `resolveBest(Container, string)` | `Entity` | This will do a best effort search starting for an entity with the given name. The search will start from the given container and perform a search within it, in the case no such entity is found there then it will recurse upwards, stopping when you reach the program-level. This also handles special cases such as dotted-paths, it can decode them and follow the trail to the intended entity. In the case that the container given is a `Program` then each name must either be solely a module name or a dotted-path beginning with one. In this mode nothing else is accepted, it effectively an absolute downwards (rather than potentially upwards search). |
+| `findContainerOfType(TypeInfo_Class, Statement)` | `Container` | Given a type-of `Container` and a starting `Statement` (AST node) this will swim upwards to try and find the first matching parent of which is of the given type (exactly, not kind-of). |
 
 Only the important methods here will be mentioned. Methods pertaining to certain single-item return and predicate generation will not. For those please go examine the source code; see `resolution.d` for those codes.
 
@@ -734,6 +735,75 @@ else
             return null;
         }
     }
+}
+```
+
+#### How finding a container of a concrete type works
+
+It is sometimes of use to be able to find a _container_ of a _given type_. This is something the other methods do not really consider, for them the _container anchoring point_ and the _name_ are well known. There are however cases whereby one may one want to find a _container_ of a certain type given a starting _statement_ - this is what this method provides.
+
+Taking a look at the method definition below:
+
+```d
+Container findContainerOfType
+(
+    TypeInfo_Class containerType,
+    Statement startingNode
+)
+```
+
+**Steps**:
+
+1. _If_ the `startingNode` _is_ `null` then we return with `null`
+2. _If_ the `typeid(startingNode)`, that is the actual type of `startingNode`, is equal to that of the `containerType` then we return the `startingNode` casted to a `Container`. This is a match on first-call with no swimming upwards.
+3. _Else_ we find the _parent of_ the `startingNode` and recurse to this method using `findContainerOfType(containerType, cast(Container)startingNode.parentOf())`. This is a case of us finding the starting node's parent, and then re-applying the logic, hence swimming up in hopes we find the match somewhere above.
+
+This is a relatively simple algorithm and the implementation is shown below:
+
+```{.d .numberLines}
+gprintln
+(
+    format
+    (
+        "findContainerOfType(TypeInfo_Class, Statement): StmtStart: %s",
+        startingNode
+    )
+);
+gprintln
+(
+    format
+    (
+        "findContainerOfType(TypeInfo_Class, Statement): StmtStart (type): %s",
+        startingNode.classinfo
+    )
+);
+
+// If the given AST object is null, return null
+if(startingNode is null)
+{
+    return null;
+}
+// If the given AST object's type is of the type given
+else if(typeid(startingNode) == containerType)
+{
+    // Sanity check: You should not be calling
+    // with a TypeInfo_Class referring to a non-`Container`
+    assert(cast(Container)startingNode);
+    return cast(Container)startingNode;
+}
+// If not, swim up to the parent
+else
+{
+    gprintln
+    (
+        format
+        (
+            "parent of %s is %s",
+            startingNode,
+            startingNode.parentOf()
+        )
+    );
+    return findContainerOfType(containerType, cast(Statement)startingNode.parentOf());
 }
 ```
 
