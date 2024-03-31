@@ -517,9 +517,10 @@ jobs:
 
       - name: Multi-module test that returns 45
         run:
-          set +e
           ./tlang compile source/tlang/testing/modules/a.t
           ./tlang.out
+
+          set +e
           if [ $? = 45 ]
           then
               exit 0
