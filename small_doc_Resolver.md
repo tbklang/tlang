@@ -476,6 +476,267 @@ Best effort resolution is now described in this section. The method of concern f
         i. First we check if the `path[0]` matches the name of any _module_ attached to the _current program_. If a match is found then we return with a call to `resolveBest(curModule, name)` and let it handle that. We do this so that module names are **always treated as absolute** and hence can always be referenced, unlike other containers which can have duplicate names if distanced away by at least one non-name-sharing container.
         ii. If a module name match _is **not**_ found then we attempt the following. We try to find an entity named by `path[0]` by resolving upwards, if we _do **not**_ find one, we return `null`, _else_ if we do then: We will use the found entity as a container called `con` and then do a `resolveBest(con, name)` in order to try and find it. This effectively is a step to find the nearest anchoring point (as `c` clearly isn't it) and then start the search from there.
 
+The code for this is shown below. Note that it is quite a hefty piece of code but it does after all entail the above process.
+
+```{.d .numberLines}
+gprintln
+(
+    format
+    (
+        "resolveBest(cntnr=%s, name=%s) Entered",
+        c,
+        name
+    )
+);
+string[] path = split(name, '.');
+assert(path.length); // We must have _something_ here
+
+// Infact this should probably only be
+// ...called relative to a Module, there
+// are only some cases where it makes sense
+// otherwise
+if(cast(Program)c)
+{
+    gprintln
+    (
+        format
+        (
+            "resolveBest: Container is program (%s)",
+            c
+        )
+    );
+    Program programC = cast(Program)c;
+
+    // If you were asking just for the module
+    // e.g. `simple_module`
+    //
+    // Note that this won't consider doing
+    // a find of the entity in any other module
+    // if the path = ['g']. The reason for that is
+    // because a search rooted at the `Program`
+    // could find such an entity in ANY of the
+    // modules if we added such support but that
+    // would be kind of useless
+    if(path.length == 1)
+    {
+        string moduleRequested = name;
+        foreach(Module curMod; programC.getModules())
+        {
+            gprintln
+            (
+                format
+                (
+                    "resolveBest(moduleHorizontal): %s",
+                    curMod
+                )
+            );
+            if(cmp(moduleRequested, curMod.getName()) == 0)
+            {
+                return curMod;
+            }
+        }
+
+        gprintln
+        (
+            "resolveBest(moduleHoritontal) We found nothing and will not go down from Program to any Module[]. You probably did a rooted search on the Program for a bnon-Module entity, didn't ya?",
+            DebugType.ERROR
+        );
+        return null;
+    }
+    // If you were asking for some entity
+    // anchored within a module
+    // e.g.`simple_module.x`
+    else
+    {
+        // First ensure a valid module name as anchor
+        string moduleRequested = path[0];
+        Container anchor;
+
+        foreach(Module curMod; programC.getModules())
+        {
+            gprintln
+            (
+                format
+                (
+                    "resolveBest(moduleHorizontal): %s",
+                    curMod
+                )
+            );
+            if(cmp(moduleRequested, curMod.getName()) == 0)
+            {
+                anchor = curMod;
+                break;
+            }
+        }
+
+        // If we found the module
+        // then do an anchored search
+        // on the remaining path
+        if(anchor)
+        {
+            string remainingPath = join(path[1..$], ".");
+            return resolveBest(anchor, remainingPath);
+        }
+        // If we could not find the module
+        else
+        {
+            gprintln
+            (
+                format
+                (
+                    "resolveBest(Program root): Could not find module '%s' for ANCHORED access",
+                    moduleRequested
+                ),
+                DebugType.ERROR
+            );
+            return null;
+        }
+    }
+}
+
+/**
+ * All objects that implement Container so far
+ * are also Entities (hence they have a name).
+ *
+ * The above is ONLY true except when you
+ * have a `Program` BUT we handle the case
+ * whereby `c` is a `Program` above, hence
+ * meaning that this code is unreachable in
+ * such a case and therefore safe.
+ */
+Entity containerEntity = cast(Entity) c;
+assert(containerEntity);
+gprintln
+(
+    format
+    (
+        "resolveBest(cntr=%s,name=%s) path = %s",
+        c,
+        name,
+        path
+    )
+);
+
+/**
+ * If no dot
+ *
+ * Try and find `name` within c
+ */
+if (path.length == 1)
+{
+    /**
+     * Check if the name, regardless of container,
+     * matches any of the roots (modules attached
+     * to this program)
+     */
+    foreach(Module curModule; this.program.getModules())
+    {
+        if(cmp(name, curModule.getName()) == 0)
+        {
+            return curModule;
+        }
+    }
+
+    Entity entityWithin = resolveUp(c, name);
+
+    /* If `name` was in container `c` or above it */
+    if (entityWithin)
+    {
+        return entityWithin;
+    }
+    /* If `name` was NOT found within container `c` or above it */
+    else
+    {
+        return null;
+    }
+}
+else
+{
+    /* If the root is the current container */
+    if (cmp(path[0], containerEntity.getName()) == 0)
+    {
+        /* If only 1 left then just grab it */
+        if (path.length == 2)
+        {
+            Entity entityNext = resolveWithin(c, path[1]);
+            return entityNext;
+        }
+        /* Go deeper */
+        else
+        {
+            string newPath = name[indexOf(name, '.') + 1 .. name.length];
+            Entity entityNext = resolveWithin(c, path[1]);
+
+            /* If null then not found */
+            if (entityNext)
+            {
+                Container containerWithin = cast(Container) entityNext;
+
+                if (entityNext)
+                {
+                    return resolveBest(containerWithin, newPath);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+    }
+    /* We need to search higher */
+    else
+    {
+        /**
+         * Check if the name is of one of the modules
+         * attached to the program
+         */
+        foreach(Module curModule; this.program.getModules())
+        {
+            if(cmp(curModule.getName(), path[0]) == 0)
+            {
+                gprintln
+                (
+                    format
+                    (
+                        "About to search for name='%s' in module %s",
+                        name,
+                        curModule
+                    )
+                );
+                return resolveBest(curModule, name);
+            }
+        }
+
+        Entity entityFound = resolveUp(c, path[0]);
+
+        if (entityFound)
+        {
+            Container con = cast(Container) entityFound;
+
+            if (con)
+            {
+                gprintln("fooook");
+                return resolveBest(con, name);
+            }
+            else
+            {
+                gprintln("also a kill me");
+                return null;
+            }
+        }
+        else
+        {
+            gprintln("killl me");
+            return null;
+        }
+    }
+}
+```
+
 ### Worked examples
 
 Given a program with a single module `resolution_test_1` as follows:
