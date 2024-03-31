@@ -2502,6 +2502,8 @@ public final class Parser
 
     private void doImport(string[] modules)
     {
+        gprintln(format("modules[]: %s", modules));
+
         // Print out some information about the current program
         Program prog = this.compiler.getProgram();
         gprintln
@@ -2584,54 +2586,55 @@ public final class Parser
      */
     private void doImport(string moduleName)
     {
-        // Print out some information about the currebt program
-        gprintln
-        (
-            format
-            (
-                "Program currently: '%s'",
-                compiler.getProgram().toString()
-            )
-        );
+        doImport([moduleName]);
+        // // Print out some information about the currebt program
+        // gprintln
+        // (
+        //     format
+        //     (
+        //         "Program currently: '%s'",
+        //         compiler.getProgram().toString()
+        //     )
+        // );
 
-        // Get the module manager
-        ModuleManager modMan = compiler.getModMan();
+        // // Get the module manager
+        // ModuleManager modMan = compiler.getModMan();
 
-        // Search for the module entry
-        gprintln
-        (
-            format("Module wanting to be imported: %s", moduleName)
-        );
-        ModuleEntry foundEnt = modMan.find(moduleName);
-        gprintln
-        (
-            format("Found module entry: %s", foundEnt)
-        );
+        // // Search for the module entry
+        // gprintln
+        // (
+        //     format("Module wanting to be imported: %s", moduleName)
+        // );
+        // ModuleEntry foundEnt = modMan.find(moduleName);
+        // gprintln
+        // (
+        //     format("Found module entry: %s", foundEnt)
+        // );
         
-        // Check here if already present, if so,
-        // then return early
-        Program prog = this.compiler.getProgram();
-        if(prog.isEntryPresent(foundEnt))
-        {
-            return;
-        }
+        // // Check here if already present, if so,
+        // // then return early
+        // Program prog = this.compiler.getProgram();
+        // if(prog.isEntryPresent(foundEnt))
+        // {
+        //     return;
+        // }
 
-        // Mark it as visited
-        prog.markEntryAsVisited(foundEnt);
+        // // Mark it as visited
+        // prog.markEntryAsVisited(foundEnt);
 
-        // Read in the module's contents
-        string moduleSource = modMan.readModuleData_throwable(foundEnt);
-        gprintln("Module has "~to!(string)(moduleSource.length)~" many bytes");
+        // // Read in the module's contents
+        // string moduleSource = modMan.readModuleData_throwable(foundEnt);
+        // gprintln("Module has "~to!(string)(moduleSource.length)~" many bytes");
 
-        // Parse the module
-        import tlang.compiler.lexer.kinds.basic : BasicLexer;
-        LexerInterface lexerInterface = new BasicLexer(moduleSource);
-        (cast(BasicLexer)lexerInterface).performLex();
-        Parser parser = new Parser(lexerInterface, this.compiler);
-        Module pMod = parser.parse(foundEnt.getPath());
+        // // Parse the module
+        // import tlang.compiler.lexer.kinds.basic : BasicLexer;
+        // LexerInterface lexerInterface = new BasicLexer(moduleSource);
+        // (cast(BasicLexer)lexerInterface).performLex();
+        // Parser parser = new Parser(lexerInterface, this.compiler);
+        // Module pMod = parser.parse(foundEnt.getPath());
 
-        // Map parsed module to its entry
-        prog.setEntryModule(foundEnt, pMod);
+        // // Map parsed module to its entry
+        // prog.setEntryModule(foundEnt, pMod);
     }
 
     /** 
@@ -2651,8 +2654,10 @@ public final class Parser
         /* Consume the token */
         lexer.nextToken();
 
-        // FIXME: Actually implement multi-module support
-        string[] collectedModuleNames;
+        /* All modules to be imported */
+        string[] collectedModuleNames = [moduleName];
+
+        /* Try process multi-line imports (if any) */
         while(getSymbolType(lexer.getCurrentToken()) == SymbolType.COMMA)
         {
             /* Consume the comma `,` */
@@ -2660,22 +2665,19 @@ public final class Parser
 
             /* Get the module's name */
             expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
-            moduleName = lexer.getCurrentToken().getToken();
-            collectedModuleNames ~= moduleName;
+            string curModuleName = lexer.getCurrentToken().getToken();
+            collectedModuleNames ~= curModuleName;
 
             /* Consume the name */
             lexer.nextToken();
         }
-        gprintln(format("Collected module names (if any): %s", collectedModuleNames));
 
         /* Expect a semi-colon and consume it */
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
 
-        // TODO: Add support for multi-imports on one line (i.e. `import <module1>, <module2>;`)
-
         /* Perform the actual import */
-        doImport(moduleName);
+        doImport(collectedModuleNames);
 
         gprintln("parseImport(): Leave", DebugType.WARNING);
     }
