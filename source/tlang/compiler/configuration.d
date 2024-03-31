@@ -239,6 +239,15 @@ public final class CompilerConfiguration
         searchPaths = []; // TODO: Disabling for now
         config.addConfig(ConfigEntry("modman:path", searchPaths));
 
+        /**
+         * If enabled then a module with
+         * `module c;` must be named
+         * `c.t`
+         */
+        // FIXME: Make true by default - this WILL break many unittests and semantic ones
+        // so be very sure before you enable this
+        config.addConfig(ConfigEntry("modman:strict_headers", false));
+
         return config;
     }
 }
