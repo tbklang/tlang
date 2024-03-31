@@ -283,23 +283,34 @@ public final class Resolver
      */
     public void resolveWithin(Container currentContainer, Predicate!(Entity) predicate, ref Entity[] collection)
     {
-        gprintln(format("resolveWithin(cntnr=%s) entered", currentContainer));
+        gprintln
+        (
+            format
+            (
+                "resolveWithin(cntnr=%s) entered",
+                currentContainer
+            )
+        );
         Statement[] statements = currentContainer.getStatements();
-        gprintln(format("resolveWithin(cntnr=%s) container has statements %s", currentContainer, statements));
+        gprintln
+        (
+            format
+            (
+                "resolveWithin(cntnr=%s) container has statements %s",
+                currentContainer,
+                statements
+            )
+        );
 
         foreach(Statement statement; statements)
         {
-            /* TODO: Only acuse parser not done yet */
-            if(statement !is null)
-            {
-                Entity entity = cast(Entity) statement;
+            Entity entity = cast(Entity) statement;
 
-                if(entity)
+            if(entity)
+            {
+                if(predicate(entity))
                 {
-                    if(predicate(entity))
-                    {
-                        collection ~= entity;               
-                    }
+                    collection ~= entity;               
                 }
             }
         }
@@ -382,7 +393,7 @@ public final class Resolver
     /** 
      * Performs a horizontal-based search of the given
      * `Container`, returning the first `Entity` found
-     * when a posotive verdict is returned from having
+     * when a positive verdict is returned from having
      * the provided predicate applied to it.
      *
      * If the verdict is `false` then we do not give
@@ -402,10 +413,27 @@ public final class Resolver
      */
     public Entity resolveUp(Container currentContainer, Predicate!(Entity) predicate)
     {
-        /* Try to find the Entity wthin the current Container */
-        gprintln(format("resolveUp(c=%s, pred=%s)", currentContainer, predicate));
+        /* Try to find the Entity within the current Container */
+        gprintln
+        (
+            format
+            (
+                "resolveUp(c=%s, pred=%s)",
+                currentContainer,
+                predicate
+            )
+        );
         Entity entity = resolveWithin(currentContainer, predicate);
-        gprintln(format("resolveUp(c=%s, pred=%s) within-search returned '%s'", currentContainer, predicate, entity));
+        gprintln
+        (
+            format
+            (
+                "resolveUp(c=%s, pred=%s) within-search returned '%s'",
+                currentContainer,
+                predicate,
+                entity
+            )
+        );
 
         /* If we found it return it */
         if(entity)
@@ -441,8 +469,26 @@ public final class Resolver
             assert(cast(Entity)currentContainer);
             Container possibleParent = (cast(Entity) currentContainer).parentOf();
 
-            gprintln(format("resolveUp(c=%s, pred=%s) cur container typeid: %s", currentContainer, predicate, currentContainer));
-            gprintln(format("resolveUp(c=%s, pred=%s) possible parent: %s", currentContainer, predicate, possibleParent));
+            gprintln
+            (
+                format
+                (
+                    "resolveUp(c=%s, pred=%s) cur container typeid: %s",
+                    currentContainer,
+                    predicate,
+                    currentContainer
+                )
+            );
+            gprintln
+            (
+                format
+                (
+                    "resolveUp(c=%s, pred=%s) possible parent: %s",
+                    currentContainer,
+                    predicate,
+                    possibleParent
+                )
+            );
 
             /* Can we go up */
             if(possibleParent)
@@ -452,7 +498,15 @@ public final class Resolver
             /* If the current container has no parent container */
             else
             {
-                gprintln(format("resolveUp(c=%s, pred=%s) Simply not found ", currentContainer, predicate));
+                gprintln
+                (
+                    format
+                    (
+                        "resolveUp(c=%s, pred=%s) Simply not found ",
+                        currentContainer,
+                        predicate
+                    )
+                );
                 return null;
             }
         }
@@ -513,53 +567,62 @@ public final class Resolver
         assert(path.length == 0);
     }
 
-    public Entity resolveBest(Container c, Predicate!(Entity) d)
-    {
-        // TODO: See how we would go about this
-
-        /** 
-         * For smething like this to work we must
-         * extract the non-name-related logic from
-         * below and code that.
-         *
-         * I believe what that would be is effectively,
-         * a method which applies the predicate
-         */
-
-
-
-        return null;
-    }
-
-    /**
-    * Resolves dot-paths and non-dot paths
-    * (both relative to a container)
-    *
-    * Example: Given c=clazz1 and name=clazz1 => result = clazz1
-    * Example: Given c=clazz1 and name=x (x is within) => result = x
-    * Example: Given c=clazz1 and name=clazz1.x => result = x
-    * Example: Given c=clazz1 and name=clazz2.x => result = x
-    */
+    /** 
+     * This will do a best effort search starting
+     * for an entity with the given name. The search
+     * will start from the given container and
+     * perform a search within it, in the case no
+     * such entity is found there then it will
+     * recurse upwards, stopping when you reach
+     * the program-level.
+     *
+     * This also handles special cases such as
+     * dotted-paths, it can decode them and follow
+     * the trail to the intended entity.
+     *
+     * In the case that the container given
+     * is a `Program` then each name must
+     * either be solely a module name or
+     * a dotted-path beginning with one. In
+     * this mode nothing else is accepted,
+     * it effectively an absolute downwards
+     * (rather than potentially upwards
+     * search).
+     *
+     * Params:
+     *   c = the starting container
+     *   name = the name 
+     * Returns: an `Entity` if found, otherwise
+     * `null`
+     */
     public Entity resolveBest(Container c, string name)
     {
-        gprintln(format("resolveBest(cntnr=%s, name=%s) Entered", c, name));
+        gprintln
+        (
+            format
+            (
+                "resolveBest(cntnr=%s, name=%s) Entered",
+                c,
+                name
+            )
+        );
         string[] path = split(name, '.');
         assert(path.length); // We must have _something_ here
 
-        // FIXME: (MODMAN) Container can be a `Program`
-        // ... (if we call it with that)
-        // ... and the assertion below will fail
-        // ... therefore we will have to take the 
-        // ... name in such a case (should we even
-        // ... be calling it like so)
-        //
         // Infact this should probably only be
         // ...called relative to a Module, there
         // are only some cases where it makes sense
         // otherwise
         if(cast(Program)c)
         {
-            gprintln("resolveBest: Container is program ("~to!(string)(c)~")");
+            gprintln
+            (
+                format
+                (
+                    "resolveBest: Container is program (%s)",
+                    c
+                )
+            );
             Program programC = cast(Program)c;
 
             // If you were asking just for the module
@@ -577,14 +640,25 @@ public final class Resolver
                 string moduleRequested = name;
                 foreach(Module curMod; programC.getModules())
                 {
-                    gprintln("resolveBest(moduleHorizontal): "~to!(string)(curMod));
+                    gprintln
+                    (
+                        format
+                        (
+                            "resolveBest(moduleHorizontal): %s",
+                            curMod
+                        )
+                    );
                     if(cmp(moduleRequested, curMod.getName()) == 0)
                     {
                         return curMod;
                     }
                 }
 
-                gprintln("resolveBest(moduleHoritontal) We found nothing and will not go down from Program to any Module[]. You probably did a rooted search on the Program for a bnon-Module entity, didn't ya?", DebugType.ERROR);
+                gprintln
+                (
+                    "resolveBest(moduleHoritontal) We found nothing and will not go down from Program to any Module[]. You probably did a rooted search on the Program for a bnon-Module entity, didn't ya?",
+                    DebugType.ERROR
+                );
                 return null;
             }
             // If you were asking for some entity
@@ -598,7 +672,14 @@ public final class Resolver
 
                 foreach(Module curMod; programC.getModules())
                 {
-                    gprintln("resolveBest(moduleHorizontal): "~to!(string)(curMod));
+                    gprintln
+                    (
+                        format
+                        (
+                            "resolveBest(moduleHorizontal): %s",
+                            curMod
+                        )
+                    );
                     if(cmp(moduleRequested, curMod.getName()) == 0)
                     {
                         anchor = curMod;
@@ -617,28 +698,48 @@ public final class Resolver
                 // If we could not find the module
                 else
                 {
-                    gprintln("resolveBest(Program root): Could not find module '"~moduleRequested~"' for ANCHORED access", DebugType.ERROR);
+                    gprintln
+                    (
+                        format
+                        (
+                            "resolveBest(Program root): Could not find module '%s' for ANCHORED access",
+                            moduleRequested
+                        ),
+                        DebugType.ERROR
+                    );
                     return null;
                 }
             }
         }
 
         /**
-        * TODO: Always make sure this holds
-        *
-        * All objects that implement Container so far
-        * are also Entities (hence they have a name)
-        */
+         * All objects that implement Container so far
+         * are also Entities (hence they have a name).
+         *
+         * The above is ONLY true except when you
+         * have a `Program` BUT we handle the case
+         * whereby `c` is a `Program` above, hence
+         * meaning that this code is unreachable in
+         * such a case and therefore safe.
+         */
         Entity containerEntity = cast(Entity) c;
         assert(containerEntity);
-
-        gprintln(format("resolveBest(cntr=%s,name=%s) path = %s", c, name, path));
+        gprintln
+        (
+            format
+            (
+                "resolveBest(cntr=%s,name=%s) path = %s",
+                c,
+                name,
+                path
+            )
+        );
 
         /**
-        * If no dot
-        *
-        * Try and find `name` within c
-        */
+         * If no dot
+         *
+         * Try and find `name` within c
+         */
         if (path.length == 1)
         {
             /**
@@ -669,12 +770,9 @@ public final class Resolver
         }
         else
         {
-            /* TODO: Add module name check here */
-
             /* If the root is the current container */
             if (cmp(path[0], containerEntity.getName()) == 0)
             {
-
                 /* If only 1 left then just grab it */
                 if (path.length == 2)
                 {
@@ -694,9 +792,6 @@ public final class Resolver
 
                         if (entityNext)
                         {
-                            /* TODO: Technically I could strip new root as we have the container */
-                            /* TODO: The only reason I don't want to do that is the condition */
-                            //newPath = newPath[indexOf(newPath, '.')+1..newPath.length];
                             return resolveBest(containerWithin, newPath);
                         }
                         else
@@ -717,11 +812,19 @@ public final class Resolver
                  * Check if the name is of one of the modules
                  * attached to the program
                  */
-                foreach(Module curModule; this.program.getModules()) // TODO; Ensure `getModules()` is the correct call to use
+                foreach(Module curModule; this.program.getModules())
                 {
                     if(cmp(curModule.getName(), path[0]) == 0)
                     {
-                        gprintln(format("About to search for name='%s' in module %s", name, curModule));
+                        gprintln
+                        (
+                            format
+                            (
+                                "About to search for name='%s' in module %s",
+                                name,
+                                curModule
+                            )
+                        );
                         return resolveBest(curModule, name);
                     }
                 }
@@ -745,13 +848,10 @@ public final class Resolver
                 }
                 else
                 {
-                    /* TODO: We add module check here */
-
                     gprintln("killl me");
                     return null;
                 }
             }
-
         }
     }
 
@@ -767,10 +867,24 @@ public final class Resolver
      */
     public Container findContainerOfType(TypeInfo_Class containerType, Statement startingNode)
     {
-        gprintln("findContainerOfType(TypeInfo_Class, Statement): StmtStart: "~to!(string)(startingNode));
-        gprintln("findContainerOfType(TypeInfo_Class, Statement): StmtStart (type): "~to!(string)(startingNode.classinfo));
+        gprintln
+        (
+            format
+            (
+                "findContainerOfType(TypeInfo_Class, Statement): StmtStart: %s",
+                startingNode
+            )
+        );
+        gprintln
+        (
+            format
+            (
+                "findContainerOfType(TypeInfo_Class, Statement): StmtStart (type): %s",
+                startingNode.classinfo
+            )
+        );
 
-        // If the given AST objetc is null, return null
+        // If the given AST object is null, return null
         if(startingNode is null)
         {
             return null;
@@ -778,14 +892,23 @@ public final class Resolver
         // If the given AST object's type is of the type given
         else if(typeid(startingNode) == containerType)
         {
-            // Sanity check: You should not be calling with a TypeInfo_Class referring to a non-`Container`
+            // Sanity check: You should not be calling
+            // with a TypeInfo_Class referring to a non-`Container`
             assert(cast(Container)startingNode);
             return cast(Container)startingNode;
         }
         // If not, swim up to the parent
         else
         {
-            gprintln("parent of "~to!(string)(startingNode)~" is "~to!(string)(startingNode.parentOf()));
+            gprintln
+            (
+                format
+                (
+                    "parent of %s is %s",
+                    startingNode,
+                    startingNode.parentOf()
+                )
+            );
             return findContainerOfType(containerType, cast(Statement)startingNode.parentOf());
         }
     }
@@ -800,7 +923,6 @@ version(unittest)
     import tlang.compiler.typecheck.core;
     import misc.exceptions : TError;
 }
-
 
 /**
  * Tests out various parts of the
