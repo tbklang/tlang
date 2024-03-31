@@ -2499,7 +2499,15 @@ public final class Parser
 
         return externStmt;
     }
-
+    
+    /** 
+     * Performs an import of the given
+     * modules by their respective names
+     *
+     * Params:
+     *   modules = the names of the modules
+     * to import
+     */
     private void doImport(string[] modules)
     {
         gprintln(format("modules[]: %s", modules));
