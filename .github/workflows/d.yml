@@ -518,6 +518,8 @@ jobs:
       - name: Multi-module test that returns 45
         run: |
           ./tlang compile source/tlang/testing/modules/a.t
+
+          set +e
           ./tlang.out
 
           set -e
