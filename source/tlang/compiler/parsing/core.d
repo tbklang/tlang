@@ -2500,6 +2500,80 @@ public final class Parser
         return externStmt;
     }
 
+    private void doImport(string[] modules)
+    {
+        // Print out some information about the current program
+        Program prog = this.compiler.getProgram();
+        gprintln
+        (
+            format
+            (
+                "Program currently: '%s'",
+                prog
+            )
+        );
+
+        // Get the module manager
+        ModuleManager modMan = compiler.getModMan();
+
+        // Search for all the module entries
+        ModuleEntry[] foundEnts;
+        foreach(string mod; modules)
+        {
+            gprintln
+            (
+                format
+                (
+                    "Module wanting to be imported: %s",
+                    mod
+                )
+            );
+
+            // Search for the module entry
+            ModuleEntry foundEnt = modMan.find(mod);
+            gprintln("Found module entry: "~to!(string)(foundEnt));
+            foundEnts ~= foundEnt;
+        }
+        
+        // For each module entry, only import
+        // it if not already in the process
+        // of being visited
+        foreach(ModuleEntry modEnt; foundEnts)
+        {
+            // Check here if already present, if so,
+            // then skip
+            if(prog.isEntryPresent(modEnt))
+            {
+                gprintln
+                (
+                    format
+                    (
+                        "Not parsing module '%s' as already marked as visited",
+                        modEnt
+                    )
+                );
+                continue;
+            }
+
+            // Mark it as visited
+            prog.markEntryAsVisited(modEnt);
+
+            // Read in the module's contents
+            string moduleSource = modMan.readModuleData_throwable(modEnt);
+            gprintln("Module has "~to!(string)(moduleSource.length)~" many bytes");
+
+            // Parse the module
+            import tlang.compiler.lexer.kinds.basic : BasicLexer;
+            LexerInterface lexerInterface = new BasicLexer(moduleSource);
+            (cast(BasicLexer)lexerInterface).performLex();
+            Parser parser = new Parser(lexerInterface, this.compiler);
+            Module pMod = parser.parse(modEnt.getPath()); // TODO: This SHOULD cycle soon (as we haven't added correct checks yet)
+
+            // Map parsed module to its entry
+            prog.setEntryModule(modEnt, pMod);
+        }   
+    }
+
     /** 
      * Performs an import of the given
      * module by its name
@@ -2511,15 +2585,28 @@ public final class Parser
     private void doImport(string moduleName)
     {
         // Print out some information about the currebt program
-        gprintln("Program currently: '"~compiler.getProgram().toString()~"'");
+        gprintln
+        (
+            format
+            (
+                "Program currently: '%s'",
+                compiler.getProgram().toString()
+            )
+        );
 
         // Get the module manager
         ModuleManager modMan = compiler.getModMan();
 
         // Search for the module entry
-        gprintln("Module wanting to be imported: "~moduleName);
+        gprintln
+        (
+            format("Module wanting to be imported: %s", moduleName)
+        );
         ModuleEntry foundEnt = modMan.find(moduleName);
-        gprintln("Found module entry: "~to!(string)(foundEnt));
+        gprintln
+        (
+            format("Found module entry: %s", foundEnt)
+        );
         
         // Check here if already present, if so,
         // then return early
@@ -2541,7 +2628,7 @@ public final class Parser
         LexerInterface lexerInterface = new BasicLexer(moduleSource);
         (cast(BasicLexer)lexerInterface).performLex();
         Parser parser = new Parser(lexerInterface, this.compiler);
-        Module pMod = parser.parse(foundEnt.getPath()); // TODO: This SHOULD cycle soon (as we haven't added correct checks yet)
+        Module pMod = parser.parse(foundEnt.getPath());
 
         // Map parsed module to its entry
         prog.setEntryModule(foundEnt, pMod);
