@@ -516,7 +516,7 @@ jobs:
           ./tlang.out
 
       - name: Multi-module test that returns 45
-        run:
+        run: |
           ./tlang compile source/tlang/testing/modules/a.t
           ./tlang.out
 
