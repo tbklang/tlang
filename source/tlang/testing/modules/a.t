@@ -1,7 +1,6 @@
 module a;
 
-import niks.c;
-import b;
+import niks.c, b;
 
 int ident(int i)
 {
