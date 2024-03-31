@@ -460,53 +460,6 @@ public final class ModuleManager
     }
 
     /** 
-     * Given a path to a module file, this will open it
-     * up, read its header and therefore derived the
-     * module's name based off of that
-     *
-     * Params:
-     *   modulePath = the path to the module file
-     *   skimmedName = the name found (if any)
-     * Returns: `true` if successfully skimmed,
-     * `false` otherwise
-     */
-    private bool skimModuleDeclaredName(string modulePath, ref string skimmedName)
-    {
-        gprintln("Begin skim for: "~modulePath);
-
-        try
-        {
-            string declaredName;
-
-            string moduleSourceCode = gibFileData(modulePath); // TODO: check for IO exception
-            LexerInterface lexer = new BasicLexer(moduleSourceCode);
-            (cast(BasicLexer)(lexer)).performLex();
-
-            /* Expect `module` and module name and consume them (and `;`) */
-            expect(SymbolType.MODULE, lexer.getCurrentToken());
-            lexer.nextToken();
-
-            /* Module name may NOT be dotted (TODO: Maybe it should be yeah) */
-            expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
-            declaredName = lexer.getCurrentToken().getToken();
-            lexer.nextToken();
-
-            /* Expect an ending semi colon */
-            expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-            lexer.nextToken();
-
-            // Save the name
-            skimmedName = declaredName;
-
-            return true;
-        }
-        catch(LexerException e)
-        {
-            return false;
-        }
-    }
-
-    /** 
      * Given a mdoule entry this
      * will read all of its bytes
      *
@@ -569,21 +522,6 @@ public final class ModuleManager
         {
             return false;
         }
-    }
-    
-    /** 
-     * Converts all slashes to
-     * dots
-     *
-     * Params:
-     *   strIn = the string to
-     * process
-     * Returns: tghe translated
-     * string
-     */
-    private static string slashToDot(string strIn)
-    {
-        return replace(strIn, "/", ".");
     }
 
     /** 
