@@ -11,6 +11,7 @@ import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
 import tlang.compiler.core : Compiler;
 import std.string : format;
+import tlang.compiler.modman;
 
 // TODO: Technically we could make a core parser etc
 public final class Parser
@@ -2531,19 +2532,19 @@ public final class Parser
             /* Consume the name */
             lexer.nextToken();
         }
+        gprintln(format("Collected module names (if any): %s", collectedModuleNames));
 
         /* Expect a semi-colon and consume it */
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
-        // TODO: Add support for multi-imports on one line (i.e. `import <module1>, <module2>;`)
 
+        // TODO: Add support for multi-imports on one line (i.e. `import <module1>, <module2>;`)
         // TODO: <<<< All below code should be in a `doImport()` method
 
         // Print out some information about the currebt program
         gprintln("Program currently: '"~compiler.getProgram().toString()~"'");
 
         // Get the module manager
-        import tlang.compiler.modman;
         ModuleManager modMan = compiler.getModMan();
 
         // Search for the module entry
@@ -2551,11 +2552,11 @@ public final class Parser
         ModuleEntry foundEnt = modMan.find(moduleName);
         gprintln("Found module entry: "~to!(string)(foundEnt));
         
-        // TODO: Check here if already present
+        // Check here if already present, if so,
+        // then return early
         Program prog = this.compiler.getProgram();
         if(prog.isEntryPresent(foundEnt))
         {
-            // TODO: Skip?
             return;
         }
 
@@ -2566,28 +2567,18 @@ public final class Parser
         string moduleSource = modMan.readModuleData_throwable(foundEnt);
         gprintln("Module has "~to!(string)(moduleSource.length)~" many bytes");
 
-        // TODO: Add parsing here
+        // Parse the module
         import tlang.compiler.lexer.kinds.basic : BasicLexer;
         LexerInterface lexerInterface = new BasicLexer(moduleSource);
         (cast(BasicLexer)lexerInterface).performLex();
         Parser parser = new Parser(lexerInterface, this.compiler);
         Module pMod = parser.parse(foundEnt.getPath()); // TODO: This SHOULD cycle soon (as we haven't added correct checks yet)
 
-        // TODO: Add entry and what else do we do?
+        // Map parsed module to its entry
         prog.setEntryModule(foundEnt, pMod);
 
         gprintln("parseImport(): Leave", DebugType.WARNING);
     }
-
-   
-
-
-    // Whilst we're building it, we may
-    // ... as well have a handle on it
-    private Module curModule;
-
-
-    import tlang.compiler.modman;
 
     /* Almost like parseBody but has more */
     /**
@@ -2620,14 +2611,22 @@ public final class Parser
         /* Set the file system path of this module */
         modulle.setFilePath(moduleFilePath);
 
-        /* Store it globally */
-        this.curModule = modulle;
 
-        // If this is an entrypoint module (i.e. one specified
-        // on the command-line) then store it as visited
+        /**
+         * If this is an entrypoint module (i.e. one
+         * specified on the command-line) then store
+         * it as visited
+         */
         if(isEntrypoint)
         {
-            gprintln(format("parse(): Yes, this IS your entrypoint module '%s' about to be parsed", moduleName));
+            gprintln
+            (
+                format
+                (
+                    "parse(): Yes, this IS your entrypoint module '%s' about to be parsed",
+                    moduleName
+                )
+            );
 
             ModuleEntry curModEnt = ModuleEntry(moduleFilePath, moduleName);
             Program prog = this.compiler.getProgram();
@@ -2636,7 +2635,6 @@ public final class Parser
             prog.setEntryModule(curModEnt, modulle);
         }
 
-        /* TODO: do `lexer.hasTokens()` check */
         /* TODO: We should add `lexer.hasTokens()` to the `lexer.nextToken()` */
         /* TODO: And too the `getCurrentTokem()` and throw an error when we have ran out rather */
 
