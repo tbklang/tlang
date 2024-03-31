@@ -2756,6 +2756,8 @@ version(unittest)
     import tlang.compiler.lexer.core;
     import tlang.compiler.lexer.kinds.basic : BasicLexer;
     import tlang.compiler.typecheck.core;
+    import tlang.compiler.typecheck.resolution : Resolver;
+    import tlang.compiler.core : gibFileData;
 }
 
 /**
@@ -3566,6 +3568,66 @@ int wrongFunction()
         assert(true);
     }
     catch(TError)
+    {
+        assert(false);
+    }
+}
+
+/**
+ * Importing of modules test
+ */
+unittest
+{
+    string inputFilePath = "source/tlang/testing/modules/a.t";
+    string sourceCode = gibFileData(inputFilePath);
+
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, inputFilePath, dummyFile);
+
+    try
+    {
+        compiler.doLex();
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    try
+    {
+        compiler.doParse();
+
+
+        Program program = compiler.getProgram();
+
+        // There should be 3 modules in this program
+        Module[] modules = program.getModules();
+        assert(modules.length == 3);
+
+        TypeChecker tc = new TypeChecker(compiler);
+        Resolver resolver = tc.getResolver();
+
+        // There should be modules named `a`, `b` and `c`
+        Module module_a = cast(Module)resolver.resolveBest(program, "a");
+        assert(module_a);
+        Module module_b = cast(Module)resolver.resolveBest(program, "b");
+        assert(module_b);
+        Module module_c = cast(Module)resolver.resolveBest(program, "c");
+        assert(module_c);
+
+        // There should be a function named `main` in module `a`
+        Function a_func = cast(Function)resolver.resolveBest(module_a, "main");
+        assert(a_func);
+
+        // There should be a function named `doThing` in module `b`
+        Function b_func = cast(Function)resolver.resolveBest(module_b, "doThing");
+        assert(b_func);
+
+        // There should be a function named `k` in module `c`
+        Function c_func = cast(Function)resolver.resolveBest(module_c, "k");
+        assert(c_func);
+    }
+    catch(TError e)
     {
         assert(false);
     }
