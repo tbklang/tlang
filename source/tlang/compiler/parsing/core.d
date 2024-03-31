@@ -2690,7 +2690,7 @@ public final class Parser
     * one to define classes within functions
     */
     /* TODO: Variables should be allowed to have letters in them and underscores */
-    public Module parse(string moduleFilePath = "", bool isEntrypoint = false)
+    public Module parse(string moduleFilePath, bool isEntrypoint = false)
     {
         gprintln("parse(): Enter", DebugType.WARNING);
 
