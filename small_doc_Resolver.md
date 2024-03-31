@@ -314,12 +314,21 @@ With this understanding one can imagine that the implementation if rather simple
 ```d
 gprintln
 (
-    format("resolveWithin(cntnr=%s) entered", currentContainer)
+    format
+    (
+        "resolveWithin(cntnr=%s) entered",
+        currentContainer
+    )
 );
 Statement[] statements = currentContainer.getStatements();
 gprintln
 (
-    format("resolveWithin(cntnr=%s) container has statements %s", currentContainer, statements)
+    format
+    (
+        "resolveWithin(cntnr=%s) container has statements %s",
+        currentContainer,
+        statements
+    )
 );
 
 foreach(Statement statement; statements)
@@ -445,7 +454,25 @@ else
 
 #### How _best-effort_ resolution works
 
-TODO: Add this
+Best effort resolution is now described in this section. The method of concern for this is `resolveBest(Container c, string name)`.
+
+**Steps**:
+
+1. We first obtain the `path` as a `string[]` by splitting the incoming `name` by any periods present (`.`s)
+2. _If_ the container `c` is a kind-of `Program` _then_...
+    a. _If_ the `path` is a single element
+        i.Search for a module with the name of `path[0]`
+    b. _If_ the `path` is more than a single element then we take it that `path[0]` is the name of a module, we first search for that
+        i. _If **not** found_ we return `null`
+        ii. _If found_ we then call `resolveBest(moduleFound, join(path[1..$], '.')`, so we re-anchor our search based on the module as the container node for the recursive call and the rest of the search path is handed off to the nested call.
+3. _If **not**_ and we have a single element in the `path` then we have a few more checks which follow
+    a. We check if any of the _modules_ within the current _program_ matches the name
+    b. _If_ no match is found _then_ we try to resolve the `name` (in other words `path[0]`) upwards
+4. _If_ the `path` has more than one element
+    a. _If_ `path[0]` refers to the container entity `c` then...
+        i. _If_ there is only one element left, namely, `path[1]`, then we return with the result of calling `resolveWithin(c, path[1])`.
+        ii. _If_ there are more than two elements then what we effectively do is these several steps. First, we check that there is an entity at `path[1]` by resolving it against `c` with `resolveWithin(c, path[1])`; if `null` we then return `null`, else we continue and call the found entity `entityNext`. Then we calculate as such, if the path was `x.y.z` then we make a `newPath` containing `y.z`. We now will resolve the `newPath` (the `y.z`) against `entityNext` (which we cast to a `Container` and ensure it is possible and call it `containerWithin`); this is accomplished with `resolveBest(containerWithin, newPath)`. Thus setting in motion the path walking recursive nature of this part of the algorithm.
+
 
 ### Worked examples
 
