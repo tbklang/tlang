@@ -520,7 +520,7 @@ jobs:
           ./tlang compile source/tlang/testing/modules/a.t
           ./tlang.out
 
-          set +e
+          set -e
           if [ $? = 45 ]
           then
               exit 0
