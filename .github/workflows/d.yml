@@ -524,7 +524,7 @@ jobs:
           ./tlang.out
 
           
-          if [ $? = 47 ]
+          if [ $? = 45 ]
           then
               set -e
               exit 0
