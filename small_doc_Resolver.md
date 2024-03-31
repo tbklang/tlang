@@ -472,7 +472,9 @@ Best effort resolution is now described in this section. The method of concern f
     a. _If_ `path[0]` refers to the container entity `c` then...
         i. _If_ there is only one element left, namely, `path[1]`, then we return with the result of calling `resolveWithin(c, path[1])`.
         ii. _If_ there are more than two elements then what we effectively do is these several steps. First, we check that there is an entity at `path[1]` by resolving it against `c` with `resolveWithin(c, path[1])`; if `null` we then return `null`, else we continue and call the found entity `entityNext`. Then we calculate as such, if the path was `x.y.z` then we make a `newPath` containing `y.z`. We now will resolve the `newPath` (the `y.z`) against `entityNext` (which we cast to a `Container` and ensure it is possible and call it `containerWithin`); this is accomplished with `resolveBest(containerWithin, newPath)`. Thus setting in motion the path walking recursive nature of this part of the algorithm.
-
+    b. _If_ `path[0]` does **not** refer to the container entity `c`, then...
+        i. First we check if the `path[0]` matches the name of any _module_ attached to the _current program_. If a match is found then we return with a call to `resolveBest(curModule, name)` and let it handle that. We do this so that module names are **always treated as absolute** and hence can always be referenced, unlike other containers which can have duplicate names if distanced away by at least one non-name-sharing container.
+        ii. If a module name match _is **not**_ found then we attempt the following. We try to find an entity named by `path[0]` by resolving upwards, if we _do **not**_ find one, we return `null`, _else_ if we do then: We will use the found entity as a container called `con` and then do a `resolveBest(con, name)` in order to try and find it. This effectively is a step to find the nearest anchoring point (as `c` clearly isn't it) and then start the search from there.
 
 ### Worked examples
 
