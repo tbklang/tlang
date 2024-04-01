@@ -2578,67 +2578,6 @@ public final class Parser
     }
 
     /** 
-     * Performs an import of the given
-     * module by its name
-     *
-     * Params:
-     *   moduleName = name of the module
-     * to import
-     */
-    private void doImport(string moduleName)
-    {
-        doImport([moduleName]);
-        // // Print out some information about the currebt program
-        // gprintln
-        // (
-        //     format
-        //     (
-        //         "Program currently: '%s'",
-        //         compiler.getProgram().toString()
-        //     )
-        // );
-
-        // // Get the module manager
-        // ModuleManager modMan = compiler.getModMan();
-
-        // // Search for the module entry
-        // gprintln
-        // (
-        //     format("Module wanting to be imported: %s", moduleName)
-        // );
-        // ModuleEntry foundEnt = modMan.find(moduleName);
-        // gprintln
-        // (
-        //     format("Found module entry: %s", foundEnt)
-        // );
-        
-        // // Check here if already present, if so,
-        // // then return early
-        // Program prog = this.compiler.getProgram();
-        // if(prog.isEntryPresent(foundEnt))
-        // {
-        //     return;
-        // }
-
-        // // Mark it as visited
-        // prog.markEntryAsVisited(foundEnt);
-
-        // // Read in the module's contents
-        // string moduleSource = modMan.readModuleData_throwable(foundEnt);
-        // gprintln("Module has "~to!(string)(moduleSource.length)~" many bytes");
-
-        // // Parse the module
-        // import tlang.compiler.lexer.kinds.basic : BasicLexer;
-        // LexerInterface lexerInterface = new BasicLexer(moduleSource);
-        // (cast(BasicLexer)lexerInterface).performLex();
-        // Parser parser = new Parser(lexerInterface, this.compiler);
-        // Module pMod = parser.parse(foundEnt.getPath());
-
-        // // Map parsed module to its entry
-        // prog.setEntryModule(foundEnt, pMod);
-    }
-
-    /** 
      * Parses module import statements
      */
     private void parseImport()
