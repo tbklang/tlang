@@ -1,9 +1,8 @@
-Programs, modules and management
-================================
+## Programs, modules and management
 
 It is deserving of its own chapter due to the complexities involved in the system - that is _the module management_ system. There are certain aspects to it which are allured to in other chapters such as the _resolution process_, the _code emit process with `DGen`_ and so forth. Due to this I will therefore only mention new information here rather than re-iterate all of that which belongs squarely in the documentation for those components of the compiler.
 
-## Introduction
+### Introduction
 
 It is worth first defining what a _module_ is and hwo this relates to the compiler at large. Firstly a _program_ (see `Program`) is made up of one or more _modules_ (see `Module`).
 
@@ -15,15 +14,15 @@ Below we show the directory structure of an example program that could be compil
 
 ```bash
 source/tlang/testing/modules/
-├── a.t
-├── b.t
-├── niks
-│   └── c.t
+|-- a.t
+|-- b.t
+|-- niks
+|   |-- c.t
 ```
 
 Each of these files within the directory shown above is now shown below so you can see their contents, next to it we provide their module names as well (TODO: Ensure these match on `parse()` enter):
 
-##### Module `a` at file `a.t`
+#### Module `a` at file `a.t`
 
 ```d
 module a;
@@ -45,7 +44,7 @@ int main()
 
 > Notice here that we import modules in the same directory just with their name. It's basically $module_{path} = module_{name}+".t"$. Directory structure is also taken into account, hence in order to reference the module `c` we must import it as `niks.c` as that will resolve to `niks/c.t` as the file path.
 
-##### Module `b` at file `b.t`
+#### Module `b` at file `b.t`
 
 ```d
 module b;
@@ -65,7 +64,7 @@ int doThing()
 }
 ```
 
-##### Module `c` at file `niks/c.t`
+#### Module `c` at file `niks/c.t`
 
 ```d
 module c;
@@ -99,11 +98,11 @@ echo $?
 
 > Note, the module you specify on the command-line will have its directory used as the base search path for the rest of the modules. Therefore specifying `a.t` or `b.t` is fine as they reside in the same directory whereby `niks/` can be found ut this is not true if you compiles `niks/c.t` as that would only see the search directory from `niks/` downwards - upwards searching does **not** occur
 
-## Module management
+### Module management
 
 The *module manager* is responsible for maintaining a list of so-called *search paths* and being able to take a query for a given module (by name) and attempt to find it within said *paths*.
 
-### The `ModuleEntry`
+#### The `ModuleEntry`
 
 The first type we should start off with an analysis of is the `ModuleEntry` type. This is a simple struct which associates a module's **name** with a given **filename** (in the form of an absolute path).
 
@@ -196,7 +195,7 @@ public struct ModuleEntry
 
 The above definition is all you really need to know about this type, this simple is a tuple of sorts with some helper methods to extract the two tuple values of $(module_{name}, module_{path})$ and doing validation of these values.
 
-### The module manager
+#### The module manager
 
 The *module manager* defined in the `ModuleManager` type, it contains the following constructor method:
 
@@ -213,7 +212,7 @@ It then also contains the following methods:
 | `find(string)`           | `ModuleEntry`| This searches all search paths for a _module file_ with the given _module name_ and then returns the `ModuleEntry` for it if found, else a `ModuleManagerError` is thrown |
 | `findAllTFilesShallow(string)` | `string[]` | Searches the directory at the given path and returns the absolute paths of all files ending in `.t` |
 
-#### How searching works
+##### How searching works
 
 We have now shown you the more frequently used API but there are, however, some more internal methods which are used in order to perform the actual searching.
 
@@ -231,7 +230,7 @@ private bool find
 
 This method is at the core of searching, most other methods are either called _from_ it or call to it as simple proxy methods. I will now go into the details of how this method works when searching is performed and the various branches it may take during a search.
 
-##### Parameters
+**Parameters**:
 
 * Firstly this method takes in a `string[]` of absolute paths to directories. Normally this will be passed a `this.searchPaths`, meaning that effectively the way this method is used is that it will be performing searches from those paths.
 
@@ -241,7 +240,7 @@ This method is at the core of searching, most other methods are either called _f
 
 * Lastly, we have the `isDirect` parameter which has a default value of `true`. This controls whether a further search is done if the module being searched for is not found during the shallow search.
 
-##### Return value
+**Return value**:
 
 The return value is a `bool` and is `true` when a `ModuleEntry` is found, `false` otherwise. This is just so you know whether or not the reference parameter `found` was updated or not; i.e. if a module by the given name was found or not.
 
@@ -251,10 +250,10 @@ So let's take an example. We had a module structure as follows:
 
 ```bash
 source/tlang/testing/modules/
-├── a.t
-├── b.t
-├── niks
-│   └── c.t
+|-- a.t
+|-- b.t
+|-- niks
+|   |-- c.t
 ```
 
 Now if we were searching for the modules named `a` or `b` and gave the `directories` of `["source/tlang/testing/modules/"]` then we would find those tow modules (ins separate calls of course) immediately within the shallow search performed.
