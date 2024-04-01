@@ -31,6 +31,7 @@ import std.path;
 import std.file : dirEntries, DirEntry, SpanMode;
 import std.conv : to;
 import std.string : endsWith, strip, replace;
+import std.file : exists, isDir;
 
 /** 
  * Represents the module-name to
@@ -148,7 +149,7 @@ public final class ModuleManager
      */
     this(Compiler compiler)
     {
-        // Add all command-line search paths
+        // Add search paths discovered from configuration entry
         string[] cmdLinePaths = compiler.getConfig().getConfig("modman:path").getArray();
         addSearchPaths(cmdLinePaths);
         
@@ -262,7 +263,18 @@ public final class ModuleManager
     {
         string[] allTFiles;
 
-        // TODO: Ensure we are given a directory path
+        // The path must be valid
+        if(!exists(directory))
+        {
+            gprintln(format("Skipping directory '%s' as it does not exist", directory), DebugType.WARNING);
+            return null;
+        }
+        // The path must refer to a directory
+        else if(!isDir(directory))
+        {
+            gprintln(format("Skipping directory '%s' it is a valid path but NOT a directory", directory), DebugType.WARNING);
+            return null;
+        }
 
         // Enumrate all directory entries in `directory`
         foreach(DirEntry entry; dirEntries!()(directory, SpanMode.shallow))
