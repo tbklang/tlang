@@ -1083,6 +1083,9 @@ public final class DCodeEmitter : CodeEmitter
         {
             gprintln(format("Emitting extern(...) statements for module %s...", mos.mod()));
 
+            // TODO: What about extern (At the T level)??!?! In wonder, those should be relaxed hey
+
+
             // Emit public functions
             foreach(Function func; mos.funcs())
             {
@@ -1093,8 +1096,13 @@ public final class DCodeEmitter : CodeEmitter
             }
 
             // Emit public variables
-            // TODO: Implement me
-            
+            foreach(Variable var; mos.vars())
+            {
+                string externEmit = format("extern %s;", generateSignature_Variable(var));
+
+                gprintln(format("VarExternEmit: '%s'", externEmit));
+                modOut.writeln(externEmit);
+            }
         }
 
         /** 
@@ -1208,6 +1216,24 @@ public final class DCodeEmitter : CodeEmitter
             emitFunctionDefinition(modOut, mod, currentFunctioName);
             modOut.writeln();
         }
+    }
+
+    private string generateSignature_Variable(Variable var)
+    {
+        string signature;
+
+        // Extract the Variable's type
+        Type varType = typeChecker.getType(var.context.container, var.getType());
+
+        // FIXME: Set proper scope type
+        string renamedSymbol = mapper.map(var, ScopeType.GLOBAL);
+
+        // <type> <name>
+        signature = typeTransform(varType)~" "~renamedSymbol;
+
+        // TODO: Add extern here?
+
+        return signature;
     }
 
     private string generateSignature(Function func)
