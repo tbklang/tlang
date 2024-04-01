@@ -139,6 +139,12 @@ public class Compiler
     /* The module manager */
     private ModuleManager modMan;
 
+    /** 
+     * Returns the module manager
+     * associated with this compiler
+     *
+     * Returns: the `ModuleManager`
+     */
     public ModuleManager getModMan()
     {
         return this.modMan;
