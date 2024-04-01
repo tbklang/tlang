@@ -577,8 +577,8 @@ public final class ModuleManager
             return false;
         }
 
-        // It should be a valid directory
-        return isDir(searchPath);
+        // Path should exist AND it should be a valid directory
+        return exists(searchPath) && isDir(searchPath);
     }
 }
 
