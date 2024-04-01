@@ -229,6 +229,9 @@ public final class CompilerConfiguration
             config.addConfig(ConfigEntry("types:max_width", 8));
         }
 
+        /* Always warn about unused variables */
+        config.addConfig(ConfigEntry("typecheck:warnUnusedVars", true));
+
         return config;
     }
 }

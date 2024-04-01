@@ -209,6 +209,34 @@ public final class TypeChecker
 
             gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
         }
+
+        /* Collect statistics */
+        doPostChecks();
+    }
+
+    /** 
+     * These are just checks we run for the convenience
+     * of the user. They do not manipulate anything but
+     * rather provide statistics
+     */
+    private void doPostChecks()
+    {
+        /** 
+         * Find the variables which were declared but never used
+         */
+        if(this.config.hasConfig("typecheck:warnUnusedVars") & this.config.getConfig("typecheck:warnUnusedVars").getBoolean())
+        {
+            Variable[] unusedVariables = getUnusedVariables();
+            gprintln("There are "~to!(string)(unusedVariables.length)~" unused variables");
+            if(unusedVariables.length)
+            {
+                foreach(Variable unusedVariable; unusedVariables)
+                {
+                    // TODO: Get a nicer name, full path-based
+                    gprintln("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never used");
+                }
+            }
+        }
     }
 
 
@@ -3257,6 +3285,51 @@ public final class TypeChecker
         //assert()
     }
 
+    /** 
+     * Maps a given `Variable` to its reference
+     * count. This includes the declaration
+     * thereof.
+     */
+    private uint[Variable] varRefCounts;
+
+    /** 
+     * Increments the given variable's reference
+     * count
+     *
+     * Params:
+     *   variable = the variable
+     */
+    void touch(Variable variable)
+    {
+        // Create entry if not existing yet
+        if(variable !in this.varRefCounts)
+        {
+            this.varRefCounts[variable] = 0;    
+        }
+
+        // Increment count
+        this.varRefCounts[variable]++;
+    }
+
+    /** 
+     * Returns all variables which were declared
+     * but not used
+     *
+     * Returns: the array of variables
+     */
+    public Variable[] getUnusedVariables()
+    {
+        Variable[] unused;
+        foreach(Variable variable; this.varRefCounts.keys())
+        {
+            if(!(this.varRefCounts[variable] > 1))
+            {
+                unused ~= variable;
+            }
+        }
+
+        return unused;
+    }
 }
 
 
@@ -3580,4 +3653,64 @@ unittest
     typeChecker.beginCheck();
 
     /* TODO: Actually test generated code queue */
+}
+
+/** 
+ * Tests the unused variable detection mechanism
+ *
+ * Case: Positive (unused variables exist)
+ * Source file: source/tlang/testing/unused_vars.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_vars.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 1 unused variable and then
+     * it should be named `j`
+     */
+    Variable[] unusedVars = tc.getUnusedVariables();
+    assert(unusedVars.length == 1);
+    Variable unusedVarActual = unusedVars[0];
+    Variable unusedVarExpected = cast(Variable)tc.getResolver().resolveBest(tc.getModule(), "j");
+    assert(unusedVarActual is unusedVarExpected);
+}
+
+/** 
+ * Tests the unused variable detection mechanism
+ *
+ * Case: Negative (unused variables do NOT exist)
+ * Source file: source/tlang/testing/unused_vars_none.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_vars_none.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 0 unused variables
+     */
+    Variable[] unusedVars = tc.getUnusedVariables();
+    assert(unusedVars.length == 0);
 }
