@@ -232,11 +232,10 @@ public final class CompilerConfiguration
         /**
          * Set the default search paths to be searched
          *
-         * These paths are, namely: (TODO) 
+         * These paths are, namely, (TODO: should be /usr/lib/tlang/*)
+         * sort of things here
          */
-        import std.file;
-        string[] searchPaths = [getcwd()];
-        searchPaths = []; // TODO: Disabling for now
+        string[] searchPaths = [];
         config.addConfig(ConfigEntry("modman:path", searchPaths));
 
         /**
