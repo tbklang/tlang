@@ -51,6 +51,19 @@ mixin template BaseCommand()
     }
 }
 
+mixin template ParseBase()
+{
+    @ArgNamed("paths|p", "Paths that should be considered for searching for modules")
+    @(ArgConfig.optional)
+    @(ArgConfig.aggregate)
+    string[] searchPaths;
+
+    void ParseBaseInit(Compiler compiler)
+    {
+        // Add additional search paths to the compiler
+        compiler.getModMan().addSearchPaths(searchPaths);
+    }
+}
 
 /** 
  * Base requirements for Emit+
@@ -126,11 +139,9 @@ mixin template TypeCheckerBase()
 struct compileCommand
 {
     mixin BaseCommand!();
-
-    
-
+    mixin ParseBase!();
+    mixin TypeCheckerBase!();
     mixin EmitBase!();
-
 
     void onExecute()
     {
@@ -158,6 +169,9 @@ struct compileCommand
             compiler.doLex();
             writeln("=== Tokens ===\n");
             writeln(compiler.getTokens());
+
+            /* Setup parser configuration parameters */
+            ParseBaseInit(compiler);
 
             /* Perform parsing */
             compiler.doParse();
@@ -243,7 +257,7 @@ struct lexCommand
 struct parseCommand
 {
     mixin BaseCommand!();
-
+    mixin ParseBase!();
 
     /* TODO: Add missing implementation for this */
     void onExecute()
@@ -270,6 +284,9 @@ struct parseCommand
             writeln("=== Tokens ===\n");
             writeln(compiler.getTokens());
 
+            /* Setup parser configuration parameters */
+            ParseBaseInit(compiler);
+
             /* Perform parsing */
             compiler.doParse();
         }
@@ -291,7 +308,8 @@ struct parseCommand
 struct typecheckCommand
 {
     mixin BaseCommand!();
-
+    mixin ParseBase!();
+    mixin TypeCheckerBase!();
 
     void onExecute()
     {
@@ -316,6 +334,9 @@ struct typecheckCommand
             compiler.doLex();
             writeln("=== Tokens ===\n");
             writeln(compiler.getTokens());
+
+            /* Setup parser configuration parameters */
+            ParseBaseInit(compiler);
 
             /* Perform parsing */
             compiler.doParse();
