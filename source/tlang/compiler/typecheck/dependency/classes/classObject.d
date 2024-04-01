@@ -27,9 +27,9 @@ public class ObjectInitializationNode : DNode
     /* Object actual type */
     private Clazz clazz;
 
-    this(DNodeGenerator dnodegen, Clazz objectActualType, NewExpression entity)
+    this(Clazz objectActualType, NewExpression entity)
     {
-        super(dnodegen, entity);
+        super(entity);
 
         // this.newExpression = entity;
         this.clazz = objectActualType;

@@ -13,12 +13,13 @@ import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
 import tlang.compiler.typecheck.dependency.core;
+import std.conv : to;
 
 public class ExpressionDNode : DNode
 {
-    this(DNodeGenerator dnodegen, Expression entity)
+    this(Expression entity)
     {
-        super(dnodegen, entity);
+        super(entity);
 
         initName();
     }
@@ -52,14 +53,16 @@ public class ExpressionDNode : DNode
 */
 public class AccessDNode : DNode
 {
+    private Entity entity;
+
     /**
     * Construct a new AccessNode given the `entity`
     * being accessed
     */
-    this(DNodeGenerator dnodegen, Entity entity)
+    this(Entity entity)
     {
-        super(dnodegen, entity);
-        // this.entity = entity;
+        super(entity);
+        this.entity = entity;
 
 
         initName();
@@ -67,8 +70,6 @@ public class AccessDNode : DNode
 
     private void initName()
     {
-        name = resolver.generateName(cast(Container)dnodegen.root.getEntity(), cast(Entity)entity);
-        name = "[AccessNode] (Name: "~name~")";
-        
+        name = "[AccessNode] (Name: "~to!(string)(entity)~")";
     }
 }

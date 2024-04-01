@@ -16,6 +16,8 @@ import std.container.slist;
 import std.algorithm : reverse;
 import tlang.compiler.typecheck.meta;
 import tlang.compiler.configuration;
+import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
+import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
 
 /**
 * The Parser only makes sure syntax
@@ -107,14 +109,6 @@ public final class TypeChecker
         /* TODO: Implement me */
         checkClassInherit(modulle);
 
-        // TODO: Issue 88: Don't use static state
-        scope(exit)
-        {
-            /* Clear the FunctionData map (for next compilation) */
-            clearFuncDefs(); 
-        }
-
-
         /**
         * Dependency tree generation
         *
@@ -125,8 +119,15 @@ public final class TypeChecker
         *
         */
         
+        // Create a pooling mechanism
+        import tlang.compiler.typecheck.dependency.pool.interfaces;
+        import tlang.compiler.typecheck.dependency.pool.impls;
+        
 
-        DNodeGenerator dNodeGenerator = new DNodeGenerator(this);
+        /* Create the dependency generator */
+        IPoolManager poolManager = new PoolManager();
+        IFuncDefStore funcDefStore = new FuncDefStore(this, poolManager);
+        DNodeGenerator dNodeGenerator = new DNodeGenerator(this, poolManager, funcDefStore);
 
         /* Generate the dependency tree */
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
@@ -157,7 +158,7 @@ public final class TypeChecker
         assert(codeQueue.empty() == true);
 
         /* Grab functionData ??? */
-        FunctionData[string] functionDefinitions = grabFunctionDefs();
+        FunctionData[string] functionDefinitions = funcDefStore.grabFunctionDefs();
         gprintln("Defined functions: "~to!(string)(functionDefinitions));
 
         foreach(FunctionData funcData; functionDefinitions.values)
@@ -208,8 +209,6 @@ public final class TypeChecker
 
             gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
         }
-
-        // NOTE: Check scope guard for "exit routines" which run here
 
         /* Collect statistics */
         doPostChecks();
