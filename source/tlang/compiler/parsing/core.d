@@ -2833,7 +2833,6 @@ public final class Parser
             /* If it is an import */
             else if(symbol == SymbolType.IMPORT)
             {
-                // TODO: Figure out exactly what to do
                 parseImport();
             }
             /* If it is a kind-of comment */
