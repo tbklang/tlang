@@ -99,7 +99,7 @@ public abstract class Statement
      * for this AST node
      *
      * Params:
-     *   line = 
+     *   linfo = the `LineInfo`
      */
     public final void setLineInfo(LineInfo linfo)
     {
