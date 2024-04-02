@@ -9,14 +9,37 @@ import tlang.compiler.lexer.core;
 import core.stdc.stdlib;
 import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
+import tlang.compiler.reporting : LineInfo;Par
 
-// TODO: Technically we could make a core parser etc
+/** 
+ * Provided with a lexer this
+ * can parse the tokens into
+ * an in-memory AST structure
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 public final class Parser
 {
     /** 
      * Tokens management
      */
     private LexerInterface lexer;
+
+    /** 
+     * Returns the `LineInfo` of
+     * the lexer's current token.
+     *
+     * This is useful when you want
+     * to associate a line with
+     * an AST node right before
+     * returning.
+     *
+     * Returns: the `LineInfo`
+     */    
+    private LineInfo getCurrentLineInfo()
+    {
+        return this.lexer.getCurrentToken().getLineInfo();
+    }
 
     /**
     * Crashes the program if the given token is not a symbol
