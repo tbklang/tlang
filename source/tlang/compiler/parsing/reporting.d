@@ -7,7 +7,7 @@
 module tlang.compiler.parsing.reporting;
 
 import tlang.compiler.lexer.core.tokens;
-import std.string : strip;
+import std.string : strip, format;
 
 /** 
  * Represents line information
@@ -76,4 +76,72 @@ public struct LineInfo
         fullLine = strip(fullLine);
         return fullLine;
     }
+
+    /** 
+     * Returns the string represenation
+     * of this line info
+     *
+     * Returns: a string
+     */
+    public string toString()
+    {
+        return format("LineInfo %s", getLine());
+    }
+}
+
+public string report(Token offendingToken, string message)
+{
+    string line = offendingToken.getOrigin();
+
+    // Needs to have an origin string
+    if(!line.length)
+    {
+        // TODO: assret maybe?
+        // return;
+    }
+
+    // FIXME: Double check the boundries here
+    ulong pointerPos = offendingToken.getCoords().getColumn() < message.length ? offendingToken.getCoords().getColumn() : 0;
+    assert(pointerPos < message.length);
+
+    import std.stdio;
+    import niknaks.debugging : genX;
+    string pointer = format("%s^", genX(pointerPos, " "));
+    
+    /**
+     * <message>
+     *
+     *    <originString>
+     *        ^ (at pos)
+     *
+     * At <Coords>
+     */
+    string fullMessage = format("%s\n\n\t%s\n\t%s\n\nAt %s", message, line, pointer, offendingToken.getCoords());
+
+    // import gogga;
+    // gprintln(fullMessage, DebugType.ERROR);
+
+    return fullMessage;
+}
+
+version(unittest)
+{
+    import gogga;
+}
+
+unittest
+{
+    string line = "int i = 20";
+    import tlang.compiler.lexer.kinds.basic : BasicLexer;
+    BasicLexer lex = new BasicLexer(line);
+    lex.performLex();
+
+    // TODO: In future when BasicLexer is updated
+    // we should remove this
+    lex.nextToken();
+    Token offending = lex.getCurrentToken();
+    offending.setOrigin(line);
+
+    string s = report(offending, "Cannot name a variable i");
+    gprintln(s);
 }
