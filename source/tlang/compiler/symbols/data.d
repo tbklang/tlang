@@ -85,7 +85,7 @@ public class Program
     }
 }
 
-public class Statement
+public abstract class Statement
 {
 
     public byte weight = 0;
