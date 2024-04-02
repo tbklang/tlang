@@ -157,13 +157,11 @@ public string report(string message, LineInfo linfo, ulong cursor = 0)
 
 public string report(Token offendingToken, string message)
 {
-    string line = offendingToken.getOrigin();
-
     // FIXME: Double check the boundries here
     ulong pointerPos = offendingToken.getCoords().getColumn() < message.length ? offendingToken.getCoords().getColumn() : 0;
     assert(pointerPos < message.length);
 
-    return report(message, offendingToken.deriveLineInfo(), pointerPos);
+    return report(message, offendingToken.getLineInfo(), pointerPos);
 }
 
 version(unittest)

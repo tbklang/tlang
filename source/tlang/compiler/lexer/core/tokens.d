@@ -6,8 +6,7 @@ module tlang.compiler.lexer.core.tokens;
 import std.string : cmp, format;
 import std.conv : to;
 import tlang.compiler.reporting : Coords;
-
-// TODO: Below could have linof?!?!?!
+import tlang.compiler.reporting : LineInfo;
 
 /** 
  * Defines a `Token` that a lexer
@@ -120,9 +119,13 @@ public final class Token
         return Coords(this.line, this.column);
     }
 
-    // TODO: Switch to this
-    import tlang.compiler.reporting :LineInfo;
-    public LineInfo deriveLineInfo()
+    /** 
+     * Returns the line information
+     * of this particular token
+     *
+     * Returns: the `LineInfo`
+     */
+    public LineInfo getLineInfo()
     {
         return LineInfo(getOrigin(), getCoords());
     }
