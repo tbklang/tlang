@@ -6,6 +6,7 @@ import tlang.compiler.symbols.check;
 import tlang.compiler.symbols.data;
 import tlang.compiler.lexer.core.tokens : Token;
 import std.conv : to;
+import tlang.compiler.reporting : LineInfo, report;
 
 public class ParserException : TError
 {
@@ -38,6 +39,10 @@ public final class SyntaxError : ParserException
 
         super(parser);
 
-        msg = "Syntax error: Expected "~to!(string)(expected)~" but got "~to!(string)(provided)~", see "~providedToken.toString();
+        msg = report
+        (
+            "Syntax error: Expected "~to!(string)(expected)~" but got "~to!(string)(provided)~", see "~providedToken.toString(),
+            providedToken
+        );
     }
 }
