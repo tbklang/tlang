@@ -7,6 +7,8 @@ import std.string : cmp, format;
 import std.conv : to;
 import tlang.compiler.reporting : Coords;
 
+// TODO: Below could have linof?!?!?!
+
 /** 
  * Defines a `Token` that a lexer
  * would be able to produce
@@ -116,5 +118,12 @@ public final class Token
     public Coords getCoords()
     {
         return Coords(this.line, this.column);
+    }
+
+    // TODO: Switch to this
+    import tlang.compiler.reporting :LineInfo;
+    public LineInfo deriveLineInfo()
+    {
+        return LineInfo(getOrigin(), getCoords());
     }
 }
