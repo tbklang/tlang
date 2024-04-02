@@ -87,6 +87,19 @@ public class Program
 
 public abstract class Statement
 {
+    import tlang.compiler.parsing.reporting : LineInfo;
+    private LineInfo lineInfo;
+
+    public final void setLineInfo(LineInfo lineInfo)
+    {
+        this.lineInfo = lineInfo;
+    }
+
+    public LineInfo getLineInfo()
+    {
+        return this.lineInfo;
+    }
+
 
     public byte weight = 0;
 
