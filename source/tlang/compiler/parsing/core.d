@@ -32,8 +32,6 @@ public final class Parser
         if (!isFine)
         {
             throw new SyntaxError(this, symbol, token);
-            // expect("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
-                    // string)(actualType) ~ " with " ~ token.toString());
         }
     }
 
