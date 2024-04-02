@@ -155,7 +155,7 @@ public string report(string message, LineInfo linfo, ulong cursor = 0)
     return fullMessage;
 }
 
-public string report(Token offendingToken, string message)
+public string report(string message, Token offendingToken)
 {
     // FIXME: Double check the boundries here
     ulong pointerPos = offendingToken.getCoords().getColumn() < message.length ? offendingToken.getCoords().getColumn() : 0;
@@ -182,6 +182,6 @@ unittest
     Token offending = lex.getCurrentToken();
     offending.setOrigin(line);
 
-    string s = report(offending, "Cannot name a variable i");
+    string s = report("Cannot name a variable i", offending);
     gprintln(s);
 }
