@@ -163,7 +163,7 @@ public string report(Token offendingToken, string message)
     ulong pointerPos = offendingToken.getCoords().getColumn() < message.length ? offendingToken.getCoords().getColumn() : 0;
     assert(pointerPos < message.length);
 
-    return report(message, LineInfo(line, offendingToken.getCoords()), pointerPos);
+    return report(message, offendingToken.deriveLineInfo(), pointerPos);
 }
 
 version(unittest)
