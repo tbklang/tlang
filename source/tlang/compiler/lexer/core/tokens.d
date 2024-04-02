@@ -5,10 +5,13 @@ module tlang.compiler.lexer.core.tokens;
 
 import std.string : cmp, format;
 import std.conv : to;
+import tlang.compiler.reporting : Coords;
 
 /** 
  * Defines a `Token` that a lexer
  * would be able to produce
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
  */
 public final class Token
 {
@@ -113,57 +116,5 @@ public final class Token
     public Coords getCoords()
     {
         return Coords(this.line, this.column);
-    }
-}
-
-/** 
- * Represents coordinates
- */
-public struct Coords
-{
-    private ulong line;
-    private ulong column;
-
-    /** 
-     * Constructs a new set of coordinates
-     *
-     * Params:
-     *   line = the line
-     *   column = the column
-     */
-    this(ulong line, ulong column)
-    {
-        this.line = line;
-        this.column = column;
-    }
-
-    /** 
-     * Returns the line
-     *
-     * Returns: line index
-     */
-    public ulong getLine()
-    {
-        return this.line;
-    }
-
-    /** 
-     * Returns the column
-     *
-     * Returns: column index
-     */
-    public ulong getColumn()
-    {
-        return this.column;
-    }
-
-    /** 
-     * Returns a string representation
-     *
-     * Returns: the coordinates
-     */
-    public string toString()
-    {
-        return format("line %d, column %d", this.line, this.column);
     }
 }

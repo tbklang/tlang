@@ -2,12 +2,66 @@
  * Reporting types and utilities
  * for error reporting
  *
- * Authors: Tristan Brice Velloza Kildaire
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
  */
 module tlang.compiler.reporting;
 
 import tlang.compiler.lexer.core.tokens;
 import std.string : strip, format;
+
+/** 
+ * Represents coordinates
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
+public struct Coords
+{
+    private ulong line;
+    private ulong column;
+
+    /** 
+     * Constructs a new set of coordinates
+     *
+     * Params:
+     *   line = the line
+     *   column = the column
+     */
+    this(ulong line, ulong column)
+    {
+        this.line = line;
+        this.column = column;
+    }
+
+    /** 
+     * Returns the line
+     *
+     * Returns: line index
+     */
+    public ulong getLine()
+    {
+        return this.line;
+    }
+
+    /** 
+     * Returns the column
+     *
+     * Returns: column index
+     */
+    public ulong getColumn()
+    {
+        return this.column;
+    }
+
+    /** 
+     * Returns a string representation
+     *
+     * Returns: the coordinates
+     */
+    public string toString()
+    {
+        return format("line %d, column %d", this.line, this.column);
+    }
+}
 
 /** 
  * Represents line information
@@ -98,22 +152,12 @@ public string report(string message, LineInfo linfo, ulong cursor = 0)
                             offendingLocation
                         );
 
-    // import gogga;
-    // gprintln(fullMessage, DebugType.ERROR);
-
     return fullMessage;
 }
 
 public string report(Token offendingToken, string message)
 {
     string line = offendingToken.getOrigin();
-
-    // Needs to have an origin string
-    if(!line.length)
-    {
-        // TODO: assret maybe?
-        // return;
-    }
 
     // FIXME: Double check the boundries here
     ulong pointerPos = offendingToken.getCoords().getColumn() < message.length ? offendingToken.getCoords().getColumn() : 0;
