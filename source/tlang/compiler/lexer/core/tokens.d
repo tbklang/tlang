@@ -1,5 +1,5 @@
 /** 
- * Token definition
+ * Token and related types definitions
  */
 module tlang.compiler.lexer.core.tokens;
 
@@ -72,5 +72,48 @@ public final class Token
     public string getToken()
     {
         return token;
+    }
+
+    /** 
+     * Returns the coordinates of
+     * this token
+     *
+     * Returns: the `Coords`
+     */
+    public Coords getCoords()
+    {
+        return Coords(this.line, this.column);
+    }
+}
+
+/** 
+ * Represents coordinates
+ */
+public struct Coords
+{
+    private ulong line;
+    private ulong column;
+
+    /** 
+     * Constructs a new set of coordinates
+     *
+     * Params:
+     *   line = the line
+     *   column = the column
+     */
+    this(ulong line, ulong column)
+    {
+        this.line = line;
+        this.column = column;
+    }
+
+    /** 
+     * Returns a string representation
+     *
+     * Returns: the coordinates
+     */
+    public string toString()
+    {
+        return format("line %d, column %d", this.line, this.column);
     }
 }
