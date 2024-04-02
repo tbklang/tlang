@@ -11,98 +11,62 @@ import std.string : strip, format;
 
 /** 
  * Represents line information
- * TODO: This should house just a token
- * but have helper methods for positions
- * and
+ * which couples the line itself
+ * with the coordinates as well
+ * 
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
  */
 public struct LineInfo
 {
     private string line;
     private Coords location;
     
+    /** 
+     * Constructs a new `LineInfo`
+     * combining the line and its
+     * location
+     *
+     * Params:
+     *   line = the line itself
+     *   location = the location
+     */
+    this(string line, Coords location)
+    {
+        this.line = line;
+        this.location = location;
+    }
+
+    /** 
+     * Returns the line itself
+     *
+     * Returns: the line
+     */
     public string getLine()
     {
         return this.line;
     }
 
+    /** 
+     * Returns the location
+     * of this line
+     *
+     * Returns: the `Coords`
+     */
     public Coords getLocation()
     {
         return this.location;
     }
 
-    // private string 
-
-    // /** 
-    //  * Appends the given token to the
-    //  * line
-    //  *
-    //  * Params:
-    //  *   tok = the token to append
-    //  */
-    // public void add(Token tok)
-    // {
-    //     this.line ~= tok;
-    // }
-
-    // /** 
-    //  * Clears all tokens from
-    //  * this line info
-    //  */
-    // public void clear()
-    // {
-    //     this.line.length = 0;
-    // }
-
-    // /** 
-    //  * Returns the coordinates of
-    //  * the start of the line
-    //  *
-    //  * Returns: starting coordinates
-    //  */
-    // public Coords getStart()
-    // {
-    //     return this.line.length ? this.line[0].getCoords() : Coords(0,0);
-    // }
-
-    // /** 
-    //  * Returns the coordinates of
-    //  * the end of the line
-    //  *
-    //  * Returns: ending coordinates
-    //  */
-    // public Coords getEnd()
-    // {
-    //     return this.line.length ? this.line[$-1].getCoords() : Coords(0,0);
-    // }
-
-    // /** 
-    //  * Returns the complete line
-    //  * of all tokens strung together
-    //  *
-    //  * Returns: the line
-    //  */
-    // public string getLine()
-    // {
-    //     string fullLine;
-    //     foreach(Token tok; this.line)
-    //     {
-    //         fullLine ~= tok.getToken() ~" ";
-    //     }
-
-    //     fullLine = strip(fullLine);
-    //     return fullLine;
-    // }
-
-    // /** 
-    //  * Returns the string represenation
-    //  * of this line info
-    //  *
-    //  * Returns: a string
-    //  */
-    // public string toString()
-    // {
-    //     return format("LineInfo %s", getLine());
-    // }
+    /** 
+     * Returns the string represenation
+     * of this line info
+     *
+     * Returns: a string
+     */
+    public string toString()
+    {
+        return format("%s at %s", getLine(), getLocation());
+    }
 }
 
 public string report(string message, LineInfo linfo, ulong cursor = 0)
@@ -155,24 +119,7 @@ public string report(Token offendingToken, string message)
     ulong pointerPos = offendingToken.getCoords().getColumn() < message.length ? offendingToken.getCoords().getColumn() : 0;
     assert(pointerPos < message.length);
 
-    import std.stdio;
-    import niknaks.debugging : genX;
-    string pointer = format("%s^", genX(pointerPos, " "));
-    
-    /**
-     * <message>
-     *
-     *    <originString>
-     *        ^ (at pos)
-     *
-     * At <Coords>
-     */
-    string fullMessage = format("%s\n\n\t%s\n\t%s\n\nAt %s", message, line, pointer, offendingToken.getCoords());
-
-    // import gogga;
-    // gprintln(fullMessage, DebugType.ERROR);
-
-    return fullMessage;
+    return report(message, LineInfo(line, offendingToken.getCoords()), pointerPos);
 }
 
 version(unittest)
