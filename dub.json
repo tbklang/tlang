@@ -5,10 +5,11 @@
 	"copyright": "Copyright © 2021-2023, Tristan B. Kildaire",
 	"dependencies": {
 		"gogga": "~>0.1.0",
-		"jcli": "0.25.0-beta.3"
+		"jcli": "0.25.0-beta.3",
+		"niknaks": "~>0.9.8"
 	},
 	"description": "The official Tristan language compiler project",
+	"homepage": "http://deavmi.assigned.network/projects/tlang",
 	"license": "GPLv3",
-	"name": "tlang",
-	"homepage": "http://deavmi.assigned.network/projects/tlang"
+	"name": "tlang"
 }
