@@ -67,7 +67,7 @@ public final class Token
      *
      * Returns: the line
      */
-    public string getOrigin()
+    private string getOrigin()
     {
         return this.origin;
     }
