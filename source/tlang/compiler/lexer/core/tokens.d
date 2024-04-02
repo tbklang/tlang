@@ -3,7 +3,7 @@
  */
 module tlang.compiler.lexer.core.tokens;
 
-import std.string : cmp;
+import std.string : cmp, format;
 import std.conv : to;
 
 /** 
