@@ -23,6 +23,12 @@ public final class Token
     private ulong line, column;
 
     /** 
+     * The line this token was
+     * lex'd from
+     */
+    private string origin;
+
+    /** 
      * Constructs a new `Token` with the given
      * contents and line information
      *
@@ -36,6 +42,30 @@ public final class Token
         this.token = token;
         this.line = line;
         this.column = column;
+    }
+
+    /** 
+     * Sets the origin string.
+     * This is the line in which
+     * this token was derived from.
+     * 
+     * Params:
+     *   line = the line
+     */
+    public void setOrigin(string line)
+    {
+        this.origin = line;
+    }
+
+    /** 
+     * Returns the origin string (if any)
+     * from which this token was derived
+     *
+     * Returns: the line
+     */
+    public string getOrigin()
+    {
+        return this.origin;
     }
 
     /** 
@@ -105,6 +135,26 @@ public struct Coords
     {
         this.line = line;
         this.column = column;
+    }
+
+    /** 
+     * Returns the line
+     *
+     * Returns: line index
+     */
+    public ulong getLine()
+    {
+        return this.line;
+    }
+
+    /** 
+     * Returns the column
+     *
+     * Returns: column index
+     */
+    public ulong getColumn()
+    {
+        return this.column;
     }
 
     /** 
