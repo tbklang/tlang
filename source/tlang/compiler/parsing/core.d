@@ -9,7 +9,7 @@ import tlang.compiler.lexer.core;
 import core.stdc.stdlib;
 import misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
-import tlang.compiler.reporting : LineInfo;Par
+import tlang.compiler.reporting : LineInfo;
 
 /** 
  * Provided with a lexer this
