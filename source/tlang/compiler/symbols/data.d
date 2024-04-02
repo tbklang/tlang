@@ -85,15 +85,25 @@ public class Program
     }
 }
 
+import tlang.compiler.reporting : LineInfo;
+
 public abstract class Statement
 {
-    // TODO: We must put something here which
-    // contains simply the line
-    private string line;
+    /** 
+     * Line information
+     */
+    private LineInfo linfo;
 
-    public void setOrigin(string line)
+    /** 
+     * Sets the line information
+     * for this AST node
+     *
+     * Params:
+     *   line = 
+     */
+    public final void setLineInfo(LineInfo linfo)
     {
-        this.line = line;
+        this.linfo = linfo;
     }
 
     /** 
@@ -102,9 +112,9 @@ public abstract class Statement
      *
      * Returns: the line info
      */
-    public string getOrigin()
+    public final LineInfo getLineInfo()
     {
-        return this.line;
+        return this.linfo;
     }
     
     public byte weight = 0;
