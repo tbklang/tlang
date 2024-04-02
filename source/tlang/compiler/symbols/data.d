@@ -87,20 +87,26 @@ public class Program
 
 public abstract class Statement
 {
-    import tlang.compiler.parsing.reporting : LineInfo;
-    private LineInfo lineInfo;
+    // TODO: We must put something here which
+    // contains simply the line
+    private string line;
 
-    public final void setLineInfo(LineInfo lineInfo)
+    public void setOrigin(string line)
     {
-        this.lineInfo = lineInfo;
+        this.line = line;
     }
 
-    public LineInfo getLineInfo()
+    /** 
+     * Gets the line information
+     * from where this was retrieved
+     *
+     * Returns: the line info
+     */
+    public string getOrigin()
     {
-        return this.lineInfo;
+        return this.line;
     }
-
-
+    
     public byte weight = 0;
 
     /* !!!! BEGIN TYPE CHECK ROUTINES AND DATA !!!! */
