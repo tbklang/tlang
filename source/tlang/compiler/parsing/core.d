@@ -299,6 +299,9 @@ public final class Parser
         /* Parent the branch to the WhileLoop */
         parentToContainer(whileLoop, [branch]);
 
+        /* Store line information at this point into AST node */
+        whileLoop.setLineInfo(getCurrentLineInfo());
+
         gprintln("parseWhile(): Leave", DebugType.WARNING);
 
         return whileLoop;
