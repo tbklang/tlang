@@ -1194,13 +1194,23 @@ public final class DCodeEmitter : CodeEmitter
         // Extract the Variable's type
         Type varType = typeChecker.getType(var.context.container, var.getType());
 
-        // FIXME: Set proper scope type
-        string renamedSymbol = mapper.map(var, ScopeType.GLOBAL);
+        // Decide on the symbol's name
+        string symbolName;
+
+        // If it is NOT extern then map it
+        if(!var.isExternal())
+        {
+            // FIXME: Set proper scope type
+            symbolName = mapper.map(var, ScopeType.GLOBAL);
+        }
+        // If it is extern, then leave it as such
+        else
+        {
+            symbolName = var.getName();
+        }
 
         // <type> <name>
-        signature = typeTransform(varType)~" "~renamedSymbol;
-
-        // TODO: Add extern here?
+        signature = typeTransform(varType)~" "~symbolName;
 
         return signature;
     }
