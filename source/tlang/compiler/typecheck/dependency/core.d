@@ -734,6 +734,9 @@ public class DNodeGenerator
                     /* Get the entity as a Variable */
                     Variable variable = cast(Variable)namedEntity;
 
+                    /* Variable reference count must increase */
+                    tc.touch(variable);
+
                     /* Pool the node */
                     VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
 
@@ -1041,6 +1044,9 @@ public class DNodeGenerator
             writeln("Hello");
             writeln("VarType: "~to!(string)(variableType));
 
+            /* Add an entry to the reference counting map */
+            tc.touch(variable);
+
             /* Basic type */
             if(cast(Primitive)variableType)
             {
@@ -1142,6 +1148,9 @@ public class DNodeGenerator
             gprintln("YEAST ENJOYER");
             Variable variable = cast(Variable)tc.getResolver().resolveBest(c, vAsStdAl.getVariableName());
             assert(variable);
+
+            /* Assinging to a variable is usage, therefore increment the reference count */
+            tc.touch(variable);
 
 
             /* Pool the variable */
@@ -1620,5 +1629,4 @@ public class DNodeGenerator
 
         return classDNode;
     }
-
 }

@@ -246,6 +246,9 @@ public final class CompilerConfiguration
         // FIXME: Make true by default - this WILL break many unittests and semantic ones
         // so be very sure before you enable this
         config.addConfig(ConfigEntry("modman:strict_headers", false));
+        
+        /* Always warn about unused variables */
+        config.addConfig(ConfigEntry("typecheck:warnUnusedVars", true));
 
         return config;
     }

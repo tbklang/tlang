@@ -129,7 +129,15 @@ mixin template EmitBase()
  */
 mixin template TypeCheckerBase()
 {
+    @ArgNamed("unusedVars|uvars", "Warn about any unused variables")
+    @(ArgConfig.optional)
+    bool warnUnusedVariables = true;
 
+    void TypeCheckerInit(Compiler compiler)
+    {
+        // Set whether to warn about unused variables
+        compiler.getConfig().addConfig(ConfigEntry("typecheck:warnUnusedVars", warnUnusedVariables));
+    }
 }
 
 /** 
@@ -164,6 +172,9 @@ struct compileCommand
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
+
+            /* Setup all type checker related parameters */
+            TypeCheckerInit(compiler);
 
             /* Perform tokenization */
             compiler.doLex();
@@ -330,6 +341,9 @@ struct typecheckCommand
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
+
+            /* Setup all type checker related parameters */
+            TypeCheckerInit(compiler);
 
             compiler.doLex();
             writeln("=== Tokens ===\n");

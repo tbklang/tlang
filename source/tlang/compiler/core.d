@@ -246,9 +246,22 @@ public class Compiler
         this.typeChecker.beginCheck();
     }
 
+    /** 
+     * Returns the type checker instance of
+     * this compiler
+     *
+     * Returns: the type checker
+     * Throws:
+     *    CompilerException if you have not
+     * called `doTypeCheck()` yet
+     */
     public TypeChecker getTypeChecker()
     {
-        // TODO: Should we do a check for if `doTypeCheck()` was called or not?
+        if(typeChecker is null)
+        {
+            throw new CompilerException(CompilerError.TYPECHECK_NOT_YET_PERFORMED);
+        }
+
         return this.typeChecker;
     }
 
