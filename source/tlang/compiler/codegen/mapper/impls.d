@@ -147,13 +147,7 @@ public class HashMapper : SymbolMapper
         // Generate the name as `_<hex(<path>)>`
         import std.digest : toHexString, LetterCase;
         import std.digest.md : md5Of;
-
-        version(unittest) { writeln(format("hashMapper, prior to hashing the symbol name is: '%s'", path)); }
-
-
         string mappedSymbol = format("t_%s", toHexString!(LetterCase.lower)(md5Of(path)));
-
-        version(unittest) { writeln(format("hashMapper, AFTER hashing symbol name is: '%s'", mappedSymbol)); }
 
         return mappedSymbol;
     }
