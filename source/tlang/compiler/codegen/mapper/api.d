@@ -8,7 +8,7 @@ import tlang.compiler.symbols.data : Entity;
  * implement in order to be used
  * in the `DGen` code emitter
  */
-public interface SymbolMapperV2
+public interface SymbolMapper
 {
     /** 
      * Maps the given `Entity` to a symbol

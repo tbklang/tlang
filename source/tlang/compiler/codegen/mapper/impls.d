@@ -6,7 +6,7 @@ import tlang.compiler.symbols.data : Entity;
 import tlang.compiler.symbols.containers : Module;
 import std.string : format;
 
-public class LebanonMapper : SymbolMapperV2
+public class LebanonMapper : SymbolMapper
 {
     private TypeChecker tc;
 
@@ -73,7 +73,7 @@ unittest
 
     TypeChecker tc = new TypeChecker(compiler);
 
-    SymbolMapperV2 lebMapper = new LebanonMapper(tc);
+    SymbolMapper lebMapper = new LebanonMapper(tc);
     
     string withModPath = lebMapper.map(variable, ScopeType.GLOBAL);
     writeln(format("withModPath: '%s'", withModPath));
@@ -84,7 +84,7 @@ unittest
     assert(cmp(withoutModPath, "varA") == 0);
 }
 
-public class HashMapper : SymbolMapperV2
+public class HashMapper : SymbolMapper
 {
     private TypeChecker tc;
     
@@ -149,7 +149,7 @@ unittest
 
     TypeChecker tc = new TypeChecker(compiler);
 
-    SymbolMapperV2 hashMapper = new HashMapper(tc);
+    SymbolMapper hashMapper = new HashMapper(tc);
     
     string withModPath = hashMapper.map(variable, ScopeType.GLOBAL);
     writeln(format("withModPath: '%s'", withModPath));

@@ -33,7 +33,7 @@ public final class DCodeEmitter : CodeEmitter
     private bool symbolMapping;
 
     // NOTE: In future store the mapper in the config please
-    this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapperV2 mapper)
+    this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
         super(typeChecker, file, config, mapper);
 

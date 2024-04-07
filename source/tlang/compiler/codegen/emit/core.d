@@ -11,7 +11,7 @@ import std.range : walkLength;
 import gogga;
 import std.conv : to;
 import tlang.compiler.configuration : CompilerConfiguration;
-import tlang.compiler.codegen.mapper.api : SymbolMapperV2;
+import tlang.compiler.codegen.mapper.api : SymbolMapper;
 
 /**
 * TODO: Perhaps have an interface that can emit(Context/Parent, Statement)
@@ -24,7 +24,7 @@ public abstract class CodeEmitter
     protected TypeChecker typeChecker;
     protected File file;
     protected CompilerConfiguration config;
-    protected SymbolMapperV2 mapper;
+    protected SymbolMapper mapper;
     
     /** 
      * The selected queue is the queue to be used
@@ -134,7 +134,7 @@ public abstract class CodeEmitter
         return functionBodyInstrs.keys();
     }
 
-    this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapperV2 mapper)
+    this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
     {
         this.typeChecker = typeChecker;
         this.file = file;
