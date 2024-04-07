@@ -1172,6 +1172,21 @@ public final class DCodeEmitter : CodeEmitter
         }
     }
 
+    /** 
+     * Generates the signature emit for a given
+     * variable.
+     *
+     * This is something of the form:
+     *
+     *    `<type> <name>`
+     *
+     * Where the `<name>` has been symbol
+     * mapped.
+     *
+     * Params:
+     *   var = the `Variable`
+     * Returns: a string
+     */
     private string generateSignature_Variable(Variable var)
     {
         string signature;
