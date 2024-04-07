@@ -1,3 +1,9 @@
+/**
+ * Various implementations of different
+ * symbol mapping techniques
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.codegen.mapper.impls;
 
 import tlang.compiler.codegen.mapper.core;
@@ -6,10 +12,21 @@ import tlang.compiler.symbols.data : Entity;
 import tlang.compiler.symbols.containers : Module;
 import std.string : format;
 
+/** 
+ * The lebanese smbol mapper
+ */
 public class LebanonMapper : SymbolMapper
 {
     private TypeChecker tc;
 
+    /** 
+     * Constructs a new lebanese
+     * symbol mapper
+     *
+     * Params:
+     *   tc = the `TypeChecker`
+     * to use
+     */
     this(TypeChecker tc)
     {
         this.tc = tc;
@@ -84,10 +101,21 @@ unittest
     assert(cmp(withoutModPath, "varA") == 0);
 }
 
+/** 
+ * The hash-based mapper
+ */
 public class HashMapper : SymbolMapper
 {
     private TypeChecker tc;
     
+    /** 
+     * Constructs a new hash
+     * symbol mapper
+     *
+     * Params:
+     *   tc = the `TypeChecker`
+     * to use
+     */
     this(TypeChecker tc)
     {
         this.tc = tc;
@@ -122,9 +150,8 @@ public class HashMapper : SymbolMapper
 
         version(unittest) { writeln(format("hashMapper, prior to hashing the symbol name is: '%s'", path)); }
 
-        // FIXME: Needs dup, somewhere this is allocating KAK!
-        // Some bizarre stack-allocation (maybe) and then returning that in [len, stackPtr]?
-        string mappedSymbol = format("t_%s", toHexString!(LetterCase.lower)(md5Of(path)).dup);
+
+        string mappedSymbol = format("t_%s", toHexString!(LetterCase.lower)(md5Of(path)));
 
         version(unittest) { writeln(format("hashMapper, AFTER hashing symbol name is: '%s'", mappedSymbol)); }
 
