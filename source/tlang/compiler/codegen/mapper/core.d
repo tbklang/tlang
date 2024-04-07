@@ -1,6 +1,12 @@
+/** 
+ * Provides symbol mapping
+ * interfaces for the emitting
+ * stage
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.codegen.mapper.core;
 
-import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.data : Entity;
 
 /** 
