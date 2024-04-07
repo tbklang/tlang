@@ -17,6 +17,9 @@ import std.string : format;
  */
 public class LebanonMapper : SymbolMapper
 {
+    /** 
+     * For access to the resolver
+     */
     private TypeChecker tc;
 
     /** 
@@ -32,6 +35,17 @@ public class LebanonMapper : SymbolMapper
         this.tc = tc;
     }
 
+    /** 
+     * Maps the given `Entity` to a symbol
+     * name with the provided scope type
+     *
+     * Params:
+     *   item = the entity to generate a
+     * symbol name for
+     *   type = the `ScopeType` to map
+     * using
+     * Returns: the symbol name
+     */
     public string map(Entity item, ScopeType type)
     {
         string path;
@@ -106,6 +120,9 @@ unittest
  */
 public class HashMapper : SymbolMapper
 {
+    /** 
+     * For access to the resolver
+     */
     private TypeChecker tc;
     
     /** 
@@ -121,6 +138,17 @@ public class HashMapper : SymbolMapper
         this.tc = tc;
     }
 
+    /** 
+     * Maps the given `Entity` to a symbol
+     * name with the provided scope type
+     *
+     * Params:
+     *   item = the entity to generate a
+     * symbol name for
+     *   type = the `ScopeType` to map
+     * using
+     * Returns: the symbol name
+     */
     public string map(Entity item, ScopeType type)
     {
         string path;
