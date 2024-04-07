@@ -3886,7 +3886,7 @@ unittest
     string sourceFile = "source/tlang/testing/unused_vars.t";
 
 
-    Compiler compiler = new Compiler(gibFileData(sourceFile), fileOutDummy);
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
     compiler.doLex();
     compiler.doParse();
     compiler.doTypeCheck();
@@ -3899,7 +3899,7 @@ unittest
     Variable[] unusedVars = tc.getUnusedVariables();
     assert(unusedVars.length == 1);
     Variable unusedVarActual = unusedVars[0];
-    Variable unusedVarExpected = cast(Variable)tc.getResolver().resolveBest(tc.getModule(), "j");
+    Variable unusedVarExpected = cast(Variable)tc.getResolver().resolveBest(compiler.getProgram().getModules()[0], "j");
     assert(unusedVarActual is unusedVarExpected);
 }
 
@@ -3918,7 +3918,7 @@ unittest
     string sourceFile = "source/tlang/testing/unused_vars_none.t";
 
 
-    Compiler compiler = new Compiler(gibFileData(sourceFile), fileOutDummy);
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
     compiler.doLex();
     compiler.doParse();
     compiler.doTypeCheck();
