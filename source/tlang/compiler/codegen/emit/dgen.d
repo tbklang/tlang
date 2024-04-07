@@ -1083,9 +1083,6 @@ public final class DCodeEmitter : CodeEmitter
         {
             gprintln(format("Emitting extern(...) statements for module %s...", mos.mod()));
 
-            // TODO: What about extern (At the T level)??!?! In wonder, those should be relaxed hey
-
-
             // Emit public functions
             foreach(Function func; mos.funcs())
             {
