@@ -1104,52 +1104,6 @@ public final class DCodeEmitter : CodeEmitter
                 modOut.writeln(externEmit);
             }
         }
-
-        /** 
-        //  * Only emit if there are entities
-        //  * needing an emit
-        //  *
-        //  * FIXME: Emit for every other module than current one
-        //  * must rather collect these
-        //  */
-        // if(externSets.length)
-        // {
-        //     string externGroupBody;
-        //     foreach(Entity entity; entities)
-        //     {
-                
-
-        //         if(cast(Variable)entity)
-        //         {
-        //             Variable variable = cast(Variable)entity;
-
-        //             // FIXME: Add a generateSignature for Variable
-        //         }
-        //         else if(cast(Function)entity)
-        //         {
-        //             Function func = cast(Function)entity;
-
-                    
-        //         }
-        //         else
-        //         {
-        //             gprintln("EXTERN EMIT: Not possible for a non function or variable, CHECK PREDICATE!");
-        //             assert(false);
-        //         }
-        //     }
-
-
-
-        //     import std.string : format;
-        //     modOut.writeln
-        //     (
-        //         format
-        //         (
-        //             "// Extern emits\n%s",
-        //             externGroupBody
-        //         )
-        //     );
-        // }
     }
 
     /** 
