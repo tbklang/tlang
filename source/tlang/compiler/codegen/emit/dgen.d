@@ -1089,7 +1089,14 @@ public final class DCodeEmitter : CodeEmitter
             // Emit public functions
             foreach(Function func; mos.funcs())
             {
-                string externEmit = format("extern %s;", generateSignature(func));
+                // Generate signature
+                string signature = generateSignature(func);
+
+                // Decide whether or not `extern` is needed
+                string externPart = func.isExternal() ? "" : "extern ";
+
+                // Generate the emit
+                string externEmit = format("%s%s;", externPart, signature);
 
                 gprintln(format("FuncExternEmit: '%s'", externEmit));
                 modOut.writeln(externEmit);
@@ -1098,7 +1105,14 @@ public final class DCodeEmitter : CodeEmitter
             // Emit public variables
             foreach(Variable var; mos.vars())
             {
-                string externEmit = format("extern %s;", generateSignature_Variable(var));
+                // Generate signature
+                string signature = generateSignature_Variable(var);
+
+                // Decide whether or not `extern` is needed
+                string externPart = var.isExternal() ? "" : "extern ";
+
+                // Generate the emit
+                string externEmit = format("%s%s;", externPart, signature);
 
                 gprintln(format("VarExternEmit: '%s'", externEmit));
                 modOut.writeln(externEmit);
@@ -1211,6 +1225,12 @@ public final class DCodeEmitter : CodeEmitter
 
         // <type> <name>
         signature = typeTransform(varType)~" "~symbolName;
+
+        // If if is external then it needs `extern ...`
+        if(var.isExternal())
+        {
+            signature = "extern "~signature;
+        }
 
         return signature;
     }
