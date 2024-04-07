@@ -1,6 +1,6 @@
 module tlang.compiler.codegen.mapper.impls;
 
-import tlang.compiler.codegen.mapper.api;
+import tlang.compiler.codegen.mapper.core;
 import tlang.compiler.typecheck.core : TypeChecker;
 import tlang.compiler.symbols.data : Entity;
 import tlang.compiler.symbols.containers : Module;

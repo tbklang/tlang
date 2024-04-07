@@ -11,7 +11,7 @@ import std.range : walkLength;
 import gogga;
 import std.conv : to;
 import tlang.compiler.configuration : CompilerConfiguration;
-import tlang.compiler.codegen.mapper.api : SymbolMapper;
+import tlang.compiler.codegen.mapper.core : SymbolMapper;
 
 /**
 * TODO: Perhaps have an interface that can emit(Context/Parent, Statement)

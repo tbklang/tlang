@@ -13,7 +13,7 @@ import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
-import tlang.compiler.codegen.mapper.api;
+import tlang.compiler.codegen.mapper.core;
 import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import tlang.compiler.symbols.check : getCharacter;
 import misc.utils : Stack;

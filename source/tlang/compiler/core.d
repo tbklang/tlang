@@ -14,7 +14,7 @@ import core.stdc.stdlib;
 import tlang.compiler.codegen.emit.core;
 import tlang.compiler.codegen.emit.dgen;
 import misc.exceptions;
-import tlang.compiler.codegen.mapper.api : SymbolMapper;
+import tlang.compiler.codegen.mapper.core : SymbolMapper;
 import tlang.compiler.codegen.mapper.impls : HashMapper, LebanonMapper;
 import std.string : cmp;
 import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
