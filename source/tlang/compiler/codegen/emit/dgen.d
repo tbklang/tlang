@@ -8,7 +8,7 @@ import std.stdio;
 import std.file;
 import std.conv : to;
 import std.string : cmp;
-import gogga;
+import tlang.misc.logging;
 import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;

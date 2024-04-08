@@ -7,7 +7,7 @@ module tlang.compiler.symbols.typing.builtins;
 
 import tlang.compiler.symbols.typing.core;
 import std.string : cmp, indexOf, lastIndexOf;
-import gogga;
+import tlang.misc.logging;
 import tlang.compiler.typecheck.core;
 import std.conv : to;
 import tlang.compiler.symbols.data : Container;

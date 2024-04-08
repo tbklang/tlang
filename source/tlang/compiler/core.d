@@ -1,6 +1,6 @@
 module tlang.compiler.core;
 
-import gogga;
+import tlang.misc.logging;
 import std.conv : to;
 import tlang.compiler.lexer.core;
 import tlang.compiler.lexer.kinds.basic : BasicLexer;

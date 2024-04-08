@@ -14,7 +14,7 @@ import tlang.compiler.lexer.kinds.basic : BasicLexer;
 import tlang.compiler.lexer.core;
 import tlang.compiler.parsing.core : Parser;
 import tlang.compiler.typecheck.core : TypeChecker;
-import gogga;
+import tlang.misc.logging;
 import tlang.compiler.core : Compiler, beginCompilation;
 import tlang.compiler.configuration : ConfigEntry;
 import std.conv : to;

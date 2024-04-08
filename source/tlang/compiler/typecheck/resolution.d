@@ -1,7 +1,7 @@
 module tlang.compiler.typecheck.resolution;
 
 import tlang.compiler.typecheck.core;
-import gogga;
+import tlang.misc.logging;
 import tlang.compiler.symbols.data;
 import std.string;
 import std.conv : to;

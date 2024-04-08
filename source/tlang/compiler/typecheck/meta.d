@@ -6,7 +6,7 @@ import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.containers : Container;
 import tlang.compiler.symbols.mcro;
 import tlang.compiler.typecheck.core;
-import gogga;
+import tlang.misc.logging;
 import std.conv : to;
 import tlang.compiler.configuration;
 

@@ -5,7 +5,7 @@ import tlang.compiler.symbols.data;
 import std.conv : to;
 import std.string;
 import std.stdio;
-import gogga;
+import tlang.misc.logging;
 import tlang.compiler.parsing.core;
 import tlang.compiler.typecheck.resolution;
 import tlang.compiler.typecheck.exceptions;

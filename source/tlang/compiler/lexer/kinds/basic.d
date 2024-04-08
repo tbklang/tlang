@@ -5,7 +5,7 @@ module tlang.compiler.lexer.kinds.basic;
 
 import std.container.slist;
 import std.string : replace;
-import gogga;
+import tlang.misc.logging;
 import std.conv : to;
 import std.ascii : isDigit, isAlpha, isWhite;
 import tlang.compiler.lexer.core;

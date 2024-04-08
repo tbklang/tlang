@@ -1,6 +1,6 @@
 module tlang.compiler.modman.modman;
 
-import gogga;
+import tlang.misc.logging;
 import std.file : isDir;
 import std.path : isAbsolute;
 

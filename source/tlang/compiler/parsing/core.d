@@ -1,6 +1,6 @@
 module tlang.compiler.parsing.core;
 
-import gogga;
+import tlang.misc.logging;
 import std.conv : to, ConvException;
 import std.string : isNumeric, cmp;
 import tlang.compiler.symbols.check;
