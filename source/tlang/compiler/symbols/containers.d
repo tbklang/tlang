@@ -34,6 +34,17 @@ public Statement[] weightReorder(Statement[] statements)
 
 // TODO: Honestly all contains should be a kind-of `MStatementSearchable` and `MStatementReplaceable`
 // AND MCloneable
+/** 
+ * Represents any sort of type
+ * that can store `Statement`(s)
+ * (AST nodes) and retrieve them
+ * again at a later stage
+ *
+ * Additionally also means that
+ * the `MStatementSearchable` and
+ * `MStatementReplaceable` types
+ * are implemented
+ */
 public interface Container : MStatementSearchable, MStatementReplaceable
 {
     /** 
@@ -47,7 +58,7 @@ public interface Container : MStatementSearchable, MStatementReplaceable
     public void addStatement(Statement statement);
 
     /** 
-     * Appends the list of statemnets
+     * Appends the list of statements
      * (in order) to this container's
      * body
      *
@@ -69,9 +80,36 @@ public interface Container : MStatementSearchable, MStatementReplaceable
 
 public class Module : Entity, Container
 {
+    /** 
+     * Path to the module on disk
+     */
+    private string moduleFilePath;
+
     this(string moduleName)
     {
         super(moduleName);
+    }
+
+    /** 
+     * Returns the file system path where
+     * this module was parsed from
+     *
+     * Returns: the path as a `string`
+     */
+    public string getFilePath()
+    {
+        return this.moduleFilePath;
+    }
+
+    /** 
+     * Sets the file system path to the module
+     *
+     * Params:
+     *   filePath = path to the module on disk
+     */
+    public void setFilePath(string filePath)
+    {
+        this.moduleFilePath = filePath;
     }
 
     private Statement[] statements;
@@ -164,6 +202,17 @@ public class Module : Entity, Container
 
             return false;
         }
+    }
+
+    /** 
+     * Provides a string representation of
+     * this module
+     *
+     * Returns: a string
+     */
+    public override string toString()
+    {
+        return "Module [name: "~getName()~"]";
     }
 }
 

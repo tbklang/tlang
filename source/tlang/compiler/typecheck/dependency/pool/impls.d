@@ -188,8 +188,11 @@ public final class PoolManager : IPoolManager
 
 version(unittest)
 {
-    import tlang.compiler.symbols.data : Module, Variable;
+    import std.stdio : File;
+    import tlang.compiler.core : Compiler;
     import tlang.compiler.typecheck.core : TypeChecker;
+    import tlang.compiler.symbols.data : Module, Variable;
+    import tlang.compiler.symbols.data : Program;
 }
 
 /**
@@ -199,9 +202,15 @@ version(unittest)
  */
 unittest
 {
-    // Create bogus module and type checker
+    // Create bogus compiler, program, module and type checker
+    File dummyFile;
+    Compiler dummyCompiler = new Compiler("", "legitidk.t", dummyFile);
+    TypeChecker tc = new TypeChecker(dummyCompiler);
+
+    Program program = new Program();
     Module testModule = new Module("myModule");
-    TypeChecker tc = new TypeChecker(testModule);
+    program.addModule(testModule);
+    dummyCompiler.setProgram(program);
 
     // Create a pool manager
     IPoolManager pool = new PoolManager();

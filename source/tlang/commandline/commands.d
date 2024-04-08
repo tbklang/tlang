@@ -38,7 +38,7 @@ public enum VerbosityLevel
 mixin template BaseCommand()
 {
     @ArgPositional("source file", "The source file to compile")
-    string sourceFile;
+    string sourceFile; // TODO: Should accept a list in the future maybe
 
     @ArgNamed("verbose|v", "Verbosity level")
     @(ArgConfig.optional)
@@ -51,6 +51,19 @@ mixin template BaseCommand()
     }
 }
 
+mixin template ParseBase()
+{
+    @ArgNamed("paths|p", "Paths that should be considered for searching for modules")
+    @(ArgConfig.optional)
+    @(ArgConfig.aggregate)
+    string[] searchPaths;
+
+    void ParseBaseInit(Compiler compiler)
+    {
+        // Add additional search paths to the compiler
+        compiler.getModMan().addSearchPaths(searchPaths);
+    }
+}
 
 /** 
  * Base requirements for Emit+
@@ -134,11 +147,9 @@ mixin template TypeCheckerBase()
 struct compileCommand
 {
     mixin BaseCommand!();
-
+    mixin ParseBase!();
     mixin TypeCheckerBase!();
-
     mixin EmitBase!();
-
 
     void onExecute()
     {
@@ -157,7 +168,7 @@ struct compileCommand
             /* Begin lexing process */
             File outFile;
             outFile.open(outputFilename, "w");
-            Compiler compiler = new Compiler(sourceText, outFile);
+            Compiler compiler = new Compiler(sourceText, sourceFile, outFile);
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
@@ -170,10 +181,11 @@ struct compileCommand
             writeln("=== Tokens ===\n");
             writeln(compiler.getTokens());
 
+            /* Setup parser configuration parameters */
+            ParseBaseInit(compiler);
+
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
 
             /* Perform typechecking/codegen */
             compiler.doTypeCheck();
@@ -228,7 +240,7 @@ struct lexCommand
             file.close();
 
             /* Begin lexing process */
-            Compiler compiler = new Compiler(sourceText, File());
+            Compiler compiler = new Compiler(sourceText, sourceFile, File());
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
@@ -256,7 +268,7 @@ struct lexCommand
 struct parseCommand
 {
     mixin BaseCommand!();
-
+    mixin ParseBase!();
 
     /* TODO: Add missing implementation for this */
     void onExecute()
@@ -274,7 +286,7 @@ struct parseCommand
             file.close();
 
             /* Begin lexing process */
-            Compiler compiler = new Compiler(sourceText, File());
+            Compiler compiler = new Compiler(sourceText, sourceFile, File());
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
@@ -283,10 +295,11 @@ struct parseCommand
             writeln("=== Tokens ===\n");
             writeln(compiler.getTokens());
 
+            /* Setup parser configuration parameters */
+            ParseBaseInit(compiler);
+
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
         }
         catch(TError t)
         {
@@ -306,6 +319,7 @@ struct parseCommand
 struct typecheckCommand
 {
     mixin BaseCommand!();
+    mixin ParseBase!();
     mixin TypeCheckerBase!();
 
     void onExecute()
@@ -323,7 +337,7 @@ struct typecheckCommand
             file.close();
 
             /* Begin lexing process */
-            Compiler compiler = new Compiler(sourceText, File());
+            Compiler compiler = new Compiler(sourceText, sourceFile, File());
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
@@ -335,10 +349,11 @@ struct typecheckCommand
             writeln("=== Tokens ===\n");
             writeln(compiler.getTokens());
 
+            /* Setup parser configuration parameters */
+            ParseBaseInit(compiler);
+
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
 
             /* Perform typechecking/codegen */
             compiler.doTypeCheck();

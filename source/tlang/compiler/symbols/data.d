@@ -10,78 +10,180 @@ import gogga;
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
 
-/**
-* TODO: Implement the blow and use them
-*
-* These are just to use for keeping track of what
-* valid identifiers are.
-*
-* Actually it might be, yeah it will
-*/
+// Module entry management
+import tlang.compiler.modman : ModuleEntry;
 
-public class Program
+/** 
+ * The _program_ holds a bunch of _modules_ as
+ * its _body statements_ (hence being a `Container` type).
+ * A program, unlike a module, is not an `Entity` - meaning
+ * it has no name associated with it **but** it is the root
+  * of the AST tree.
+ */
+public final class Program : Container
 {
-    private string moduleName;
-    private Program[] importedModules;
+    /** 
+     * Module entry to module mappings
+     *
+     * Used for visitation marking
+     */
+    private Module[string] modsMap;
 
-    private Statement[] statements;
+    /** 
+     * Modules this program is made up of
+     */
+    private Module[] modules;
 
-    this(string moduleName)
+    /** 
+     * Constructs a new empty `Program`
+     */
+    this()
     {
-        this.moduleName = moduleName;
+
+    }
+
+    /** 
+     * Adds a new `Module` to this program
+     *
+     * Params:
+     *   newModule = the new `Module` to add
+     */
+    public void addModule(Module newModule)
+    {
+        addStatement(newModule);
+    }
+
+    /** 
+     * Returns the list of all modules which
+     * make up this program
+     *
+     * Returns: the array of modules
+     */
+    public Module[] getModules()
+    {
+        // TODO: Should this not use the modmap.values()?
+        return this.modules;
+    }
+
+    public Statement[] search(TypeInfo_Class clazzType)
+    {
+        // TODO: Implement me
+        return [];
+    }
+
+    public bool replace(Statement thiz, Statement that)
+    {
+        // TODO: Implement me
+        return false;
     }
 
     public void addStatement(Statement statement)
     {
-        statements ~= statement;
+        // Should only be adding modules to a program
+        assert(cast(Module)statement);
+
+        this.modules ~= cast(Module)statement;
     }
 
-    public static StatementType[] getAllOf(StatementType)(StatementType, Statement[] statements)
+    public void addStatements(Statement[] statements)
     {
-        StatementType[] statementsMatched;
-
         foreach(Statement statement; statements)
         {
-            /* TODO: Remove null, this is for unimpemented */
-            if(statement !is null && cast(StatementType)statement)
-            {
-                statementsMatched ~= cast(StatementType)statement;
-            }
+            addStatement(statement);
         }
-
-        return statementsMatched;
     }
 
-    public Variable[] getGlobals()
-    {
-        Variable[] variables;
-
-        foreach(Statement statement; statements)
-        {
-            if(typeid(statement) == typeid(Variable))
-            {
-                variables ~= cast(Variable)statement;
-            }
-        }
-
-        return variables;
-    }
-
-    /* TODO: Make this use weights */
     public Statement[] getStatements()
     {
-        /* Re-ordered by lowest wieght first */
-        Statement[] stmntsRed;
+        return cast(Statement[])this.modules;
+    }
 
-        bool wCmp(Statement lhs, Statement rhs)
+    /** 
+     * Check if the given module entry
+     * is present. This is based on whether
+     * a module entry within the internal
+     * map is present which has a name equal
+     * to the incoming entry
+     *
+     * Params:
+     *   ent = the module entry to test
+     * Returns: `true` if such an entry
+     * is present, otherwise `false`
+     */
+    public bool isEntryPresent(ModuleEntry ent)
+    {
+        foreach(string key; this.modsMap.keys())
         {
-            return lhs.weight < rhs.weight;
+            if(key == ent.getName())
+            {
+                return true;
+            }
         }
-        import std.algorithm.sorting;
-        stmntsRed = sort!(wCmp)(statements).release;
-    
 
-        return stmntsRed;
+        return false;
+    }
+
+    /** 
+     * Marks the given entry as present.
+     * This effectively means simply adding
+     * the name of the incoming module entry
+     * as a key to the internal map but
+     * without it mapping to a module 
+     * in particular
+     *
+     * Params:
+     *   ent = the module entry to mark
+     */
+    public void markEntryAsVisited(ModuleEntry ent)
+    {
+        this.modsMap[ent.getName()] = null; // TODO: You should then call set when done
+    }
+
+    /** 
+     * Given a module entry this will assign
+     * (map) a module to it. Along with doing
+     * this the incoming module shall be added
+     * to the body of this `Program` and this
+     * module will have its parent set to said
+     * `Program`.
+     *
+     * Params:
+     *   ent = the module entry
+     *   mod = the module itself
+     */
+    public void setEntryModule(ModuleEntry ent, Module mod)
+    {
+        // TODO: Sanity check for already present?
+        this.modsMap[ent.getName()] = mod;
+
+        // Add module to body
+        addModule(mod);
+
+        // Parent the given Module to the Program
+        mod.parentTo(this);
+        // (TODO: Should this not be explctly done within the parser)
+    }
+
+    // TODO: Make this part of debug option
+    public void debugDump()
+    {
+        gprintln("Dumping modules imported into program:");
+        import niknaks.debugging : dumpArray;
+        import std.stdio : writeln;
+        Module[] modulesImported = this.modules;
+        writeln(dumpArray!(modulesImported));
+    }
+
+    /** 
+     * Returns an informative string about the
+     * program's details along with the modules
+     * it is made up of
+     *
+     * Returns: a string
+     */
+    public override string toString()
+    {
+        return "Program [modules: "~to!(string)(this.modules)~"]";
     }
 }
 

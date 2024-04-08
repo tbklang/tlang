@@ -87,10 +87,41 @@ public struct FunctionData
     public string name;
     public DNodeGenerator ownGenerator;
     public Function func;
+    private Module belongsTo;
 
     public DNode generate()
     {
         return ownGenerator.generate();
+    }
+
+    /** 
+     * Sets the module to which
+     * this function is declared
+     * within
+     *
+     * Params:
+     *   mod = the `Module`
+     */
+    public void setOwner(Module mod)
+    {
+        this.belongsTo = mod;
+    }
+
+    /** 
+     * Gets the module this
+     * function is declared
+     * within
+     *
+     * Returns: the `Module`
+     */
+    public Module getOwner()
+    {
+        return this.belongsTo;
+    }
+
+    public string getName()
+    {
+        return this.name;
     }
 }
 
@@ -170,6 +201,11 @@ public class DNode
     public final string getName()
     {
         return name;
+    }
+
+    void forceName(string name)
+    {
+        this.name = name;
     }
 
     /**
@@ -298,6 +334,22 @@ public class DNode
     {
         return "[DNode: "~to!(string)(entity)~"]";
     }
+
+    ulong getDepCount()
+    {
+        return this.dependencies.length;
+    }
+
+    /** 
+     * Returns this dependency node's
+     * attached dependencies
+     *
+     * Returns: the `DNode[]`
+     */
+    public DNode[] getDeps()
+    {
+        return this.dependencies;
+    }
 }
 
 
@@ -364,15 +416,12 @@ public class DNodeGenerator
     * Type checking utilities
     */
     private TypeChecker tc;
-    public Resolver resolver;
+    private Resolver resolver;
 
-
-    /**
-    * Supporting string -> DNode map for `saveFunctionDefinitionNode`
-    * and `retrieveFunctionDefintionNode`
-    */
-    private DNode[string] functionDefinitions;
-
+    /** 
+     * Management of function
+     * definitions
+     */
     private IFuncDefStore funcDefStore;
 
     /** 
@@ -383,22 +432,10 @@ public class DNodeGenerator
 
     this(TypeChecker tc, IPoolManager poolManager, IFuncDefStore funcDefStore)
     {
-        // /* NOTE: NEW STUFF 1st Oct 2022 */
-        // Module modulle = tc.getModule();
-        // Context context = new Context(modulle, InitScope.STATIC);
-        // super(tc, context, context.getContainer().getStatements());
-
-        // TODO: See if we can pass it in rather, but
-        // ... because this needs a this we must make
-        // ... it here
-        this.poolManager = poolManager;
-
         this.tc = tc;
-        this.resolver = tc.getResolver();
+        this.poolManager = poolManager;
         this.funcDefStore = funcDefStore;
-
-        /* TODO: Make this call in the TypeChecker instance */
-        //generate();
+        this.resolver = tc.getResolver();
     }
 
     /** 
@@ -419,17 +456,41 @@ public class DNodeGenerator
 
     public DNode generate()
     {
-        /* Start at the top-level container, the module */
-        Module modulle = tc.getModule();
+        DNode[] moduleDNodes;
 
-        /* Recurse downwards */
-        Context context = new Context(modulle, InitScope.STATIC);
-        DNode moduleDNode = generalPass(modulle, context);
+        Module[] modules = tc.getProgram().getModules();
+        foreach(Module curMod; modules)
+        {
+            /* Start at the top-level container, the module */
+            Module modulle = curMod;
+
+            /* Recurse downwards */
+            Context context = new Context(modulle, InitScope.STATIC);
+            DNode moduleDNode = generalPass(modulle, context);
+            
+            /* Set nice name */
+            moduleDNode.forceName(format("Module (name: %s)", modulle.getName()));
+
+            /* Tack on */
+            moduleDNodes ~= moduleDNode;
+        }
+
+        
 
         /* Print tree */
         // gprintln("\n"~moduleDNode.print());
 
-        return moduleDNode;
+        // FIXME: Ensure that this never crashes
+        // FIXME: See how we will process this
+        // on the other side
+        import tlang.compiler.typecheck.dependency.prog : ProgramDepNode;
+        DNode programDNode = new ProgramDepNode(tc.getProgram());
+        foreach(m; moduleDNodes)
+        {
+            programDNode.needs(m);
+        }
+        
+        return programDNode; // TODO: Fix me, make it all or something
     }
 
     private DNode pool(Statement entity)
@@ -713,7 +774,7 @@ public class DNodeGenerator
                     * be declared (atleast for basic examples as like now) in
                     * the module level
                     */
-                    Context cont = new Context(tc.getModule(), InitScope.STATIC);
+                    Context cont = new Context(tc.getResolver().findContainerOfType(Module.classinfo, funcHandle), InitScope.STATIC);
                     // cont.container = tc.getModule();
                     // cont.
                     funcHandle.setContext(cont);
@@ -1165,8 +1226,9 @@ public class DNodeGenerator
             func.context = context;
 
             /* Add funtion definition */
-            gprintln("Hello");
-            this.funcDefStore.addFunctionDef(func);
+            gprintln("Hello"); // TODO: Check `root`, just use findContainerOfType
+            // Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func));
+            this.funcDefStore.addFunctionDef(cast(Module)root.entity, func);
 
             return null;
         }
@@ -1452,7 +1514,7 @@ public class DNodeGenerator
         else if(cast(Function)namedContainer)
         {
             ignoreInitScope=false;
-            root=pool(tc.getModule());
+            root=pool(cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, namedContainer));
         }
 
 

@@ -208,7 +208,7 @@ public class MetaProcessor
         IntegerLiteral literal = new IntegerLiteral("TODO_LITERAL_GOES_HERESIZEOF_REPLACEMENT", IntegerLiteralEncoding.UNSIGNED_INTEGER);
 
         // TODO: Via typechecker determine size with a lookup
-        Type type = tc.getType(tc.getModule(), typeName);
+        Type type = tc.getType(tc.getProgram(), typeName);
 
         /* Calculated type size */
         ulong typeSize = 0;

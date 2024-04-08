@@ -16,8 +16,11 @@ import std.container.slist;
 import std.algorithm : reverse;
 import tlang.compiler.typecheck.meta;
 import tlang.compiler.configuration;
+import tlang.compiler.core;
 import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
 import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
+import tlang.compiler.typecheck.dependency.pool.interfaces;
+import tlang.compiler.typecheck.dependency.pool.impls;
 
 /**
 * The Parser only makes sure syntax
@@ -29,15 +32,23 @@ import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
 public final class TypeChecker
 {
     /** 
+     * The compiler instance
+     */
+    private Compiler compiler;
+
+    /** 
      * The compiler configuration
      */
     private CompilerConfiguration config;
 
+    /** 
+     * The container of the program
+     */
+    private Program program;
 
-
-    private Module modulle;
-
-    /* The name resolver */
+    /** 
+     * The name resolver
+     */
     private Resolver resolver;
 
     /** 
@@ -45,29 +56,21 @@ public final class TypeChecker
      */
     private MetaProcessor meta;
 
-    public Module getModule()
-    {
-        return modulle;
-    }
-
     /** 
-     * Constructs a new `TypeChecker` based on the provided `Module`
-     * of which to typecheck its members and using the default
-     * compiler configuration
+     * Constructs a new `TypeChecker` with the given
+     * compiler instance
      *
      * Params:
-     *   modulle = the `Module` to check
-     *   config = the `CompilerConfiguration` (default if not specified)
+     *   compiler = the `Compiler` instance
      */
-    this(Module modulle, CompilerConfiguration config = CompilerConfiguration.defaultConfig())
+    this(Compiler compiler)
     {
-        this.modulle = modulle;
-        this.config = config;
+        this.compiler = compiler;
+        this.config = compiler.getConfig();
+        this.program = compiler.getProgram();
 
-        this.resolver = new Resolver(this);
+        this.resolver = new Resolver(program, this);
         this.meta = new MetaProcessor(this, true);
-        
-        /* TODO: Module check?!?!? */
     }
 
     /** 
@@ -78,6 +81,16 @@ public final class TypeChecker
     public CompilerConfiguration getConfig()
     {
         return config;
+    }
+
+    /** 
+     * Returns the program instance
+     *
+     * Returns: the `Program`
+     */
+    public Program getProgram()
+    {
+        return this.program;
     }
 
     /** 
@@ -103,11 +116,19 @@ public final class TypeChecker
     */
     public void dependencyCheck()
     {
+        // TODO: Ensure this is CORRECT! (MODMAN)
         /* Check declaration and definition types */
-        checkDefinitionTypes(modulle);
-
+        foreach(Module curModule; this.program.getModules())
+        {
+            checkDefinitionTypes(curModule);
+        }
+        
+        // TODO: Ensure this is CORRECT! (MODMAN)
         /* TODO: Implement me */
-        checkClassInherit(modulle);
+        foreach(Module curModule; this.program.getModules())
+        {
+            checkClassInherit(curModule);
+        }
 
         /**
         * Dependency tree generation
@@ -118,11 +139,6 @@ public final class TypeChecker
         * non-cyclic
         *
         */
-        
-        // Create a pooling mechanism
-        import tlang.compiler.typecheck.dependency.pool.interfaces;
-        import tlang.compiler.typecheck.dependency.pool.impls;
-        
 
         /* Create the dependency generator */
         IPoolManager poolManager = new PoolManager();
@@ -132,82 +148,99 @@ public final class TypeChecker
         /* Generate the dependency tree */
         DNode rootNode = dNodeGenerator.generate(); /* TODO: This should make it acyclic */
 
-        /* Perform the linearization to the dependency tree */
-        rootNode.performLinearization();
-
-        /* Print the tree */
-        string tree = rootNode.getTree();
-        gprintln(tree);
-
-        /* Get the action-list (linearised bottom up graph) */
-        DNode[] actionList = rootNode.getLinearizedNodes();
-        doTypeCheck(actionList);
-
-        /**
-         * After processing globals executions the instructions will
-         * be placed into `codeQueue`, therefore copy them from the temporary
-         * scratchpad queue into `globalCodeQueue`.
-         *
-         * Then clean the codeQueue for next use
+        /** 
+         * TODO: Because we get a `Program` DNode out
+         * of this we should perform linearization on
+         * each sub-node and then process those seperately
          */
-        foreach(Instruction curGlobInstr; codeQueue)
+        foreach(DNode modDep; rootNode.getDeps())
         {
-            globalCodeQueue~=curGlobInstr;
-        }
-        codeQueue.clear();
-        assert(codeQueue.empty() == true);
+            Module mod = cast(Module)modDep.getEntity();
+            assert(mod);
+            gprintln(format("Dependency node entry point mod: %s", modDep));
 
-        /* Grab functionData ??? */
-        FunctionData[string] functionDefinitions = funcDefStore.grabFunctionDefs();
-        gprintln("Defined functions: "~to!(string)(functionDefinitions));
+            // Linearize this module's dependencies
+            modDep.performLinearization();
 
-        foreach(FunctionData funcData; functionDefinitions.values)
-        {
+            // Print the dep tree
+            string modTree = modDep.getTree();
+            gprintln(format("\n%s", modTree));
+
+            // Get the linerization
+            DNode[] modActions = modDep.getLinearizedNodes();
+
+            // Perform typecheck/codegen for this
+            doTypeCheck(modActions);
+
+            /** 
+             * After having done the typecheck/codegen
+             * there would be instructions in the
+             * `codeQueue`. We must extract these
+             * now, clear the `codeQueue` and save
+             * the extracted stuff to something
+             * which maps `Module -> Instruction[]`
+             */
+            scratchToModQueue(mod);
             assert(codeQueue.empty() == true);
 
-            /* Generate the dependency tree */
-            DNode funcNode = funcData.generate();
-            
-            /* Perform the linearization to the dependency tree */
-            funcNode.performLinearization();
-
-            /* Get the action-list (linearised bottom up graph) */
-            DNode[] actionListFunc = funcNode.getLinearizedNodes();
-
-            //TODO: Would this not mess with our queues?
-            doTypeCheck(actionListFunc);
-            gprintln(funcNode.getTree());
-
-            // The current code queue would be the function's body instructions
-            // a.k.a. the `codeQueue`
-            // functionBodies[funcData.name] = codeQueue;
-
-
-            // The call to `doTypeCheck()` above adds to this queue
-            // so we should clean it out before the next run
-            //
-            // NOTE: Static allocations in? Well, we don't clean init queue
-            // so is it fine then? We now have seperate dependency trees,
-            // we should make checking methods that check the `initQueue`
-            // whenever we come past a `ClassStaticNode` for example
-            // codeQueue.clear();
-
             /**
-             * Copy over the function code queue into
-             * the function code queue respective key.
-             *
-             * Then clear the scratchpad code queue
+             * We must now find the function
+             * definitions that belong to this
+             * `Module` and process those
+             * by generating the dependencies
+             * for them
              */
-            functionBodyCodeQueues[funcData.name]=[];
-            foreach(Instruction curFuncInstr; codeQueue)
+            FunctionData[string] modFuncDefs = funcDefStore.grabFunctionDefs(mod);
+            gprintln(format("Defined functions for module '%s': %s", mod, modFuncDefs));
+            foreach(FunctionData curFD; modFuncDefs.values)
             {
-                //TODO: Think about class funcs? Nah
-                functionBodyCodeQueues[funcData.name]~=curFuncInstr;
-                gprintln("FuncDef ("~funcData.name~"): Adding body instruction: "~to!(string)(curFuncInstr));
-            }
-            codeQueue.clear();
+                assert(codeQueue.empty() == true);
 
-            gprintln("FUNCDEF DONE: "~to!(string)(functionBodyCodeQueues[funcData.name]));
+                /* Generate the dependency tree */
+                DNode funcNode = curFD.generate();
+                
+                /* Perform the linearization to the dependency tree */
+                funcNode.performLinearization();
+
+                /* Get the action-list (linearised bottom up graph) */
+                DNode[] actionListFunc = funcNode.getLinearizedNodes();
+
+                //TODO: Would this not mess with our queues?
+                doTypeCheck(actionListFunc);
+                gprintln(funcNode.getTree());
+
+                // The current code queue would be the function's body instructions
+                // a.k.a. the `codeQueue`
+                // functionBodies[funcData.name] = codeQueue;
+
+
+                // The call to `doTypeCheck()` above adds to this queue
+                // so we should clean it out before the next run
+                //
+                // NOTE: Static allocations in? Well, we don't clean init queue
+                // so is it fine then? We now have seperate dependency trees,
+                // we should make checking methods that check the `initQueue`
+                // whenever we come past a `ClassStaticNode` for example
+                // codeQueue.clear();
+
+                /**
+                 * Copy over the current function's
+                 * instructions which make part of
+                 * its definition, clear the scratchpad
+                 * `codeQueue` and map to these
+                 * instructions to the `ModuleQueue`
+                 */
+                funcScratchToModQueue(mod, curFD);
+                assert(codeQueue.empty() == true);
+            }
+
+            /** 
+             * Copy the `initQueue` instructions over
+             * to the `ModuleQueue` for the current
+             * module and clear the queue for the
+             * next module round
+             */
+            initsScratchToModQueue(mod);
         }
 
         /* Collect statistics */
@@ -239,18 +272,152 @@ public final class TypeChecker
         }
     }
 
+    /** 
+     * Associates various instruction
+     * sets with a given `Module`
+     */
+    private struct ModuleQueue
+    {
+        private Module owner;
+        private Instruction[] codeInstrs;
+        private Instruction[][string] functionBodyCodeQueues;
+        private Instruction[] initInstrs;
+
+        this(Module owner)
+        {
+            this.owner = owner;
+        }
+
+        public void setCode(Instruction[] instructions)
+        {
+            this.codeInstrs = instructions;
+        }
+
+        public Instruction[] getCode()
+        {
+            return this.codeInstrs;
+        }
+
+        public void setFunctionDeclInstr(string functionName, Instruction[] bodyInstrs)
+        {
+            this.functionBodyCodeQueues[functionName] = bodyInstrs;
+        }
+
+        public Instruction[][string] getFunctionDefinitions()
+        {
+            return this.functionBodyCodeQueues;
+        }
+
+        public void setInit(Instruction[] instructions)
+        {
+            this.initInstrs = instructions;
+        }
+
+        public Instruction[] getInitInstrs()
+        {
+            return this.initInstrs;
+        }
+    }
+
+    private ModuleQueue[Module] moduleQueues;
 
     /** 
-     * Function definitions
+     * Gets the `ModuleQueue*` for the given
+     * `Module` and creates one if it does
+     * not yet already exist
      *
-     * Holds their action lists which are to be used for the
-     * (later) emitting of their X-lang emit code
+     * Params:
+     *   owner = the `Module`
+     * Returns: a `ModuleQueue*`
      */
-     //FUnctionDeifnition should couple `linearizedList` but `functionEntity`
-    // private FunctionDefinition[string] functionDefinitions2; //TODO: Use this
+    private ModuleQueue* getModQueueFor(Module owner)
+    {
+        // Find entry
+        ModuleQueue* modQ = owner in this.moduleQueues;
 
+        // If not there, make it
+        if(!modQ)
+        {
+            this.moduleQueues[owner] = ModuleQueue(owner);
+            return getModQueueFor(owner);
+        }
 
+        return modQ;
+    }
 
+    /** 
+     * Takes the current scratchpad `codeQueue`,
+     * copies its instructions, clears it
+     * and then creates a new `ModuleQueue`
+     * entry for it and adds it to the
+     * `moduleQueues` array
+     *
+     * Params:
+     *   owner = the owner `Module` to
+     * associat with the current code
+     * queue
+     */
+    private void scratchToModQueue(Module owner)
+    {
+        // Extract a copy
+        Instruction[] copyQueue;
+        foreach(Instruction instr; this.codeQueue)
+        {
+            copyQueue ~= instr;
+        }
+
+        // Clear the scratchpad `codeQueue`
+        this.codeQueue.clear();
+
+        // Get the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
+
+        // Set the `code` instructions
+        modQ.setCode(copyQueue);
+    }
+
+    private void funcScratchToModQueue(Module owner, FunctionData fd)
+    {
+        // Extract a copy
+        Instruction[] copyQueue;
+        foreach(Instruction instr; this.codeQueue)
+        {
+            copyQueue ~= instr;
+            gprintln(format("FuncDef (%s): Adding body instruction: %s", fd.getName(), instr));
+        }
+
+        // Clear the scratchpad `codeQueue`
+        this.codeQueue.clear();
+
+        // Get the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
+
+        // Set this function definition's instructions
+        modQ.setFunctionDeclInstr(fd.getName(), copyQueue);
+    }
+
+    private void initsScratchToModQueue(Module owner)
+    {
+        // Extract a copy
+        Instruction[] copyQueue;
+        foreach(Instruction instr; this.initQueue)
+        {
+            copyQueue ~= instr;
+        }
+
+        // Clear the scratchpad `initQueue`
+        this.initQueue.clear();
+
+        // Get the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
+
+        // Set the `init` instructions
+        modQ.setInit(copyQueue);
+    }
+    
     /** 
      * Concrete queues
      *
@@ -264,14 +431,22 @@ public final class TypeChecker
     private Instruction[] globalCodeQueue;
     private Instruction[][string] functionBodyCodeQueues;
 
-    public Instruction[] getGlobalCodeQueue()
+    public Instruction[] getGlobalCodeQueue(Module owner)
     {
-        return globalCodeQueue;
+        // Find the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
+
+        return modQ.getCode();
     }
 
-    public Instruction[][string] getFunctionBodyCodeQueues()
+    public Instruction[][string] getFunctionBodyCodeQueues(Module owner)
     {
-        return functionBodyCodeQueues;
+        // Find the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
+
+        return modQ.getFunctionDefinitions();
     }
 
 
@@ -286,16 +461,13 @@ public final class TypeChecker
 
 
     //TODO: CHange to oneshot in the function
-    public Instruction[] getInitQueue()
+    public Instruction[] getInitQueue(Module owner)
     {
-        Instruction[] initQueueConcrete;
+        // Find the module queue
+        ModuleQueue* modQ = getModQueueFor(owner);
+        assert(modQ);
 
-        foreach(Instruction currentInstruction; initQueue)
-        {
-            initQueueConcrete~=currentInstruction;
-        }
-
-        return initQueueConcrete;
+        return modQ.getInitInstrs();
     }
 
     /* Adds an initialization instruction to the initialization queue (at the back) */
@@ -365,18 +537,6 @@ public final class TypeChecker
     {
         return codeQueue.empty;
     }
-    
-    // public Instruction[] getCodeQueue()
-    // {
-    //     Instruction[] codeQueueConcrete;
-
-    //     foreach(Instruction currentInstruction; codeQueue)
-    //     {
-    //         codeQueueConcrete~=currentInstruction;
-    //     }
-
-    //     return codeQueueConcrete;
-    // }
 
     /*
     * Prints the current contents of the code-queue
@@ -404,14 +564,16 @@ public final class TypeChecker
     {
         import tlang.compiler.symbols.typing.core;
 
-        TypeChecker tc = new TypeChecker(null);
+        File dummyFile;
+        Compiler dummyCompiler = new Compiler("", "legitidk.t", dummyFile);
+        TypeChecker tc = new TypeChecker(dummyCompiler);
 
         /* To type is `t1` */
-        Type t1 = getBuiltInType(tc, "uint");
+        Type t1 = getBuiltInType(tc, tc.getProgram(), "uint");
         assert(t1);
 
         /* We will comapre `t2` to `t1` */
-        Type t2 = getBuiltInType(tc, "ubyte");
+        Type t2 = getBuiltInType(tc, tc.getProgram(), "ubyte");
         assert(t2);
         Value v2 = new LiteralValue("25", t2);
         
@@ -430,8 +592,8 @@ public final class TypeChecker
         {
             Type expectedType = mismatch.getExpectedType();
             Type attemptedType = mismatch.getAttemptedType();
-            assert(tc.isSameType(expectedType, getBuiltInType(tc, "uint")));
-            assert(tc.isSameType(attemptedType, getBuiltInType(tc, "ubyte")));
+            assert(tc.isSameType(expectedType, getBuiltInType(tc, tc.getProgram(), "uint")));
+            assert(tc.isSameType(attemptedType, getBuiltInType(tc, tc.getProgram(), "ubyte")));
         }
 
 
@@ -456,14 +618,16 @@ public final class TypeChecker
     {
         import tlang.compiler.symbols.typing.core;
 
-        TypeChecker tc = new TypeChecker(null);
+        File dummyFile;
+        Compiler dummyCompiler = new Compiler("", "legitidk.t", dummyFile);
+        TypeChecker tc = new TypeChecker(dummyCompiler);
 
         /* To type is `t1` */
-        Type t1 = getBuiltInType(tc, "uint");
+        Type t1 = getBuiltInType(tc, tc.getProgram(), "uint");
         assert(t1);
 
         /* We will comapre `t2` to `t1` */
-        Type t2 = getBuiltInType(tc, "uint");
+        Type t2 = getBuiltInType(tc, tc.getProgram(), "uint");
         assert(t2);
         Value v2 = new LiteralValue("25", t2);
         
@@ -560,8 +724,15 @@ public final class TypeChecker
          * a function that returns an uint
          * and an expression of type ubyte
          */
+        File dummyFile;
+        Compiler compiler = new Compiler("", "", dummyFile);
+
+        Program program = new Program();
         Module testModule = new Module("myModule");
-        TypeChecker tc = new TypeChecker(testModule);
+        program.addModule(testModule);
+        compiler.setProgram(program);
+        
+        TypeChecker tc = new TypeChecker(compiler);
 
 
         /* Add the function with a return expression */
@@ -1426,19 +1597,19 @@ public final class TypeChecker
                     Type literalEncodingType;
                     if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_INTEGER)
                     {
-                        literalEncodingType = getType(modulle, "int");
+                        literalEncodingType = getType(this.program, "int");
                     }
                     else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_INTEGER)
                     {
-                        literalEncodingType = getType(modulle, "uint");
+                        literalEncodingType = getType(this.program, "uint");
                     }
                     else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_LONG)
                     {
-                        literalEncodingType = getType(modulle, "long");
+                        literalEncodingType = getType(this.program, "long");
                     }
                     else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_LONG)
                     {
-                        literalEncodingType = getType(modulle, "ulong");
+                        literalEncodingType = getType(this.program, "ulong");
                     }
                     assert(literalEncodingType);
 
@@ -1496,6 +1667,7 @@ public final class TypeChecker
 
                 gprintln("Yaa, it's rewind time");
                 auto g  = cast(VariableExpression)statement;
+                assert(g);
 
                 /* FIXME: It would seem that g.getContext() is returning null, so within function body's context is not being set */
                 gprintln("VarExp: "~g.getName());
@@ -1504,8 +1676,7 @@ public final class TypeChecker
                 gprintln("gVar nullity?: "~to!(string)(gVar is null));
 
                 /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
-
-                string variableName = resolver.generateName(modulle, gVar);
+                string variableName = resolver.generateName(this.program, gVar);
 
                 gprintln("VarName: "~variableName);
                 gprintln("Halo");
@@ -1817,14 +1988,21 @@ public final class TypeChecker
 
                 FunctionCall funcCall = cast(FunctionCall)statement;
 
+                // Find the top-level container of the function being called
+                // and then use this as the container to resolve our function
+                // being-called to (as a starting point)
+                Module belongsTo = cast(Module)resolver.findContainerOfType(Module.classinfo, statement);
+                assert(belongsTo);
+
                 /* TODO: Look up func def to know when popping stops (types-based delimiting) */
-                Function func = cast(Function)resolver.resolveBest(modulle, funcCall.getName());
+                Function func = cast(Function)resolver.resolveBest(belongsTo, funcCall.getName());
                 assert(func);
                 VariableParameter[] paremeters = func.getParams();
 
 
                 /* TODO: Pass in FUnction, so we get function's body for calling too */
-                FuncCallInstr funcCallInstr = new FuncCallInstr(func.getName(), paremeters.length);
+                gprintln(format("funcCall.getName() %s", funcCall.getName()));
+                FuncCallInstr funcCallInstr = new FuncCallInstr(funcCall.getName(), paremeters.length);
                 gprintln("Name of func call: "~func.getName(), DebugType.ERROR);
 
                 /* If there are paremeters for this function (as per definition) */
@@ -2108,7 +2286,7 @@ public final class TypeChecker
             string variableName;
             VariableAssignmentNode varAssignDNode = cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
             Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
-            variableName = resolver.generateName(modulle, assignTo);
+            variableName = resolver.generateName(this.program, assignTo);
             gprintln("VariableAssignmentNode: "~to!(string)(variableName));
 
             /* Get the Context of the Variable Assigmnent */
@@ -2167,7 +2345,8 @@ public final class TypeChecker
             */
             Variable variablePNode = cast(Variable)dnode.getEntity();
             gprintln("HELLO FELLA");
-            string variableName = resolver.generateName(modulle, variablePNode);
+
+            string variableName = resolver.generateName(this.program, variablePNode);
             gprintln("HELLO FELLA (name): "~variableName);
             
 
@@ -2208,7 +2387,7 @@ public final class TypeChecker
         {
             /* Extract the class node and create a static allocation instruction out of it */
             Clazz clazzPNode = cast(Clazz)dnode.getEntity();
-            string clazzName = resolver.generateName(modulle, clazzPNode);
+            string clazzName = resolver.generateName(this.program, clazzPNode);
             ClassStaticInitAllocate clazzStaticInitAllocInstr = new ClassStaticInitAllocate(clazzName);
 
             /* Add this static initialization to the list of global allocations required */
@@ -2305,7 +2484,7 @@ public final class TypeChecker
                 */
 
                 /* If the function's return type is void */
-                if(isSameType(functionReturnType, getBuiltInType(this, "void")))
+                if(isSameType(functionReturnType, getType(cast(Container)funcContainer, "void")))
                 {
                     /* It is an error to have a return expression if function is return void */
                     if(returnStatement.hasReturnExpression())
@@ -2777,7 +2956,7 @@ public final class TypeChecker
         Type foundType;
 
         /* Check if the type is built-in */
-        foundType = getBuiltInType(this, typeString);
+        foundType = getBuiltInType(this, c, typeString);
 
         /* If it isn't then check for a type (resolve it) */
         if(!foundType)
@@ -2812,19 +2991,28 @@ public final class TypeChecker
     */
     public void beginCheck()
     {
+        // TODO: Ensure this is CORRECT! (MODMAN)
         /* Run the meta-processor on the AST tree (starting from the Module) */
-        meta.process(modulle);
+        meta.process(this.program);
 
-        /* Process all pseudo entities of the given module */
-        processPseudoEntities(modulle);
+        // TODO: Ensure this is CORRECT! (MODMAN)
+        /* Process all pseudo entities of the program's modules */
+        foreach(Statement curModule; this.program.getStatements())
+        {
+            processPseudoEntities(cast(Module)curModule);
+        }
 
+        // TODO: Ensure this is CORRECT! (MODMAN)
         /**
         * Make sure there are no name collisions anywhere
         * in the Module with an order of precedence of
         * Classes being declared before Functions and
         * Functions before Variables
         */
-        checkContainerCollision(modulle); /* TODO: Rename checkContainerCollision */
+        foreach(Statement curModule; this.program.getStatements())
+        {
+            checkContainerCollision(cast(Module)curModule); /* TODO: Rename checkContainerCollision */
+        }
 
         /* TODO: Now that everything is defined, no collision */
         /* TODO: Do actual type checking and declarations */
@@ -2983,6 +3171,15 @@ public final class TypeChecker
     * same level), HOWEVER if so, we then recursively
     * call `checkContainer` on said Entity and the
     * logic above applies again
+    *
+    * FIXME:
+    *
+    * (MODMAN) We need to know WHICH `Module` we
+    * are currently examining when we do this such
+    * that we can then fix the other `resolver`
+    * calls when we `generateName`(s), else
+    * we use the old `modulle` which is null
+    * now.
     */
     private void checkContainerCollision(Container c)
     {
@@ -3003,18 +3200,21 @@ public final class TypeChecker
 
         foreach (Entity entity; entities)
         {
-            /**
-            * Absolute root Container (in other words, the Module)
-            * can not be used
-            */
-            if(cmp(modulle.getName(), entity.getName()) == 0)
+            // (MODMAN) TODO: We need to loop through each module and make
+            // ... sure its name doesn't match with any of them
+            foreach(Module curMod; program.getModules())
             {
-                throw new CollidingNameException(this, modulle, entity, c);
+                if(cmp(entity.getName(), curMod.getName()) == 0)
+                {
+                    throw new CollidingNameException(this, curMod, entity, c);
+                }
             }
+            
+
             /**
             * If the current entity's name matches the container then error
             */
-            else if (cmp(containerEntity.getName(), entity.getName()) == 0)
+            if (cmp(containerEntity.getName(), entity.getName()) == 0)
             {
                 throw new CollidingNameException(this, containerEntity, entity, c);
             }
@@ -3033,8 +3233,10 @@ public final class TypeChecker
             */
             else
             {
-                string fullPath = resolver.generateName(modulle, entity);
-                string containerNameFullPath = resolver.generateName(modulle, containerEntity);
+                // (MODMAN) This will need to be fixed (anchored at the Program-level)
+                string fullPath = resolver.generateName(this.program, entity);
+                // (MODMAN) This will need to be fixed (anchored at the Program-level)
+                string containerNameFullPath = resolver.generateName(this.program, containerEntity);
                 gprintln("Entity \"" ~ fullPath
                         ~ "\" is allowed to be defined within container \""
                         ~ containerNameFullPath ~ "\"");
@@ -3052,7 +3254,6 @@ public final class TypeChecker
         }
 
     }
-
 
     /**
     * TODO: Create a version of the below function that possibly
@@ -3191,10 +3392,10 @@ public final class TypeChecker
             */
             if (resolver.resolveUp(c, clazz.getName()) != clazz)
             {
-                expect("Cannot define class \"" ~ resolver.generateName(modulle,
-                        clazz) ~ "\" as one with same name, \"" ~ resolver.generateName(modulle,
+                expect("Cannot define class \"" ~ resolver.generateName(this.program,
+                        clazz) ~ "\" as one with same name, \"" ~ resolver.generateName(this.program,
                         resolver.resolveUp(c, clazz.getName())) ~ "\" exists in container \"" ~ resolver.generateName(
-                        modulle, containerEntity) ~ "\"");
+                        this.program, containerEntity) ~ "\"");
             }
             else
             {
@@ -3206,9 +3407,9 @@ public final class TypeChecker
                 // {
                 if (cmp(containerEntity.getName(), clazz.getName()) == 0)
                 {
-                    expect("Class \"" ~ resolver.generateName(modulle,
+                    expect("Class \"" ~ resolver.generateName(this.program,
                             clazz) ~ "\" cannot be defined within container with same name, \"" ~ resolver.generateName(
-                            modulle, containerEntity) ~ "\"");
+                            this.program, containerEntity) ~ "\"");
                 }
 
                 /* TODO: Loop througn Container ENtitys here */
@@ -3358,27 +3559,30 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
-
+    compiler.doLex();
+    compiler.doParse();
+    
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity container = typeChecker.getResolver().resolveBest(modulle, "y");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(modulle, "y.y");
+
         /* Make sure the member y.y collided with root container (module) y */
         assert(e.defined == container);
     }
@@ -3400,27 +3604,30 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.a.b.c.y");
+    compiler.doLex();
+    compiler.doParse();
 
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity container = typeChecker.getResolver().resolveBest(modulle, "y");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(modulle, "y.a.b.c.y");
+
         /* Make sure the member y.a.b.c.y collided with root container (module) y */
         assert(e.defined == container);
     }
@@ -3440,27 +3647,30 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b.c.c");
+    compiler.doLex();
+    compiler.doParse();
 
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity container = typeChecker.getResolver().resolveBest(modulle, "a.b.c");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(modulle, "a.b.c.c");
+
         /* Make sure the member a.b.c.c collided with a.b.c container */
         assert(e.defined == container);
     }
@@ -3480,26 +3690,29 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity memberFirst = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a.b");
+    compiler.doLex();
+    compiler.doParse();
 
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity memberFirst = typeChecker.getResolver().resolveBest(modulle, "a.b");
+
         /* Make sure the member a.b.c.c collided with a.b.c container */
         assert(e.attempted != memberFirst);
     }
@@ -3519,26 +3732,29 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity ourClassA = typeChecker.getResolver().resolveBest(typeChecker.getModule, "a");
+    compiler.doLex();
+    compiler.doParse();
 
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity ourClassA = typeChecker.getResolver().resolveBest(modulle, "a");
+
         /* Make sure the member attempted was Variable and defined was Clazz */
         assert(cast(Variable)e.attempted);
         assert(cast(Clazz)e.defined);
@@ -3560,27 +3776,30 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-    /* Setup testing variables */
-    Entity container = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y");
-    Entity colliderMember = typeChecker.getResolver().resolveBest(typeChecker.getModule, "y.y");
+    compiler.doLex();
+    compiler.doParse();
 
     try
     {
         /* Perform test */
-        typeChecker.beginCheck();
+        compiler.doTypeCheck();
 
         /* Shouldn't reach here, collision exception MUST occur */
         assert(false);
     }
     catch (CollidingNameException e)
     {
+        Program program = compiler.getProgram();
+        TypeChecker typeChecker = compiler.getTypeChecker();
+        Module modulle = program.getModules()[0];
+
+        /* Setup testing variables */
+        Entity container = typeChecker.getResolver().resolveBest(modulle, "y");
+        Entity colliderMember = typeChecker.getResolver().resolveBest(modulle, "y.y");
+
         /* Make sure the member y.y collided with root container (module) y */
         assert(e.defined == container);
     }
@@ -3640,17 +3859,14 @@ unittest
     sourceFileFile.close();
 
     string sourceCode = cast(string) fileBytes;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
-    (cast(BasicLexer)currentLexer).performLex();
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
-    Parser parser = new Parser(currentLexer);
-    Module modulle = parser.parse();
-    TypeChecker typeChecker = new TypeChecker(modulle);
-
-   
+    compiler.doLex();
+    compiler.doParse();
 
     /* Perform test */
-    typeChecker.beginCheck();
+    compiler.doTypeCheck();
 
     /* TODO: Actually test generated code queue */
 }
@@ -3670,7 +3886,7 @@ unittest
     string sourceFile = "source/tlang/testing/unused_vars.t";
 
 
-    Compiler compiler = new Compiler(gibFileData(sourceFile), fileOutDummy);
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
     compiler.doLex();
     compiler.doParse();
     compiler.doTypeCheck();
@@ -3683,7 +3899,7 @@ unittest
     Variable[] unusedVars = tc.getUnusedVariables();
     assert(unusedVars.length == 1);
     Variable unusedVarActual = unusedVars[0];
-    Variable unusedVarExpected = cast(Variable)tc.getResolver().resolveBest(tc.getModule(), "j");
+    Variable unusedVarExpected = cast(Variable)tc.getResolver().resolveBest(compiler.getProgram().getModules()[0], "j");
     assert(unusedVarActual is unusedVarExpected);
 }
 
@@ -3702,7 +3918,7 @@ unittest
     string sourceFile = "source/tlang/testing/unused_vars_none.t";
 
 
-    Compiler compiler = new Compiler(gibFileData(sourceFile), fileOutDummy);
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
     compiler.doLex();
     compiler.doParse();
     compiler.doTypeCheck();
