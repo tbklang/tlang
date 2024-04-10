@@ -4,7 +4,8 @@ public enum DebugType
 {
     INFO,
     WARNING,
-    ERROR
+    ERROR,
+    DEBUG
 }
 
 
@@ -20,7 +21,7 @@ private GoggaLogger logger;
 static this()
 {
     logger = new GoggaLogger();
-    logger.mode(GoggaMode.SIMPLE);
+    logger.mode(GoggaMode.RUSTACEAN);
 
     import dlog.basic : Level;
     logger.setLevel(Level.DEBUG);
@@ -35,7 +36,11 @@ static this()
 // TODO: Change to actually use error, etc. directkly on GoggaLogger
 public void gprintln(messageT)(messageT message, DebugType debugType = DebugType.INFO)
 {
-    if(debugType == DebugType.INFO)
+    if(debugType == DebugType.DEBUG)
+    {
+        logger.dbg(message);
+    }
+    else if(debugType == DebugType.INFO)
     {
         logger.info(message);
     }
