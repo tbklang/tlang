@@ -14,11 +14,23 @@ import gogga;
 // as we would have many static fields init'd per thread then
 // (would need a corresponding ghsraed field)
 
+// import dlog.core;
+
 private GoggaLogger logger;
 static this()
 {
     logger = new GoggaLogger();
+    logger.mode(GoggaMode.SIMPLE);
+
+    import dlog.basic : Level;
+    logger.setLevel(Level.DEBUG);
+
+    import dlog.basic : FileHandler;
+    import std.stdio : stdout;
+    logger.addHandler(new FileHandler(stdout));
 }
+
+
 
 // TODO: Change to actually use error, etc. directkly on GoggaLogger
 public void gprintln(messageT)(messageT message, DebugType debugType = DebugType.INFO)
