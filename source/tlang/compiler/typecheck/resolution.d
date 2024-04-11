@@ -987,17 +987,17 @@ int g;
 
         // Generate the name from the program as the anchor
         string nameFromProgram = tc.getResolver().generateName(program, var);
-        gprintln(format("nameFromProgram: %s", nameFromProgram));
+        DEBUG(format("nameFromProgram: %s", nameFromProgram));
         assert(nameFromProgram == "resolution_test_1.g");
 
         // Generate the name from the module as the anchor (should be same as above)
         string nameFromModule = tc.getResolver().generateName(cast(Container)myModule, var);
-        gprintln(format("nameFromModule: %s", nameFromModule));
+        DEBUG(format("nameFromModule: %s", nameFromModule));
         assert(nameFromModule == "resolution_test_1.g");
 
         // Generate absolute path of the entity WITHOUT an anchor point
         string bestName = tc.getResolver().generateNameBest(var);
-        gprintln(format("bestName: %s", bestName));
+        DEBUG(format("bestName: %s", bestName));
         assert(bestName == "resolution_test_1.g");
     }
     catch(TError e)

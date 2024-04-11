@@ -526,8 +526,8 @@ unittest
         // On Error
         catch(Exception e)
         {
-            gprintln("Yo: "~e.toString(), DebugType.ERROR);
-            gprintln("Yo, we should not be getting this but rather ONLY TErrors, this is a bug to be fixed", DebugType.ERROR);
+            ERROR("Yo: "~e.toString());
+            ERROR("Yo, we should not be getting this but rather ONLY TErrors, this is a bug to be fixed");
             assert(false);
         }
     }
@@ -588,7 +588,7 @@ unittest
         // We should ONLY be getting TErrors
         catch(Exception e)
         {
-            gprintln("Got non TError, this is a bug that must be fixed", DebugType.ERROR);
+            ERROR("Got non TError, this is a bug that must be fixed");
             assert(false);
         }
     }
