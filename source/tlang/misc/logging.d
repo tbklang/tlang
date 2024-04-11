@@ -1,23 +1,24 @@
+/** 
+ * Logging routines
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.misc.logging;
 
-public enum DebugType
-{
-    INFO,
-    WARNING,
-    ERROR,
-    DEBUG
-}
-
-
-// TODO: setup static logger here
 import gogga;
-// TODO: May want gshared if it must be cross-thread module init
-// as we would have many static fields init'd per thread then
-// (would need a corresponding ghsraed field)
+import gogga.extras;
 
-// import dlog.core;
-
+/** 
+ * The logger instance
+ * shared amongst a single
+ * thread (TLS)
+ */
 private GoggaLogger logger;
+
+/**
+ * Initializes a logger instance
+ * per thread (TLS)
+ */
 static this()
 {
     logger = new GoggaLogger();
@@ -31,11 +32,18 @@ static this()
     logger.addHandler(new FileHandler(stdout));
 }
 
-import gogga.extras;
-
+// Bring in helper methods
 mixin LoggingFuncs!(logger);
 
 
+// TODO: Remove this
+public enum DebugType
+{
+    INFO,
+    WARNING,
+    ERROR,
+    DEBUG
+}
 
 // TODO: Change to actually use error, etc. directkly on GoggaLogger
 public void gprintln(messageT)(messageT message, DebugType debugType = DebugType.INFO)
