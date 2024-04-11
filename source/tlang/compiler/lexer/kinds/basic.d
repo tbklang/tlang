@@ -333,7 +333,7 @@ public final class BasicLexer : LexerInterface
             }
             //else if (currentChar == LS.UNDERSCORE || ((!isSplitter(currentChar) && !isDigit(currentChar)) && currentChar != LS.DOUBLE_QUOTE && currentChar != LS.SINGLE_QUOTE && currentChar != LS.BACKSLASH)) {
             else if (currentChar == LS.UNDERSCORE || isAlpha(currentChar)) {
-                gprintln("path ident String");
+                DEBUG("path ident String");
                 if (!doIdentOrPath()) {
                     break;
                 } else {

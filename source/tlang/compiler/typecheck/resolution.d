@@ -227,17 +227,17 @@ public final class Resolver
 
             do
             {
-                gprintln
+                DEBUG
                 (
                     format("c isdecsenat: %s", c)
                 );
-                gprintln
+                DEBUG
                 (
                     format("currentEntity: %s", currentEntity)
                 );
 
                 Container parentOfCurrent = currentEntity.parentOf();
-                gprintln
+                DEBUG
                 (
                     format("currentEntity(parent): %s", parentOfCurrent)
                 );
@@ -283,7 +283,7 @@ public final class Resolver
      */
     public void resolveWithin(Container currentContainer, Predicate!(Entity) predicate, ref Entity[] collection)
     {
-        gprintln
+        DEBUG
         (
             format
             (
@@ -292,7 +292,7 @@ public final class Resolver
             )
         );
         Statement[] statements = currentContainer.getStatements();
-        gprintln
+        DEBUG
         (
             format
             (
@@ -332,7 +332,7 @@ public final class Resolver
     {
         Entity[] foundEnts;
         resolveWithin(currentContainer, predicate, foundEnts);
-        gprintln(format("foundEnts: %s", foundEnts));
+        DEBUG(format("foundEnts: %s", foundEnts));
 
         return foundEnts.length ? foundEnts[0] : null;
     }
@@ -358,7 +358,7 @@ public final class Resolver
         bool nameMatch(Entity entity)
         {
             bool result = cmp(entity.getName(), nameToMatch) == 0;
-            gprintln(format("nameMatch(left=%s, right=%s) result: %s", nameToMatch, entity.getName(), result));
+            DEBUG(format("nameMatch(left=%s, right=%s) result: %s", nameToMatch, entity.getName(), result));
             return result;
         }
 
@@ -386,7 +386,7 @@ public final class Resolver
     public Entity resolveWithin(Container currentContainer, string name)
     {
         // Apply search with custom name-based matching predicate
-        gprintln(format("resolveWithin(cntnr=%s, name=%s) entering with predicate", currentContainer, name));
+        DEBUG(format("resolveWithin(cntnr=%s, name=%s) entering with predicate", currentContainer, name));
         return resolveWithin(currentContainer, derive_nameMatch(name));
     }
 
@@ -414,7 +414,7 @@ public final class Resolver
     public Entity resolveUp(Container currentContainer, Predicate!(Entity) predicate)
     {
         /* Try to find the Entity within the current Container */
-        gprintln
+        DEBUG
         (
             format
             (
@@ -424,7 +424,7 @@ public final class Resolver
             )
         );
         Entity entity = resolveWithin(currentContainer, predicate);
-        gprintln
+        DEBUG
         (
             format
             (
@@ -447,7 +447,7 @@ public final class Resolver
          */
         else if(cast(Program)currentContainer)
         {
-            gprintln
+            DEBUG
             (
                 format
                 (
@@ -469,7 +469,7 @@ public final class Resolver
             assert(cast(Entity)currentContainer);
             Container possibleParent = (cast(Entity) currentContainer).parentOf();
 
-            gprintln
+            DEBUG
             (
                 format
                 (
@@ -479,7 +479,7 @@ public final class Resolver
                     currentContainer
                 )
             );
-            gprintln
+            DEBUG
             (
                 format
                 (
@@ -498,7 +498,7 @@ public final class Resolver
             /* If the current container has no parent container */
             else
             {
-                gprintln
+                DEBUG
                 (
                     format
                     (
@@ -597,7 +597,7 @@ public final class Resolver
      */
     public Entity resolveBest(Container c, string name)
     {
-        gprintln
+        DEBUG
         (
             format
             (
@@ -615,7 +615,7 @@ public final class Resolver
         // otherwise
         if(cast(Program)c)
         {
-            gprintln
+            DEBUG
             (
                 format
                 (
@@ -640,7 +640,7 @@ public final class Resolver
                 string moduleRequested = name;
                 foreach(Module curMod; programC.getModules())
                 {
-                    gprintln
+                    DEBUG
                     (
                         format
                         (
@@ -654,10 +654,9 @@ public final class Resolver
                     }
                 }
 
-                gprintln
+                ERROR
                 (
-                    "resolveBest(moduleHoritontal) We found nothing and will not go down from Program to any Module[]. You probably did a rooted search on the Program for a bnon-Module entity, didn't ya?",
-                    DebugType.ERROR
+                    "resolveBest(moduleHoritontal) We found nothing and will not go down from Program to any Module[]. You probably did a rooted search on the Program for a bnon-Module entity, didn't ya?"
                 );
                 return null;
             }
@@ -672,7 +671,7 @@ public final class Resolver
 
                 foreach(Module curMod; programC.getModules())
                 {
-                    gprintln
+                    DEBUG
                     (
                         format
                         (
@@ -698,14 +697,13 @@ public final class Resolver
                 // If we could not find the module
                 else
                 {
-                    gprintln
+                    ERROR
                     (
                         format
                         (
                             "resolveBest(Program root): Could not find module '%s' for ANCHORED access",
                             moduleRequested
-                        ),
-                        DebugType.ERROR
+                        )
                     );
                     return null;
                 }
@@ -724,7 +722,7 @@ public final class Resolver
          */
         Entity containerEntity = cast(Entity) c;
         assert(containerEntity);
-        gprintln
+        DEBUG
         (
             format
             (
@@ -816,7 +814,7 @@ public final class Resolver
                 {
                     if(cmp(curModule.getName(), path[0]) == 0)
                     {
-                        gprintln
+                        DEBUG
                         (
                             format
                             (
@@ -837,18 +835,18 @@ public final class Resolver
 
                     if (con)
                     {
-                        gprintln("fooook");
+                        DEBUG("fooook");
                         return resolveBest(con, name);
                     }
                     else
                     {
-                        gprintln("also a kill me");
+                        DEBUG("also a kill me");
                         return null;
                     }
                 }
                 else
                 {
-                    gprintln("killl me");
+                    DEBUG("killl me");
                     return null;
                 }
             }
@@ -867,7 +865,7 @@ public final class Resolver
      */
     public Container findContainerOfType(TypeInfo_Class containerType, Statement startingNode)
     {
-        gprintln
+        DEBUG
         (
             format
             (
@@ -875,7 +873,7 @@ public final class Resolver
                 startingNode
             )
         );
-        gprintln
+        DEBUG
         (
             format
             (
@@ -900,7 +898,7 @@ public final class Resolver
         // If not, swim up to the parent
         else
         {
-            gprintln
+            DEBUG
             (
                 format
                 (

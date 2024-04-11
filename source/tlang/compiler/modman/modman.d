@@ -266,13 +266,13 @@ public final class ModuleManager
         // The path must be valid
         if(!exists(directory))
         {
-            gprintln(format("Skipping directory '%s' as it does not exist", directory), DebugType.WARNING);
+            WARN(format("Skipping directory '%s' as it does not exist", directory));
             return null;
         }
         // The path must refer to a directory
         else if(!isDir(directory))
         {
-            gprintln(format("Skipping directory '%s' it is a valid path but NOT a directory", directory), DebugType.WARNING);
+            WARN(format("Skipping directory '%s' it is a valid path but NOT a directory", directory));
             return null;
         }
 
@@ -327,7 +327,7 @@ public final class ModuleManager
      */
     private bool find(string[] directories, string modName, ref ModuleEntry found, bool isDirect = true)
     {
-        gprintln("Request to find module '"~modName~"' in directories: "~to!(string)(directories));
+        DEBUG("Request to find module '"~modName~"' in directories: "~to!(string)(directories));
 
         // Discover all files ending in .t in all search paths
         // (Doing shallow)
@@ -340,7 +340,7 @@ public final class ModuleManager
         version(DBG_MODMAN)
         {
             import niknaks.debugging : dumpArray;
-            gprintln("Files ending in `.t`:\n\n"~dumpArray!(tFiles)(0, tFiles.length, 1));
+            DEBUG("Files ending in `.t`:\n\n"~dumpArray!(tFiles)(0, tFiles.length, 1));
         }
 
 
@@ -363,8 +363,8 @@ public final class ModuleManager
                 return true;
             }
 
-            gprintln("Original path: "~tFile);
-            gprintln("Module name potetial: '"~modNamePot~"'");
+            DEBUG("Original path: "~tFile);
+            DEBUG("Module name potetial: '"~modNamePot~"'");
         }
 
         // Only if not tried already (else recursion)
@@ -384,7 +384,7 @@ public final class ModuleManager
              */
             if(!isPresent(modName, '.'))
             {
-                gprintln
+                DEBUG
                 (
                     format
                     (
@@ -396,7 +396,7 @@ public final class ModuleManager
             }
             
             string newModName = tailEndGet(modName);
-            gprintln("New module name "~newModName);
+            DEBUG("New module name "~newModName);
 
             /**
             * Now before giving up we must consider
@@ -428,11 +428,11 @@ public final class ModuleManager
                 {
                     relativeDir ~= element ~"/";
                 }
-                gprintln("Relative dir (generated): "~relativeDir);
+                DEBUG("Relative dir (generated): "~relativeDir);
 
                 // Construct the directory to search
                 string newSearchPath = directory~"/"~relativeDir;
-                gprintln("New search path (consideration): "~newSearchPath);
+                DEBUG("New search path (consideration): "~newSearchPath);
 
                 newPaths ~= newSearchPath;
             }

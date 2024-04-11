@@ -348,13 +348,13 @@ public string gibFileData(string sourceFile)
 void beginCompilation(string[] sourceFiles)
 {
     /* TODO: Begin compilation process, take in data here */
-    gprintln("Compiling files "~to!(string)(sourceFiles)~" ...");
+    DEBUG("Compiling files "~to!(string)(sourceFiles)~" ...");
 
     foreach(string sourceFile; sourceFiles)
     {
         /* Read in the source code */
         // TODO: THis below code is used so many times, for heavens-sake please make a helper function for it
-        gprintln("Reading source file '"~sourceFile~"' ...");
+        DEBUG("Reading source file '"~sourceFile~"' ...");
         File sourceFileFile;
         sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
         ulong fileSize = sourceFileFile.size();

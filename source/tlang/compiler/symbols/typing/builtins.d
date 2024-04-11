@@ -32,7 +32,7 @@ import tlang.compiler.symbols.data : Container;
  */
 public Type getBuiltInType(TypeChecker tc, Container container, string typeString)
 {
-    gprintln("getBuiltInType("~typeString~")");
+    DEBUG("getBuiltInType("~typeString~")");
 
     /* `int`, signed (2-complement) */
     if(cmp(typeString, "int") == 0)
@@ -109,19 +109,19 @@ public Type getBuiltInType(TypeChecker tc, Container container, string typeStrin
 
         // Find the component type (everything before `lastOBracketPos`)
         string componentTypeString = typeString[0..lastOBracketPos];
-        gprintln("StackArray (component type): "~componentTypeString);
+        DEBUG("StackArray (component type): "~componentTypeString);
 
         // Determine the size of the array (from `pos('[')+1` to typeString.length-2)
         string arraySizeString = typeString[lastOBracketPos+1..$-1];
         ulong arraySize = to!(ulong)(arraySizeString);
-        gprintln("StackArray (stack size): "~to!(string)(arraySize));
+        DEBUG("StackArray (stack size): "~to!(string)(arraySize));
 
 
-        gprintln("typeString: "~typeString);
+        DEBUG("typeString: "~typeString);
 
         stackArray = new StackArray(tc.getType(container, componentTypeString), arraySize);
 
-        gprintln("Stack-based array types are still being implemented", DebugType.ERROR);
+        ERROR("Stack-based array types are still being implemented");
         // assert(false);
         return stackArray;
     }
@@ -147,8 +147,8 @@ public Type getBuiltInType(TypeChecker tc, Container container, string typeStrin
 
         long ptrTypePos = rightmostTypePos;
         string ptrType = typeString[0..(ptrTypePos)];
-        gprintln("TypeStr: "~typeString);
-        gprintln("Pointer to '"~ptrType~"'", DebugType.ERROR);
+        DEBUG("TypeStr: "~typeString);
+        ERROR("Pointer to '"~ptrType~"'");
 
         return new Pointer(tc.getType(container, ptrType));
     }
@@ -161,7 +161,7 @@ public Type getBuiltInType(TypeChecker tc, Container container, string typeStrin
     {
 
 
-        gprintln("getBuiltInType("~typeString~"): Failed to map to a built-in type", DebugType.ERROR);
+        ERROR("getBuiltInType("~typeString~"): Failed to map to a built-in type");
 
         return null;
     }

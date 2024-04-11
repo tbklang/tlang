@@ -302,7 +302,7 @@ public class DNode
         markCompleted();
 
          /* TODO: I think using `isDone` we can linearise */
-        gprintln("Done/Not-done?: "~to!(string)(isDone));
+        DEBUG("Done/Not-done?: "~to!(string)(isDone));
 
         // TODO: What is this for and do we even need it? See issue #41 Problem 5
         if(isDone)
@@ -594,8 +594,8 @@ public class DNodeGenerator
     {
         ExpressionDNode dnode = poolT!(ExpressionDNode, Expression)(exp);
 
-        gprintln("expressionPass(Exp): Processing "~exp.toString(), DebugType.WARNING);
-        gprintln("expressionPass(Exp): Context coming in "~to!(string)(context));
+        WARN("expressionPass(Exp): Processing "~exp.toString());
+        DEBUG("expressionPass(Exp): Context coming in "~to!(string)(context));
 
         /* TODO: Add pooling */
 
@@ -614,7 +614,7 @@ public class DNodeGenerator
         {
             /* TODO: Implement argument expression dependency */
             FunctionCall funcCall = cast(FunctionCall)exp;
-            gprintln("FuncCall: "~funcCall.getName());
+            DEBUG("FuncCall: "~funcCall.getName());
 
             /* TODO: We need to fetch the cached function definition here and call it */
             Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
@@ -689,7 +689,7 @@ public class DNodeGenerator
                     expect("Only class-type may be used with `new`");
                     assert(false);
                 }
-                gprintln("King of the castle");
+                DEBUG("King of the castle");
             }
             else
             {
@@ -791,7 +791,7 @@ public class DNodeGenerator
                     FuncDecNode funcDecNode = poolT!(FuncDecNode, Function)(funcHandle);
                     dnode.needs(funcDecNode);
 
-                    gprintln("Muh function handle: "~namedEntity.toString(), DebugType.WARNING);
+                    WARN("Muh function handle: "~namedEntity.toString());
                 }
                 else
                 {
@@ -977,7 +977,7 @@ public class DNodeGenerator
 
 
             // dnode.needs()
-            gprintln("Interesting", DebugType.ERROR);
+            ERROR("Interesting");
         }
         
 
@@ -1088,20 +1088,20 @@ public class DNodeGenerator
                 else
                 {
                     // TODO: Add more advanced handling here
-                    gprintln("Advanced component types l;ike arrays of arrays or arrays of classes etc not yet supported", DebugType.ERROR);
+                    ERROR("Advanced component types l;ike arrays of arrays or arrays of classes etc not yet supported");
                     assert(false);
                 }
 
-                gprintln("Arrays (and these are stack arrays) are not yet supported", DebugType.ERROR);
+                ERROR("Arrays (and these are stack arrays) are not yet supported");
                 // assert(false);
             }
             /* Anything else */
             else
             {
                 /* This should never happen */
-                gprintln(variableType);
-                gprintln(variableType.classinfo);
-                gprintln("#ThisShouldNeverHappen Fault: A variable declaration with a kind-of type we don't know", DebugType.ERROR);
+                DEBUG(variableType);
+                DEBUG(variableType.classinfo);
+                ERROR("#ThisShouldNeverHappen Fault: A variable declaration with a kind-of type we don't know");
                 assert(false);
             }
 
@@ -1138,14 +1138,14 @@ public class DNodeGenerator
             vAsStdAl.setContext(context);
 
             /* TODO: CHeck avriable name even */
-            gprintln("YEAST ENJOYER");
+            DEBUG("YEAST ENJOYER");
 
 
             // FIXME: The below assert fails for function definitions trying to refer to global values
             // as a reoslveBest (up) is needed. We should firstly check if within fails, if so,
             // resolveBest, if that fails, then it is an error (see #46)
             assert(tc.getResolver().resolveBest(c, vAsStdAl.getVariableName()));
-            gprintln("YEAST ENJOYER");
+            DEBUG("YEAST ENJOYER");
             Variable variable = cast(Variable)tc.getResolver().resolveBest(c, vAsStdAl.getVariableName());
             assert(variable);
 
@@ -1209,7 +1209,7 @@ public class DNodeGenerator
 
 
 
-            gprintln("Please implement array assignment dependency generation", DebugType.ERROR);
+            ERROR("Please implement array assignment dependency generation");
             // assert(false);
 
             return arrayAssDerefDNode;
@@ -1226,7 +1226,7 @@ public class DNodeGenerator
             func.context = context;
 
             /* Add funtion definition */
-            gprintln("Hello"); // TODO: Check `root`, just use findContainerOfType
+            DEBUG("Hello"); // TODO: Check `root`, just use findContainerOfType
             // Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func));
             this.funcDefStore.addFunctionDef(cast(Module)root.entity, func);
 
@@ -1288,9 +1288,9 @@ public class DNodeGenerator
                     branchDNode.needs(branchConditionDNode);
                 }
 
-                gprintln("branch parentOf(): "~to!(string)(branch.parentOf()));
+                DEBUG("branch parentOf(): "~to!(string)(branch.parentOf()));
                 assert(branch.parentOf());
-                gprintln("branch generalPass(context="~to!(string)(context.getContainer())~")");
+                DEBUG("branch generalPass(context="~to!(string)(context.getContainer())~")");
 
                 // When generalPass()'ing a branch's body we don't want to pass in `context`
                 // as that is containing the branch container and hence we skip anything IN the
@@ -1320,7 +1320,7 @@ public class DNodeGenerator
             // Extract the branch (body Statement[] + condition)
             Branch whileBranch = whileLoopStmt.getBranch();
             DNode branchDNode = pool(whileBranch);
-            gprintln("Branch: "~to!(string)(whileBranch));
+            DEBUG("Branch: "~to!(string)(whileBranch));
 
             // If this is a while-loop
             if(!whileLoopStmt.isDoWhile)
@@ -1445,7 +1445,7 @@ public class DNodeGenerator
             discardStatement.setContext(context);
             DNode discardStatementDNode = pool(discardStatement);
 
-            gprintln("Implement discard statement!", DebugType.ERROR);
+            ERROR("Implement discard statement!");
             
             /* Pass the expression */
             Expression discardExpression = discardStatement.getExpression();
@@ -1474,7 +1474,7 @@ public class DNodeGenerator
             
             // It MUST be if we are processing it in `generalPass()`
             assert(funcCall.isStatementLevelFuncCall());
-            gprintln("Function calls (at statement level)", DebugType.INFO);
+            INFO("Function calls (at statement level)");
 
             // The FunctionCall is an expression, so to get a DNode from it `expressionPass()` it
             DNode funcCallDNode = expressionPass(funcCall, context);
@@ -1537,7 +1537,7 @@ public class DNodeGenerator
         */
         foreach(Statement entity; entities)
         {
-            gprintln("generalPass(): Processing entity: "~entity.toString());
+            DEBUG("generalPass(): Processing entity: "~entity.toString());
 
             Entity ent = cast(Entity)entity;
             // NOTE: COme back to and re-enable when this makes sense (IF it even needs to be here)
@@ -1553,7 +1553,7 @@ public class DNodeGenerator
             DNode statementDNode = generalStatement(c, context, entity);
             if(statementDNode is null)
             {
-                gprintln("Not adding dependency '"~to!(string)(statementDNode)~"' as it is null");
+                DEBUG("Not adding dependency '"~to!(string)(statementDNode)~"' as it is null");
             }
             else
             {
@@ -1591,12 +1591,12 @@ public class DNodeGenerator
         /* Get a DNode for the Class */
         ClassStaticNode classDNode = poolClassStatic(clazz);
 
-        gprintln("classPassStatic(): Static init check for?: "~to!(string)(clazz));
+        DEBUG("classPassStatic(): Static init check for?: "~to!(string)(clazz));
 
         /* Make sure we are static */
         if(clazz.getModifierType()!=InitScope.STATIC)
         {
-            gprintln("classPassStatic(): Not static class", DebugType.ERROR);
+            ERROR("classPassStatic(): Not static class");
             assert(false);
         }
 

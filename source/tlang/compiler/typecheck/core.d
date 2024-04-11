@@ -157,14 +157,14 @@ public final class TypeChecker
         {
             Module mod = cast(Module)modDep.getEntity();
             assert(mod);
-            gprintln(format("Dependency node entry point mod: %s", modDep));
+            DEBUG(format("Dependency node entry point mod: %s", modDep));
 
             // Linearize this module's dependencies
             modDep.performLinearization();
 
             // Print the dep tree
             string modTree = modDep.getTree();
-            gprintln(format("\n%s", modTree));
+            DEBUG(format("\n%s", modTree));
 
             // Get the linerization
             DNode[] modActions = modDep.getLinearizedNodes();
@@ -191,7 +191,7 @@ public final class TypeChecker
              * for them
              */
             FunctionData[string] modFuncDefs = funcDefStore.grabFunctionDefs(mod);
-            gprintln(format("Defined functions for module '%s': %s", mod, modFuncDefs));
+            DEBUG(format("Defined functions for module '%s': %s", mod, modFuncDefs));
             foreach(FunctionData curFD; modFuncDefs.values)
             {
                 assert(codeQueue.empty() == true);
@@ -207,7 +207,7 @@ public final class TypeChecker
 
                 //TODO: Would this not mess with our queues?
                 doTypeCheck(actionListFunc);
-                gprintln(funcNode.getTree());
+                DEBUG(funcNode.getTree());
 
                 // The current code queue would be the function's body instructions
                 // a.k.a. the `codeQueue`
@@ -260,13 +260,13 @@ public final class TypeChecker
         if(this.config.hasConfig("typecheck:warnUnusedVars") & this.config.getConfig("typecheck:warnUnusedVars").getBoolean())
         {
             Variable[] unusedVariables = getUnusedVariables();
-            gprintln("There are "~to!(string)(unusedVariables.length)~" unused variables");
+            WARN("There are "~to!(string)(unusedVariables.length)~" unused variables");
             if(unusedVariables.length)
             {
                 foreach(Variable unusedVariable; unusedVariables)
                 {
                     // TODO: Get a nicer name, full path-based
-                    gprintln("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never used");
+                    INFO("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never used");
                 }
             }
         }
@@ -384,7 +384,7 @@ public final class TypeChecker
         foreach(Instruction instr; this.codeQueue)
         {
             copyQueue ~= instr;
-            gprintln(format("FuncDef (%s): Adding body instruction: %s", fd.getName(), instr));
+            DEBUG(format("FuncDef (%s): Adding body instruction: %s", fd.getName(), instr));
         }
 
         // Clear the scratchpad `codeQueue`
@@ -485,7 +485,7 @@ public final class TypeChecker
         ulong i = 0;
         foreach(Instruction instruction; initQueue)
         {
-            gprintln("InitQueue: "~to!(string)(i+1)~"/"~to!(string)(walkLength(initQueue[]))~": "~instruction.toString());
+            DEBUG("InitQueue: "~to!(string)(i+1)~"/"~to!(string)(walkLength(initQueue[]))~": "~instruction.toString());
             i++;
         }
     }
@@ -547,7 +547,7 @@ public final class TypeChecker
         ulong i = 0;
         foreach(Instruction instruction; codeQueue)
         {
-            gprintln(to!(string)(i+1)~"/"~to!(string)(walkLength(codeQueue[]))~": "~instruction.toString());
+            DEBUG(to!(string)(i+1)~"/"~to!(string)(walkLength(codeQueue[]))~": "~instruction.toString());
             i++;
         }
     }
@@ -812,10 +812,10 @@ public final class TypeChecker
     {
         /* Debugging */
         string dbgHeader = "typeEnforce(t1="~t1.toString()~", v2="~v2.toString()~", attemptCoerce="~to!(string)(allowCoercion)~"): ";
-        gprintln(dbgHeader~"Entering");
+        DEBUG(dbgHeader~"Entering");
         scope(exit)
         {
-            gprintln(dbgHeader~"Leaving");
+            DEBUG(dbgHeader~"Leaving");
         }
 
         /* Extract the original types of `v2` */
@@ -892,7 +892,7 @@ public final class TypeChecker
             return true;
         }
 
-        gprintln("isSameType("~to!(string)(type1)~","~to!(string)(type2)~"): "~to!(string)(same), DebugType.ERROR);
+        ERROR("isSameType("~to!(string)(type1)~","~to!(string)(type2)~"): "~to!(string)(same));
         return same;
     }
 
@@ -1052,7 +1052,7 @@ public final class TypeChecker
 
                 // Then the actual literal will be `-<value>`
                 string negativeLiteral = "-"~theLiteral.getLiteralValue();
-                gprintln("Negated literal: "~negativeLiteral);
+                DEBUG("Negated literal: "~negativeLiteral);
 
                 // NOTE (X-platform): For cross-platform sake we should change the `long` to `ssize_t`
                 long literalValue = to!(long)(negativeLiteral);
@@ -1151,7 +1151,7 @@ public final class TypeChecker
      */
     private CastedValueInstruction attemptCoercion(Type toType, Value providedInstruction)
     {
-        gprintln("VibeCheck?");
+        DEBUG("VibeCheck?");
 
         /* Extract the type of the provided instruction */
         Type providedType = providedInstruction.getInstrType();
@@ -1179,7 +1179,7 @@ public final class TypeChecker
             // We still need the component type to match the to-type's referred type
             if(isSameType(stackArrCompType, toTypeReferred))
             {
-                gprintln("Stack-array ('"~providedInstruction.toString()~"' coercion from type '"~providedType.getName()~"' to type of '"~toType.getName()~"' allowed :)");
+                DEBUG("Stack-array ('"~providedInstruction.toString()~"' coercion from type '"~providedType.getName()~"' to type of '"~toType.getName()~"' allowed :)");
 
                 // Return a cast instruction to the to-type
                 return new CastedValueInstruction(providedInstruction, toType);
@@ -1241,7 +1241,7 @@ public final class TypeChecker
         // If it is a LiteralValueFloat (support for issue #94)
         else if(cast(LiteralValueFloat)providedInstruction)
         {
-            gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
+            ERROR("Coercion not yet supported for floating point literals");
             assert(false);
         }
         // Unary operator (specifically with a minus)
@@ -1289,14 +1289,14 @@ public final class TypeChecker
                     }
                     else
                     {
-                        gprintln("Yo, 'fix me', just throw an exception thing ain't integral, too lazy to write it now", DebugType.ERROR);
+                        ERROR("Yo, 'fix me', just throw an exception thing ain't integral, too lazy to write it now");
                         assert(false);
                     }
                 }
                 // If it is a negative LiteralValueFloat (floating-point literal)
                 else if(cast(LiteralValueFloat)operandInstr)
                 {
-                    gprintln("Coercion not yet supported for floating point literals", DebugType.ERROR);
+                    ERROR("Coercion not yet supported for floating point literals");
                     assert(false);
                 }
                 // If anything else is embedded
@@ -1352,7 +1352,7 @@ public final class TypeChecker
             }
             else
             {
-                gprintln("Mashallah why are we here? BECAUSE we should just use ze-value-based genral case!: "~providedInstruction.classinfo.toString());
+                ERROR("Mashallah why are we here? BECAUSE we should just use ze-value-based genral case!: "~providedInstruction.classinfo.toString());
                 throw new CoercionException(this, toType, providedType);
             }
         }
@@ -1561,7 +1561,7 @@ public final class TypeChecker
 
     public void typeCheckThing(DNode dnode)
     {
-        gprintln("typeCheckThing(): "~dnode.toString());
+        DEBUG("typeCheckThing(): "~dnode.toString());
 
         /* ExpressionDNodes */
         if(cast(tlang.compiler.typecheck.dependency.expression.ExpressionDNode)dnode)
@@ -1569,7 +1569,7 @@ public final class TypeChecker
             tlang.compiler.typecheck.dependency.expression.ExpressionDNode expDNode = cast(tlang.compiler.typecheck.dependency.expression.ExpressionDNode)dnode;
 
             Statement statement = expDNode.getEntity();
-            gprintln("Hdfsfdjfds"~to!(string)(statement));
+            DEBUG("Hdfsfdjfds"~to!(string)(statement));
 
             /* Dependent on the type of Statement */
 
@@ -1625,7 +1625,7 @@ public final class TypeChecker
                 {
                     FloatingLiteral floatLiteral = cast(FloatingLiteral)statement;
 
-                    gprintln("We haven't sorted ouyt literal encoding for floating onts yet (null below hey!)", DebugType.ERROR);
+                    ERROR("We haven't sorted ouyt literal encoding for floating onts yet (null below hey!)");
                     Type bruhType = null;
                     assert(bruhType);
                     
@@ -1641,13 +1641,13 @@ public final class TypeChecker
             /* String literal */
             else if(cast(StringExpression)statement)
             {
-                gprintln("Typecheck(): String literal processing...");
+                DEBUG("Typecheck(): String literal processing...");
 
                 /**
                 * Add the char* type as string literals should be
                 * interned
                 */
-                gprintln("Please implement strings", DebugType.ERROR);
+                ERROR("Please implement strings");
                 // assert(false);
                 // addType(getType(modulle, "char*"));
                 
@@ -1665,24 +1665,24 @@ public final class TypeChecker
             else if(cast(VariableExpression)statement)
             {
 
-                gprintln("Yaa, it's rewind time");
+                DEBUG("Yaa, it's rewind time");
                 auto g  = cast(VariableExpression)statement;
                 assert(g);
 
                 /* FIXME: It would seem that g.getContext() is returning null, so within function body's context is not being set */
-                gprintln("VarExp: "~g.getName());
-                gprintln(g.getContext());
+                DEBUG("VarExp: "~g.getName());
+                DEBUG(g.getContext());
                 auto gVar = cast(TypedEntity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
-                gprintln("gVar nullity?: "~to!(string)(gVar is null));
+                DEBUG("gVar nullity?: "~to!(string)(gVar is null));
 
                 /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
                 string variableName = resolver.generateName(this.program, gVar);
 
-                gprintln("VarName: "~variableName);
-                gprintln("Halo");
+                DEBUG("VarName: "~variableName);
+                DEBUG("Halo");
 
-                gprintln("Yaa, it's rewind time1: "~to!(string)(gVar.getType()));
-                gprintln("Yaa, it's rewind time2: "~to!(string)(gVar.getContext()));
+                DEBUG("Yaa, it's rewind time1: "~to!(string)(gVar.getType()));
+                DEBUG("Yaa, it's rewind time2: "~to!(string)(gVar.getContext()));
                 
                 /* TODO: Above TYpedEntity check */
                 /* TODO: still wip the expresison parser */
@@ -1690,7 +1690,7 @@ public final class TypeChecker
                 /* TODO: TYpe needs ansatz too `.updateName()` call */
                 Type variableType = getType(gVar.getContext().getContainer(), gVar.getType());
 
-                gprintln("Yaa, it's rewind time");
+                DEBUG("Yaa, it's rewind time");
 
 
                 /**
@@ -1824,7 +1824,7 @@ public final class TypeChecker
                 else
                 {
                     // See issue #141: Binary Operators support for non-Integer types (https://deavmi.assigned.network/git/tlang/tlang/issues/141)
-                    gprintln("FIXME: We need to add support for this, class equality, and others like floats", DebugType.ERROR);
+                    ERROR("FIXME: We need to add support for this, class equality, and others like floats");
                 }
 
                 
@@ -1929,7 +1929,7 @@ public final class TypeChecker
                 /* If pointer dereference */
                 else if(unaryOperator == SymbolType.STAR)
                 {
-                    gprintln("Type popped: "~to!(string)(expType));
+                    DEBUG("Type popped: "~to!(string)(expType));
 
                     // Okay, so yes, we would pop `ptr`'s type as `int*` which is correct
                     // but now, we must a.) ensure that IS the case and b.)
@@ -1962,7 +1962,7 @@ public final class TypeChecker
                 /* This should never occur */
                 else
                 {
-                    gprintln("UnaryOperatorExpression: This should NEVER happen: "~to!(string)(unaryOperator), DebugType.ERROR);
+                    ERROR("UnaryOperatorExpression: This should NEVER happen: "~to!(string)(unaryOperator));
                     assert(false);
                 }
                 
@@ -1976,7 +1976,7 @@ public final class TypeChecker
                 
                 
                 UnaryOpInstr addInst = new UnaryOpInstr(expInstr, unaryOperator);
-                gprintln("Made unaryop instr: "~to!(string)(addInst));
+                DEBUG("Made unaryop instr: "~to!(string)(addInst));
                 addInstr(addInst);
 
                 addInst.setInstrType(unaryOpType);
@@ -2001,20 +2001,20 @@ public final class TypeChecker
 
 
                 /* TODO: Pass in FUnction, so we get function's body for calling too */
-                gprintln(format("funcCall.getName() %s", funcCall.getName()));
+                DEBUG(format("funcCall.getName() %s", funcCall.getName()));
                 FuncCallInstr funcCallInstr = new FuncCallInstr(funcCall.getName(), paremeters.length);
-                gprintln("Name of func call: "~func.getName(), DebugType.ERROR);
+                ERROR("Name of func call: "~func.getName());
 
                 /* If there are paremeters for this function (as per definition) */
                 if(!paremeters.length)
                 {
-                    gprintln("No parameters for deez nuts: "~func.getName(), DebugType.ERROR);
+                    ERROR("No parameters for deez nuts: "~func.getName());
                 }
                 /* Pop all args per type */
                 else
                 {
                     ulong parmCount = paremeters.length-1;
-                    gprintln("Kachow: "~to!(string)(parmCount),DebugType.ERROR);
+                    ERROR("Kachow: "~to!(string)(parmCount));
 
                     while(!isInstrEmpty())
                     {
@@ -2027,8 +2027,8 @@ public final class TypeChecker
                         if(valueInstr && parmCount!=-1)
                         {
                             /* TODO: Determine type and match up */
-                            gprintln("Yeah");
-                            gprintln(valueInstr);
+                            DEBUG("Yeah");
+                            DEBUG(valueInstr);
                             Type argType = valueInstr.getInstrType();
                             // gprintln(argType);
 
@@ -2066,7 +2066,7 @@ public final class TypeChecker
                             
                             /* Add the instruction into the FunctionCallInstr */
                             funcCallInstr.setEvalInstr(parmCount, valueInstr);
-                            gprintln(funcCallInstr.getEvaluationInstructions());
+                            DEBUG(funcCallInstr.getEvaluationInstructions());
                             
                             /* Decrement the parameter index (right-to-left, so move to left) */
                             parmCount--;
@@ -2123,8 +2123,8 @@ public final class TypeChecker
             else if(cast(CastedExpression)statement)
             {
                 CastedExpression castedExpression = cast(CastedExpression)statement;
-                gprintln("Context: "~to!(string)(castedExpression.context));
-                gprintln("ParentOf: "~to!(string)(castedExpression.parentOf()));
+                DEBUG("Context: "~to!(string)(castedExpression.context));
+                DEBUG("ParentOf: "~to!(string)(castedExpression.parentOf()));
                 
                 /* Extract the type that the cast is casting towards */
                 Type castToType = getType(castedExpression.context.container, castedExpression.getToType());
@@ -2143,7 +2143,7 @@ public final class TypeChecker
 
                 /* Extract the type of the expression being casted */
                 Type typeBeingCasted = uncastedInstruction.getInstrType();
-                gprintln("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
+                DEBUG("TypeCast [FromType: "~to!(string)(typeBeingCasted)~", ToType: "~to!(string)(castToType)~"]");
                 
 
                 printCodeQueue();
@@ -2167,7 +2167,7 @@ public final class TypeChecker
                 Value indexToInstr = cast(Value)popInstr();
                 Type indexToType = indexToInstr.getInstrType();
                 assert(indexToType);
-                gprintln("ArrayIndex: Type of `indexToInstr`: "~indexToType.toString());
+                DEBUG("ArrayIndex: Type of `indexToInstr`: "~indexToType.toString());
 
                 /* Pop the index instruction (the index expression) */
                 Value indexInstr = cast(Value)popInstr();
@@ -2192,7 +2192,7 @@ public final class TypeChecker
                 // TODO: Look up based on the name of the `FetchValueInstruction` (so if it is)
                 // ... AND if it refers to a stack array
                 bool isStackArray = isStackArrayIndex(indexToInstr);
-                gprintln("isStackArray (being indexed-on)?: "~to!(string)(isStackArray), DebugType.ERROR);
+                ERROR("isStackArray (being indexed-on)?: "~to!(string)(isStackArray));
 
 
                
@@ -2206,10 +2206,10 @@ public final class TypeChecker
                 {
                     StackArray stackArray = cast(StackArray)indexToType;
                     accessType = stackArray.getComponentType();
-                    gprintln("ArrayIndex: Stack-array access");
+                    DEBUG("ArrayIndex: Stack-array access");
 
 
-                    gprintln("<<<<<<<< STCK ARRAY INDEX CODE GEN >>>>>>>>", DebugType.ERROR);
+                    ERROR("<<<<<<<< STCK ARRAY INDEX CODE GEN >>>>>>>>");
 
 
 
@@ -2223,9 +2223,9 @@ public final class TypeChecker
                     stackArrayIndexInstr.setInstrType(accessType);
                     stackArrayIndexInstr.setContext(arrayIndex.context);
 
-                    gprintln("IndexTo: "~indexToInstr.toString(), DebugType.ERROR);
-                    gprintln("Index: "~indexInstr.toString(), DebugType.ERROR);
-                    gprintln("Stack ARray type: "~stackArray.getComponentType().toString(), DebugType.ERROR);
+                    ERROR("IndexTo: "~indexToInstr.toString());
+                    ERROR("Index: "~indexInstr.toString());
+                    ERROR("Stack ARray type: "~stackArray.getComponentType().toString());
 
                     
 
@@ -2235,7 +2235,7 @@ public final class TypeChecker
                 /* Array type `<componentType>[]` */
                 else if(cast(Pointer)indexToType)
                 {
-                    gprintln("ArrayIndex: Pointer access");
+                    DEBUG("ArrayIndex: Pointer access");
 
                     Pointer pointer = cast(Pointer)indexToType;
                     accessType = pointer.getReferredType();
@@ -2256,7 +2256,7 @@ public final class TypeChecker
                 {
                     // TODO: Throw an error here
                     // throw new TypeMismatchException()
-                    gprintln("Indexing to an entity other than a stack array or pointer!", DebugType.ERROR);
+                    ERROR("Indexing to an entity other than a stack array or pointer!");
                     assert(false);
                 }
 
@@ -2264,16 +2264,16 @@ public final class TypeChecker
 
                 // TODO: context (arrayIndex)
 
-                gprintln("ArrayIndex: [toInstr: "~indexToInstr.toString()~", indexInstr: "~indexInstr.toString()~"]");
+                DEBUG("ArrayIndex: [toInstr: "~indexToInstr.toString()~", indexInstr: "~indexInstr.toString()~"]");
 
-                gprintln("Array index not yet supported", DebugType.ERROR);
+                ERROR("Array index not yet supported");
                 // assert(false);
 
                 addInstr(generatedInstruction);
             }
             else
             {
-                gprintln("This ain't it chief", DebugType.ERROR);
+                ERROR("This ain't it chief");
                 assert(false);
             }
         }
@@ -2287,7 +2287,7 @@ public final class TypeChecker
             VariableAssignmentNode varAssignDNode = cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
             Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
             variableName = resolver.generateName(this.program, assignTo);
-            gprintln("VariableAssignmentNode: "~to!(string)(variableName));
+            DEBUG("VariableAssignmentNode: "~to!(string)(variableName));
 
             /* Get the Context of the Variable Assigmnent */
             Context variableAssignmentContext = (cast(VariableAssignment)varAssignDNode.getEntity()).context;
@@ -2311,16 +2311,16 @@ public final class TypeChecker
             assert(instr);
             Value valueInstr = cast(Value)instr;
             assert(valueInstr);
-            gprintln("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr), DebugType.WARNING);
+            WARN("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr));
 
 
             Type rightHandType = valueInstr.getInstrType();
-            gprintln("RightHandType (assignment): "~to!(string)(rightHandType));
+            DEBUG("RightHandType (assignment): "~to!(string)(rightHandType));
 
             
 
         
-            gprintln(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
+            DEBUG(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
             VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
             varAssInstr.setContext(variableAssignmentContext);
             // NOTE: No need setting `varAssInstr.type` as the type if in `getEmbeddedInstruction().type`
@@ -2344,10 +2344,10 @@ public final class TypeChecker
             * Emit a variable declaration instruction
             */
             Variable variablePNode = cast(Variable)dnode.getEntity();
-            gprintln("HELLO FELLA");
+            DEBUG("HELLO FELLA");
 
             string variableName = resolver.generateName(this.program, variablePNode);
-            gprintln("HELLO FELLA (name): "~variableName);
+            DEBUG("HELLO FELLA (name): "~variableName);
             
 
             Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
@@ -2400,7 +2400,7 @@ public final class TypeChecker
             /* TODO: Get the STatement */
             Statement statement = dnode.getEntity();
 
-            gprintln("Generic DNode typecheck(): Begin (examine: "~to!(string)(dnode)~" )");
+            DEBUG("Generic DNode typecheck(): Begin (examine: "~to!(string)(dnode)~" )");
 
 
             /* VariableAssignmentStdAlone */
@@ -2565,8 +2565,8 @@ public final class TypeChecker
                     if(branch.hasCondition())
                     {
                         Instruction instr = popInstr();
-                        gprintln("BranchIdx: "~to!(string)(branchIdx));
-                        gprintln("Instr is: "~to!(string)(instr));
+                        DEBUG("BranchIdx: "~to!(string)(branchIdx));
+                        DEBUG("Instr is: "~to!(string)(instr));
                         branchConditionInstr = cast(Value)instr;
                         assert(branchConditionInstr);
                     }
@@ -2582,7 +2582,7 @@ public final class TypeChecker
                         Instruction bodyInstr = tailPopInstr();
                         bodyInstructions~=bodyInstr;
 
-                        gprintln("tailPopp'd("~to!(string)(i)~"/"~to!(string)(bodyCount-1)~"): "~to!(string)(bodyInstr));
+                        DEBUG("tailPopp'd("~to!(string)(i)~"/"~to!(string)(bodyCount-1)~"): "~to!(string)(bodyInstr));
 
                         i++;
                     }
@@ -2615,7 +2615,7 @@ public final class TypeChecker
                 ifStatementInstruction.setContext(ifStatement.getContext());
                 addInstrB(ifStatementInstruction);
 
-                gprintln("If!");
+                DEBUG("If!");
             }
             /**
             * While loop (WhileLoop)
@@ -2627,7 +2627,7 @@ public final class TypeChecker
                 // FIXME: Do-while loops are still being considered in terms of dependency construction
                 if(whileLoop.isDoWhile)
                 {
-                    gprintln("Still looking at dependency construction in this thing (do while loops )");
+                    DEBUG("Still looking at dependency construction in this thing (do while loops )");
                     assert(false);
                 }
 
@@ -2681,7 +2681,7 @@ public final class TypeChecker
 
                 /* Calculate the number of instructions representing the body to tailPopInstr() */
                 ulong bodyTailPopNumber = forLoop.getBranch().getStatements().length;
-                gprintln("bodyTailPopNumber: "~to!(string)(bodyTailPopNumber));
+                DEBUG("bodyTailPopNumber: "~to!(string)(bodyTailPopNumber));
 
                 /* Pop off the body instructions, then reverse final list */
                 Instruction[] bodyInstructions;
@@ -2719,7 +2719,7 @@ public final class TypeChecker
             {
                 Branch branch = cast(Branch)statement;
 
-                gprintln("Look at that y'all, cause this is it: "~to!(string)(branch));
+                DEBUG("Look at that y'all, cause this is it: "~to!(string)(branch));
             }
             /**
             * Dereferencing pointer assignment statement (PointerDereferenceAssignment)
@@ -2778,7 +2778,7 @@ public final class TypeChecker
             {
                 ArrayAssignment arrayAssignment = cast(ArrayAssignment)statement;
 
-                gprintln("Note, dependency processing of ArrayAssignment is not yet implemented, recall seggy", DebugType.ERROR);
+                ERROR("Note, dependency processing of ArrayAssignment is not yet implemented, recall seggy");
                 printCodeQueue();
 
                 // TODO: We need to implement this, what should we put here
@@ -2801,9 +2801,9 @@ public final class TypeChecker
                 Value arrayRefInstruction = cast(Value)popInstr();
                 Value assignmentInstr = cast(Value)popInstr();
 
-                gprintln("indexInstruction: "~indexInstruction.toString(), DebugType.WARNING);
-                gprintln("arrayRefInstruction: "~arrayRefInstruction.toString(), DebugType.WARNING);
-                gprintln("assignmentInstr: "~assignmentInstr.toString(), DebugType.WARNING);
+                WARN("indexInstruction: "~indexInstruction.toString());
+                WARN("arrayRefInstruction: "~arrayRefInstruction.toString());
+                WARN("assignmentInstr: "~assignmentInstr.toString());
 
 
                 /* Final Instruction generated */
@@ -2813,14 +2813,14 @@ public final class TypeChecker
                 // TODO: We need to add a check here for if the `arrayRefInstruction` is a name
                 // ... and if so if its type is `StackArray`, else we will enter the wrong thing below
                 bool isStackArray = isStackArrayIndex(arrayRefInstruction);
-                gprintln("isStackArray (being assigned to)?: "~to!(string)(isStackArray), DebugType.ERROR);
+                ERROR("isStackArray (being assigned to)?: "~to!(string)(isStackArray));
 
 
                
                 /* The type of what is being indexed on */
                 Type indexingOnType = arrayRefInstruction.getInstrType();
-                gprintln("Indexing-on type: "~indexingOnType.toString(), DebugType.WARNING);
-                gprintln("Indexing-on type: "~indexingOnType.classinfo.toString(), DebugType.WARNING);
+                WARN("Indexing-on type: "~indexingOnType.toString());
+                WARN("Indexing-on type: "~indexingOnType.classinfo.toString());
 
                 
                 /* Stack-array type `<compnentType>[<size>]` */
@@ -2843,8 +2843,8 @@ public final class TypeChecker
                     Variable arrayVariable = cast(Variable)resolver.resolveBest(stackVarContext.container, arrayFetch.varName);
                     Type arrayVariableDeclarationType = getType(stackVarContext.container, arrayVariable.getType());
 
-                    gprintln("TODO: We are still working on generating an assignment instruction for assigning to stack arrays", DebugType.ERROR);
-                    gprintln("TODO: Implement instruction generation for stack-based arrays", DebugType.ERROR);
+                    ERROR("TODO: We are still working on generating an assignment instruction for assigning to stack arrays");
+                    ERROR("TODO: Implement instruction generation for stack-based arrays");
 
                     // TODO: Use StackArrayIndexAssignmentInstruction
                     StackArrayIndexAssignmentInstruction stackAssignmentInstr = new StackArrayIndexAssignmentInstruction(arrayFetch.varName, indexInstruction, assignmentInstr);
@@ -2858,8 +2858,8 @@ public final class TypeChecker
                     stackAssignmentInstr.setContext(arrayAssignment.getContext());
 
 
-                    gprintln(">>>>> "~stackAssignmentInstr.toString());
-                    gprintln("Assigning into this array: "~to!(string)(assignmentInstr));
+                    DEBUG(">>>>> "~stackAssignmentInstr.toString());
+                    DEBUG("Assigning into this array: "~to!(string)(assignmentInstr));
                     // assert(false);
                 }
                 /* Array type `<componentType>[]` */
@@ -2877,7 +2877,7 @@ public final class TypeChecker
                     ArrayIndexInstruction arrIndex = new ArrayIndexInstruction(arrayRefInstruction, indexInstruction);
                     ArrayIndexAssignmentInstruction arrDerefAssInstr = new ArrayIndexAssignmentInstruction(arrIndex, assignmentInstr);
 
-                    gprintln("TODO: Implement instruction generation for pointer-based arrays", DebugType.ERROR);
+                    ERROR("TODO: Implement instruction generation for pointer-based arrays");
                     generatedInstruction = arrDerefAssInstr;
                     // assert(false);
 
@@ -2897,7 +2897,7 @@ public final class TypeChecker
             /* Case of no matches */
             else
             {
-                gprintln("NO MATCHES FIX ME FOR: "~to!(string)(statement), DebugType.WARNING);
+                WARN("NO MATCHES FIX ME FOR: "~to!(string)(statement));
             }
         }
         
@@ -2912,7 +2912,7 @@ public final class TypeChecker
     private void doTypeCheck(DNode[] actionList)
     {
         /* Print the action list provided to us */
-        gprintln("Action list: "~to!(string)(actionList));
+        DEBUG("Action list: "~to!(string)(actionList));
 
         /**
         * Loop through each dependency-node in the action list
@@ -2920,12 +2920,12 @@ public final class TypeChecker
         */
         foreach(DNode node; actionList)
         {
-            gprintln("Process: "~to!(string)(node));
+            DEBUG("Process: "~to!(string)(node));
 
             /* Print the code queue each time */
-            gprintln("sdfhjkhdsfjhfdsj 1");
+            DEBUG("sdfhjkhdsfjhfdsj 1");
             printCodeQueue();
-            gprintln("sdfhjkhdsfjhfdsj 2");
+            DEBUG("sdfhjkhdsfjhfdsj 2");
 
             /* Type-check/code-gen this node */
             typeCheckThing(node);
@@ -2937,11 +2937,11 @@ public final class TypeChecker
 
         
         /* Print the init queue */
-        gprintln("<<<<< FINAL ALLOCATE QUEUE >>>>>");
+        DEBUG("<<<<< FINAL ALLOCATE QUEUE >>>>>");
         printInitQueue();
 
         /* Print the code queue */
-        gprintln("<<<<< FINAL CODE QUEUE >>>>>");
+        DEBUG("<<<<< FINAL CODE QUEUE >>>>>");
         printCodeQueue();
     }
 
@@ -3070,7 +3070,7 @@ public final class TypeChecker
         {
             /* Get the current class's parent */
             string[] parentClasses = clazz.getInherit();
-            gprintln("Class: " ~ clazz.getName() ~ ": ParentInheritList: " ~ to!(
+            DEBUG("Class: " ~ clazz.getName() ~ ": ParentInheritList: " ~ to!(
                     string)(parentClasses));
 
             /* Try resolve all of these */
@@ -3081,7 +3081,7 @@ public final class TypeChecker
 
                 /* Check if the name is rooted */
                 string[] dotPath = split(parent, '.');
-                gprintln(dotPath.length);
+                DEBUG(dotPath.length);
 
                 /* Resolve the name */
                 namedEntity = resolver.resolveBest(c, parent);
@@ -3196,7 +3196,7 @@ public final class TypeChecker
         * Get all Entities of the Container with order Clazz, Function, Variable
         */
         Entity[] entities = getContainerMembers(c);
-        gprintln("checkContainer(C): " ~ to!(string)(entities));
+        DEBUG("checkContainer(C): " ~ to!(string)(entities));
 
         foreach (Entity entity; entities)
         {
@@ -3237,7 +3237,7 @@ public final class TypeChecker
                 string fullPath = resolver.generateName(this.program, entity);
                 // (MODMAN) This will need to be fixed (anchored at the Program-level)
                 string containerNameFullPath = resolver.generateName(this.program, containerEntity);
-                gprintln("Entity \"" ~ fullPath
+                DEBUG("Entity \"" ~ fullPath
                         ~ "\" is allowed to be defined within container \""
                         ~ containerNameFullPath ~ "\"");
 
@@ -3464,7 +3464,7 @@ public final class TypeChecker
         */
         foreach (Clazz clazz; classTypes)
         {
-            gprintln("Check recursive " ~ to!(string)(clazz), DebugType.WARNING);
+            WARN("Check recursive " ~ to!(string)(clazz));
 
             /* Check the current class's types within */
             checkClassNames(clazz);

@@ -167,7 +167,7 @@ public final class Program : Container
     // TODO: Make this part of debug option
     public void debugDump()
     {
-        gprintln("Dumping modules imported into program:");
+        DEBUG("Dumping modules imported into program:");
         import niknaks.debugging : dumpArray;
         import std.stdio : writeln;
         Module[] modulesImported = this.modules;

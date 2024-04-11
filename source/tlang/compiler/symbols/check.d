@@ -951,7 +951,7 @@ public string getCharacter(SymbolType symbolIn)
     }
     else
     {
-        gprintln("getCharacter: No back-mapping for "~to!(string)(symbolIn), DebugType.ERROR);
+        ERROR("getCharacter: No back-mapping for "~to!(string)(symbolIn));
         assert(false);
     }
 }
