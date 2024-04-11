@@ -34,34 +34,3 @@ static this()
 
 // Bring in helper methods
 mixin LoggingFuncs!(logger);
-
-
-// TODO: Remove this
-public enum DebugType
-{
-    INFO,
-    WARNING,
-    ERROR,
-    DEBUG
-}
-
-// TODO: Change to actually use error, etc. directkly on GoggaLogger
-public void gprintln(messageT)(messageT message, DebugType debugType = DebugType.INFO)
-{
-    if(debugType == DebugType.DEBUG)
-    {
-        logger.dbg(message);
-    }
-    else if(debugType == DebugType.INFO)
-    {
-        logger.info(message);
-    }
-    else if(debugType == DebugType.WARNING)
-    {
-        logger.warn(message);
-    }
-    else
-    {
-        logger.error(message);
-    }
-}
