@@ -31,6 +31,10 @@ static this()
     logger.addHandler(new FileHandler(stdout));
 }
 
+import gogga.extras;
+
+mixin LoggingFuncs!(logger);
+
 
 
 // TODO: Change to actually use error, etc. directkly on GoggaLogger
