@@ -7,6 +7,8 @@ module tlang.misc.logging;
 
 import gogga;
 import gogga.extras;
+import dlog.basic : Level, FileHandler;
+import std.stdio : stdout;
 
 /** 
  * The logger instance
@@ -22,13 +24,11 @@ private GoggaLogger logger;
 static this()
 {
     logger = new GoggaLogger();
+    // TODO: Still decide on this
     logger.mode(GoggaMode.RUSTACEAN);
 
-    import dlog.basic : Level;
+    // TODO: In future make this configurable
     logger.setLevel(Level.DEBUG);
-
-    import dlog.basic : FileHandler;
-    import std.stdio : stdout;
     logger.addHandler(new FileHandler(stdout));
 }
 
