@@ -24,8 +24,19 @@ private GoggaLogger logger;
 static this()
 {
     logger = new GoggaLogger();
-    // TODO: Still decide on this
-    logger.mode(GoggaMode.RUSTACEAN);
+
+    GoggaMode mode;
+
+    version(DBG_VERBOSE_LOGGING)
+    {
+        mode = GoggaMode.RUSTACEAN;
+    }
+    else
+    {
+        mode = GoggaMode.SIMPLE;
+    }
+
+    logger.mode(mode);
 
     // TODO: In future make this configurable
     logger.setLevel(Level.DEBUG);
