@@ -38,8 +38,18 @@ static this()
 
     logger.mode(mode);
 
-    // TODO: In future make this configurable
-    logger.setLevel(Level.DEBUG);
+    Level level;
+
+    version(DBG_DEBUG_LOGGING)
+    {
+        level = Level.DEBUG;
+    }
+    else
+    {
+        level = Level.INFO;
+    }
+
+    logger.setLevel(level);
     logger.addHandler(new FileHandler(stdout));
 }
 
