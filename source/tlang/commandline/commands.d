@@ -14,7 +14,7 @@ import tlang.compiler.lexer.kinds.basic : BasicLexer;
 import tlang.compiler.lexer.core;
 import tlang.compiler.parsing.core : Parser;
 import tlang.compiler.typecheck.core : TypeChecker;
-import gogga;
+import tlang.misc.logging;
 import tlang.compiler.core : Compiler, beginCompilation;
 import tlang.compiler.configuration : ConfigEntry;
 import std.conv : to;
@@ -198,18 +198,17 @@ struct compileCommand
         }
         catch(TError t)
         {
-            gprintln(t.msg, DebugType.ERROR);
+            ERROR(t.msg);
             exit(-1);
         }
         catch(ErrnoException e)
         {
-            /* TODO: Use gogga error */
-            writeln("Could not open source file "~sourceFile);
+            ERROR("Could not open source file "~sourceFile);
             exit(-2);
         }
         catch(Exception e)
         {
-            gprintln(e.msg, DebugType.ERROR);
+            ERROR(e.msg);
             exit(-1);
         }
     }
@@ -252,13 +251,12 @@ struct lexCommand
         }
         catch(TError t)
         {
-            gprintln(t.msg, DebugType.ERROR);
+            ERROR(t.msg);
             exit(-1);
         }
         catch(ErrnoException e)
         {
-            /* TODO: Use gogga error */
-            writeln("Could not open source file "~sourceFile);
+            ERROR("Could not open source file "~sourceFile);
             exit(-2);
         }
     }
@@ -303,13 +301,12 @@ struct parseCommand
         }
         catch(TError t)
         {
-            gprintln(t.msg, DebugType.ERROR);
+            ERROR(t.msg);
             exit(-1);
         }
         catch(ErrnoException e)
         {
-            /* TODO: Use gogga error */
-            writeln("Could not open source file "~sourceFile);
+            ERROR("Could not open source file "~sourceFile);
             exit(-2);
         }
     }
@@ -360,13 +357,12 @@ struct typecheckCommand
         }
         catch(TError t)
         {
-            gprintln(t.msg, DebugType.ERROR);
+            ERROR(t.msg);
             exit(-1);
         }
         catch(ErrnoException e)
         {
-            /* TODO: Use gogga error */
-            writeln("Could not open source file "~sourceFile);
+            ERROR("Could not open source file "~sourceFile);
             exit(-2);
         }
     }

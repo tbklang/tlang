@@ -6,7 +6,7 @@ import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.containers : Container;
 import tlang.compiler.symbols.mcro;
 import tlang.compiler.typecheck.core;
-import gogga;
+import tlang.misc.logging;
 import std.conv : to;
 import tlang.compiler.configuration;
 
@@ -53,7 +53,7 @@ public class MetaProcessor
 
         foreach(Statement curStmt; stmts)
         {
-            gprintln("MetaProcessor: Examining AST node '"~curStmt.toString()~"'...");
+            DEBUG("MetaProcessor: Examining AST node '"~curStmt.toString()~"'...");
 
             // Perform replacement of all type alises to concrete types, such as `size_t`
             doTypeAlias(container, curStmt);
@@ -66,7 +66,7 @@ public class MetaProcessor
             {
                 MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
                 Statement[] foundStmts = searchableStmt.search(FunctionCall.classinfo);
-                gprintln("Nah fr");
+                DEBUG("Nah fr");
 
                 foreach(Statement curFoundStmt; foundStmts)
                 {
@@ -74,7 +74,7 @@ public class MetaProcessor
 
                     if(curFuncCall.getName() == "sizeof")
                     {
-                        gprintln("Elo");
+                        DEBUG("Elo");
                         Expression[] arguments = curFuncCall.getCallArguments();
                         if(arguments.length == 1)
                         {
@@ -83,7 +83,7 @@ public class MetaProcessor
                             {
                                 string typeName = potentialIdentExp.getName();
                                 IntegerLiteral replacementStmt = sizeOf_Literalize(typeName);
-                                gprintln("sizeof: Replace '"~curFoundStmt.toString()~"' with '"~replacementStmt.toString()~"'");
+                                DEBUG("sizeof: Replace '"~curFoundStmt.toString()~"' with '"~replacementStmt.toString()~"'");
 
                                 /* Traverse down from the `Container` we are process()'ing and apply the replacement */
                                 MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
@@ -92,13 +92,13 @@ public class MetaProcessor
                             else
                             {
                                 // TODO: Throw an exception here that an ident_type should be present as the argument
-                                gprintln("The argument to `sizeof` should be an ident", DebugType.ERROR);
+                                ERROR("The argument to `sizeof` should be an ident");
                             }
                         }
                         else
                         {
                             // TODO: Throw an exception here as only 1 argument is allowed
-                            gprintln("To use the `sizeof` macro you require a single argument to be passed to it", DebugType.ERROR);
+                            ERROR("To use the `sizeof` macro you require a single argument to be passed to it");
                         }
                     }
                 }
@@ -194,7 +194,7 @@ public class MetaProcessor
                 {
                     // Determine the concrete type
                     string concereteType = getConcreteType(identName);
-                    gprintln("Found type alias '"~identName~"' which concretely is '"~concereteType~"'");
+                    DEBUG("Found type alias '"~identName~"' which concretely is '"~concereteType~"'");
 
                     // Replace with concrete type
                     container.replace(identExp, new IdentExpression(concereteType));

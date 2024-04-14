@@ -5,7 +5,7 @@ import std.conv : to;
 import tlang.compiler.typecheck.dependency.core : Context;
 
 // For debug printing
-import gogga;
+import tlang.misc.logging;
 
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
@@ -167,7 +167,7 @@ public final class Program : Container
     // TODO: Make this part of debug option
     public void debugDump()
     {
-        gprintln("Dumping modules imported into program:");
+        DEBUG("Dumping modules imported into program:");
         import niknaks.debugging : dumpArray;
         import std.stdio : writeln;
         Module[] modulesImported = this.modules;

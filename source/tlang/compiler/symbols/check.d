@@ -11,7 +11,7 @@ import std.conv : to;
 import std.string : isNumeric, cmp;
 import std.algorithm.searching : canFind;
 import misc.utils;
-import gogga;
+import tlang.misc.logging;
 
 /**
  * All allowed symbols
@@ -951,7 +951,7 @@ public string getCharacter(SymbolType symbolIn)
     }
     else
     {
-        gprintln("getCharacter: No back-mapping for "~to!(string)(symbolIn), DebugType.ERROR);
+        ERROR("getCharacter: No back-mapping for "~to!(string)(symbolIn));
         assert(false);
     }
 }

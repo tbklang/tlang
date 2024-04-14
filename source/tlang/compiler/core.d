@@ -1,6 +1,6 @@
 module tlang.compiler.core;
 
-import gogga;
+import tlang.misc.logging;
 import std.conv : to;
 import tlang.compiler.lexer.core;
 import tlang.compiler.lexer.kinds.basic : BasicLexer;
@@ -348,13 +348,13 @@ public string gibFileData(string sourceFile)
 void beginCompilation(string[] sourceFiles)
 {
     /* TODO: Begin compilation process, take in data here */
-    gprintln("Compiling files "~to!(string)(sourceFiles)~" ...");
+    DEBUG("Compiling files "~to!(string)(sourceFiles)~" ...");
 
     foreach(string sourceFile; sourceFiles)
     {
         /* Read in the source code */
         // TODO: THis below code is used so many times, for heavens-sake please make a helper function for it
-        gprintln("Reading source file '"~sourceFile~"' ...");
+        DEBUG("Reading source file '"~sourceFile~"' ...");
         File sourceFileFile;
         sourceFileFile.open(sourceFile); /* TODO: Error handling with ANY file I/O */
         ulong fileSize = sourceFileFile.size();
@@ -526,8 +526,8 @@ unittest
         // On Error
         catch(Exception e)
         {
-            gprintln("Yo: "~e.toString(), DebugType.ERROR);
-            gprintln("Yo, we should not be getting this but rather ONLY TErrors, this is a bug to be fixed", DebugType.ERROR);
+            ERROR("Yo: "~e.toString());
+            ERROR("Yo, we should not be getting this but rather ONLY TErrors, this is a bug to be fixed");
             assert(false);
         }
     }
@@ -588,7 +588,7 @@ unittest
         // We should ONLY be getting TErrors
         catch(Exception e)
         {
-            gprintln("Got non TError, this is a bug that must be fixed", DebugType.ERROR);
+            ERROR("Got non TError, this is a bug that must be fixed");
             assert(false);
         }
     }
