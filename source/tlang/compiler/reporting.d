@@ -166,7 +166,7 @@ public string report(string message, Token offendingToken)
 
 version(unittest)
 {
-    import gogga;
+    import tlang.misc.logging;
 }
 
 unittest
@@ -183,5 +183,5 @@ unittest
     offending.setOrigin(line);
 
     string s = report("Cannot name a variable i", offending);
-    gprintln(s);
+    INFO(s);
 }
