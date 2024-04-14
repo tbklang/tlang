@@ -11,7 +11,7 @@ import std.conv : to;
 import std.string : isNumeric, cmp;
 import std.algorithm.searching : canFind;
 import misc.utils;
-import gogga;
+import tlang.misc.logging;
 
 /**
  * All allowed symbols
@@ -289,6 +289,11 @@ public enum SymbolType
      * `generic`
      */
     GENERIC_TYPE_DECLARE,
+
+    /**
+     * `import` keyword
+     */
+    IMPORT,
 
     /**
      * Multi-line comment (frwd-slash-star)
@@ -705,6 +710,11 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.GENERIC_TYPE_DECLARE;
     }
+    /* import keyword */
+    else if(cmp(token, "import") == 0)
+    {
+        return SymbolType.IMPORT;
+    }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))
     {
@@ -941,7 +951,7 @@ public string getCharacter(SymbolType symbolIn)
     }
     else
     {
-        gprintln("getCharacter: No back-mapping for "~to!(string)(symbolIn), DebugType.ERROR);
+        ERROR("getCharacter: No back-mapping for "~to!(string)(symbolIn));
         assert(false);
     }
 }
