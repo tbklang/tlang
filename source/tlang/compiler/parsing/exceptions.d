@@ -1,7 +1,7 @@
 module tlang.compiler.parsing.exceptions;
 
 import tlang.compiler.parsing.core;
-import misc.exceptions;
+import tlang.misc.exceptions;
 import tlang.compiler.symbols.check;
 import tlang.compiler.symbols.data;
 import tlang.compiler.lexer.core.tokens : Token;

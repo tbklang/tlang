@@ -1,6 +1,6 @@
 module tlang.compiler.modman.exceptions;
 
-import misc.exceptions;
+import tlang.misc.exceptions;
 import tlang.compiler.modman.modman : ModuleManager;
 
 public final class ModuleManagerError : TError

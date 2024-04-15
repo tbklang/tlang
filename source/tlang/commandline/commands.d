@@ -8,7 +8,7 @@ module tlang.commandline.commands;
 
 import jcli;
 import std.stdio;
-import misc.exceptions : TError;
+import tlang.misc.exceptions : TError;
 import std.exception : ErrnoException;
 import tlang.compiler.lexer.kinds.basic : BasicLexer;
 import tlang.compiler.lexer.core;

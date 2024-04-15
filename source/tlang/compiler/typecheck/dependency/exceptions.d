@@ -1,6 +1,6 @@
 module tlang.compiler.typecheck.dependency.exceptions;
 
-import misc.exceptions : TError;
+import tlang.misc.exceptions : TError;
 import std.conv : to;
 
 // FIXME: Extend TError rather than Exception
