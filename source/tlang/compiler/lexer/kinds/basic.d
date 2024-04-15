@@ -255,7 +255,7 @@ public final class BasicLexer : LexerInterface
                 * Here we check if we have a `.` and that the characters
                 * preceding us were all good for an identifier
                 */
-                import misc.utils;
+                import tlang.misc.utils;
 
                 if (currentChar == LS.DOT)
                 {

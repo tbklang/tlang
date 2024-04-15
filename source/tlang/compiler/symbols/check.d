@@ -10,7 +10,7 @@ import tlang.compiler.lexer.core.tokens : Token;
 import std.conv : to;
 import std.string : isNumeric, cmp;
 import std.algorithm.searching : canFind;
-import misc.utils;
+import tlang.misc.utils;
 import tlang.misc.logging;
 
 /**
