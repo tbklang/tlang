@@ -16,7 +16,7 @@ import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
 import tlang.compiler.codegen.mapper.core;
 import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import tlang.compiler.symbols.check : getCharacter;
-import misc.utils : Stack;
+import tlang.misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.configuration : CompilerConfiguration;
 import tlang.compiler.symbols.containers : Module;
