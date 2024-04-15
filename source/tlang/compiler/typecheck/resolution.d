@@ -919,7 +919,7 @@ version(unittest)
     import tlang.compiler.lexer.core;
     import tlang.compiler.lexer.kinds.basic : BasicLexer;
     import tlang.compiler.typecheck.core;
-    import misc.exceptions : TError;
+    import tlang.misc.exceptions : TError;
 }
 
 /**

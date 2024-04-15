@@ -7,7 +7,7 @@ import tlang.compiler.symbols.check;
 import tlang.compiler.symbols.data;
 import tlang.compiler.lexer.core;
 import core.stdc.stdlib;
-import misc.exceptions : TError;
+import tlang.misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
 import tlang.compiler.reporting : LineInfo;
 import tlang.compiler.core : Compiler;

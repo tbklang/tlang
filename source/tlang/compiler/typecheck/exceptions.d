@@ -5,7 +5,7 @@ import tlang.compiler.symbols.data;
 import tlang.compiler.typecheck.resolution;
 import std.string : cmp;
 import std.conv : to;
-import misc.exceptions: TError;
+import tlang.misc.exceptions: TError;
 import tlang.compiler.symbols.typing.core;
 
 public class TypeCheckerException : TError

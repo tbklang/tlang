@@ -6,7 +6,7 @@ module tlang.compiler.typecheck.dependency.store.interfaces;
 
 import tlang.compiler.symbols.data : Function, Module;
 import tlang.compiler.typecheck.dependency.core : FunctionData;
-import misc.exceptions : TError;
+import tlang.misc.exceptions : TError;
 
 /** 
  * Represents a storage mechanism
