@@ -5,6 +5,73 @@ module tlang.compiler.symbols.comments;
 import std.string : startsWith, split, strip, stripLeft;
 import std.array : join;
 
+import tlang.misc.logging;
+import std.string : format;
+
+public enum DocType
+{
+    PARAM,
+    THROWS,
+    RETURNS
+}
+
+public struct ParamDoc
+{
+    string param;
+    string description;
+}
+
+public struct ReturnsDoc
+{
+    string description;
+}
+
+public struct ExceptionDoc
+{
+    string description;
+}
+
+
+private union DocContent
+{
+    ParamDoc param;
+    ReturnsDoc returns;
+    ExceptionDoc exception;
+}
+
+public struct DocStr
+{
+    private DocType type;
+    private DocContent content;
+
+    public enum DocType getType()
+    {
+        return this.type;
+    }
+
+    public static DocStr param(string name, string description)
+    {
+        DocStr dstr;
+        dstr.type = DocType.PARAM;
+        dstr.content.param = ParamDoc(name, description);
+        return dstr;
+    }
+
+    public ExceptionDoc getExceptionDoc()
+    {
+        assert(this.type == DocType.THROWS);
+        return content.exception;
+    }
+
+
+}
+
+private struct CommentParts
+{
+    string bdy;
+    DocStr[] strs;
+}
+
 private class CommentParser
 {
     private string source;
@@ -15,8 +82,10 @@ private class CommentParser
 
     private string commentPart;
 
-    private string extract()
+    private CommentParts extract()
     {
+        CommentParts parts;
+
         string buildUp;
 
         if(this.source.startsWith("/**"))
@@ -65,9 +134,185 @@ private class CommentParser
 
             // Now put it all together in a new-line seperate string
             buildUp = join(lines, "\n");
+
+            // Set the body parts
+            parts.bdy = join(stripOutDocLines(lines));
+
+            // TODO: DO @param stuff here
+
+            DocStr[] docStrs;
+            foreach(string line; onlyParams(lines))
+            {
+                DocStr ds;
+
+                if(extractDocLine(line, ds))
+                {
+                    docStrs ~= ds;
+                    DEBUG(format("Converted docline '%s' to: %s", line, ds));
+                }
+            }
+
+            parts.strs = docStrs;
+            
         }
 
-        return buildUp;
+        return parts;
+    }
+
+    private bool extractDocLine(string line, ref DocStr ds)
+    {
+        string buildUp;
+        bool foundType = false;
+
+        ulong i = 0;
+        bool getch(ref char c)
+        {
+            if(i < line.length)
+            {
+                c = line[i];
+                return true;
+            }
+            return false;
+        }
+
+        void prog()
+        {
+            i++;
+        }
+
+        char c;
+
+
+        bool parseParam(ref string paramName, ref string paramDescription)
+        {
+            bool gotParamName = false;
+            string foundParamName;
+            bool gotParamDescription = false;
+            string foundParamDescription;
+
+            while(getch(c))
+            {
+                if(c == ' ')
+                {
+                    prog;
+                    continue;
+                }
+                else if(!gotParamName)
+                {
+                    while(getch(c) && c != ' ')
+                    {
+                        foundParamName ~= c;
+                        prog;
+                    }
+
+                    // TODO: Validate name?
+                    gotParamName = true;
+                }
+                else
+                {
+                    while(getch(c))
+                    {
+                        foundParamDescription ~= c;
+                        prog;
+                    }
+
+                    gotParamDescription = true;
+                }
+            }
+
+            if(gotParamName && gotParamDescription)
+            {
+                paramName = foundParamName;
+                paramDescription = foundParamDescription;
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        
+        while(getch(c))
+        {
+            if(c == ' ')
+            {
+                prog();
+                continue;
+            }
+            else if(c == '@' && !foundType)
+            {
+                string paramType;
+                prog();
+                while(getch(c) && c != ' ')
+                {
+                    paramType ~= c;
+                    prog();
+                }
+
+                // @param
+                if(paramType == "param")
+                {
+                    string paramName, paramDescr;
+                    if(parseParam(paramName, paramDescr))
+                    {
+                        DocStr tmp;
+                        tmp.type = DocType.PARAM;
+                        tmp.content.param = ParamDoc(paramName, paramDescr);
+                        ds = tmp;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                // Unknown @<thing>
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    // TODO: Use niknaks filter
+    private string[] onlyParams(string[] input)
+    {
+        string[] withDoc;
+
+        foreach(string i; input)
+        {
+            if(stripLeft(i).startsWith("@"))
+            {
+                withDoc ~= i;
+            }
+        }
+
+        return withDoc;
+    }
+
+    // TODO: Use niknaks filter
+    private string[] stripOutDocLines(string[] input)
+    {
+        string[] withoutDoc;
+
+        foreach(string i; input)
+        {
+            if(!stripLeft(i).startsWith("@"))
+            {
+                withoutDoc ~= i;
+            }
+        }
+
+        return withoutDoc;
     }
 }
 
@@ -86,13 +331,15 @@ unittest
  *  there
  */`;
     CommentParser parser = new CommentParser(source);
-    string comment = parser.extract();
+    CommentParts comment = parser.extract();
 
     writeln(format("Comment: '%s'", comment));
 
     // *cast(int*)0  = 1;
-    assert(" Hello\n  there" == comment);
+    assert(" Hello\n  there" == comment.bdy);
 }
+
+import tlang.compiler.lexer.core.tokens : Token;
 
 /** 
  * Represents a comment
@@ -101,16 +348,50 @@ unittest
  */
 public final class Comment
 {
-    private string content;
+    private CommentParts content;
 
-    this(string content)
+    private this(CommentParts content)
     {
         // TODO: Parse the comment into text but annotated section
         this.content = content;
     }
 
+    public static Comment fromToken(Token commentToken)
+    {
+        return fromText(commentToken.getToken());
+    }
+
+    private static Comment fromText(string text)
+    {
+        // TODO: Inline this behavior here
+        CommentParser parser = new CommentParser(text);
+
+        return new Comment(parser.extract());
+    }
+
     public string getContent()
     {
-        return this.content;
+        return this.content.bdy;
+    }
+
+    public DocStr[] getDocStrings()
+    {
+        return this.content.strs;
+    }
+
+    public ParamDoc[string] getAllParamDocs()
+    {
+        // TODO: Use niknaks
+        ParamDoc[string] d;
+        foreach(DocStr i; getDocStrings())
+        {
+            if(i.type == DocType.PARAM)
+            {
+                ParamDoc pDoc = i.content.param;
+                d[pDoc.param] = pDoc;
+            }
+        }
+
+        return d;
     }
 }
