@@ -12,6 +12,7 @@ import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable
 
 // Module entry management
 import tlang.compiler.modman : ModuleEntry;
+import tlang.compiler.symbols.comments;
 
 /** 
  * The _program_ holds a bunch of _modules_ as
@@ -207,15 +208,32 @@ public class Statement
     }
     /* !!!! END TYPE CHECK ROUTINES AND DATA !!!! */
 
+    /** 
+     * An optionally attached comment
+     */
+    private Comment comment;
 
+    /** 
+     * Returns the comment attached
+     *
+     * Returns: the `Comment` or `null`
+     * if none if attached
+     */
+    public final Comment getComment()
+    {
+        return this.comment;
+    }
 
-
-
-
-
-
-
-
+    /** 
+     * Sets the comment for this node
+     *
+     * Params:
+     *   comment = the `Comment`
+     */
+    public final void setComment(Comment comment)
+    {
+        this.comment = comment;
+    }
 
     private static ulong rollingCount = 0;
 
