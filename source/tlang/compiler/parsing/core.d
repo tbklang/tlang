@@ -445,6 +445,23 @@ public final class Parser
     {
         Statement ret;
 
+        /* If there are any comments available then pop them off now */
+        // TODO: Check if we should pop anything off of the comment
+        // stack here
+        Comment potComment;
+        if(hasCommentsOnStack())
+        {
+            potComment = popComment();
+        }
+
+        scope(exit)
+        {
+            if(potComment)
+            {
+                ret.setComment(potComment);
+            }
+        }
+
         /* Save the name or type */
         string nameTYpe = lexer.getCurrentToken().getToken();
         DEBUG("parseName(): Current token: "~lexer.getCurrentToken().toString());
@@ -2181,7 +2198,8 @@ public final class Parser
     }
 
     import std.container.slist : SList;
-    private SList!(Token) commentStack;
+    import tlang.compiler.symbols.comments;
+    private SList!(Comment) commentStack;
     private void pushComment(Token commentToken)
     {
         // Sanity check
@@ -2190,7 +2208,7 @@ public final class Parser
               );
 
         // Push it onto top of stack
-        commentStack.insertFront(commentToken);        
+        commentStack.insertFront(Comment.fromToken(commentToken));
     }
     //TODO: Add a popToken() (also think if we want a stack-based mechanism)
     private bool hasCommentsOnStack()
@@ -2202,6 +2220,13 @@ public final class Parser
     {
         import std.range : walkLength;
         return walkLength(commentStack[]);
+    }
+
+    private Comment popComment()
+    {
+        Comment popped = commentStack.front();
+        commentStack.removeFront();
+        return popped;
     }
 
     private void parseComment()
@@ -2395,6 +2420,14 @@ public final class Parser
         {
             expect("parseStatement(): Unknown symbol: " ~ lexer.getCurrentToken().getToken());
         }
+
+        // // TODO: Check if we should pop anything off of the comment
+        // // stack here
+        // if(hasCommentsOnStack())
+        // {
+        //     statement.setComment(popComment());
+        // }
+        
 
         WARN("parseStatement(): Leave");
 
