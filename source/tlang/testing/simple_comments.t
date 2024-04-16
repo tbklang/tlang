@@ -10,7 +10,8 @@ int p;
  */
 
 /**
- * Returns 0
+ * Takes two inputs, does nothing with
+  them and then returns 0 nonetheless
  *
  * @param   x  This is the first input
  *@param y This is the second    input
