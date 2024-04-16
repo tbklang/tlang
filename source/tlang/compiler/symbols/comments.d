@@ -24,6 +24,11 @@ public struct ParamDoc
 public struct ReturnsDoc
 {
     string description;
+
+    public string getDescription()
+    {
+        return this.description;
+    }
 }
 
 public struct ExceptionDoc
@@ -233,6 +238,28 @@ private class CommentParser
             }
         }
 
+        bool parseReturn(ref string returnDescription)
+        {
+            string gotDescription;
+            bool foundDescription;
+            while(getch(c))
+            {
+                gotDescription ~= c;
+                prog;
+                foundDescription = true;
+            }
+
+            if(foundDescription)
+            {
+                returnDescription = gotDescription;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         
         while(getch(c))
         {
@@ -260,6 +287,24 @@ private class CommentParser
                         DocStr tmp;
                         tmp.type = DocType.PARAM;
                         tmp.content.param = ParamDoc(paramName, paramDescr);
+                        ds = tmp;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                // @return
+                else if (paramType == "return")
+                {
+                    string returnDescr;
+                    if(parseReturn(returnDescr))
+                    {
+                        DEBUG("hool");
+                        DocStr tmp;
+                        tmp.type = DocType.RETURNS;
+                        tmp.content.returns = ReturnsDoc(returnDescr);
                         ds = tmp;
                         return true;
                     }
@@ -393,5 +438,20 @@ public final class Comment
         }
 
         return d;
+    }
+
+    public bool getReturnDoc(ref ReturnsDoc retDoc)
+    {
+        // TODO: Use niknaks flter
+        foreach(DocStr d; getDocStrings())
+        {
+            if(d.type == DocType.RETURNS)
+            {
+                retDoc = d.content.returns;
+                return true;
+            }
+        }
+
+        return false;
     }
 }
