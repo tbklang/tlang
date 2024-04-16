@@ -244,6 +244,12 @@ private class CommentParser
             bool foundDescription;
             while(getch(c))
             {
+                if(c == ' ' && !foundDescription)
+                {
+                    prog;
+                    continue;
+                }
+                
                 gotDescription ~= c;
                 prog;
                 foundDescription = true;
