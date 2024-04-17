@@ -154,6 +154,8 @@ public final class Parser
 
     private bool getAssociatedComment(ref Comment comment)
     {
+        // TODO: null check? on this.prevToken
+
         // If the previous token was a comment
         if
         (
@@ -488,9 +490,9 @@ public final class Parser
         // TODO: Check if we should pop anything off of the comment
         // stack here
         Comment potComment;
-        if(hasCommentsOnStack())
+        if(getAssociatedComment(potComment))
         {
-            potComment = popComment();
+            DEBUG(format("Found associated comment: %s", potComment));
         }
 
         scope(exit)
