@@ -413,7 +413,7 @@ unittest
     writeln(format("Comment: '%s'", comment));
 
     // *cast(int*)0  = 1;
-    assert(" Hello\n  there" == comment.bdy);
+    assert("Hello there" == comment.bdy);
 }
 
 import tlang.compiler.lexer.core.tokens : Token;
