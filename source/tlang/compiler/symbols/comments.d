@@ -8,22 +8,67 @@ import std.array : join;
 import tlang.misc.logging;
 import std.string : format;
 
+/** 
+ * The type of docstring
+ */
 public enum DocType
 {
+    /** 
+     * A parameter docstring
+     *
+     * This documents a function's
+     * parameter
+     */
     PARAM,
+
+    /** 
+     * An exception docstring
+     *
+     * This documents a function's
+     * exceptions which is throws
+     */
     THROWS,
+
+    /** 
+     * A return docstring
+     *
+     * This documents a cuntion's
+     * return type
+     */
     RETURNS
 }
 
+/** 
+ * A parameter docstring
+ *
+ * This documents a function's
+ * parameter
+ */
 public struct ParamDoc
 {
-    string param;
-    string description;
+    private string param;
+    private string description;
+
+    public string getParam()
+    {
+        return this.param;
+    }
+
+    public string getDescription()
+    {
+        return this.description;
+    }
 }
 
+/** 
+ * A return docstring
+ *
+ * This documents a cuntion's
+ * return type
+ */
 public struct ReturnsDoc
 {
-    string description;
+    private string description;
 
     public string getDescription()
     {
@@ -31,10 +76,16 @@ public struct ReturnsDoc
     }
 }
 
+/** 
+ * An exception docstring
+ *
+ * This documents a function's
+ * exceptions which is throws
+ */
 public struct ExceptionDoc
 {
-    string exception;
-    string description;
+    private string exception;
+    private string description;
 
     public string getDescription()
     {
@@ -42,7 +93,12 @@ public struct ExceptionDoc
     }
 }
 
-
+/** 
+ * Union to be able
+ * to reinterpret cast
+ * any of the members
+ * listed below
+ */
 private union DocContent
 {
     ParamDoc param;
@@ -50,6 +106,11 @@ private union DocContent
     ExceptionDoc exception;
 }
 
+/** 
+ * Represents a docstring
+ * comprised of a type
+ * and the docstring itself
+ */
 public struct DocStr
 {
     private DocType type;
@@ -68,13 +129,54 @@ public struct DocStr
         return dstr;
     }
 
-    public ExceptionDoc getExceptionDoc()
+    public static DocStr returns(string description)
     {
-        assert(this.type == DocType.THROWS);
-        return content.exception;
+        DocStr dstr;
+        dstr.type = DocType.RETURNS;
+        dstr.content.returns = ReturnsDoc(description);
+        return dstr;
     }
 
+    public static DocStr exception(string name, string description)
+    {
+        DocStr dstr;
+        dstr.type = DocType.THROWS;
+        dstr.content.exception = ExceptionDoc(name, description);
+        return dstr;
+    }
 
+    public bool getExceptionDoc(ref ExceptionDoc doc)
+    {
+        if(this.type == DocType.THROWS)
+        {
+            doc = content.exception;
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool getParamDoc(ref ParamDoc doc)
+    {
+        if(this.type == DocType.PARAM)
+        {
+            doc = content.param;
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool getReturnDoc(ref ReturnsDoc doc)
+    {
+        if(this.type == DocType.RETURNS)
+        {
+            doc = content.returns;
+            return true;
+        }
+
+        return false;
+    }
 }
 
 private struct CommentParts
@@ -295,10 +397,7 @@ private class CommentParser
                     string paramName, paramDescr;
                     if(parseParam(paramName, paramDescr))
                     {
-                        DocStr tmp;
-                        tmp.type = DocType.PARAM;
-                        tmp.content.param = ParamDoc(paramName, paramDescr);
-                        ds = tmp;
+                        ds = DocStr.param(paramName, paramDescr);
                         return true;
                     }
                     else
@@ -312,11 +411,7 @@ private class CommentParser
                     string returnDescr;
                     if(parseReturn(returnDescr))
                     {
-                        DEBUG("hool");
-                        DocStr tmp;
-                        tmp.type = DocType.RETURNS;
-                        tmp.content.returns = ReturnsDoc(returnDescr);
-                        ds = tmp;
+                        ds = DocStr.returns(returnDescr);
                         return true;
                     }
                     else
@@ -330,10 +425,7 @@ private class CommentParser
                     string exceptionName, exceptionDescr;
                     if(parseParam(exceptionName, exceptionDescr)) // Has same structure as a `@param <1> <...>`
                     {
-                        DocStr tmp;
-                        tmp.type = DocType.THROWS;
-                        tmp.content.exception = ExceptionDoc(exceptionName, exceptionDescr);
-                        ds = tmp;
+                        ds = DocStr.exception(exceptionName, exceptionDescr);
                         return true;
                     }
                     else
