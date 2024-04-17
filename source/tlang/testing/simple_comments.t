@@ -1,7 +1,9 @@
 module simple_comments;
 
+// Lol
 
 int i;
+
 
 int p;
 
