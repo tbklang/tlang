@@ -130,6 +130,40 @@ public final class Parser
         return findOfType(statementType, from).length != 0;
     }
 
+
+    private Token prevToken;
+
+    private Token getCurrentToken()
+    {
+        return this.lexer.getCurrentToken();
+    }
+
+    private void nextToken()
+    {
+        // Save current token as previous token
+        this.prevToken = this.getCurrentToken();
+
+        // Move onto next token
+        this.lexer.nextToken();
+    }
+
+    private bool getAssociatedComment(ref Comment comment)
+    {
+        // If the previous token was a comment
+        if
+        (
+            getSymbolType(this.prevToken) == SymbolType.SINGLE_LINE_COMMENT ||
+            getSymbolType(this.prevToken) == SymbolType.MULTI_LINE_COMMENT
+        )
+        {
+            comment = Comment.fromToken(this.prevToken);
+            return true;
+        }
+
+        return false;
+    }
+
+
     /**
     * Parses if statements
     *
