@@ -12,6 +12,7 @@ import tlang.compiler.parsing.exceptions;
 import tlang.compiler.core : Compiler;
 import std.string : format;
 import tlang.compiler.modman;
+import tlang.compiler.symbols.comments;
 
 // TODO: Technically we could make a core parser etc
 public final class Parser
@@ -2238,39 +2239,7 @@ public final class Parser
 
         return statement;
     }
-
-    import std.container.slist : SList;
-    import tlang.compiler.symbols.comments;
-    // private SList!(Comment) commentStack;
-    // private void pushComment(Token commentToken)
-    // {
-    //     // Sanity check
-    //     assert(getSymbolType(commentToken) == SymbolType.SINGLE_LINE_COMMENT ||
-    //            getSymbolType(commentToken) == SymbolType.MULTI_LINE_COMMENT
-    //           );
-
-    //     // Push it onto top of stack
-    //     commentStack.insertFront(Comment.fromToken(commentToken));
-    // }
-    // //TODO: Add a popToken() (also think if we want a stack-based mechanism)
-    // private bool hasCommentsOnStack()
-    // {
-    //     return getCommentCount() != 0;
-    // }
-
-    // private ulong getCommentCount()
-    // {
-    //     import std.range : walkLength;
-    //     return walkLength(commentStack[]);
-    // }
-
-    // private Comment popComment()
-    // {
-    //     Comment popped = commentStack.front();
-    //     commentStack.removeFront();
-    //     return popped;
-    // }
-
+    
     private void parseComment()
     {
         WARN("parseComment(): Enter");
