@@ -97,8 +97,7 @@ private class CommentParser
     {
         CommentParts parts;
 
-        // string buildUp;
-
+        // Handle multi-line comments
         if(this.source.startsWith("/**"))
         {
             string[] lines = split(this.source, "\n");
@@ -159,6 +158,12 @@ private class CommentParser
                 }
             }
             parts.strs = docStrs;
+        }
+        // Handle single-line comments
+        else
+        {
+            // Set body parts
+            parts.bdy = strip(stripLeft(this.source, ("//")));
         }
 
         return parts;
