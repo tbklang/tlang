@@ -23,6 +23,14 @@ public final class Parser
     private LexerInterface lexer;
 
     /** 
+     * Stores the previous token
+     * 
+     * This is updated everytime
+     * `nextToken()` is called
+     */
+    private Token prevToken;
+
+    /** 
      * The associated compiler
      */
     private Compiler compiler;
@@ -131,19 +139,36 @@ public final class Parser
         return findOfType(statementType, from).length != 0;
     }
 
-
-    private Token prevToken;
-
+    
+    /** 
+     * Returns the current token
+     *
+     * This is a simple proxy method
+     *
+     * Returns: the `Token`
+     */
     private Token getCurrentToken()
     {
         return this.lexer.getCurrentToken();
     }
 
+    /** 
+     * Moves the token pointer back
+     *
+     * This is a simple proxy method
+     */
     private void previousToken()
     {
         this.lexer.previousToken();
     }
-
+    
+    /** 
+     * Moves the token pointer forwards
+     *
+     * This is a proxy method BUT prior
+     * to doing the proxy call it first
+     * saves the current token into `prevToken`
+     */
     private void nextToken()
     {
         // Save current token as previous token
