@@ -163,6 +163,7 @@ public final class Parser
             getSymbolType(this.prevToken) == SymbolType.MULTI_LINE_COMMENT
         )
         {
+            DEBUG(format("Parsing a comment from token: '%s'", this.prevToken));
             comment = Comment.fromToken(this.prevToken);
             return true;
         }
