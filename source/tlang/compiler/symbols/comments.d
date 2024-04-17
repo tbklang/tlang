@@ -2,7 +2,7 @@ module tlang.compiler.symbols.comments;
 
 // TODO: Add comment parsing
 
-import std.string : startsWith, split, strip, stripLeft;
+import std.string : startsWith, split, strip, stripLeft, stripRight;
 import std.array : join;
 
 import tlang.misc.logging;
@@ -33,7 +33,13 @@ public struct ReturnsDoc
 
 public struct ExceptionDoc
 {
+    string exception;
     string description;
+
+    public string getDescription()
+    {
+        return this.description;
+    }
 }
 
 
@@ -91,7 +97,7 @@ private class CommentParser
     {
         CommentParts parts;
 
-        string buildUp;
+        // string buildUp;
 
         if(this.source.startsWith("/**"))
         {
@@ -137,14 +143,10 @@ private class CommentParser
                 lines = lines[0..$-1];
             }
 
-            // Now put it all together in a new-line seperate string
-            buildUp = join(lines, "\n");
-
             // Set the body parts
             parts.bdy = join(stripOutDocLines(lines));
 
-            // TODO: DO @param stuff here
-
+            // Set doc strings
             DocStr[] docStrs;
             foreach(string line; onlyParams(lines))
             {
@@ -156,9 +158,7 @@ private class CommentParser
                     DEBUG(format("Converted docline '%s' to: %s", line, ds));
                 }
             }
-
             parts.strs = docStrs;
-            
         }
 
         return parts;
@@ -249,7 +249,7 @@ private class CommentParser
                     prog;
                     continue;
                 }
-                
+
                 gotDescription ~= c;
                 prog;
                 foundDescription = true;
@@ -319,6 +319,23 @@ private class CommentParser
                         return false;
                     }
                 }
+                // @throws
+                else if(paramType == "throws")
+                {
+                    string exceptionName, exceptionDescr;
+                    if(parseParam(exceptionName, exceptionDescr)) // Has same structure as a `@param <1> <...>`
+                    {
+                        DocStr tmp;
+                        tmp.type = DocType.THROWS;
+                        tmp.content.exception = ExceptionDoc(exceptionName, exceptionDescr);
+                        ds = tmp;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
                 // Unknown @<thing>
                 else
                 {
@@ -357,10 +374,19 @@ private class CommentParser
 
         foreach(string i; input)
         {
+            DEBUG(format("'%s'", i));
             if(!stripLeft(i).startsWith("@"))
             {
-                withoutDoc ~= i;
+                // Strip left-hand side of any spaces
+                // and add trailing space
+                withoutDoc ~= stripLeft(i)~' ';
             }
+        }
+
+        // Remove trailing whitespace on last item
+        if(withoutDoc.length)
+        {
+            withoutDoc[$-1] = stripRight(withoutDoc[$-1]);
         }
 
         return withoutDoc;
