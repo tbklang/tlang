@@ -116,7 +116,7 @@ public struct DocStr
     private DocType type;
     private DocContent content;
 
-    public enum DocType getType()
+    public DocType getType()
     {
         return this.type;
     }
@@ -210,19 +210,19 @@ private class CommentParser
                 lines[i] = strip(lines[i]);
             }
 
-            // Strip first line of the `/**`
-            lines[0] = stripLeft(lines[0], "/**");
+            // Strip first line of the `/`
+            lines[0] = stripLeft(lines[0], "/");
 
-            // Strip all lines between the starting and ending delimiter
-            // of their `*`s
-            for(ulong i = 1; i < lines.length-1; i++)
+            // Strip last line of the `/`
+            lines[$-1] = stripRight(lines[$-1], "/");
+
+            // Strip all lines of `*` (on either side)
+            for(ulong i = 0; i < lines.length; i++)
             {
-                lines[i] = stripLeft(lines[i], "*");
-
+                lines[i] = strip(lines[i], "*");
             }
 
-            // Strip last line of a a `*/`
-            lines[lines.length-1] = stripLeft(lines[lines.length-1], "*/");
+            
 
             version(unittest)
             {
