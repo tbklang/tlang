@@ -138,6 +138,11 @@ public final class Parser
         return this.lexer.getCurrentToken();
     }
 
+    private void previousToken()
+    {
+        this.lexer.previousToken();
+    }
+
     private void nextToken()
     {
         // Save current token as previous token
@@ -186,24 +191,24 @@ public final class Parser
             if (getSymbolType(lexer.getCurrentToken()) == SymbolType.IF)
             {
                 /* Pop off the `if` */
-                lexer.nextToken();
+                nextToken();
 
                 /* Expect an opening brace `(` */
                 expect(SymbolType.LBRACE, lexer.getCurrentToken());
-                lexer.nextToken();
+                nextToken();
 
                 /* Parse an expression (for the condition) */
                 currentBranchCondition = parseExpression();
                 expect(SymbolType.RBRACE, lexer.getCurrentToken());
 
                 /* Opening { */
-                lexer.nextToken();
+                nextToken();
                 expect(SymbolType.OCURLY, lexer.getCurrentToken());
 
                 /* Parse the if' statement's body AND expect a closing curly */
                 currentBranchBody = parseBody();
                 expect(SymbolType.CCURLY, lexer.getCurrentToken());
-                lexer.nextToken();
+                nextToken();
 
                 /* Create a branch node */
                 Branch branch = new Branch(currentBranchCondition, currentBranchBody);
@@ -214,30 +219,30 @@ public final class Parser
             else if (getSymbolType(lexer.getCurrentToken()) == SymbolType.ELSE)
             {
                 /* Pop off the `else` */
-                lexer.nextToken();
+                nextToken();
 
                 /* Check if we have an `if` after the `{` (so an "else if" statement) */
                 if (getSymbolType(lexer.getCurrentToken()) == SymbolType.IF)
                 {
                     /* Pop off the `if` */
-                    lexer.nextToken();
+                    nextToken();
 
                     /* Expect an opening brace `(` */
                     expect(SymbolType.LBRACE, lexer.getCurrentToken());
-                    lexer.nextToken();
+                    nextToken();
 
                     /* Parse an expression (for the condition) */
                     currentBranchCondition = parseExpression();
                     expect(SymbolType.RBRACE, lexer.getCurrentToken());
 
                     /* Opening { */
-                    lexer.nextToken();
+                    nextToken();
                     expect(SymbolType.OCURLY, lexer.getCurrentToken());
 
                     /* Parse the if' statement's body AND expect a closing curly */
                     currentBranchBody = parseBody();
                     expect(SymbolType.CCURLY, lexer.getCurrentToken());
-                    lexer.nextToken();
+                    nextToken();
 
                     /* Create a branch node */
                     Branch branch = new Branch(currentBranchCondition, currentBranchBody);
@@ -250,7 +255,7 @@ public final class Parser
                     /* Parse the if' statement's body (starting with `{` AND expect a closing curly */
                     currentBranchBody = parseBody();
                     expect(SymbolType.CCURLY, lexer.getCurrentToken());
-                    lexer.nextToken();
+                    nextToken();
 
                     /* Create a branch node */
                     Branch branch = new Branch(null, currentBranchBody);
@@ -292,24 +297,24 @@ public final class Parser
         Statement[] branchBody;
 
         /* Pop off the `while` */
-        lexer.nextToken();
+        nextToken();
 
         /* Expect an opening brace `(` */
         expect(SymbolType.LBRACE, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Parse an expression (for the condition) */
         branchCondition = parseExpression();
         expect(SymbolType.RBRACE, lexer.getCurrentToken());
 
         /* Opening { */
-        lexer.nextToken();
+        nextToken();
         expect(SymbolType.OCURLY, lexer.getCurrentToken());
 
         /* Parse the while' statement's body AND expect a closing curly */
         branchBody = parseBody();
         expect(SymbolType.CCURLY, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
 
         /* Create a Branch node coupling the condition and body statements */
@@ -337,7 +342,7 @@ public final class Parser
         Statement[] branchBody;
 
         /* Pop off the `do` */
-        lexer.nextToken();
+        nextToken();
 
         /* Expect an opening curly `{` */
         expect(SymbolType.OCURLY, lexer.getCurrentToken());
@@ -345,24 +350,24 @@ public final class Parser
         /* Parse the do-while statement's body AND expect a closing curly */
         branchBody = parseBody();
         expect(SymbolType.CCURLY, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Expect a `while` */
         expect(SymbolType.WHILE, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Expect an opening brace `(` */
         expect(SymbolType.LBRACE, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Parse the condition */
         branchCondition = parseExpression();
         expect(SymbolType.RBRACE, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Expect a semicolon */
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Create a Branch node coupling the condition and body statements */
         Branch branch = new Branch(branchCondition, branchBody);
@@ -392,11 +397,11 @@ public final class Parser
         Statement[] branchBody;
 
         /* Pop of the token `for` */
-        lexer.nextToken();
+        nextToken();
 
         /* Expect an opening smooth brace `(` */
         expect(SymbolType.LBRACE, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Expect a single Statement */
         // TODO: Make optional, add parser lookahead check
@@ -408,7 +413,7 @@ public final class Parser
 
         /* Expect a semi-colon, then move on */
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Expect a post-iteration statement with `)` as terminator */
         // TODO: Make optional, add parser lookahead check
@@ -420,7 +425,7 @@ public final class Parser
 
         /* Expect a closing curly and move on */
         expect(SymbolType.CCURLY, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         DEBUG("Yo: "~lexer.getCurrentToken().toString());
 
@@ -453,8 +458,8 @@ public final class Parser
 
         /* The identifier being assigned to */
         string identifier = lexer.getCurrentToken().getToken();
-        lexer.nextToken();
-        lexer.nextToken();
+        nextToken();
+        nextToken();
         DEBUG(lexer.getCurrentToken());
 
         /* Expression */
@@ -469,7 +474,7 @@ public final class Parser
         expect(terminatingSymbol, lexer.getCurrentToken());
 
         /* Move off terminating symbol */
-        lexer.nextToken();
+        nextToken();
         
 
         return assignment;
@@ -503,7 +508,7 @@ public final class Parser
         /* TODO: The problem here is I don't want to progress the token */
 
         /* Get next token */
-        lexer.nextToken();
+        nextToken();
         SymbolType type = getSymbolType(lexer.getCurrentToken());
 
         /* If we have `(` then function call */
@@ -518,7 +523,7 @@ public final class Parser
 
              /* Expect a semi-colon */
             expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-            lexer.nextToken();
+            nextToken();
         }
         /**
         * Either we have:
@@ -543,14 +548,14 @@ public final class Parser
             {
                 /* Expect a semicolon and consume it */
                 expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-                lexer.nextToken();
+                nextToken();
             }
             /* If it is an arrau assignment */
             else if(cast(ArrayAssignment)ret)
             {
                 /* Expect a semicolon and consume it */
                 expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-                lexer.nextToken();
+                nextToken();
             }
             /* This should never happen */
             else
@@ -586,7 +591,7 @@ public final class Parser
         Statement[] statements;
 
         /* Consume the `struct` that caused `parseStruct` to be called */
-        lexer.nextToken();
+        nextToken();
 
         /* Expect an identifier here (no dot) */
         string structName = lexer.getCurrentToken().getToken();
@@ -597,11 +602,11 @@ public final class Parser
         }
         
         /* Consume the name */
-        lexer.nextToken();
+        nextToken();
 
         /* TODO: Here we will do a while loop */
         expect(SymbolType.OCURLY, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         while(true)
         {
@@ -630,7 +635,7 @@ public final class Parser
                 
                 /* Should have a semi-colon and consume it */
                 expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-                lexer.nextToken();
+                nextToken();
             }
             /* If it is an accessor */
             else if (isAccessor(lexer.getCurrentToken()))
@@ -698,7 +703,7 @@ public final class Parser
         expect(SymbolType.CCURLY, lexer.getCurrentToken());
 
         /* Consume the closing curly brace */
-        lexer.nextToken();
+        nextToken();
 
 
         WARN("parseStruct(): Leave");
@@ -711,7 +716,7 @@ public final class Parser
         ReturnStmt returnStatement;
 
         /* Move from `return` onto start of expression */
-        lexer.nextToken();
+        nextToken();
 
         // TODO: Check if semicolon here (no expression) else expect expression
 
@@ -736,7 +741,7 @@ public final class Parser
         }
 
         /* Move off of the terminator */
-        lexer.nextToken();
+        nextToken();
 
         return returnStatement;
     }
@@ -749,7 +754,7 @@ public final class Parser
         Statement[] statements;
 
         /* Consume the `{` symbol */
-        lexer.nextToken();
+        nextToken();
 
         /**
         * If we were able to get a closing token, `}`, then
@@ -849,7 +854,7 @@ public final class Parser
 
         /* Save and consume the init-scope */
         InitScope initScope = getInitScope(lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Get the current token's symbol type */
         SymbolType symbolType = getSymbolType(lexer.getCurrentToken());
@@ -915,7 +920,7 @@ public final class Parser
 
         /* Save and consume the accessor */
         AccessorType accessorType = getAccessorType(lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* TODO: Only allow, private, public, protected */
         /* TODO: Pass this to call for class prsewr or whatever comes after the accessor */
@@ -985,7 +990,7 @@ public final class Parser
         
 
         /* Consume the `(` token */
-        lexer.nextToken();
+        nextToken();
 
         /* Count for number of parameters processed */
         ulong parameterCount;
@@ -1010,7 +1015,7 @@ public final class Parser
                     expect("Identifier can not be path");
                 }
                 string identifier = lexer.getCurrentToken().getToken();
-                lexer.nextToken();
+                nextToken();
 
 
                 /* Add the local variable (parameter variable) */
@@ -1024,7 +1029,7 @@ public final class Parser
             else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.COMMA)
             {
                 /* Consume the `,` */
-                lexer.nextToken();
+                nextToken();
 
                 moreArgs = true;
             }
@@ -1035,7 +1040,7 @@ public final class Parser
                 if(!moreArgs)
                 {
                     /* Consume the `)` */
-                    lexer.nextToken();
+                    nextToken();
                     break;
                 }
                 /* Error out if we were and we prematurely ended */
@@ -1075,7 +1080,7 @@ public final class Parser
                 }
             }
 
-            lexer.nextToken();
+            nextToken();
         }
         /* If no body is requested */
         else
@@ -1105,14 +1110,14 @@ public final class Parser
     private DiscardStatement parseDiscard()
     {
         /* Consume the `discard` */
-        lexer.nextToken();
+        nextToken();
 
         /* Parse the following expression */
         Expression expression = parseExpression();
 
         /* Expect a semi-colon */
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Create a `discard` statement */
         DiscardStatement discardStatement = new DiscardStatement(expression);
@@ -1130,11 +1135,11 @@ public final class Parser
         CastedExpression castedExpression;
 
         /* Consume the `cast` */
-        lexer.nextToken();
+        nextToken();
 
         /* Expect an `(` open brace */
         expect(SymbolType.LBRACE, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /** 
          * Expect a type
@@ -1156,7 +1161,7 @@ public final class Parser
 
         /* Expect a `)` closing brace */
         expect(SymbolType.RBRACE, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Get the expression to cast */
         Expression uncastedExpression = parseExpression();
@@ -1344,7 +1349,7 @@ public final class Parser
                 addRetExp(numberLiteral);
 
                 /* Get the next token */
-                lexer.nextToken();
+                nextToken();
             }
             /* If it is a cast operator */
             else if(symbol == SymbolType.CAST)
@@ -1360,7 +1365,7 @@ public final class Parser
 
                 /* TODO: Save operator, also pass to constructor */
                 /* TODO: Parse expression or pass arithemetic (I think latter) */
-                lexer.nextToken();
+                nextToken();
 
                 OperatorExpression opExp;
 
@@ -1422,7 +1427,7 @@ public final class Parser
                 addRetExp(new StringExpression(lexer.getCurrentToken().getToken()));
 
                 /* Get the next token */
-                lexer.nextToken();
+                nextToken();
             }
             /* If we have a `[` (array index/access) */
             else if(symbol == SymbolType.OBRACKET)
@@ -1432,9 +1437,9 @@ public final class Parser
                 DEBUG("indexTo: "~indexTo.toString());
 
                 /* Get the index expression */
-                lexer.nextToken();
+                nextToken();
                 Expression index = parseExpression();
-                lexer.nextToken();
+                nextToken();
                 DEBUG("IndexExpr: "~index.toString());
                 // gprintln(lexer.getCurrentToken());
 
@@ -1446,7 +1451,7 @@ public final class Parser
             {
                 string identifier = lexer.getCurrentToken().getToken();
 
-                lexer.nextToken();
+                nextToken();
 
                 Expression toAdd;
 
@@ -1486,13 +1491,13 @@ public final class Parser
             else if (symbol == SymbolType.LBRACE)
             {
                 /* Consume the `(` */
-                lexer.nextToken();
+                nextToken();
 
                 /* Parse the inner expression till terminator */
                 addRetExp(parseExpression());
 
                 /* Consume the terminator */
-                lexer.nextToken();
+                nextToken();
             }
             /**
             * `new` operator
@@ -1500,11 +1505,11 @@ public final class Parser
             else if(symbol == SymbolType.NEW)
             {
                 /* Cosume the `new` */
-                lexer.nextToken();
+                nextToken();
 
                 /* Get the identifier */
                 string identifier = lexer.getCurrentToken().getToken();
-                lexer.nextToken();
+                nextToken();
 
 
                 NewExpression toAdd;
@@ -1537,7 +1542,7 @@ public final class Parser
                 Expression previousExpression = removeExp();
 
                 /* TODO: Get next expression */
-                lexer.nextToken();
+                nextToken();
                 Expression item = parseExpression();
 
                 /* TODO: Construct accessor expression from both and addRetExp */
@@ -1579,7 +1584,7 @@ public final class Parser
         /* TODO: Save type */
         string type = lexer.getCurrentToken().getToken();
         string identifier;
-        lexer.nextToken();
+        nextToken();
 
       
 
@@ -1599,7 +1604,7 @@ public final class Parser
             /* If we have `[` then expect a number and/or a `]` */
             if(getSymbolType(lexer.getCurrentToken()) == SymbolType.OBRACKET)
             {
-                lexer.nextToken();
+                nextToken();
                 SymbolType nextType = getSymbolType(lexer.getCurrentToken());
                 
 
@@ -1651,7 +1656,7 @@ public final class Parser
                 type=type~"*";
             }
             
-            lexer.nextToken();
+            nextToken();
         }
 
         /* If were requested to only find a type, then stop here and return it */
@@ -1684,7 +1689,7 @@ public final class Parser
             }
             identifier = lexer.getCurrentToken().getToken();
 
-            lexer.nextToken();
+            nextToken();
             DEBUG("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ lexer.getCurrentToken().getToken());
         }
         /* Anything else is an error */
@@ -1769,7 +1774,7 @@ public final class Parser
                 if(wantsBody)
                 {
                     /* Consume the `=` token */
-                    lexer.nextToken();
+                    nextToken();
 
                     /* Now parse an expression */
                     Expression expression = parseExpression();
@@ -1824,7 +1829,7 @@ public final class Parser
             /* Expect a `=` and consume it */
             DEBUG(lexer.getCurrentToken());
             expect(SymbolType.ASSIGN, lexer.getCurrentToken());
-            lexer.nextToken();
+            nextToken();
 
             /* Parse the expression being assigned followed by a semi-colon `;` */
             Expression expressionBeingAssigned = parseExpression();
@@ -1860,7 +1865,7 @@ public final class Parser
         Clazz generated;
 
         /* Pop off the `class` */
-        lexer.nextToken();
+        nextToken();
 
         /* Get the class's name (CAN NOT be dotted) */
         expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
@@ -1870,7 +1875,7 @@ public final class Parser
         }
         string className = lexer.getCurrentToken().getToken();
         DEBUG("parseClass(): Class name found '" ~ className ~ "'");
-        lexer.nextToken();
+        nextToken();
 
         generated = new Clazz(className);
 
@@ -1882,14 +1887,14 @@ public final class Parser
             /* TODO: Loop until `}` */
 
             /* Consume the inheritance operator `:` */
-            lexer.nextToken();
+            nextToken();
 
             while(true)
             {
                 /* Check if it is an identifier (may be dotted) */
                 expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
                 inheritList ~= lexer.getCurrentToken().getToken();
-                lexer.nextToken();
+                nextToken();
 
                 /* Check if we have ended with a `{` */
                 if(getSymbolType(lexer.getCurrentToken()) == SymbolType.OCURLY)
@@ -1901,7 +1906,7 @@ public final class Parser
                 else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.COMMA)
                 {
                     /* Consume */
-                    lexer.nextToken();
+                    nextToken();
                 }
                 /* Error out if we get anything else */
                 else
@@ -1920,7 +1925,7 @@ public final class Parser
 
         /* TODO: Here we will do a while loop */
         expect(SymbolType.OCURLY, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         Statement[] statements;
 
@@ -1951,7 +1956,7 @@ public final class Parser
                 
                 /* Should have a semi-colon and consume it */
                 expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-                lexer.nextToken();
+                nextToken();
             }
             /* If it is a class */
             else if(symbolType == SymbolType.CLASS)
@@ -2021,7 +2026,7 @@ public final class Parser
         parentToContainer(generated, statements);
 
         /* Pop off the ending `}` */
-        lexer.nextToken();
+        nextToken();
 
         WARN("parseClass(): Leave");
 
@@ -2199,14 +2204,14 @@ public final class Parser
         Statement statement;
 
         /* Consume the star `*` */
-        lexer.nextToken();
+        nextToken();
         ulong derefCnt = 1;
 
         /* Check if there is another star */
         while(getSymbolType(lexer.getCurrentToken()) == SymbolType.STAR)
         {
             derefCnt+=1;
-            lexer.nextToken();
+            nextToken();
         }
 
         /* Expect an expression */
@@ -2214,14 +2219,14 @@ public final class Parser
 
         /* Expect an assignment operator */
         expect(SymbolType.ASSIGN, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Expect an expression */
         Expression assigmentExpression = parseExpression();
 
         /* Expect a semicolon */
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         // FIXME: We should make a LHSPiinterAssignmentThing
         statement = new PointerDereferenceAssignment(pointerExpression, assigmentExpression, derefCnt);
@@ -2273,7 +2278,7 @@ public final class Parser
 
         // TODO: Do something here like placing it on some kind of stack
         DEBUG("Comment is: '"~curCommentToken.getToken()~"'");
-        lexer.nextToken(); // Move off comment
+        nextToken(); // Move off comment
 
         WARN("parseComment(): Leave");
     }
@@ -2477,11 +2482,11 @@ public final class Parser
 
         Expression[] arguments;
 
-        lexer.nextToken();
+        nextToken();
 
         /* Expect an opening brace `(` */
         expect(SymbolType.LBRACE, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* If next token is RBRACE we don't expect arguments */
         if(getSymbolType(lexer.getCurrentToken()) == SymbolType.RBRACE)
@@ -2507,7 +2512,7 @@ public final class Parser
                 /* If comma expect more */
                 else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.COMMA)
                 {
-                    lexer.nextToken();
+                    nextToken();
                     /* TODO: If rbrace after then error, so save boolean */
                 }
                 /* TODO: Add else, could have exited on `;` which is invalid closing */
@@ -2519,7 +2524,7 @@ public final class Parser
         }
 
        
-        lexer.nextToken();
+        nextToken();
 
         WARN("parseFuncCall(): Leave");
 
@@ -2531,11 +2536,11 @@ public final class Parser
         ExternStmt externStmt;
 
         /* Consume the `extern` token */
-        lexer.nextToken();
+        nextToken();
 
         /* Expect the next token to be either `efunc` or `evariable` */
         SymbolType externType = getSymbolType(lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Pseudo-entity */
         Entity pseudoEntity;
@@ -2570,7 +2575,7 @@ public final class Parser
 
         /* Expect a semicolon to end it all and then consume it */
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         externStmt = new ExternStmt(pseudoEntity, externType);
 
@@ -2651,14 +2656,14 @@ public final class Parser
         WARN("parseImport(): Enter");
 
         /* Consume the `import` keyword */
-        lexer.nextToken();
+        nextToken();
 
         /* Get the module's name */
         expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
         string moduleName = lexer.getCurrentToken().getToken();
 
         /* Consume the token */
-        lexer.nextToken();
+        nextToken();
 
         /* All modules to be imported */
         string[] collectedModuleNames = [moduleName];
@@ -2667,7 +2672,7 @@ public final class Parser
         while(getSymbolType(lexer.getCurrentToken()) == SymbolType.COMMA)
         {
             /* Consume the comma `,` */
-            lexer.nextToken();
+            nextToken();
 
             /* Get the module's name */
             expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
@@ -2675,12 +2680,12 @@ public final class Parser
             collectedModuleNames ~= curModuleName;
 
             /* Consume the name */
-            lexer.nextToken();
+            nextToken();
         }
 
         /* Expect a semi-colon and consume it */
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Perform the actual import */
         doImport(collectedModuleNames);
@@ -2703,15 +2708,15 @@ public final class Parser
 
         /* Expect `module` and module name and consume them (and `;`) */
         expect(SymbolType.MODULE, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Module name may NOT be dotted (TODO: Maybe it should be yeah) */
         expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
         string moduleName = lexer.getCurrentToken().getToken();
-        lexer.nextToken();
+        nextToken();
 
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-        lexer.nextToken();
+        nextToken();
 
         /* Initialize Module */
         modulle = new Module(moduleName);
@@ -2765,7 +2770,7 @@ public final class Parser
             prog.setEntryModule(curModEnt, modulle);
         }
 
-        /* TODO: We should add `lexer.hasTokens()` to the `lexer.nextToken()` */
+        /* TODO: We should add `lexer.hasTokens()` to the `nextToken()` */
         /* TODO: And too the `getCurrentTokem()` and throw an error when we have ran out rather */
 
         /* We can have an import or vardef or funcdef */
