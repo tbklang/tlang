@@ -2241,35 +2241,35 @@ public final class Parser
 
     import std.container.slist : SList;
     import tlang.compiler.symbols.comments;
-    private SList!(Comment) commentStack;
-    private void pushComment(Token commentToken)
-    {
-        // Sanity check
-        assert(getSymbolType(commentToken) == SymbolType.SINGLE_LINE_COMMENT ||
-               getSymbolType(commentToken) == SymbolType.MULTI_LINE_COMMENT
-              );
+    // private SList!(Comment) commentStack;
+    // private void pushComment(Token commentToken)
+    // {
+    //     // Sanity check
+    //     assert(getSymbolType(commentToken) == SymbolType.SINGLE_LINE_COMMENT ||
+    //            getSymbolType(commentToken) == SymbolType.MULTI_LINE_COMMENT
+    //           );
 
-        // Push it onto top of stack
-        commentStack.insertFront(Comment.fromToken(commentToken));
-    }
-    //TODO: Add a popToken() (also think if we want a stack-based mechanism)
-    private bool hasCommentsOnStack()
-    {
-        return getCommentCount() != 0;
-    }
+    //     // Push it onto top of stack
+    //     commentStack.insertFront(Comment.fromToken(commentToken));
+    // }
+    // //TODO: Add a popToken() (also think if we want a stack-based mechanism)
+    // private bool hasCommentsOnStack()
+    // {
+    //     return getCommentCount() != 0;
+    // }
 
-    private ulong getCommentCount()
-    {
-        import std.range : walkLength;
-        return walkLength(commentStack[]);
-    }
+    // private ulong getCommentCount()
+    // {
+    //     import std.range : walkLength;
+    //     return walkLength(commentStack[]);
+    // }
 
-    private Comment popComment()
-    {
-        Comment popped = commentStack.front();
-        commentStack.removeFront();
-        return popped;
-    }
+    // private Comment popComment()
+    // {
+    //     Comment popped = commentStack.front();
+    //     commentStack.removeFront();
+    //     return popped;
+    // }
 
     private void parseComment()
     {
@@ -2277,7 +2277,7 @@ public final class Parser
 
         Token curCommentToken = lexer.getCurrentToken();
 
-        pushComment(curCommentToken);
+        // pushComment(curCommentToken);
 
         // TODO: Do something here like placing it on some kind of stack
         DEBUG("Comment is: '"~curCommentToken.getToken()~"'");
