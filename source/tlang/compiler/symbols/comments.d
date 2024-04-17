@@ -295,6 +295,11 @@ private class CommentParser
         char c;
 
 
+        bool spacey(char c)
+        {
+            return c == ' ' || c == '\t';
+        }
+
         bool parseParam(ref string paramName, ref string paramDescription)
         {
             bool gotParamName = false;
@@ -304,14 +309,14 @@ private class CommentParser
 
             while(getch(c))
             {
-                if(c == ' ')
+                if(spacey(c))
                 {
                     prog;
                     continue;
                 }
                 else if(!gotParamName)
                 {
-                    while(getch(c) && c != ' ')
+                    while(getch(c) && !spacey(c))
                     {
                         foundParamName ~= c;
                         prog;
@@ -351,7 +356,7 @@ private class CommentParser
             bool foundDescription;
             while(getch(c))
             {
-                if(c == ' ' && !foundDescription)
+                if(spacey(c) && !foundDescription)
                 {
                     prog;
                     continue;
@@ -376,16 +381,16 @@ private class CommentParser
         
         while(getch(c))
         {
-            if(c == ' ')
+            if(spacey(c))
             {
                 prog();
                 continue;
             }
-            else if(c == '@' && !foundType)
+            else if(c == '@')
             {
                 string paramType;
                 prog();
-                while(getch(c) && c != ' ')
+                while(getch(c) && !spacey(c))
                 {
                     paramType ~= c;
                     prog();
@@ -436,6 +441,7 @@ private class CommentParser
                 // Unknown @<thing>
                 else
                 {
+                    WARN(format("Unknown docstring type '%s'", paramType));
                     return false;
                 }
             }
