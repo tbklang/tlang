@@ -25,9 +25,7 @@ int zero(int x, int y)
 }
 
 
-/**
- * Yo fr
- */
+
 int main()
 {
 	int k = zero();
