@@ -2289,96 +2289,6 @@ public final class Parser
         WARN("parseComment(): Leave");
     }
 
-    /** 
-     * Tests the handling of comments
-     */
-    unittest
-    {
-        import tlang.compiler.lexer.kinds.arr : ArrLexer;
-
-        try
-        {
-            string sourceCode = `module myCommentModule;
-        // Hello`;
-
-            File dummyFile;
-            Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
-
-            compiler.doLex();
-            compiler.doParse();
-
-            // FIXME: Re-enable when we we have
-            // a way to extract comments from
-            // AST nodes
-            // assert(parser.hasCommentsOnStack());
-            // assert(parser.getCommentCount() == 1);
-        }
-        catch(TError e)
-        {
-            assert(false);
-        }
-
-        
-
-        try
-        {
-            string sourceCode = `module myCommntedModule;
-        /*Hello */
-        
-        /* Hello*/`;
-
-            File dummyFile;
-            Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
-
-            compiler.doLex();
-            compiler.doParse();
-
-            // FIXME: Re-enable when we we have
-            // a way to extract comments from
-            // AST nodes
-            // assert(parser.hasCommentsOnStack());
-            // assert(parser.getCommentCount() == 1);
-        }
-        catch(TError e)
-        {
-            assert(false);
-        }
-
-    
-        try
-        {
-            string sourceCode = `module myCommentedModule;
-
-        void function()
-        {
-            /*Hello */
-            /* Hello */
-            // Hello
-            //Hello
-        }
-        `;
-
-            File dummyFile;
-            Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
-
-            compiler.doLex();
-            compiler.doParse();
-
-
-            // FIXME: Re-enable when we we have
-            // a way to extract comments from
-            // AST nodes
-            // assert(parser.hasCommentsOnStack());
-            // assert(parser.getCommentCount() == 1);
-            // assert(parser.hasCommentsOnStack());
-            // assert(parser.getCommentCount() == 4);
-        }
-        catch(TError e)
-        {
-            assert(false);
-        }
-    }
-
     // TODO: We need to add `parseComment()`
     // support here (see issue #84)
     // TODO: This ic currently dead code and ought to be used/implemented
@@ -3743,6 +3653,189 @@ unittest
         // There should be a function named `k` in module `c`
         Function c_func = cast(Function)resolver.resolveBest(module_c, "k");
         assert(c_func);
+    }
+    catch(TError e)
+    {
+        assert(false);
+    }
+}
+
+/**
+ * If statement tests
+ */
+unittest
+{
+    string sourceCode = `
+module comments;
+
+// Comment for no one
+
+// Comment for Elise
+int p;
+
+/**
+ * This is a comment on a function
+ *  
+ *
+ * @param i This is the i
+ * @param p This is the p
+ * @throws Exception worst exception eva
+ * @return Void, so nothing
+ */
+void function(int i, int p)
+{
+
+}
+`;
+
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+    try
+    {
+        compiler.doLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    try
+    {
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
+
+        TypeChecker tc = new TypeChecker(compiler);
+
+        /* Find the function named `function` and get its comment */
+        Entity funcEnt = tc.getResolver().resolveBest(modulle, "function");
+        Function func = cast(Function)funcEnt;
+        Comment funcComment = func.getComment();
+        assert(funcComment);
+
+        /* Ensure the comment is as we want */
+        DEBUG(funcComment.getContent());
+        assert(funcComment.getContent() == "This is a comment on a function  ");
+
+        ParamDoc* iPDoc, pPDoc;
+        ParamDoc[string] paramDocs = funcComment.getAllParamDocs();
+        assert((iPDoc = "i" in paramDocs) !is null);
+        assert((pPDoc = "p" in paramDocs) !is null);
+        assert(iPDoc.getParam() == "i");
+        assert(iPDoc.getDescription() == "This is the i");
+        assert(pPDoc.getParam() == "p");
+        assert(pPDoc.getDescription() == "This is the p");
+
+        ExceptionDoc eDoc;
+        bool found;
+        foreach(DocStr dc; funcComment.getDocStrings())
+        {
+            if((found = dc.getExceptionDoc(eDoc)) == true)
+            {
+                break;
+            }
+        }
+        assert(found);
+        assert(eDoc.getException() == "Exception");
+        assert(eDoc.getDescription() == "worst exception eva");
+
+        ReturnsDoc retDoc;
+        assert(funcComment.getReturnDoc(retDoc));
+        assert(retDoc.getDescription() == "Void, so nothing");
+    }
+    catch(TError e)
+    {
+        assert(false);
+    }
+}
+
+/** 
+ * Tests the handling of comments
+ */
+unittest
+{
+    import tlang.compiler.lexer.kinds.arr : ArrLexer;
+
+    try
+    {
+        string sourceCode = `module myCommentModule;
+    // Hello`;
+
+        File dummyFile;
+        Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+        compiler.doLex();
+        compiler.doParse();
+
+        // FIXME: Re-enable when we we have
+        // a way to extract comments from
+        // AST nodes
+        // assert(parser.hasCommentsOnStack());
+        // assert(parser.getCommentCount() == 1);
+    }
+    catch(TError e)
+    {
+        assert(false);
+    }
+
+    
+
+    try
+    {
+        string sourceCode = `module myCommntedModule;
+    /*Hello */
+    
+    /* Hello*/`;
+
+        File dummyFile;
+        Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+        compiler.doLex();
+        compiler.doParse();
+
+        // FIXME: Re-enable when we we have
+        // a way to extract comments from
+        // AST nodes
+        // assert(parser.hasCommentsOnStack());
+        // assert(parser.getCommentCount() == 1);
+    }
+    catch(TError e)
+    {
+        assert(false);
+    }
+
+
+    try
+    {
+        string sourceCode = `module myCommentedModule;
+
+    void function()
+    {
+        /*Hello */
+        /* Hello */
+        // Hello
+        //Hello
+    }
+    `;
+
+        File dummyFile;
+        Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+        compiler.doLex();
+        compiler.doParse();
+
+
+        // FIXME: Re-enable when we we have
+        // a way to extract comments from
+        // AST nodes
+        // assert(parser.hasCommentsOnStack());
+        // assert(parser.getCommentCount() == 1);
+        // assert(parser.hasCommentsOnStack());
+        // assert(parser.getCommentCount() == 4);
     }
     catch(TError e)
     {
