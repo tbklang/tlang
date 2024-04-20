@@ -7,6 +7,7 @@ import std.array : join;
 
 import tlang.misc.logging;
 import std.string : format;
+import tlang.compiler.lexer.core.tokens : Token;
 
 /** 
  * The type of docstring
@@ -524,8 +525,6 @@ unittest
     assert("Hello there" == comment.bdy);
 }
 
-import tlang.compiler.lexer.core.tokens : Token;
-
 /** 
  * Represents a comment
  * which can be attached
@@ -537,7 +536,6 @@ public final class Comment
 
     private this(CommentParts content)
     {
-        // TODO: Parse the comment into text but annotated section
         this.content = content;
     }
 
