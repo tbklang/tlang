@@ -87,6 +87,11 @@ public struct ExceptionDoc
     private string exception;
     private string description;
 
+    public string getException()
+    {
+        return this.exception;
+    }
+
     public string getDescription()
     {
         return this.description;
