@@ -509,7 +509,7 @@ public final class BasicLexer : LexerInterface
         while (true) {
             if (!multiLine && currentChar == LS.NEWLINE) {
                 flush();
-                return advanceLine();
+                return true;
             }
             if (multiLine && currentChar == LS.STAR && isForward() && sourceCode[position+1] == LS.FORWARD_SLASH) {
                 buildAdvance();
