@@ -1,10 +1,13 @@
+/** 
+ * Comment types and parsing
+ * facilities
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.symbols.comments;
-
-// TODO: Add comment parsing
 
 import std.string : startsWith, split, strip, stripLeft, stripRight;
 import std.array : join;
-
 import tlang.misc.logging;
 import std.string : format;
 import tlang.compiler.lexer.core.tokens : Token;
