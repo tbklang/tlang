@@ -188,22 +188,48 @@ public struct DocStr
     }
 }
 
+/** 
+ * Parts of a comment
+ */
 private struct CommentParts
 {
     string bdy;
     DocStr[] strs;
 }
 
+/** 
+ * Parses comments of various forms
+ */
 private class CommentParser
 {
+    /** 
+     * Comment text
+     */
     private string source;
+
+    /** 
+     * Constructs a new `CommentParser`
+     * which can extract the comments
+     * from the given comment text
+     *
+     * Params:
+     *   source = the comment itself
+     */
     this(string source)
     {
         this.source = source;
     }
 
-    private string commentPart;
-
+    /** 
+     * Begins the parsing of the provided
+     * comment source text.
+     *
+     * This assumes a well-formatted
+     * comment is passed to us. i.e. one
+     * extracted form the lexer.
+     *
+     * Returns: the `CommentParts`
+     */
     private CommentParts extract()
     {
         CommentParts parts;
@@ -280,6 +306,17 @@ private class CommentParser
         return parts;
     }
 
+    /** 
+     * Attempts to extract the doc params
+     * from a given line, returning if it
+     * was a success or not
+     *
+     * Params:
+     *   line = the line to parse
+     *   ds = the result (if any)
+     * Returns: `true` if extraction succeeded,
+     * otherwise `false`
+     */
     private bool extractDocLine(string line, ref DocStr ds)
     {
         string buildUp;
@@ -463,11 +500,19 @@ private class CommentParser
         return false;
     }
 
-    // TODO: Use niknaks filter
+    /** 
+     * Strips out all lines with doc-strings
+     * (params) in them
+     *
+     * Params:
+     *   input = the input lines
+     * Returns: the output lines
+     */
     private string[] onlyParams(string[] input)
     {
         string[] withDoc;
 
+        // TODO: Use niknaks filter
         foreach(string i; input)
         {
             if(stripLeft(i).startsWith("@"))
@@ -479,11 +524,19 @@ private class CommentParser
         return withDoc;
     }
 
-    // TODO: Use niknaks filter
+    /** 
+     * Strips out any line which is a doc line
+     * (non-parameter line)
+     *
+     * Params:
+     *   input = the input lines
+     * Returns: the output lines
+     */
     private string[] stripOutDocLines(string[] input)
     {
         string[] withoutDoc;
 
+        // TODO: Use niknaks filter
         foreach(string i; input)
         {
             DEBUG(format("'%s'", i));
@@ -505,7 +558,6 @@ private class CommentParser
     }
 }
 
-
 version(unittest)
 {
     import std.stdio;
@@ -524,7 +576,6 @@ unittest
 
     writeln(format("Comment: '%s'", comment));
 
-    // *cast(int*)0  = 1;
     assert("Hello there" == comment.bdy);
 }
 
@@ -535,36 +586,85 @@ unittest
  */
 public final class Comment
 {
+    /** 
+     * The comment's component
+     * parts
+     */
     private CommentParts content;
 
+    /** 
+     * Constructs a new comment out
+     * of its parsed component parts
+     *
+     * Params:
+     *   content = the parts
+     */
     private this(CommentParts content)
     {
         this.content = content;
     }
 
+    /** 
+     * Generates a comment from the 
+     * provided token
+     *
+     * Params:
+     *   commentToken = token containing
+     * the comment
+     * Returns: a `Comment`
+     */
     public static Comment fromToken(Token commentToken)
     {
         return fromText(commentToken.getToken());
     }
 
+    /** 
+     * Generates a comment from the
+     * provided comment text
+     *
+     * Params:
+     *   text = the text containing
+     * the comment
+     * Returns: a `Comment`
+     */
     private static Comment fromText(string text)
     {
-        // TODO: Inline this behavior here
         CommentParser parser = new CommentParser(text);
-
         return new Comment(parser.extract());
     }
 
+    /** 
+     * Extracts the comment's contents.
+     *
+     * This excludes param/doc-strings
+     *
+     * Returns: the contents
+     */
     public string getContent()
     {
         return this.content.bdy;
     }
 
+    /** 
+     * Extract all the doc-strings present
+     * within the comment
+     *
+     * Returns: an array of them
+     */
     public DocStr[] getDocStrings()
     {
         return this.content.strs;
     }
 
+    /** 
+     * Extracts all of the param-docs
+     * and places them into a key-value
+     * mapping whereby the key is
+     * the parameter's name and the
+     * value the doc itself
+     *
+     * Returns: a map
+     */
     public ParamDoc[string] getAllParamDocs()
     {
         // TODO: Use niknaks
@@ -581,6 +681,15 @@ public final class Comment
         return d;
     }
 
+    /** 
+     * Extracts the return doc-string
+     * from this comment
+     *
+     * Params:
+     *   retDoc = the found `ReturnDoc`
+     * Returns: `true` if found, otheriwse
+     * `false`
+     */
     public bool getReturnDoc(ref ReturnsDoc retDoc)
     {
         // TODO: Use niknaks flter
