@@ -1,5 +1,7 @@
 /** 
  * A single-pass tokenizer
+ *
+ * Authors: Gustav Meyer
  */
 module tlang.compiler.lexer.kinds.basic;
 
