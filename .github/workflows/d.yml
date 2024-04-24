@@ -71,6 +71,10 @@ jobs:
           # mv doveralls_linux_travis doveralls
           # chmod +x doveralls
           dub fetch doveralls
+
+          # Thank you Indian fella, you receive 1 satoshi (https://github.com/orgs/community/discussions/120966#discussioncomment-9211925)
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+
           sudo apt update
           sudo apt install libcurl4-openssl-dev
         
