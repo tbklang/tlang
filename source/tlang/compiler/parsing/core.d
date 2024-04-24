@@ -2029,6 +2029,21 @@ public final class Parser
                         
                         parentToContainer(container, [varAssExp]);
                     }
+                    /**
+                     * If we have a `PointerDereferenceAssignment`
+                     * then we must parent its left-hand and right-hand
+                     * side expressions (the expression the address
+                     * is derived from) and (the expression being
+                     * assigned)
+                     */
+                    else if(cast(PointerDereferenceAssignment)statement)
+                    {
+                        PointerDereferenceAssignment ptrDerefAss = cast(PointerDereferenceAssignment)statement;
+                        Expression addrExp = ptrDerefAss.getPointerExpression();
+                        Expression assExp = ptrDerefAss.getExpression();
+                        
+                        parentToContainer(container, [addrExp, assExp]);
+                    }
                     /** 
                      * If we have a `FunctionCall`
                      * expression
