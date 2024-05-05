@@ -451,6 +451,38 @@ public class DNodeGenerator
         throw new DependencyException(DependencyError.GENERAL_ERROR, message);
     }
 
+
+    /** 
+     * Checks whether you can access a given entity
+     * via the current context; that being the
+     * container the reference is being made from
+     *
+     * Params:
+     *   yourContainer = the `Container` the reference
+     * is being made from
+     *   toCheck = the `Entity` being referenced, of
+     * which we are meant to perform the check against
+     * Returns: `true` if access is allowed, `false`
+     * if not
+     */
+    private bool accessCheck(Container yourContainer, Entity toCheck)
+    {
+        // Determine if `toCheck` resides within `yourContainer`
+        // (somewhere along the path as one of its immediate
+        // or non-immediate children) and if so then return `true`.
+        // If NOT, then check if the access modifier of the entity
+        // is public and then return `true`, else return `false`
+        
+        if(resolver.isDescendant(yourContainer, toCheck))
+        {
+            return true;
+        }
+        else
+        {
+            return toCheck.getAccessorType() == AccessorType.PUBLIC;
+        }
+    }
+
     public DNode root;
 
 
