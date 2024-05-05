@@ -523,8 +523,6 @@ public final class Parser
         Statement ret;
 
         /* If there are any comments available then pop them off now */
-        // TODO: Check if we should pop anything off of the comment
-        // stack here
         Comment potComment;
         if(getAssociatedComment(potComment))
         {
