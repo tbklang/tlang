@@ -3,7 +3,7 @@
  */
 module tlang.compiler.lexer.core.exceptions;
 
-import misc.exceptions : TError;
+import tlang.misc.exceptions : TError;
 import tlang.compiler.lexer.core.lexer : LexerInterface;
 import std.conv : to;
 

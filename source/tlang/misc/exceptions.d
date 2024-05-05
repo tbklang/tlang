@@ -1,4 +1,4 @@
-module misc.exceptions;
+module tlang.misc.exceptions;
 
 //import gogga : generateMessage;
 
