@@ -3241,6 +3241,12 @@ public final class Parser
                 parseAccessor();
                 continue;
             }
+            /* If it is an initscope */
+            else if (isModifier(tok))
+            {
+                parseInitScope();
+                continue;
+            }
             /* If it is a class */
             else if (symbol == SymbolType.CLASS)
             {
@@ -4170,6 +4176,7 @@ unittest
     }
     catch(TError e)
     {
+        ERROR(e);
         assert(false);
     }
 }
