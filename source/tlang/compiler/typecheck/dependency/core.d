@@ -3,7 +3,7 @@ module tlang.compiler.typecheck.dependency.core;
 import tlang.compiler.symbols.check;
 import tlang.compiler.symbols.data;
 import std.conv : to;
-import std.string;
+import std.string : cmp;
 import std.stdio;
 import tlang.misc.logging;
 import tlang.compiler.parsing.core;

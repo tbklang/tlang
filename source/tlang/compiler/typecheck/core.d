@@ -3,7 +3,7 @@ module tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.check;
 import tlang.compiler.symbols.data;
 import std.conv : to, ConvException;
-import std.string;
+import std.string : split, cmp, format;
 import std.stdio;
 import tlang.misc.logging;
 import tlang.compiler.parsing.core;
