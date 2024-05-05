@@ -381,3 +381,36 @@ public final class ArrayIndex : Expression
         return "ArrayIndex [to: "~indexInto.toString()~", idx: "~index.toString()~"]";
     }
 }
+
+public final class TernaryOperator : Expression
+{
+    private Expression condition;
+    private Expression whenTrue, whenFalse;
+
+    this
+    (
+        Expression condition,
+        Expression whenTrue,
+        Expression whenFalse
+    )
+    {
+        this.condition = condition;
+        this.whenTrue = whenTrue;
+        this.whenFalse = whenFalse;
+    }
+
+    public Expression getCondition()
+    {
+        return this.condition;
+    }
+
+    public Expression getTrueExpression()
+    {
+        return this.whenTrue;
+    }
+
+    public Expression getFalseExpression()
+    {
+        return this.whenFalse;
+    }
+}
