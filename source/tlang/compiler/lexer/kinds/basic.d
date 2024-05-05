@@ -5,7 +5,7 @@ module tlang.compiler.lexer.kinds.basic;
 
 import std.container.slist;
 import std.string : replace;
-import gogga;
+import tlang.misc.logging;
 import std.conv : to;
 import std.ascii : isDigit, isAlpha, isWhite;
 import tlang.compiler.lexer.core;
@@ -255,7 +255,7 @@ public final class BasicLexer : LexerInterface
                 * Here we check if we have a `.` and that the characters
                 * preceding us were all good for an identifier
                 */
-                import misc.utils;
+                import tlang.misc.utils;
 
                 if (currentChar == LS.DOT)
                 {
@@ -333,7 +333,7 @@ public final class BasicLexer : LexerInterface
             }
             //else if (currentChar == LS.UNDERSCORE || ((!isSplitter(currentChar) && !isDigit(currentChar)) && currentChar != LS.DOUBLE_QUOTE && currentChar != LS.SINGLE_QUOTE && currentChar != LS.BACKSLASH)) {
             else if (currentChar == LS.UNDERSCORE || isAlpha(currentChar)) {
-                gprintln("path ident String");
+                DEBUG("path ident String");
                 if (!doIdentOrPath()) {
                     break;
                 } else {
@@ -731,7 +731,7 @@ version(unittest)
     */
     private void shout(int i = __LINE__, string mod = __MODULE__, string func = __FUNCTION__)
     {
-        gprintln("Unittest at "~to!(string)(i)~" in "~func~" (within module "~mod~")");
+        DEBUG("Unittest at "~to!(string)(i)~" in "~func~" (within module "~mod~")");
     }
 }
 
@@ -746,7 +746,7 @@ unittest
     string sourceCode = "hello \"world\";";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("hello", 0, 0), new Token("\"world\"", 0, 0),
             new Token(";", 0, 0)
@@ -764,7 +764,7 @@ unittest
     string sourceCode = "hello \n \"world\";";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("hello", 0, 0), new Token("\"world\"", 0, 0),
             new Token(";", 0, 0)
@@ -800,7 +800,7 @@ unittest
     string sourceCode = "hello \"world\"|| ";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("hello", 0, 0), new Token("\"world\"", 0, 0),
             new Token("||", 0, 0)
@@ -818,7 +818,7 @@ unittest
     string sourceCode = "hello \"world\"&& ";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("hello", 0, 0), new Token("\"world\"", 0, 0),
             new Token("&&", 0, 0)
@@ -836,7 +836,7 @@ unittest
     string sourceCode = "hello \"wooorld\"||";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("hello", 0, 0), new Token("\"wooorld\"", 0, 0),
             new Token("||", 0, 0)
@@ -854,7 +854,7 @@ unittest
     string sourceCode = "hello \"world\";|";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("hello", 0, 0), new Token("\"world\"", 0, 0),
             new Token(";", 0, 0), new Token("|", 0, 0)
@@ -872,7 +872,7 @@ unittest
     string sourceCode = " hello";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("hello", 0, 0)]);
 }
 
@@ -887,7 +887,7 @@ unittest
     string sourceCode = "//trist";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("//trist", 0, 0)]);
 }
 
@@ -902,7 +902,7 @@ unittest
     string sourceCode = "/*trist*/";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("/*trist*/", 0, 0)]);
 }
 
@@ -917,7 +917,7 @@ unittest
     string sourceCode = "/*t\nr\ni\ns\nt*/";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("/*t\nr\ni\ns\nt*/", 0, 0)]);
 }
 
@@ -932,7 +932,7 @@ unittest
     string sourceCode = "/*t\nr\ni\ns\nt*/ ";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("/*t\nr\ni\ns\nt*/", 0, 0)]);
 }
 
@@ -947,7 +947,7 @@ unittest
     string sourceCode = "//trist \n hello";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
         new Token("//trist ", 0, 0),
         new Token("hello", 0, 0),
@@ -965,7 +965,7 @@ unittest
     string sourceCode = " hello;";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("hello", 0, 0), new Token(";", 0, 0)
         ]);
@@ -982,7 +982,7 @@ unittest
     string sourceCode = "5+5";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("5", 0, 0),
             new Token("+", 0, 0),
@@ -1001,7 +1001,7 @@ unittest
     string sourceCode = "hello \"world\\\"\"";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("hello", 0, 0), new Token("\"world\\\"\"", 0, 0)
         ]);
@@ -1018,7 +1018,7 @@ unittest
     string sourceCode = "'c'";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("'c'", 0, 0)]);
 }
 
@@ -1033,7 +1033,7 @@ unittest
     string sourceCode = "2121\n2121";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("2121", 0, 0), new Token("2121", 0, 0)
         ]);
@@ -1050,7 +1050,7 @@ unittest
     string sourceCode = " =\n";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("=", 0, 0)]);
 
     import std.algorithm.comparison;
@@ -1058,7 +1058,7 @@ unittest
     sourceCode = " = ==\n";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("=", 0, 0), new Token("==", 0, 0)
         ]);
@@ -1068,7 +1068,7 @@ unittest
     sourceCode = " ==\n";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("==", 0, 0)]);
 
     import std.algorithm.comparison;
@@ -1076,7 +1076,7 @@ unittest
     sourceCode = " = =\n";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("=", 0, 0), new Token("=", 0, 0)
         ]);
@@ -1086,7 +1086,7 @@ unittest
     sourceCode = " ==, = ==\n";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("==", 0, 0), new Token(",", 0, 0), new Token("=", 0, 0),
             new Token("==", 0, 0)
@@ -1098,7 +1098,7 @@ unittest
     sourceCode = "i==i=\n";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("i", 0, 0), new Token("==", 0, 0), new Token("i", 0, 0),
             new Token("=", 0, 0)
@@ -1122,14 +1122,14 @@ unittest
     sourceCode = "21L";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("21L", 0, 0)]);
 
     /* 21UL (valid) */
     sourceCode = "21UL";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("21UL", 0, 0)]);
 
     /* 21U (invalid) */
@@ -1158,14 +1158,14 @@ unittest
     sourceCode = "21SI";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("21SI", 0, 0)]);
 
     /* 21UL; (valid) */
     sourceCode = "21SI;";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected "~to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected "~to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
         new Token("21SI", 0, 0),
         new Token(";", 0, 0)
@@ -1183,7 +1183,7 @@ unittest
     string sourceCode = "1.5";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("1.5", 0, 0)]);
 }
 
@@ -1201,7 +1201,7 @@ unittest
     string sourceCode = "new A().l.p.p;";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("new", 0, 0),
             new Token("A", 0, 0),
@@ -1224,13 +1224,13 @@ unittest
     * Test calssification: Valid
     * Test input: `\t1.5`
     */
-    gprintln("Tab Unit Test");
+    DEBUG("Tab Unit Test");
     import std.algorithm.comparison;
 
     string sourceCode = "\t1.5";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [new Token("1.5", 0, 0)]);
 
     /**
@@ -1312,13 +1312,13 @@ unittest
     * Test calssification: Valid
     * Test input: `\t\t\t\t\t`
     */
-    gprintln("Tab Unit Test");
+    DEBUG("Tab Unit Test");
     import std.algorithm.comparison;
 
     sourceCode = "\t\t\t\t\t";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens().length == 0);
 }
 
@@ -1425,7 +1425,7 @@ unittest
     sourceCode = ").x";
     currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token(")", 0, 0),
             new Token(".", 0, 0),
@@ -1463,7 +1463,7 @@ unittest
     string sourceCode = "\n\n\n\n";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens().length == 0);
 }
 
@@ -1480,7 +1480,7 @@ unittest
     string sourceCode = "'\\\\'";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("'\\\\'", 0, 0),
         ]);
@@ -1499,7 +1499,7 @@ unittest
     string sourceCode = "'\\a'";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("'\\a'", 0, 0),
         ]);
@@ -1584,7 +1584,7 @@ unittest
     string sourceCode = "1_ 1_2 1_2.3 1_2.3_ 1__2 1__2.3 1__.23__";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("1", 0, 0),
             new Token("12", 0, 0),
@@ -1609,7 +1609,7 @@ unittest
     string sourceCode = "<= >= =< => == != < > ^";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("<=", 0, 0),
             new Token(">=", 0, 0),
@@ -1636,7 +1636,7 @@ unittest
     string sourceCode = "'a'";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
             new Token("'a'", 0, 0),
         ]);
@@ -1875,7 +1875,7 @@ unittest
     string sourceCode = "//";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
         new Token("//", 0, 0)
         ]);
@@ -1938,7 +1938,7 @@ unittest
     string sourceCode = "'a' ";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
         new Token("'a'", 0, 0)
         ]);
@@ -1957,7 +1957,7 @@ unittest
     string sourceCode = "// \n";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
     currentLexer.performLex();
-    gprintln("Collected " ~ to!(string)(currentLexer.getTokens()));
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
     assert(currentLexer.getTokens() == [
         new Token("// ", 0, 0)
         ]);

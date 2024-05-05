@@ -5,7 +5,7 @@ import tlang.compiler.symbols.data;
 import tlang.compiler.typecheck.resolution;
 import std.string : cmp;
 import std.conv : to;
-import misc.exceptions: TError;
+import tlang.misc.exceptions: TError;
 import tlang.compiler.symbols.typing.core;
 
 public class TypeCheckerException : TError
@@ -124,21 +124,21 @@ public final class CollidingNameException : TypeCheckerException
         /* If colliding with the container */
         if(isCollidingWithContainer())
         {
-            string containerPath = typeChecker.getResolver().generateName(typeChecker.getModule(), defined);
-            string entityPath = typeChecker.getResolver().generateName(typeChecker.getModule(), attempted);
+            string containerPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), defined);
+            string entityPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), attempted);
             msg = "Cannot have entity \""~entityPath~"\" with same name as container \""~containerPath~"\"";
         }
-        /* If colliding with root (Module) */
-        else if(cmp(typeChecker.getModule().getName(), attempted.getName()) == 0)
+        /* If colliding with a one of the program's modules */
+        else if(isCollidingWithAModule())
         {
-            string entityPath = typeChecker.getResolver().generateName(typeChecker.getModule(), attempted);
-            msg = "Cannot have entity \""~entityPath~"\" with same name as module \""~typeChecker.getModule().getName()~"\"";
+            string entityPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), attempted);
+            msg = "Cannot have entity \""~entityPath~"\" with same name as module \""~getCollidedModule().getName()~"\"";
         }
         /* If colliding with a member within the container */
         else
         {
-            string preExistingEntity = typeChecker.getResolver().generateName(typeChecker.getModule(), typeChecker.findPrecedence(c, attempted.getName()));
-            string entityPath = typeChecker.getResolver().generateName(typeChecker.getModule(), attempted);
+            string preExistingEntity = typeChecker.getResolver().generateName(typeChecker.getProgram(), typeChecker.findPrecedence(c, attempted.getName()));
+            string entityPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), attempted);
             msg = "Cannot have entity \""~entityPath~"\" with same name as entity \""~preExistingEntity~"\" within same container";
         }
     }
@@ -148,5 +148,22 @@ public final class CollidingNameException : TypeCheckerException
         return attempted.parentOf() == defined;
     }
 
-    
+    private bool isCollidingWithAModule()
+    {
+        return getCollidedModule() !is null;
+    }
+
+    private Module getCollidedModule()
+    {
+        Program program = this.typeChecker.getProgram();
+        foreach(Module curMod; program.getModules())
+        {
+            if(cmp(attempted.getName(), curMod.getName()) == 0)
+            {
+                return curMod;
+            }
+        }
+
+        return null;
+    }
 }

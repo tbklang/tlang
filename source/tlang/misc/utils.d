@@ -1,4 +1,4 @@
-module misc.utils;
+module tlang.misc.utils;
 
 import std.string : cmp;
 import std.array : replace;

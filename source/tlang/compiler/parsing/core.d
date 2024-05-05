@@ -1,14 +1,17 @@
 module tlang.compiler.parsing.core;
 
-import gogga;
+import tlang.misc.logging;
 import std.conv : to, ConvException;
 import std.string : isNumeric, cmp;
 import tlang.compiler.symbols.check;
 import tlang.compiler.symbols.data;
 import tlang.compiler.lexer.core;
 import core.stdc.stdlib;
-import misc.exceptions : TError;
+import tlang.misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
+import tlang.compiler.core : Compiler;
+import std.string : format;
+import tlang.compiler.modman;
 
 import std.string : format;
 
@@ -19,6 +22,11 @@ public final class Parser
      * Tokens management
      */
     private LexerInterface lexer;
+
+    /** 
+     * The associated compiler
+     */
+    private Compiler compiler;
 
     /**
     * Crashes the program if the given token is not a symbol
@@ -48,7 +56,7 @@ public final class Parser
      */
     public void expect(string message)
     {
-        gprintln(message, DebugType.ERROR);
+        ERROR(message);
 
         throw new ParserException(this, ParserException.ParserErrorType.GENERAL_ERROR, message);
     }
@@ -59,10 +67,14 @@ public final class Parser
      *
      * Params:
      *   lexer = the token source
+     *   compiler = the compiler to be using
+     *
+     * FIXME: Remove null for `compiler`
      */
-    this(LexerInterface lexer)
+    this(LexerInterface lexer, Compiler compiler = null)
     {
         this.lexer = lexer;
+        this.compiler = compiler;
     }
 
     /** 
@@ -128,7 +140,7 @@ public final class Parser
     */
     private IfStatement parseIf()
     {
-        gprintln("parseIf(): Enter", DebugType.WARNING);
+        WARN("parseIf(): Enter");
 
         IfStatement ifStmt;
         Branch[] branches;
@@ -229,7 +241,7 @@ public final class Parser
             }
         }
 
-        gprintln("parseIf(): Leave", DebugType.WARNING);
+        WARN("parseIf(): Leave");
 
         /* Create the if statement with the branches */
         ifStmt = new IfStatement(branches);
@@ -242,7 +254,7 @@ public final class Parser
 
     private WhileLoop parseWhile()
     {
-        gprintln("parseWhile(): Enter", DebugType.WARNING);
+        WARN("parseWhile(): Enter");
 
         Expression branchCondition;
         Statement[] branchBody;
@@ -280,14 +292,14 @@ public final class Parser
         /* Parent the branch to the WhileLoop */
         parentToContainer(whileLoop, [branch]);
 
-        gprintln("parseWhile(): Leave", DebugType.WARNING);
+        WARN("parseWhile(): Leave");
 
         return whileLoop;
     }
 
     private WhileLoop parseDoWhile()
     {
-        gprintln("parseDoWhile(): Enter", DebugType.WARNING);
+        WARN("parseDoWhile(): Enter");
 
         Expression branchCondition;
         Statement[] branchBody;
@@ -332,7 +344,7 @@ public final class Parser
         /* Parent the branch to the WhileLoop */
         parentToContainer(whileLoop, [branch]);
 
-        gprintln("parseDoWhile(): Leave", DebugType.WARNING);
+        WARN("parseDoWhile(): Leave");
 
         return whileLoop;
     }
@@ -342,7 +354,7 @@ public final class Parser
     // TODO: We ASSUME there is always pre-run, condition and post-iteration
     public ForLoop parseFor()
     {
-        gprintln("parseFor(): Enter", DebugType.WARNING);
+        WARN("parseFor(): Enter");
 
         Expression branchCondition;
         Statement[] branchBody;
@@ -378,7 +390,7 @@ public final class Parser
         expect(SymbolType.CCURLY, lexer.getCurrentToken());
         lexer.nextToken();
 
-        gprintln("Yo: "~lexer.getCurrentToken().toString());
+        DEBUG("Yo: "~lexer.getCurrentToken().toString());
 
         /* Create the Branch coupling the body statements (+post iteration statement) and condition */
         Branch forBranch = new Branch(branchCondition, branchBody~postIterationStatement);
@@ -397,7 +409,7 @@ public final class Parser
         /* Parent the Branch to its for loop */
         parentToContainer(forLoop, [forBranch]);
 
-        gprintln("parseFor(): Leave", DebugType.WARNING);
+        WARN("parseFor(): Leave");
 
         return forLoop;
     }
@@ -411,7 +423,7 @@ public final class Parser
         string identifier = lexer.getCurrentToken().getToken();
         lexer.nextToken();
         lexer.nextToken();
-        gprintln(lexer.getCurrentToken());
+        DEBUG(lexer.getCurrentToken());
 
         /* Expression */
         Expression assignmentExpression = parseExpression();
@@ -450,7 +462,7 @@ public final class Parser
 
         /* Save the name or type */
         string nameTYpe = lexer.getCurrentToken().getToken();
-        gprintln("parseName(): Current token: "~lexer.getCurrentToken().toString());
+        DEBUG("parseName(): Current token: "~lexer.getCurrentToken().toString());
 
         /* TODO: The problem here is I don't want to progress the token */
 
@@ -527,7 +539,7 @@ public final class Parser
         /* Any other case */
         else
         {
-            gprintln(lexer.getCurrentToken());
+            DEBUG(lexer.getCurrentToken());
             expect("Error expected ( for var/func def");
         }
        
@@ -540,7 +552,7 @@ public final class Parser
     /* TODO: Implement me, and call me */
     private Struct parseStruct(bool allowsInitScopeOnDec = false)
     {
-        gprintln("parseStruct(): Enter", DebugType.WARNING);
+        WARN("parseStruct(): Enter");
 
         Struct generatedStruct;
         Statement[] statements;
@@ -693,7 +705,7 @@ public final class Parser
             }
         }
 
-        gprintln("parseStruct(): Leave", DebugType.WARNING);
+        WARN("parseStruct(): Leave");
 
         return generatedStruct;
     }
@@ -720,7 +732,7 @@ public final class Parser
             Expression returnExpression = parseExpression();
 
             /* Expect a semi-colon as the terminator */
-            gprintln(lexer.getCurrentToken());
+            WARN(lexer.getCurrentToken());
             expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
 
             /* Create the ReturnStmt */
@@ -737,7 +749,7 @@ public final class Parser
 
     private static void funxDebugPrint(string msg)
     {
-        gprintln(msg, DebugType.WARNING);
+        WARN(msg);
     }
 
     private Statement[] parseBody(bool allowModifiers = false)
@@ -751,7 +763,6 @@ public final class Parser
         {
             leave();
         }
-
 
         /* TODO: Implement body parsing */
         Statement[] statements;
@@ -773,13 +784,13 @@ public final class Parser
             Token tok = lexer.getCurrentToken();
             SymbolType symbol = getSymbolType(tok);
 
-            gprintln("parseBody(): SymbolType=" ~ to!(string)(symbol));
+            DEBUG("parseBody(): SymbolType=" ~ to!(string)(symbol));
 
     
             /* If it is a class definition */
             if(symbol == SymbolType.CLASS)
             {
-                /* Parse the class and add its statements */
+                /* Parsgprintlne the class and add its statements */
                 statements ~= parseClass();
             }
             /* If it is a struct definition */
@@ -791,7 +802,7 @@ public final class Parser
             /* If it is closing the body `}` */
             else if(symbol == SymbolType.CCURLY)
             {
-                gprintln("parseBody(): Exiting body by }", DebugType.WARNING);
+                WARN("parseBody(): Exiting body by }");
 
                 closedBeforeExit = true;
                 break;
@@ -808,7 +819,7 @@ public final class Parser
             expect("Expected closing } but ran out of tokens");
         }
 
-        gprintln("parseBody(): Leave", DebugType.WARNING);
+        WARN("parseBody(): Leave");
 
         return statements;
     }
@@ -1004,7 +1015,7 @@ public final class Parser
         {
             scope(exit)
             {
-                gprintln(format("Popping off ModifierItem '%s'", front));
+                DEBUG(format("Popping off ModifierItem '%s'", front));
             }
         }
 
@@ -1112,7 +1123,7 @@ public final class Parser
 
     private funcDefPair parseFuncDef(bool wantsBody = true)
     {
-        gprintln("parseFuncDef(): Enter", DebugType.WARNING);
+        WARN("parseFuncDef(): Enter");
 
         Statement[] statements;
         VariableParameter[] parameterList;
@@ -1218,8 +1229,8 @@ public final class Parser
             expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         }
 
-        gprintln("ParseFuncDef: Parameter count: " ~ to!(string)(parameterCount));
-        gprintln("parseFuncDef(): Leave", DebugType.WARNING);
+        DEBUG("ParseFuncDef: Parameter count: " ~ to!(string)(parameterCount));
+        WARN("parseFuncDef(): Leave");
 
         bruh.bodyStatements = statements;
         bruh.params = parameterList;
@@ -1317,7 +1328,7 @@ public final class Parser
     */
     private Expression parseExpression()
     {
-        gprintln("parseExpression(): Enter", DebugType.WARNING);
+        WARN("parseExpression(): Enter");
 
 
         /** 
@@ -1359,7 +1370,7 @@ public final class Parser
             /* If we don't have 1 on the stack */
             if(retExpression.length != 1)
             {
-                gprintln(retExpression);
+                DEBUG(retExpression);
                 expect("Expression parsing failed as we had remaining items on the expression parser stack or zero");
             }
         }
@@ -1381,7 +1392,7 @@ public final class Parser
         {
             SymbolType symbol = getSymbolType(lexer.getCurrentToken());
 
-            gprintln(retExpression);
+            DEBUG(retExpression);
 
             /* If it is a number literal */
             if (symbol == SymbolType.NUMBER_LITERAL)
@@ -1516,7 +1527,7 @@ public final class Parser
                     {
                         /* Expression can only be a `VariableExpression` which accounts for Function Handles and Variable Identifiers */
                         Expression rhs = parseExpression();
-                        gprintln("hhshhshshsh");
+                        DEBUG("hhshhshshsh");
                         if(cast(VariableExpression)rhs)
                         {
                             /* Create UnaryExpression comprised of the operator and the right-hand side expression */
@@ -1564,13 +1575,13 @@ public final class Parser
             {
                 // Pop off an expression which will be `indexTo`
                 Expression indexTo = removeExp();
-                gprintln("indexTo: "~indexTo.toString());
+                DEBUG("indexTo: "~indexTo.toString());
 
                 /* Get the index expression */
                 lexer.nextToken();
                 Expression index = parseExpression();
                 lexer.nextToken();
-                gprintln("IndexExpr: "~index.toString());
+                DEBUG("IndexExpr: "~index.toString());
                 // gprintln(lexer.getCurrentToken());
 
                 ArrayIndex arrayIndexExpr = new ArrayIndex(indexTo, index);
@@ -1690,8 +1701,8 @@ public final class Parser
         }
 
 
-        gprintln(retExpression);
-        gprintln("parseExpression(): Leave", DebugType.WARNING);
+        DEBUG(retExpression);
+        WARN("parseExpression(): Leave");
 
         /* TODO: DO check here for retExp.length = 1 */
         expressionStackSanityCheck();
@@ -1720,7 +1731,7 @@ public final class Parser
             leave();
         }
 
-        gprintln("parseTypedDeclaration(): Enter", DebugType.WARNING);
+        WARN("parseTypedDeclaration(): Enter");
 
 
         /* Generated object */
@@ -1778,13 +1789,13 @@ public final class Parser
                         // If the expression is an integer (which it should be)
                         if(stackArraySize)
                         {
-                            gprintln("StackArraySize: "~stackArraySize.toString());
+                            DEBUG("StackArraySize: "~stackArraySize.toString());
                             potentialStackSize = stackArraySize.getNumber();
                         }
                         // If not, then error
                         else
                         {
-                            gprintln("Expected an integer as stack-array size but got iets ander", DebugType.ERROR);
+                            ERROR("Expected an integer as stack-array size but got iets ander");
                             // TODO: Rather throw a parsing error
                             assert(false);
                         }
@@ -1836,7 +1847,7 @@ public final class Parser
             identifier = lexer.getCurrentToken().getToken();
 
             lexer.nextToken();
-            gprintln("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ lexer.getCurrentToken().getToken());
+            DEBUG("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ lexer.getCurrentToken().getToken());
         }
         /* Anything else is an error */
         else
@@ -1849,7 +1860,7 @@ public final class Parser
 
         /* Check if it is `(` (func dec) */
         SymbolType symbolType = getSymbolType(lexer.getCurrentToken());
-        gprintln("ParseTypedDec: SymbolType=" ~ to!(string)(symbolType));
+        DEBUG("ParseTypedDec: SymbolType=" ~ to!(string)(symbolType));
         if (symbolType == SymbolType.LBRACE)
         {
             /** 
@@ -1968,12 +1979,12 @@ public final class Parser
              */
             if(potAccMod != AccessorType.UNKNOWN)
             {
-                gprintln(format("Setting explict access modifier of %s to %s", potAccMod, funcEntity));
+                DEBUG(format("Setting explict access modifier of %s to %s", potAccMod, funcEntity));
                 funcEntity.setAccessorType(potAccMod);
             }
             if(potInitScp != InitScope.UNKNOWN)
             {
-                gprintln(format("Setting explicit init scope modifier of %s to %s", potInitScp, funcEntity));
+                DEBUG(format("Setting explicit init scope modifier of %s to %s", potInitScp, funcEntity));
                 funcEntity.setModifierType(potInitScp);
             }
 
@@ -1985,10 +1996,9 @@ public final class Parser
             // Only continue if variable declarations are allowed
             if(allowVarDec)
             {
-                gprintln("Semi: "~to!(string)(lexer.getCurrentToken()));
-                gprintln("Semi: "~to!(string)(lexer.getCurrentToken()));
-                gprintln("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")",
-                        DebugType.WARNING);
+                DEBUG("Semi: "~to!(string)(lexer.getCurrentToken()));
+                DEBUG("Semi: "~to!(string)(lexer.getCurrentToken()));
+                WARN("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")");
 
                 generated = new Variable(type, identifier);
             }
@@ -2014,8 +2024,8 @@ public final class Parser
 
                     VariableAssignment varAssign = new VariableAssignment(expression);
 
-                    gprintln("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
-                            ~ type ~ ", Identifier: " ~ identifier ~ ")", DebugType.WARNING);
+                    WARN("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
+                            ~ type ~ ", Identifier: " ~ identifier ~ ")");
                     
                     Variable variable = new Variable(type, identifier);
                     variable.addAssignment(varAssign);
@@ -2039,10 +2049,10 @@ public final class Parser
         {
             // Set the token pointer back to the beginning
             lexer.setCursor(arrayAssignTokenBeginPos);
-            gprintln("Looking at: "~to!(string)(lexer.getCurrentToken()));
+            DEBUG("Looking at: "~to!(string)(lexer.getCurrentToken()));
 
             // TODO: Move all below code to the branch below that handles this case
-            gprintln("We have an array assignment, here is the indexers: "~to!(string)(arrayIndexExprs), DebugType.WARNING);
+            WARN("We have an array assignment, here is the indexers: "~to!(string)(arrayIndexExprs));
 
             // Our identifier will be some weird malformed-looking `mrArray[][1]` (because os atck array size declarations no-number literal)
             // ... expressions don't make it in (we have arrayIndexExprs for that). Therefore what we must do is actually
@@ -2051,16 +2061,16 @@ public final class Parser
             long firstBracket = indexOf(type, "[");
             assert(firstBracket > -1);
             identifier = type[0..firstBracket];
-            gprintln("Then identifier is type actually: "~identifier);
+            DEBUG("Then identifier is type actually: "~identifier);
 
 
-            gprintln("We are still implenenting array assignments", DebugType.ERROR);
+            ERROR("We are still implenenting array assignments");
 
             ArrayIndex muhIndex = cast(ArrayIndex)parseExpression();
-            gprintln("Expback: "~muhIndex.toString());
+            DEBUG("Expback: "~muhIndex.toString());
 
             /* Expect a `=` and consume it */
-            gprintln(lexer.getCurrentToken());
+            DEBUG(lexer.getCurrentToken());
             expect(SymbolType.ASSIGN, lexer.getCurrentToken());
             lexer.nextToken();
 
@@ -2070,7 +2080,7 @@ public final class Parser
 
             // TODO: Get the expression after the `=`
             ArrayAssignment arrayAssignment = new ArrayAssignment(muhIndex, expressionBeingAssigned);
-            gprintln("Created array assignment: "~arrayAssignment.toString());
+            DEBUG("Created array assignment: "~arrayAssignment.toString());
             // assert(false);
 
             generated = arrayAssignment;
@@ -2144,7 +2154,7 @@ public final class Parser
         //     }
         // }
 
-        gprintln("parseTypedDeclaration(): Leave", DebugType.WARNING);
+        WARN("parseTypedDeclaration(): Leave");
 
         return generated;
     }
@@ -2157,7 +2167,7 @@ public final class Parser
     */
     private Clazz parseClass()
     {
-        gprintln("parseClass(): Enter", DebugType.WARNING);
+        WARN("parseClass(): Enter");
 
         Clazz generated;
 
@@ -2171,7 +2181,7 @@ public final class Parser
             expect("Class name in declaration cannot be path");
         }
         string className = lexer.getCurrentToken().getToken();
-        gprintln("parseClass(): Class name found '" ~ className ~ "'");
+        DEBUG("parseClass(): Class name found '" ~ className ~ "'");
         lexer.nextToken();
 
         generated = new Clazz(className);
@@ -2352,25 +2362,193 @@ public final class Parser
         /* Pop off the ending `}` */
         lexer.nextToken();
 
-        gprintln("parseClass(): Leave", DebugType.WARNING);
+        WARN("parseClass(): Leave");
 
         return generated;
     }
 
-    private void parentToContainer(Container container, Statement[] statements)
+    private void parentToContainer(Container container, Statement[] statements, bool allowRecursivePainting = true)
     {
         foreach(Statement statement; statements)
         {
             if(statement !is null)
             {
                 statement.parentTo(container);
+
+                if(allowRecursivePainting)
+                {
+                    // TODO: Add specifics handling here to same-level parent
+
+                    /** 
+                    * If we have a `Variable` (a vardec)
+                    * then, if it has an assignment,
+                    * parent its expression to the
+                    * same `Container`
+                    */
+                    if(cast(Variable)statement)
+                    {
+                        Variable variable = cast(Variable)statement;
+                        
+                        VariableAssignment assignment = variable.getAssignment();
+                        if(assignment)
+                        {
+                            Expression assExp = assignment.getExpression();
+                            parentToContainer(container, [assExp]);
+                        }
+                    }
+                    /** 
+                    * If we have an `BinaryOperatorExpression`
+                    * then we must parent its left and right
+                    * hand side expressions
+                    */
+                    else if(cast(BinaryOperatorExpression)statement)
+                    {
+                        BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
+
+                        parentToContainer(container, [binOpExp.getLeftExpression(), binOpExp.getRightExpression()]);
+                    }
+                    /** 
+                     * If we have a `VariableAssignmentStdAlone`
+                     * then we must parent its expression
+                     * (the assignment) to the same `Container`
+                     */
+                    else if(cast(VariableAssignmentStdAlone)statement)
+                    {
+                        VariableAssignmentStdAlone varAss = cast(VariableAssignmentStdAlone)statement;
+                        Expression varAssExp = varAss.getExpression();
+                        
+                        parentToContainer(container, [varAssExp]);
+                    }
+                    /**
+                     * If we have a `PointerDereferenceAssignment`
+                     * then we must parent its left-hand and right-hand
+                     * side expressions (the expression the address
+                     * is derived from) and (the expression being
+                     * assigned)
+                     */
+                    else if(cast(PointerDereferenceAssignment)statement)
+                    {
+                        PointerDereferenceAssignment ptrDerefAss = cast(PointerDereferenceAssignment)statement;
+                        Expression addrExp = ptrDerefAss.getPointerExpression();
+                        Expression assExp = ptrDerefAss.getExpression();
+                        
+                        parentToContainer(container, [addrExp, assExp]);
+                    }
+                    /** 
+                     * If we have a `FunctionCall`
+                     * expression
+                     */
+                    else if(cast(FunctionCall)statement)
+                    {
+                        FunctionCall funcCall = cast(FunctionCall)statement;
+
+                        Expression[] actualArguments = funcCall.getCallArguments();
+                        parentToContainer(container, cast(Statement[])actualArguments);
+                    }
+                    /** 
+                     * If we have a `ReturnStmt`
+                     * then we must process its
+                     * contained expression (if any)
+                     */
+                    else if(cast(ReturnStmt)statement)
+                    {
+                        ReturnStmt retStmt = cast(ReturnStmt)statement;
+
+                        if(retStmt.hasReturnExpression())
+                        {
+                            parentToContainer(container, [retStmt.getReturnExpression()]);
+                        }
+                    }
+                    /**
+                     * If we have a `DiscardStatement`
+                     * then we must process its
+                     * contained expression
+                     */
+                    else if(cast(DiscardStatement)statement)
+                    {
+                        DiscardStatement dcrdStmt = cast(DiscardStatement)statement;
+
+                        parentToContainer(container, [dcrdStmt.getExpression()]);
+                    }
+                    /**
+                     * If we have an `IfStatement`
+                     * then extract its `Branch`
+                     * object
+                     */
+                    else if(cast(IfStatement)statement)
+                    {
+                        IfStatement ifStmt = cast(IfStatement)statement;
+                        Branch[] branches = ifStmt.getBranches();
+                        
+                        // Parent the branches to the if-statement
+                        parentToContainer(ifStmt, cast(Statement[])branches);
+                    }
+                    /**
+                     * If we have an `WhileLoop`
+                     * then extract its `Branch`
+                     * object
+                     */
+                    else if(cast(WhileLoop)statement)
+                    {
+                        WhileLoop whileLoop = cast(WhileLoop)statement;
+
+                        // Parent the branch to the while-statement
+                        parentToContainer(whileLoop, [whileLoop.getBranch()]);
+                    }
+                    /**
+                     * If we have an `ForLoop`
+                     * then extract its `Branch`
+                     * object
+                     */
+                    else if(cast(ForLoop)statement)
+                    {
+                        ForLoop forLoop = cast(ForLoop)statement;
+
+                        // Parent the branch to the for-loop-statement
+                        parentToContainer(forLoop, [forLoop.getBranch()]);
+                    }
+                    /** 
+                     * If we have a `Branch` then
+                     * process its conditions
+                     * expression
+                     */
+                    else if(cast(Branch)statement)
+                    {
+                        Branch branch = cast(Branch)statement;
+                        // TODO: See if this is okay, because I recall
+                        // ... atleast for for-loops that we had to
+                        // ... place things (body-container wise)
+                        // ... into certain locations
+
+                        // FIXME: This doesn't look right, if it is a Container
+                        // ... then it should stay as such
+                        parentToContainer(branch, [branch.getCondition()]);
+
+                        // NOTE: I don't want to recurse on to
+                        // ... body as that would entail
+                        // ... reparenting things whereas
+                        // ... they SHOULD (Body statements)
+                        // ... remain ALWAYS parented to
+                        // ... their branch's body
+                        Statement[] branchBody = branch.getBody();
+
+                        // UPDATE: The above _can_ be done
+                        // ... it probably isn't needed as 
+                        // explicit depth calls are made 
+                        // already BUT we can do it for
+                        // safety and we can just make the 
+                        // branch the container as we have
+                        // done so above
+                        parentToContainer(branch, branchBody);
+                    }
+                }
             }
         }
     }
 
     private Statement parseDerefAssignment()
     {
-        gprintln("parseDerefAssignment(): Enter", DebugType.WARNING);
+        WARN("parseDerefAssignment(): Enter");
 
         Statement statement;
 
@@ -2402,7 +2580,7 @@ public final class Parser
         // FIXME: We should make a LHSPiinterAssignmentThing
         statement = new PointerDereferenceAssignment(pointerExpression, assigmentExpression, derefCnt);
 
-        gprintln("parseDerefAssignment(): Leave", DebugType.WARNING);
+        WARN("parseDerefAssignment(): Leave");
 
         return statement;
     }
@@ -2433,17 +2611,17 @@ public final class Parser
 
     private void parseComment()
     {
-        gprintln("parseComment(): Enter", DebugType.WARNING);
+        WARN("parseComment(): Enter");
 
         Token curCommentToken = lexer.getCurrentToken();
 
         pushComment(curCommentToken);
 
         // TODO: Do something here like placing it on some kind of stack
-        gprintln("Comment is: '"~curCommentToken.getToken()~"'");
+        DEBUG("Comment is: '"~curCommentToken.getToken()~"'");
         lexer.nextToken(); // Move off comment
 
-        gprintln("parseComment(): Leave", DebugType.WARNING);
+        WARN("parseComment(): Leave");
     }
 
     /** 
@@ -2453,48 +2631,58 @@ public final class Parser
     {
         import tlang.compiler.lexer.kinds.arr : ArrLexer;
 
-        string sourceCode = `module myCommentModule;
-        // Hello`;
-
-        LexerInterface currentLexer = new BasicLexer(sourceCode);
-        (cast(BasicLexer)currentLexer).performLex();
-
-        Parser parser = new Parser(currentLexer);
-    
         try
         {
-            Module modulle = parser.parse();
+            string sourceCode = `module myCommentModule;
+        // Hello`;
 
-            assert(parser.hasCommentsOnStack());
-            assert(parser.getCommentCount() == 1);
+            File dummyFile;
+            Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+            compiler.doLex();
+            compiler.doParse();
+
+            // FIXME: Re-enable when we we have
+            // a way to extract comments from
+            // AST nodes
+            // assert(parser.hasCommentsOnStack());
+            // assert(parser.getCommentCount() == 1);
         }
         catch(TError e)
         {
             assert(false);
         }
 
-        sourceCode = `module myCommntedModule;
+        
+
+        try
+        {
+            string sourceCode = `module myCommntedModule;
         /*Hello */
         
         /* Hello*/`;
 
-        currentLexer = new BasicLexer(sourceCode);
-        (cast(BasicLexer)currentLexer).performLex();
-        parser = new Parser(currentLexer);
-    
-        try
-        {
-            Module modulle = parser.parse();
+            File dummyFile;
+            Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
 
-            assert(parser.hasCommentsOnStack());
-            assert(parser.getCommentCount() == 2);
+            compiler.doLex();
+            compiler.doParse();
+
+            // FIXME: Re-enable when we we have
+            // a way to extract comments from
+            // AST nodes
+            // assert(parser.hasCommentsOnStack());
+            // assert(parser.getCommentCount() == 1);
         }
         catch(TError e)
         {
             assert(false);
         }
 
-        sourceCode = `module myCommentedModule;
+    
+        try
+        {
+            string sourceCode = `module myCommentedModule;
 
         void function()
         {
@@ -2505,16 +2693,20 @@ public final class Parser
         }
         `;
 
-        currentLexer = new BasicLexer(sourceCode);
-        (cast(BasicLexer)currentLexer).performLex();
-        parser = new Parser(currentLexer);
-    
-        try
-        {
-            Module modulle = parser.parse();
+            File dummyFile;
+            Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
 
-            assert(parser.hasCommentsOnStack());
-            assert(parser.getCommentCount() == 4);
+            compiler.doLex();
+            compiler.doParse();
+
+
+            // FIXME: Re-enable when we we have
+            // a way to extract comments from
+            // AST nodes
+            // assert(parser.hasCommentsOnStack());
+            // assert(parser.getCommentCount() == 1);
+            // assert(parser.hasCommentsOnStack());
+            // assert(parser.getCommentCount() == 4);
         }
         catch(TError e)
         {
@@ -2531,7 +2723,7 @@ public final class Parser
         bool allowModifiers = false
     )
     {
-        gprintln("parseStatement(): Enter", DebugType.WARNING);
+        WARN("parseStatement(): Enter");
 
         mixin FuncDebug!(parseStatement, &funxDebugPrint);
         enter(true);
@@ -2545,7 +2737,7 @@ public final class Parser
         Token tok = lexer.getCurrentToken();
         SymbolType symbol = getSymbolType(tok);
 
-        gprintln("parseStatement(): SymbolType=" ~ to!(string)(symbol));
+        DEBUG("parseStatement(): SymbolType=" ~ to!(string)(symbol));
 
         Statement statement;
 
@@ -2626,7 +2818,7 @@ public final class Parser
         /* If it is a kind-of comment */
         else if(symbol == SymbolType.SINGLE_LINE_COMMENT || symbol == SymbolType.MULTI_LINE_COMMENT)
         {
-            gprintln("COMMENTS NOT YET PROPERLY SUPOORTED", DebugType.ERROR);
+            ERROR("COMMENTS NOT YET PROPERLY SUPOORTED");
             parseComment();
         }
         /* Error out */
@@ -2635,14 +2827,14 @@ public final class Parser
             expect("parseStatement(): Unknown symbol: " ~ lexer.getCurrentToken().getToken());
         }
 
-        gprintln("parseStatement(): Leave", DebugType.WARNING);
+        WARN("parseStatement(): Leave");
 
         return statement;
     }
 
     private FunctionCall parseFuncCall()
     {
-        gprintln("parseFuncCall(): Enter", DebugType.WARNING);
+        WARN("parseFuncCall(): Enter");
 
         /* TODO: Save name */
         string functionName = lexer.getCurrentToken().getToken();
@@ -2693,7 +2885,7 @@ public final class Parser
        
         lexer.nextToken();
 
-        gprintln("parseFuncCall(): Leave", DebugType.WARNING);
+        WARN("parseFuncCall(): Leave");
 
         return new FunctionCall(functionName, arguments);
     }
@@ -2752,6 +2944,113 @@ public final class Parser
         return externStmt;
     }
 
+    /** 
+     * Performs an import of the given
+     * modules by their respective names
+     *
+     * Params:
+     *   modules = the names of the modules
+     * to import
+     */
+    private void doImport(string[] modules)
+    {
+        DEBUG(format("modules[]: %s", modules));
+
+        // Print out some information about the current program
+        Program prog = this.compiler.getProgram();
+        DEBUG(format("Program currently: '%s'", prog));
+
+        // Get the module manager
+        ModuleManager modMan = compiler.getModMan();
+
+        // Search for all the module entries
+        ModuleEntry[] foundEnts;
+        foreach(string mod; modules)
+        {
+            DEBUG(format("Module wanting to be imported: %s", mod));
+
+            // Search for the module entry
+            ModuleEntry foundEnt = modMan.find(mod);
+            DEBUG("Found module entry: "~to!(string)(foundEnt));
+            foundEnts ~= foundEnt;
+        }
+        
+        // For each module entry, only import
+        // it if not already in the process
+        // of being visited
+        foreach(ModuleEntry modEnt; foundEnts)
+        {
+            // Check here if already present, if so,
+            // then skip
+            if(prog.isEntryPresent(modEnt))
+            {
+                DEBUG(format("Not parsing module '%s' as already marked as visited", modEnt));
+                continue;
+            }
+
+            // Mark it as visited
+            prog.markEntryAsVisited(modEnt);
+
+            // Read in the module's contents
+            string moduleSource = modMan.readModuleData_throwable(modEnt);
+            DEBUG("Module has "~to!(string)(moduleSource.length)~" many bytes");
+
+            // Parse the module
+            import tlang.compiler.lexer.kinds.basic : BasicLexer;
+            LexerInterface lexerInterface = new BasicLexer(moduleSource);
+            (cast(BasicLexer)lexerInterface).performLex();
+            Parser parser = new Parser(lexerInterface, this.compiler);
+            Module pMod = parser.parse(modEnt.getPath());
+
+            // Map parsed module to its entry
+            prog.setEntryModule(modEnt, pMod);
+        }   
+    }
+
+    /** 
+     * Parses module import statements
+     */
+    private void parseImport()
+    {
+        WARN("parseImport(): Enter");
+
+        /* Consume the `import` keyword */
+        lexer.nextToken();
+
+        /* Get the module's name */
+        expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
+        string moduleName = lexer.getCurrentToken().getToken();
+
+        /* Consume the token */
+        lexer.nextToken();
+
+        /* All modules to be imported */
+        string[] collectedModuleNames = [moduleName];
+
+        /* Try process multi-line imports (if any) */
+        while(getSymbolType(lexer.getCurrentToken()) == SymbolType.COMMA)
+        {
+            /* Consume the comma `,` */
+            lexer.nextToken();
+
+            /* Get the module's name */
+            expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
+            string curModuleName = lexer.getCurrentToken().getToken();
+            collectedModuleNames ~= curModuleName;
+
+            /* Consume the name */
+            lexer.nextToken();
+        }
+
+        /* Expect a semi-colon and consume it */
+        expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+        lexer.nextToken();
+
+        /* Perform the actual import */
+        doImport(collectedModuleNames);
+
+        WARN("parseImport(): Leave");
+    }
 
     /* Almost like parseBody but has more */
     /**
@@ -2760,9 +3059,9 @@ public final class Parser
     * one to define classes within functions
     */
     /* TODO: Variables should be allowed to have letters in them and underscores */
-    public Module parse()
+    public Module parse(string moduleFilePath, bool isEntrypoint = false)
     {
-        gprintln("parse(): Enter", DebugType.WARNING);
+        WARN("parse(): Enter");
 
         Module modulle;
 
@@ -2772,16 +3071,64 @@ public final class Parser
 
         /* Module name may NOT be dotted (TODO: Maybe it should be yeah) */
         expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
-        string programName = lexer.getCurrentToken().getToken();
+        string moduleName = lexer.getCurrentToken().getToken();
         lexer.nextToken();
 
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
 
         /* Initialize Module */
-        modulle = new Module(programName);
+        modulle = new Module(moduleName);
 
-        /* TODO: do `lexer.hasTokens()` check */
+        /* Set the file system path of this module */
+        modulle.setFilePath(moduleFilePath);
+
+        /**
+         * As a rule, the tail end of a filename should match
+         * the name of the module (in its header)
+         *
+         * i.e. `niks/c.t` should have a module name
+         * (declared in the header `module <name>;`)
+         * of `c`
+         *
+         * Only checked is enabled (TODO: make that a thing)
+         */
+        import std.string : replace, split;
+        // TODO: use a PATH SPLITTER rather
+        import std.path : pathSplitter;
+        if
+        (
+            compiler.getConfig().hasConfig("modman:strict_headers") &&
+            compiler.getConfig().getConfig("modman:strict_headers").getBoolean() &&
+            cmp(moduleName, replace(pathSplitter(moduleFilePath).back(), ".t", "")) != 0)
+        {
+            expect(format("The module's name '%s' does not match the file name for it at '%s'", moduleName, moduleFilePath));
+        }
+
+
+        /**
+         * If this is an entrypoint module (i.e. one
+         * specified on the command-line) then store
+         * it as visited
+         */
+        if(isEntrypoint)
+        {
+            DEBUG
+            (
+                format
+                (
+                    "parse(): Yes, this IS your entrypoint module '%s' about to be parsed",
+                    moduleName
+                )
+            );
+
+            ModuleEntry curModEnt = ModuleEntry(moduleFilePath, moduleName);
+            Program prog = this.compiler.getProgram();
+
+            prog.markEntryAsVisited(curModEnt); // TODO: Could not call?
+            prog.setEntryModule(curModEnt, modulle);
+        }
+
         /* TODO: We should add `lexer.hasTokens()` to the `lexer.nextToken()` */
         /* TODO: And too the `getCurrentTokem()` and throw an error when we have ran out rather */
 
@@ -2792,7 +3139,7 @@ public final class Parser
             Token tok = lexer.getCurrentToken();
             SymbolType symbol = getSymbolType(tok);
 
-            gprintln("parse(): Token: " ~ tok.getToken());
+            DEBUG("parse(): Token: " ~ tok.getToken());
 
             /* If it is a type */
             if (symbol == SymbolType.IDENT_TYPE)
@@ -2847,10 +3194,15 @@ public final class Parser
 
                 modulle.addStatement(externStatement);
             }
+            /* If it is an import */
+            else if(symbol == SymbolType.IMPORT)
+            {
+                parseImport();
+            }
             /* If it is a kind-of comment */
             else if(symbol == SymbolType.SINGLE_LINE_COMMENT || symbol == SymbolType.MULTI_LINE_COMMENT)
             {
-                gprintln("COMMENTS NOT YET PROPERLY SUPOORTED", DebugType.ERROR);
+                ERROR("COMMENTS NOT YET PROPERLY SUPOORTED");
                 parseComment();
             }
             else
@@ -2859,10 +3211,13 @@ public final class Parser
             }
         }
 
-        gprintln("parse(): Leave", DebugType.WARNING);
+        WARN("parse(): Leave");
 
         /* Parent each Statement to the container (the module) */
         parentToContainer(modulle, modulle.getStatements());
+
+
+        DEBUG("Done parsing module '"~modulle.getName()~"' from file '"~modulle.getFilePath()~"'");
 
         return modulle;
     }
@@ -2876,6 +3231,8 @@ version(unittest)
     import tlang.compiler.lexer.core;
     import tlang.compiler.lexer.kinds.basic : BasicLexer;
     import tlang.compiler.typecheck.core;
+    import tlang.compiler.typecheck.resolution : Resolver;
+    import tlang.compiler.core : gibFileData;
 }
 
 /**
@@ -2887,27 +3244,17 @@ unittest
 module myModule;
 `;
 
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
-        assert(true);
-    }
-    catch(LexerException e)
-    {
-        assert(false);
-    }
-    
-    
-    Parser parser = new Parser(currentLexer);
-    
-    try
-    {
-        Module modulle = parser.parse();
+        compiler.doLex();
+        compiler.doParse();
+        Module modulle = compiler.getProgram().getModules()[0];
 
         assert(cmp(modulle.getName(), "myModule")==0);
     }
-    catch(TError)
+    catch(TError e)
     {
         assert(false);
     }
@@ -2940,10 +3287,12 @@ class myClass2
 }
 `;
 
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
+        compiler.doLex();
         assert(true);
     }
     catch(LexerException e)
@@ -2951,16 +3300,17 @@ class myClass2
         assert(false);
     }
     
-    
-    Parser parser = new Parser(currentLexer);
-    
     try
     {
-        Module modulle = parser.parse();
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
 
         /* Module name must be myModule */
         assert(cmp(modulle.getName(), "myModule")==0);
-        TypeChecker tc = new TypeChecker(modulle);
+        TypeChecker tc = new TypeChecker(compiler);
 
         /**
         * There should exist two module-level classes
@@ -3090,11 +3440,12 @@ void function()
 }
 `;
 
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
 
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
+        compiler.doLex();
         assert(true);
     }
     catch(LexerException e)
@@ -3102,16 +3453,17 @@ void function()
         assert(false);
     }
     
-    
-    Parser parser = new Parser(currentLexer);
-    
     try
     {
-        Module modulle = parser.parse();
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
 
         /* Module name must be parser_discard */
         assert(cmp(modulle.getName(), "parser_discard")==0);
-        TypeChecker tc = new TypeChecker(modulle);
+        TypeChecker tc = new TypeChecker(compiler);
 
         
         /* Find the function named `function` */
@@ -3156,10 +3508,12 @@ int myFunction(int i, int j)
 `;
 
 
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
+        compiler.doLex();
         assert(true);
     }
     catch(LexerException e)
@@ -3167,16 +3521,17 @@ int myFunction(int i, int j)
         assert(false);
     }
     
-    
-    Parser parser = new Parser(currentLexer);
-    
     try
     {
-        Module modulle = parser.parse();
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
 
         /* Module name must be parser_function_def */
         assert(cmp(modulle.getName(), "parser_function_def")==0);
-        TypeChecker tc = new TypeChecker(modulle);
+        TypeChecker tc = new TypeChecker(compiler);
 
         
         /* Find the function named `myFunction` */
@@ -3240,10 +3595,12 @@ void function()
 `;
 
 
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
+        compiler.doLex();
         assert(true);
     }
     catch(LexerException e)
@@ -3251,16 +3608,17 @@ void function()
         assert(false);
     }
     
-    
-    Parser parser = new Parser(currentLexer);
-    
     try
     {
-        Module modulle = parser.parse();
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
 
         /* Module name must be parser_while */
         assert(cmp(modulle.getName(), "parser_while")==0);
-        TypeChecker tc = new TypeChecker(modulle);
+        TypeChecker tc = new TypeChecker(compiler);
 
         
         /* Find the function named `function` */
@@ -3348,10 +3706,12 @@ int thing()
     return 0;
 }
 `;
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
+        compiler.doLex();
         assert(true);
     }
     catch(LexerException e)
@@ -3359,16 +3719,17 @@ int thing()
         assert(false);
     }
     
-    
-    Parser parser = new Parser(currentLexer);
-    
     try
     {
-        Module modulle = parser.parse();
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
 
         /* Module name must be simple_pointer */
         assert(cmp(modulle.getName(), "simple_pointer")==0);
-        TypeChecker tc = new TypeChecker(modulle);
+        TypeChecker tc = new TypeChecker(compiler);
 
         /* Find the function named `function` */
         Entity funcFunction = tc.getResolver().resolveBest(modulle, "function");
@@ -3434,11 +3795,12 @@ void function()
 }
 `;
 
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
 
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
+        compiler.doLex();
         assert(true);
     }
     catch(LexerException e)
@@ -3446,16 +3808,17 @@ void function()
         assert(false);
     }
     
-    
-    Parser parser = new Parser(currentLexer);
-    
     try
     {
-        Module modulle = parser.parse();
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
 
         /* Module name must be parser_for */
         assert(cmp(modulle.getName(), "parser_for")==0);
-        TypeChecker tc = new TypeChecker(modulle);
+        TypeChecker tc = new TypeChecker(compiler);
 
         
         /* Find the function named `function` */
@@ -3559,11 +3922,12 @@ void function()
 }
 `;
 
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
 
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
+        compiler.doLex();
         assert(true);
     }
     catch(LexerException e)
@@ -3571,16 +3935,17 @@ void function()
         assert(false);
     }
     
-    
-    Parser parser = new Parser(currentLexer);
-    
     try
     {
-        Module modulle = parser.parse();
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
 
         /* Module name must be parser_if */
         assert(cmp(modulle.getName(), "parser_if")==0);
-        TypeChecker tc = new TypeChecker(modulle);
+        TypeChecker tc = new TypeChecker(compiler);
 
         /* Find the function named `function` */
         Entity func = tc.getResolver().resolveBest(modulle, "function");
@@ -3644,10 +4009,12 @@ int wrongFunction()
 }
 `;
 
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
+        compiler.doLex();
         assert(true);
     }
     catch(LexerException e)
@@ -3655,12 +4022,9 @@ int wrongFunction()
         assert(false);
     }
     
-    
-    Parser parser = new Parser(currentLexer);
-    
     try
     {
-        Module modulle = parser.parse();
+        compiler.doParse();
 
         assert(false);
     }
@@ -3669,6 +4033,66 @@ int wrongFunction()
         assert(true);
     }
     catch(TError)
+    {
+        assert(false);
+    }
+}
+
+/**
+ * Importing of modules test
+ */
+unittest
+{
+    string inputFilePath = "source/tlang/testing/modules/a.t";
+    string sourceCode = gibFileData(inputFilePath);
+
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, inputFilePath, dummyFile);
+
+    try
+    {
+        compiler.doLex();
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    try
+    {
+        compiler.doParse();
+
+
+        Program program = compiler.getProgram();
+
+        // There should be 3 modules in this program
+        Module[] modules = program.getModules();
+        assert(modules.length == 3);
+
+        TypeChecker tc = new TypeChecker(compiler);
+        Resolver resolver = tc.getResolver();
+
+        // There should be modules named `a`, `b` and `c`
+        Module module_a = cast(Module)resolver.resolveBest(program, "a");
+        assert(module_a);
+        Module module_b = cast(Module)resolver.resolveBest(program, "b");
+        assert(module_b);
+        Module module_c = cast(Module)resolver.resolveBest(program, "c");
+        assert(module_c);
+
+        // There should be a function named `main` in module `a`
+        Function a_func = cast(Function)resolver.resolveBest(module_a, "main");
+        assert(a_func);
+
+        // There should be a function named `doThing` in module `b`
+        Function b_func = cast(Function)resolver.resolveBest(module_b, "doThing");
+        assert(b_func);
+
+        // There should be a function named `k` in module `c`
+        Function c_func = cast(Function)resolver.resolveBest(module_c, "k");
+        assert(c_func);
+    }
+    catch(TError e)
     {
         assert(false);
     }
@@ -3707,30 +4131,36 @@ public int i = 2;
 `;
 
 
-    LexerInterface currentLexer = new BasicLexer(sourceCode);
+    string inputFilePath = "nowhere";
+
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, null, dummyFile);
+
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
-        assert(true);
+        compiler.doLex();
     }
     catch(LexerException e)
     {
         assert(false);
     }
-    
-    
-    Parser parser = new Parser(currentLexer);
-    
+        
     try
     {
-        Module modulle = parser.parse();
+        compiler.doParse();
+        compiler.doTypeCheck();
 
-        parser.debugModifiersQueue();
+        Program program = compiler.getProgram();
 
-        TypeChecker tc = new TypeChecker(modulle);
+        
+        Module modulle = program.getModules()[0];
+
+        // parser.debugModifiersQueue();
+
+        TypeChecker tc = compiler.getTypeChecker();
 
         writeln("Oh god why");
-        writeln(parser.hasModifierItems());
+        // writeln(parser.hasModifierItems());
 
         
         /* Find the function named `a` and make sure it is private */
@@ -3776,12 +4206,12 @@ protected void func_b()
     int b = 0;
 }
 `;
+    
+    compiler = new Compiler(sourceCode, null, dummyFile);
 
-    currentLexer = new BasicLexer(sourceCode);
     try
     {
-        (cast(BasicLexer)currentLexer).performLex();
-        assert(true);
+        compiler.doLex();
     }
     catch(LexerException e)
     {
@@ -3789,11 +4219,9 @@ protected void func_b()
     }
     
     
-    parser = new Parser(currentLexer);
-    
     try
     {
-        Module modulle = parser.parse();
+        compiler.doParse();
         assert(false);
     }
     catch(TError e)

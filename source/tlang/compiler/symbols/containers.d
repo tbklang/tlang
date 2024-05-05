@@ -34,21 +34,82 @@ public Statement[] weightReorder(Statement[] statements)
 
 // TODO: Honestly all contains should be a kind-of `MStatementSearchable` and `MStatementReplaceable`
 // AND MCloneable
+/** 
+ * Represents any sort of type
+ * that can store `Statement`(s)
+ * (AST nodes) and retrieve them
+ * again at a later stage
+ *
+ * Additionally also means that
+ * the `MStatementSearchable` and
+ * `MStatementReplaceable` types
+ * are implemented
+ */
 public interface Container : MStatementSearchable, MStatementReplaceable
 {
+    /** 
+     * Appends the given statement to
+     * this container's body
+     *
+     * Params:
+     *   statement = the `Statement`
+     * to add
+     */
     public void addStatement(Statement statement);
 
+    /** 
+     * Appends the list of statements
+     * (in order) to this container's
+     * body
+     *
+     * Params:
+     *   statements = the `Statement[]`
+     * to add
+     */
     public void addStatements(Statement[] statements);
 
+    /** 
+     * Returns the body of this
+     * container
+     *
+     * Returns: a `Statement[]`
+     */
     public Statement[] getStatements();
 }
 
 
 public class Module : Entity, Container
 {
+    /** 
+     * Path to the module on disk
+     */
+    private string moduleFilePath;
+
     this(string moduleName)
     {
         super(moduleName);
+    }
+
+    /** 
+     * Returns the file system path where
+     * this module was parsed from
+     *
+     * Returns: the path as a `string`
+     */
+    public string getFilePath()
+    {
+        return this.moduleFilePath;
+    }
+
+    /** 
+     * Sets the file system path to the module
+     *
+     * Params:
+     *   filePath = path to the module on disk
+     */
+    public void setFilePath(string filePath)
+    {
+        this.moduleFilePath = filePath;
     }
 
     private Statement[] statements;
@@ -66,6 +127,7 @@ public class Module : Entity, Container
 
     public Statement[] getStatements()
     {
+        // TODO: Holy naai this is expensive
         return weightReorder(statements);
     }
 
@@ -141,6 +203,17 @@ public class Module : Entity, Container
             return false;
         }
     }
+
+    /** 
+     * Provides a string representation of
+     * this module
+     *
+     * Returns: a string
+     */
+    public override string toString()
+    {
+        return "Module [name: "~getName()~"]";
+    }
 }
 
 /**
@@ -166,6 +239,7 @@ public class Struct : Type, Container, MCloneable
 
     public Statement[] getStatements()
     {
+        // TODO: Holy naai this is expensive
         return weightReorder(statements);
     }
 
@@ -331,6 +405,7 @@ public class Clazz : Type, Container
 
     public Statement[] getStatements()
     {
+        // TODO: Holy naai this is expensive
         return weightReorder(statements);
     }
 

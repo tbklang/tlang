@@ -229,6 +229,27 @@ public final class CompilerConfiguration
             config.addConfig(ConfigEntry("types:max_width", 8));
         }
 
+        /**
+         * Set the default search paths to be searched
+         *
+         * These paths are, namely, (TODO: should be /usr/lib/tlang/*)
+         * sort of things here
+         */
+        string[] searchPaths = [];
+        config.addConfig(ConfigEntry("modman:path", searchPaths));
+
+        /**
+         * If enabled then a module with
+         * `module c;` must be named
+         * `c.t`
+         */
+        // FIXME: Make true by default - this WILL break many unittests and semantic ones
+        // so be very sure before you enable this
+        config.addConfig(ConfigEntry("modman:strict_headers", false));
+        
+        /* Always warn about unused variables */
+        config.addConfig(ConfigEntry("typecheck:warnUnusedVars", true));
+
         return config;
     }
 }

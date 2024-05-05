@@ -7,9 +7,10 @@ module tlang.compiler.symbols.typing.builtins;
 
 import tlang.compiler.symbols.typing.core;
 import std.string : cmp, indexOf, lastIndexOf;
-import gogga;
+import tlang.misc.logging;
 import tlang.compiler.typecheck.core;
 import std.conv : to;
+import tlang.compiler.symbols.data : Container;
 
 /**
 * TODO: We should write spec here like I want int and stuff of proper size so imma hard code em
@@ -25,12 +26,13 @@ import std.conv : to;
  *
  * Params:
  *   tc = the associated `TypeChecker` required for lookups
+ *   container = the container to do any searches from
  *   typeString = the type string to test
  * Returns: the `Type` found, if not found then `null`
  */
-public Type getBuiltInType(TypeChecker tc, string typeString)
+public Type getBuiltInType(TypeChecker tc, Container container, string typeString)
 {
-    gprintln("getBuiltInType("~typeString~")");
+    DEBUG("getBuiltInType("~typeString~")");
 
     /* `int`, signed (2-complement) */
     if(cmp(typeString, "int") == 0)
@@ -107,19 +109,19 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
 
         // Find the component type (everything before `lastOBracketPos`)
         string componentTypeString = typeString[0..lastOBracketPos];
-        gprintln("StackArray (component type): "~componentTypeString);
+        DEBUG("StackArray (component type): "~componentTypeString);
 
         // Determine the size of the array (from `pos('[')+1` to typeString.length-2)
         string arraySizeString = typeString[lastOBracketPos+1..$-1];
         ulong arraySize = to!(ulong)(arraySizeString);
-        gprintln("StackArray (stack size): "~to!(string)(arraySize));
+        DEBUG("StackArray (stack size): "~to!(string)(arraySize));
 
 
-        gprintln("typeString: "~typeString);
+        DEBUG("typeString: "~typeString);
 
-        stackArray = new StackArray(tc.getType(tc.getModule(), componentTypeString), arraySize);
+        stackArray = new StackArray(tc.getType(container, componentTypeString), arraySize);
 
-        gprintln("Stack-based array types are still being implemented", DebugType.ERROR);
+        ERROR("Stack-based array types are still being implemented");
         // assert(false);
         return stackArray;
     }
@@ -145,10 +147,10 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
 
         long ptrTypePos = rightmostTypePos;
         string ptrType = typeString[0..(ptrTypePos)];
-        gprintln("TypeStr: "~typeString);
-        gprintln("Pointer to '"~ptrType~"'", DebugType.ERROR);
+        DEBUG("TypeStr: "~typeString);
+        ERROR("Pointer to '"~ptrType~"'");
 
-        return new Pointer(tc.getType(tc.getModule(), ptrType));
+        return new Pointer(tc.getType(container, ptrType));
     }
     
     
@@ -159,7 +161,7 @@ public Type getBuiltInType(TypeChecker tc, string typeString)
     {
 
 
-        gprintln("getBuiltInType("~typeString~"): Failed to map to a built-in type", DebugType.ERROR);
+        ERROR("getBuiltInType("~typeString~"): Failed to map to a built-in type");
 
         return null;
     }

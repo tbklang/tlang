@@ -8,13 +8,13 @@ module tlang.commandline.commands;
 
 import jcli;
 import std.stdio;
-import misc.exceptions : TError;
+import tlang.misc.exceptions : TError;
 import std.exception : ErrnoException;
 import tlang.compiler.lexer.kinds.basic : BasicLexer;
 import tlang.compiler.lexer.core;
 import tlang.compiler.parsing.core : Parser;
 import tlang.compiler.typecheck.core : TypeChecker;
-import gogga;
+import tlang.misc.logging;
 import tlang.compiler.core : Compiler, beginCompilation;
 import tlang.compiler.configuration : ConfigEntry;
 import std.conv : to;
@@ -38,7 +38,7 @@ public enum VerbosityLevel
 mixin template BaseCommand()
 {
     @ArgPositional("source file", "The source file to compile")
-    string sourceFile;
+    string sourceFile; // TODO: Should accept a list in the future maybe
 
     @ArgNamed("verbose|v", "Verbosity level")
     @(ArgConfig.optional)
@@ -51,6 +51,19 @@ mixin template BaseCommand()
     }
 }
 
+mixin template ParseBase()
+{
+    @ArgNamed("paths|p", "Paths that should be considered for searching for modules")
+    @(ArgConfig.optional)
+    @(ArgConfig.aggregate)
+    string[] searchPaths;
+
+    void ParseBaseInit(Compiler compiler)
+    {
+        // Add additional search paths to the compiler
+        compiler.getModMan().addSearchPaths(searchPaths);
+    }
+}
 
 /** 
  * Base requirements for Emit+
@@ -116,7 +129,15 @@ mixin template EmitBase()
  */
 mixin template TypeCheckerBase()
 {
+    @ArgNamed("unusedVars|uvars", "Warn about any unused variables")
+    @(ArgConfig.optional)
+    bool warnUnusedVariables = true;
 
+    void TypeCheckerInit(Compiler compiler)
+    {
+        // Set whether to warn about unused variables
+        compiler.getConfig().addConfig(ConfigEntry("typecheck:warnUnusedVars", warnUnusedVariables));
+    }
 }
 
 /** 
@@ -126,11 +147,9 @@ mixin template TypeCheckerBase()
 struct compileCommand
 {
     mixin BaseCommand!();
-
-    
-
+    mixin ParseBase!();
+    mixin TypeCheckerBase!();
     mixin EmitBase!();
-
 
     void onExecute()
     {
@@ -149,20 +168,24 @@ struct compileCommand
             /* Begin lexing process */
             File outFile;
             outFile.open(outputFilename, "w");
-            Compiler compiler = new Compiler(sourceText, outFile);
+            Compiler compiler = new Compiler(sourceText, sourceFile, outFile);
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
+
+            /* Setup all type checker related parameters */
+            TypeCheckerInit(compiler);
 
             /* Perform tokenization */
             compiler.doLex();
             writeln("=== Tokens ===\n");
             writeln(compiler.getTokens());
 
+            /* Setup parser configuration parameters */
+            ParseBaseInit(compiler);
+
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
 
             /* Perform typechecking/codegen */
             compiler.doTypeCheck();
@@ -175,18 +198,17 @@ struct compileCommand
         }
         catch(TError t)
         {
-            gprintln(t.msg, DebugType.ERROR);
+            ERROR(t.msg);
             exit(-1);
         }
         catch(ErrnoException e)
         {
-            /* TODO: Use gogga error */
-            writeln("Could not open source file "~sourceFile);
+            ERROR("Could not open source file "~sourceFile);
             exit(-2);
         }
         catch(Exception e)
         {
-            gprintln(e.msg, DebugType.ERROR);
+            ERROR(e.msg);
             exit(-1);
         }
     }
@@ -217,7 +239,7 @@ struct lexCommand
             file.close();
 
             /* Begin lexing process */
-            Compiler compiler = new Compiler(sourceText, File());
+            Compiler compiler = new Compiler(sourceText, sourceFile, File());
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
@@ -229,13 +251,12 @@ struct lexCommand
         }
         catch(TError t)
         {
-            gprintln(t.msg, DebugType.ERROR);
+            ERROR(t.msg);
             exit(-1);
         }
         catch(ErrnoException e)
         {
-            /* TODO: Use gogga error */
-            writeln("Could not open source file "~sourceFile);
+            ERROR("Could not open source file "~sourceFile);
             exit(-2);
         }
     }
@@ -245,7 +266,7 @@ struct lexCommand
 struct parseCommand
 {
     mixin BaseCommand!();
-
+    mixin ParseBase!();
 
     /* TODO: Add missing implementation for this */
     void onExecute()
@@ -263,7 +284,7 @@ struct parseCommand
             file.close();
 
             /* Begin lexing process */
-            Compiler compiler = new Compiler(sourceText, File());
+            Compiler compiler = new Compiler(sourceText, sourceFile, File());
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
@@ -272,20 +293,20 @@ struct parseCommand
             writeln("=== Tokens ===\n");
             writeln(compiler.getTokens());
 
+            /* Setup parser configuration parameters */
+            ParseBaseInit(compiler);
+
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
         }
         catch(TError t)
         {
-            gprintln(t.msg, DebugType.ERROR);
+            ERROR(t.msg);
             exit(-1);
         }
         catch(ErrnoException e)
         {
-            /* TODO: Use gogga error */
-            writeln("Could not open source file "~sourceFile);
+            ERROR("Could not open source file "~sourceFile);
             exit(-2);
         }
     }
@@ -295,7 +316,8 @@ struct parseCommand
 struct typecheckCommand
 {
     mixin BaseCommand!();
-
+    mixin ParseBase!();
+    mixin TypeCheckerBase!();
 
     void onExecute()
     {
@@ -312,32 +334,35 @@ struct typecheckCommand
             file.close();
 
             /* Begin lexing process */
-            Compiler compiler = new Compiler(sourceText, File());
+            Compiler compiler = new Compiler(sourceText, sourceFile, File());
 
             /* Setup general configuration parameters */
             BaseCommandInit(compiler);
+
+            /* Setup all type checker related parameters */
+            TypeCheckerInit(compiler);
 
             compiler.doLex();
             writeln("=== Tokens ===\n");
             writeln(compiler.getTokens());
 
+            /* Setup parser configuration parameters */
+            ParseBaseInit(compiler);
+
             /* Perform parsing */
             compiler.doParse();
-            // TODO: Do something with the returned module
-            auto modulel = compiler.getModule();
 
             /* Perform typechecking/codegen */
             compiler.doTypeCheck();
         }
         catch(TError t)
         {
-            gprintln(t.msg, DebugType.ERROR);
+            ERROR(t.msg);
             exit(-1);
         }
         catch(ErrnoException e)
         {
-            /* TODO: Use gogga error */
-            writeln("Could not open source file "~sourceFile);
+            ERROR("Could not open source file "~sourceFile);
             exit(-2);
         }
     }

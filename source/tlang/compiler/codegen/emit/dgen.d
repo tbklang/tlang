@@ -8,17 +8,21 @@ import std.stdio;
 import std.file;
 import std.conv : to;
 import std.string : cmp;
-import gogga;
+import tlang.misc.logging;
 import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
-import tlang.compiler.codegen.mapper.core : SymbolMapper;
+import tlang.compiler.codegen.mapper.core;
 import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import tlang.compiler.symbols.check : getCharacter;
-import misc.utils : Stack;
+import tlang.misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.configuration : CompilerConfiguration;
+import tlang.compiler.symbols.containers : Module;
+import std.format : format;
+import std.datetime.stopwatch : StopWatch, AutoStart;
+import std.datetime.stopwatch : Duration, dur;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -129,7 +133,7 @@ public final class DCodeEmitter : CodeEmitter
             // return "KAK TODO";
         }
 
-        gprintln("Type transform unimplemented for type '"~to!(string)(typeIn)~"'", DebugType.ERROR);
+        ERROR("Type transform unimplemented for type '"~to!(string)(typeIn)~"'");
         assert(false);
         // return stringRepr;
     }
@@ -138,7 +142,7 @@ public final class DCodeEmitter : CodeEmitter
     public override string transform(const Instruction instruction)
     {
         writeln("\n");
-        gprintln("transform(): "~to!(string)(instruction));
+        DEBUG("transform(): "~to!(string)(instruction));
         transformDepth++;
 
         // The data to emit
@@ -153,27 +157,28 @@ public final class DCodeEmitter : CodeEmitter
         /* VariableAssignmentInstr */
         if(cast(VariableAssignmentInstr)instruction)
         {
-            gprintln("type: VariableAssignmentInstr");
+            DEBUG("type: VariableAssignmentInstr");
 
             VariableAssignmentInstr varAs = cast(VariableAssignmentInstr)instruction;
             Context context = varAs.getContext();
 
-            gprintln("Is ContextNull?: "~to!(string)(context is null));
-            gprintln("Wazza contect: "~to!(string)(context.container));
+            DEBUG("Is ContextNull?: "~to!(string)(context is null));
+            DEBUG("Wazza contect: "~to!(string)(context.container));
             auto typedEntityVariable = typeChecker.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
-            gprintln("Hi"~to!(string)(varAs));
-            gprintln("Hi"~to!(string)(varAs.data));
-            gprintln("Hi"~to!(string)(varAs.data.getInstrType()));
+            DEBUG("Hi"~to!(string)(varAs));
+            DEBUG("Hi"~to!(string)(varAs.data));
+            DEBUG("Hi"~to!(string)(varAs.data.getInstrType()));
 
             // NOTE: For tetsing issue #94 coercion (remove when done)
             string typeName = (cast(Type)varAs.data.getInstrType()).getName();
-            gprintln("VariableAssignmentInstr: The data to assign's type is: "~typeName);
+            DEBUG("VariableAssignmentInstr: The data to assign's type is: "~typeName);
 
 
             /* If it is not external */
             if(!typedEntityVariable.isExternal())
             {
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                // FIXME: Set proper scope type
+                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
 
                 emmmmit = renamedSymbol~" = "~transform(varAs.data)~";";
             }
@@ -186,7 +191,7 @@ public final class DCodeEmitter : CodeEmitter
         /* VariableDeclaration */
         else if(cast(VariableDeclaration)instruction)
         {
-            gprintln("type: VariableDeclaration");
+            DEBUG("type: VariableDeclaration");
 
             VariableDeclaration varDecInstr = cast(VariableDeclaration)instruction;
             Context context = varDecInstr.getContext();
@@ -203,7 +208,8 @@ public final class DCodeEmitter : CodeEmitter
                 //NOTE: We may need to create a symbol table actually and add to that and use that as these names
                 //could get out of hand (too long)
                 // NOTE: Best would be identity-mapping Entity's to a name
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                // FIXME: Set proper scope type
+                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
 
 
                 // Check if the type is a stack-based array
@@ -218,7 +224,7 @@ public final class DCodeEmitter : CodeEmitter
                 if(typedEntityVariable.getAssignment())
                 {
                     Value varAssInstr = varDecInstr.getAssignmentInstr();
-                    gprintln("VarDec(with assignment): My assignment type is: "~varAssInstr.getInstrType().getName());
+                    DEBUG("VarDec(with assignment): My assignment type is: "~varAssInstr.getInstrType().getName());
 
                     // Generate the code to emit
                     emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
@@ -237,7 +243,7 @@ public final class DCodeEmitter : CodeEmitter
         /* LiteralValue */
         else if(cast(LiteralValue)instruction)
         {
-            gprintln("type: LiteralValue");
+            DEBUG("type: LiteralValue");
 
             LiteralValue literalValueInstr = cast(LiteralValue)instruction;
 
@@ -246,7 +252,7 @@ public final class DCodeEmitter : CodeEmitter
         /* FetchValueVar */
         else if(cast(FetchValueVar)instruction)
         {
-            gprintln("type: FetchValueVar");
+            DEBUG("type: FetchValueVar");
 
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
@@ -259,7 +265,8 @@ public final class DCodeEmitter : CodeEmitter
                 //TODO: THis is giving me kak (see issue #54), it's generating name but trying to do it for the given container, relative to it
                 //TODO: We might need a version of generateName that is like generatenamebest (currently it acts like generatename, within)
 
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                // FIXME: Set proper scope type
+                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
 
                 emmmmit = renamedSymbol;
             }
@@ -272,7 +279,7 @@ public final class DCodeEmitter : CodeEmitter
         /* BinOpInstr */
         else if(cast(BinOpInstr)instruction)
         {
-            gprintln("type: BinOpInstr");
+            DEBUG("type: BinOpInstr");
 
             BinOpInstr binOpInstr = cast(BinOpInstr)instruction;
 
@@ -307,7 +314,7 @@ public final class DCodeEmitter : CodeEmitter
                 CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.rhs;
                 assert(cvInstr);
 
-                gprintln("CastedValueInstruction relax setting: Da funk RIGHT ");
+                DEBUG("CastedValueInstruction relax setting: Da funk RIGHT ");
 
                 // Relax the CV-instr to prevent it from emitting explicit cast code
                 cvInstr.setRelax(true);
@@ -318,7 +325,7 @@ public final class DCodeEmitter : CodeEmitter
                 CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.lhs;
                 assert(cvInstr);
 
-                gprintln("CastedValueInstruction relax setting: Da funk LEFT ");
+                DEBUG("CastedValueInstruction relax setting: Da funk LEFT ");
 
                 // Relax the CV-instr to prevent it from emitting explicit cast code
                 cvInstr.setRelax(true);
@@ -329,7 +336,7 @@ public final class DCodeEmitter : CodeEmitter
         /* FuncCallInstr */
         else if(cast(FuncCallInstr)instruction)
         {
-            gprintln("type: FuncCallInstr");
+            DEBUG("type: FuncCallInstr");
 
             FuncCallInstr funcCallInstr = cast(FuncCallInstr)instruction;
             Context context = funcCallInstr.getContext();
@@ -379,7 +386,7 @@ public final class DCodeEmitter : CodeEmitter
         /* ReturnInstruction */
         else if(cast(ReturnInstruction)instruction)
         {
-            gprintln("type: ReturnInstruction");
+            DEBUG("type: ReturnInstruction");
 
             ReturnInstruction returnInstruction = cast(ReturnInstruction)instruction;
             Context context = returnInstruction.getContext();
@@ -398,7 +405,7 @@ public final class DCodeEmitter : CodeEmitter
             IfStatementInstruction ifStatementInstruction = cast(IfStatementInstruction)instruction;
 
             BranchInstruction[] branchInstructions = ifStatementInstruction.getBranchInstructions();
-            gprintln("Holla"~to!(string)(branchInstructions));
+            DEBUG("Holla"~to!(string)(branchInstructions));
 
             string emit;
 
@@ -612,7 +619,7 @@ public final class DCodeEmitter : CodeEmitter
                 else
                 {
                     // TODO: Implement this
-                    gprintln("Non-primitive type casting not yet implemented", DebugType.ERROR);
+                    ERROR("Non-primitive type casting not yet implemented");
                     assert(false);
                 }
             }
@@ -629,10 +636,10 @@ public final class DCodeEmitter : CodeEmitter
         {
             ArrayIndexInstruction arrAssInstr = cast(ArrayIndexInstruction)instruction;
 
-            gprintln("TODO: Implement Pointer-array index emit", DebugType.ERROR);
+            ERROR("TODO: Implement Pointer-array index emit");
 
-            gprintln("ArrayInstr: "~arrAssInstr.getIndexedToInstr().toString());
-            gprintln("ArrayIndexInstr: "~to!(string)(arrAssInstr.getIndexInstr()));
+            DEBUG("ArrayInstr: "~arrAssInstr.getIndexedToInstr().toString());
+            DEBUG("ArrayIndexInstr: "~to!(string)(arrAssInstr.getIndexInstr()));
 
             
             /* Obtain the entity being indexed */
@@ -723,7 +730,8 @@ public final class DCodeEmitter : CodeEmitter
             Variable arrayVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), array.varName);
 
             /* Perform symbol mapping */
-            string arrayName = mapper.symbolLookup(arrayVariable);
+            // FIXME: Set proper scope type
+            string arrayName = mapper.map(arrayVariable, ScopeType.GLOBAL);
 
             /* Obtain the index expression */
             Value indexInstr = stackArrInstr.getIndexInstr();
@@ -737,7 +745,7 @@ public final class DCodeEmitter : CodeEmitter
             emit ~= "]";
 
 
-            gprintln("TODO: Implement Stack-array index emit", DebugType.ERROR);
+            ERROR("TODO: Implement Stack-array index emit");
 
             
             
@@ -764,7 +772,8 @@ public final class DCodeEmitter : CodeEmitter
             Variable arrayVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), arrayName);
 
             /* Perform symbol mapping */
-            string arrayNameMapped = mapper.symbolLookup(arrayVariable);
+            // FIXME: Set proper scope type
+            string arrayNameMapped = mapper.map(arrayVariable, ScopeType.GLOBAL);
 
             /* Obtain the index expression */
             Value indexInstr = stackArrAssInstr.getIndexInstr();
@@ -809,29 +818,125 @@ public final class DCodeEmitter : CodeEmitter
 
     public override void emit()
     {
-        // Emit header comment (NOTE: Change this to a useful piece of text)
-        emitHeaderComment("Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
+        // TODO: We must figure out how we decide to generate
+        // multiple emits here for the many modules within the
+        // `Program`
+        import tlang.compiler.symbols.data : Program;
+        import tlang.compiler.symbols.containers : Module;
+        Program program = this.typeChecker.getProgram();
+        Module[] programsModules = program.getModules();
+        DEBUG("emit() has found modules '"~to!(string)(programsModules)~"'");
 
-        // Emit standard integer header import
-        emitStdint();
+        foreach(Module curMod; programsModules)
+        {
+            DEBUG("Begin emit process for module '"~to!(string)(curMod)~"'...");
 
-        // Emit static allocation code
-        emitStaticAllocations();
+            File modOut;
+            modOut.open(format("%s.c", curMod.getName()), "w");
 
-        // Emit globals
-        emitCodeQueue();
+            // Emit header comment (NOTE: Change this to a useful piece of text)
+            emitHeaderComment(modOut, curMod, "Place any extra information by code generator here"); // NOTE: We can pass a string with extra information to it if we want to
 
-        // Emit function definitions
-        emitFunctionPrototypes();
-        emitFunctionDefinitions();
+            // Emit standard integer header import
+            emitStdint(modOut, curMod);
 
+            // Emit make-available's (externs)
+            emitExterns(modOut, curMod);
+
+            // Emit static allocation code
+            emitStaticAllocations(modOut, curMod);
+
+            // Emit globals
+            emitCodeQueue(modOut, curMod);
+
+            // Emit function definitions
+            emitFunctionPrototypes(modOut, curMod);
+            emitFunctionDefinitions(modOut, curMod);
+
+            // Close (and flush anything not yet written)
+            modOut.close();
+            DEBUG("Emit for '"~to!(string)(curMod)~"'");
+        }
         
         // If enabled (default: yes) then emit entry point (TODO: change later)
-        if(config.getConfig("dgen:emit_entrypoint_test").getBoolean())
+        Module mainModule;
+        Function mainFunction;
+        if(findEntrypoint(mainModule, mainFunction))
         {
-            //TODO: Emit main (entry point)
-            emitEntryPoint();
+            // FIXME: Disable (needed "a", because "w" overwrote previous writes)
+            File entryModOut;
+            entryModOut.open(format("%s.c", mainModule.getName()), "a");
+
+            // Emit entry point
+            emitEntrypoint(entryModOut, mainModule);
+
+            entryModOut.close();
         }
+        else
+        {
+            // If enabled (default: yes) then emit a testing
+            // entrypoint (if one if available for the given
+            // test case)
+            //
+            // In such test cases we assume that the first module
+            // is the one we care about
+            if(config.getConfig("dgen:emit_entrypoint_test").getBoolean())
+            {
+                WARN("Generating a testcase entrypoint for this program");
+
+                Module firstMod = programsModules[0];
+                File firstModOut;
+                firstModOut.open(format("%s.c", firstMod.getName()), "a");
+                
+                // Emit testing entrypoint
+                emitTestingEntrypoint(firstModOut, firstMod);
+
+                firstModOut.close();
+            }
+            else
+            {
+                ERROR("Could not find an entry point module and function. Missing a main() maybe?");
+            }
+        }   
+    }
+
+    /** 
+     * Attempts to find an entry point within the `Program`,
+     * when it is found the ref parameters are filled in
+     * and `true` is returned, else they are left untouched
+     * and `false` is returned
+     *
+     * Params:
+     *   mainModule = the found main `Module` (if any)
+     *   mainFunc = the found main `Function` (if any)
+     * Returns: `true` if an entrypoint is found, else
+     * `false`
+     */
+    private bool findEntrypoint(ref Module mainModule, ref Function mainFunc)
+    {
+        import tlang.compiler.symbols.data : Program, Entity;
+        import tlang.compiler.typecheck.resolution : Resolver;
+        Program program = this.typeChecker.getProgram();
+        Resolver resolver = this.typeChecker.getResolver();
+        foreach(Module curMod; program.getModules())
+        {
+            Entity potentialMain = resolver.resolveWithin(curMod, "main");
+
+            if(potentialMain !is null)
+            {
+                Function potentialMainFunc = cast(Function)potentialMain;
+                if(potentialMainFunc !is null)
+                {
+                    // TODO: Ensure that it is void or int? (Our decision)
+                    // TODO: Ensure arguments (choose what we allow)
+                    mainModule = curMod;
+                    mainFunc = potentialMainFunc;
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /** 
@@ -839,83 +944,292 @@ public final class DCodeEmitter : CodeEmitter
      * file and the generated code file
      *
      * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
      *   headerPhrase = Optional additional string information to add to the header comment
      */
-    private void emitHeaderComment(string headerPhrase = "")
+    private void emitHeaderComment(File modFile, Module mod, string headerPhrase = "")
     {
         // NOTE: We could maybe fetch input fiel info too? Although it would have to be named similiarly in any case
         // so perhaps just appending a `.t` to the module name below would be fine
-        string moduleName = typeChecker.getResolver().generateName(typeChecker.getModule(), typeChecker.getModule()); //TODO: Lookup actual module name (I was lazy)
-        string outputCFilename = file.name();
+        string moduleName = typeChecker.getResolver().generateName(mod, mod); //TODO: Lookup actual module name (I was lazy)
+        string outputCFilename = modFile.name();
 
-        file.write(`/**
+        modFile.write(`/**
  * TLP compiler generated code
  *
  * Module name: `);
-        file.writeln(moduleName);
-        file.write(" * Output C file: ");
-        file.writeln(outputCFilename);
+        modFile.writeln(moduleName);
+        modFile.write(" * Output C file: ");
+        modFile.writeln(outputCFilename);
 
         if(headerPhrase.length)
         {
-            file.write(wrap(headerPhrase, 40, " *\n * ", " * "));
+            modFile.write(wrap(headerPhrase, 40, " *\n * ", " * "));
         }
         
-        file.write(" */\n");
+        modFile.write(" */\n");
+    }
+
+    private struct ModuleExternSet
+    {
+        private Module originator;
+        private Variable[] pubVars;
+        private Function[] pubFns;
+
+        this(Module originator, Variable[] publicVars, Function[] publicFunctions)
+        {
+            this.originator = originator;
+            this.pubVars = publicVars;
+            this.pubFns =  publicFunctions;
+        }
+
+        public Variable[] vars()
+        {
+            return this.pubVars;
+        }
+
+        public Function[] funcs()
+        {
+            return this.pubFns;
+        }
+
+        public Module mod()
+        {
+            return this.originator;
+        }
+    }
+
+    private ModuleExternSet generateExternsForModule(Module mod)
+    {
+        DEBUG(format("Generating extern statements for module '%s'", mod.getName()));
+
+        Entity[] allPubFunc;
+        Entity[] allPubVar;
+
+        import tlang.compiler.typecheck.resolution : Resolver;
+
+        Resolver resolver = this.typeChecker.getResolver();
+
+        auto funcAccPred = derive_functionAccMod(AccessorType.PUBLIC);
+        auto varAccPred = derive_variableAccMod(AccessorType.PUBLIC);
+
+        bool allPubFuncsAndVars(Entity entity)
+        {
+            return funcAccPred(entity) || varAccPred(entity);
+        }
+
+        Entity[] entities;
+        resolver.resolveWithin(mod, &allPubFuncsAndVars, entities);
+        DEBUG(format("Got %d many entities needing extern statements emitted", entities.length));
+        import niknaks.arrays : filter;
+        import niknaks.functional : predicateOf;
+
+        // Filter variables
+        bool onlyVar(Entity entity) { return cast(Variable)entity !is null; }
+        filter!(Entity)(entities, predicateOf!(onlyVar), allPubVar);
+
+        // Filter functions
+        bool onlyFunc(Entity entity) { return cast(Function)entity !is null; }
+        filter!(Entity)(entities, predicateOf!(onlyFunc), allPubFunc);
+        
+        ModuleExternSet modExtSet = ModuleExternSet(mod, cast(Variable[])allPubVar, cast(Function[])allPubFunc);
+        return modExtSet;
+    }
+
+    /** 
+     * TODO: Re-do
+     *
+     * Generates a bunch of extern statements
+     * for symbols such as variables and
+     * function which are to be exposed
+     * in the generated object file such
+     * that they can be linked externally
+     * to other object files.
+     *
+     * The method for this is to resolve
+     * all `Entity`(s) which are either
+     * a `Function` or `Variable` which
+     * have an access modifier of `public`
+     * and lastly which are only at the
+     * module-level in terms of declaration
+     *
+     * Params:
+     *   modOut = the `File` to write the
+     * emitted source code to
+     *   mod = the current `Module` being
+     * processed
+     */
+    private void emitExterns(File modOut, Module mod)
+    {
+        // Find all modules except ourselves
+        import tlang.compiler.typecheck.resolution : Resolver;
+        import niknaks.arrays : filter;
+        Module[] everyoneElse;
+        bool justNotMe(Module modI) { return modI !is mod; }
+        filter!(Module)(this.typeChecker.getProgram().getModules(), predicateOf!(justNotMe), everyoneElse);
+
+        // Now grab each other modules' extern data
+        ModuleExternSet[] externSets;
+        foreach(Module omod; everyoneElse)
+        {
+            externSets ~= generateExternsForModule(omod);
+        }
+
+        /**
+         * Emit for each
+         */
+        foreach(ModuleExternSet mos; externSets)
+        {
+            DEBUG(format("Emitting extern(...) statements for module %s...", mos.mod()));
+
+            // Emit public functions
+            foreach(Function func; mos.funcs())
+            {
+                // Generate signature
+                string signature = generateSignature(func);
+
+                // Decide whether or not `extern` is needed
+                string externPart = func.isExternal() ? "" : "extern ";
+
+                // Generate the emit
+                string externEmit = format("%s%s;", externPart, signature);
+
+                DEBUG(format("FuncExternEmit: '%s'", externEmit));
+                modOut.writeln(externEmit);
+            }
+
+            // Emit public variables
+            foreach(Variable var; mos.vars())
+            {
+                // Generate signature
+                string signature = generateSignature_Variable(var);
+
+                // Decide whether or not `extern` is needed
+                string externPart = var.isExternal() ? "" : "extern ";
+
+                // Generate the emit
+                string externEmit = format("%s%s;", externPart, signature);
+
+                DEBUG(format("VarExternEmit: '%s'", externEmit));
+                modOut.writeln(externEmit);
+            }
+        }
     }
 
     /** 
      * Emits the static allocations provided
      *
      * Params:
-     *   initQueue = The allocation queue to emit static allocations from
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
      */
-    private void emitStaticAllocations()
+    private void emitStaticAllocations(File modOut, Module mod)
     {
-        selectQueue(QueueType.ALLOC_QUEUE);
-        gprintln("Static allocations needed: "~to!(string)(getQueueLength()));
+        // Select the static initializations code queue for
+        // the given module
+        selectQueue(mod, QueueType.ALLOC_QUEUE);
+        DEBUG("Static allocations needed: "~to!(string)(getQueueLength()));
 
-        file.writeln();
+        modOut.writeln();
     }
 
     /** 
      * Emits the function prototypes
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
      */
-    private void emitFunctionPrototypes()
+    private void emitFunctionPrototypes(File modOut, Module mod)
     {
-        gprintln("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount()));
+        DEBUG("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount(mod)));
 
-        Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues();
+        // Get complete map (should we bypass anything in CodeEmitter for this? Guess it is fair?)
+        Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues(mod);
+        string[] functionNames = getFunctionDefinitionNames(mod);
 
-        string[] functionNames = getFunctionDefinitionNames();
-
-        gprintln("WOAH: "~to!(string)(functionNames));
+        DEBUG("WOAH: "~to!(string)(functionNames));
 
         foreach(string currentFunctioName; functionNames)
         {
-            emitFunctionPrototype(currentFunctioName);
-            file.writeln();
+            emitFunctionPrototype(modOut, mod, currentFunctioName);
+            modOut.writeln();
         }
     }
 
     /** 
      * Emits the function definitions
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
      */
-    private void emitFunctionDefinitions()
+    private void emitFunctionDefinitions(File modOut, Module mod)
     {
-        gprintln("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount()));
+        DEBUG("Function definitions needed: "~to!(string)(getFunctionDefinitionsCount(mod)));
 
-        Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues();
+        // Get the function definitions of the current module
+        Instruction[][string] functionBodyInstrs = typeChecker.getFunctionBodyCodeQueues(mod);
 
-        string[] functionNames = getFunctionDefinitionNames();
+        string[] functionNames = getFunctionDefinitionNames(mod);
 
-        gprintln("WOAH: "~to!(string)(functionNames));
+        DEBUG("WOAH: "~to!(string)(functionNames));
 
         foreach(string currentFunctioName; functionNames)
         {
-            emitFunctionDefinition(currentFunctioName);
-            file.writeln();
+            emitFunctionDefinition(modOut, mod, currentFunctioName);
+            modOut.writeln();
         }
+    }
+
+    /** 
+     * Generates the signature emit for a given
+     * variable.
+     *
+     * This is something of the form:
+     *
+     *    `<type> <name>`
+     *
+     * Where the `<name>` has been symbol
+     * mapped.
+     *
+     * Params:
+     *   var = the `Variable`
+     * Returns: a string
+     */
+    private string generateSignature_Variable(Variable var)
+    {
+        string signature;
+
+        // Extract the Variable's type
+        Type varType = typeChecker.getType(var.context.container, var.getType());
+
+        // Decide on the symbol's name
+        string symbolName;
+
+        // If it is NOT extern then map it
+        if(!var.isExternal())
+        {
+            // FIXME: Set proper scope type
+            symbolName = mapper.map(var, ScopeType.GLOBAL);
+        }
+        // If it is extern, then leave it as such
+        else
+        {
+            symbolName = var.getName();
+        }
+
+        // <type> <name>
+        signature = typeTransform(varType)~" "~symbolName;
+
+        // If if is external then it needs `extern ...`
+        if(var.isExternal())
+        {
+            signature = "extern "~signature;
+        }
+
+        return signature;
     }
 
     private string generateSignature(Function func)
@@ -943,7 +1257,8 @@ public final class DCodeEmitter : CodeEmitter
 
                 // Generate the symbol-mapped names for the parameters
                 Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(func, currentParameter.getName()); //TODO: Remove `auto`
-                string renamedSymbol = mapper.symbolLookup(typedEntityVariable);
+                // FIXME: Set proper scope type
+                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
 
 
                 // Generate <type> <parameter-name (symbol mapped)>
@@ -971,38 +1286,59 @@ public final class DCodeEmitter : CodeEmitter
 
     }
 
-    private void emitFunctionPrototype(string functionName)
+    /** 
+     * Emits the function prototype for the `Function`
+     * of the given name
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
+     *   functionName = the name of the function
+     */
+    private void emitFunctionPrototype(File modOut, Module mod, string functionName)
     {
-        selectQueue(QueueType.FUNCTION_DEF_QUEUE, functionName);
+        // Select the function definition code queue by module and function name
+        // TODO: Is this needed for protptype def? I think not (REMOVE PLEASE)
+        selectQueue(mod, QueueType.FUNCTION_DEF_QUEUE, functionName);
 
-        gprintln("emotFunctionDefinition(): Function: "~functionName~", with "~to!(string)(getSelectedQueueLength())~" many instructions");
+        DEBUG("emotFunctionDefinition(): Function: "~functionName~", with "~to!(string)(getSelectedQueueLength())~" many instructions");
     
         //TODO: Look at nested definitions or nah? (Context!!)
         //TODO: And what about methods defined in classes? Those should technically be here too
-        Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(typeChecker.getModule(), functionName); //TODO: Remove `auto`
+        Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(mod, functionName); //TODO: Remove `auto`
         
         // Emit the function signature
-        file.writeln(generateSignature(functionEntity)~";");
+        modOut.writeln(generateSignature(functionEntity)~";");
     }
 
-    private void emitFunctionDefinition(string functionName)
+    /** 
+     * Emits the function definition for the `Function`
+     * of the given name
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
+     *   functionName = the name of the function
+     */
+    private void emitFunctionDefinition(File modOut, Module mod, string functionName)
     {
-        selectQueue(QueueType.FUNCTION_DEF_QUEUE, functionName);
+        // Select the function definition code queue by module and function name
+        selectQueue(mod, QueueType.FUNCTION_DEF_QUEUE, functionName);
 
-        gprintln("emotFunctionDefinition(): Function: "~functionName~", with "~to!(string)(getSelectedQueueLength())~" many instructions");
+        DEBUG("emotFunctionDefinition(): Function: "~functionName~", with "~to!(string)(getSelectedQueueLength())~" many instructions");
     
         //TODO: Look at nested definitions or nah? (Context!!)
         //TODO: And what about methods defined in classes? Those should technically be here too
-        Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(typeChecker.getModule(), functionName); //TODO: Remove `auto`
+        Function functionEntity = cast(Function)typeChecker.getResolver().resolveBest(mod, functionName); //TODO: Remove `auto`
         
         // If the Entity is NOT external then emit the signature+body
         if(!functionEntity.isExternal())
         {
             // Emit the function signature
-            file.writeln(generateSignature(functionEntity));
+            modOut.writeln(generateSignature(functionEntity));
 
             // Emit opening curly brace
-            file.writeln(getCharacter(SymbolType.OCURLY));
+            modOut.writeln(getCharacter(SymbolType.OCURLY));
 
             // Emit body
             while(hasInstructions())
@@ -1010,14 +1346,14 @@ public final class DCodeEmitter : CodeEmitter
                 Instruction curFuncBodyInstr = getCurrentInstruction();
 
                 string emit = transform(curFuncBodyInstr);
-                gprintln("emitFunctionDefinition("~functionName~"): Emit: "~emit);
-                file.writeln("\t"~emit);
+                DEBUG("emitFunctionDefinition("~functionName~"): Emit: "~emit);
+                modOut.writeln("\t"~emit);
                 
                 nextInstruction();
             }
 
             // Emit closing curly brace
-            file.writeln(getCharacter(SymbolType.CCURLY));
+            modOut.writeln(getCharacter(SymbolType.CCURLY));
         }
         // If the Entity IS external then don't emit anything as the signature would have been emitted via a prorotype earlier with `emitPrototypes()`
         else
@@ -1026,35 +1362,71 @@ public final class DCodeEmitter : CodeEmitter
         }
     }
 
-    private void emitCodeQueue()
+    /** 
+     * Emits the code queue of the given `Module`
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
+     */
+    private void emitCodeQueue(File modOut, Module mod)
     {
-        selectQueue(QueueType.GLOBALS_QUEUE);
-        gprintln("Code emittings needed: "~to!(string)(getQueueLength()));
+        // Select the global code queue of the current module
+        selectQueue(mod, QueueType.GLOBALS_QUEUE);
+        DEBUG("Code emittings needed: "~to!(string)(getQueueLength()));
 
         while(hasInstructions())
         {
             Instruction currentInstruction = getCurrentInstruction();
-            file.writeln(transform(currentInstruction));
+            modOut.writeln(transform(currentInstruction));
 
             nextInstruction();
         }
 
-        file.writeln();
+        modOut.writeln();
     }
 
-    private void emitStdint()
+    /** 
+     * Emits the standard imports of the given
+     * `Module`
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
+     */
+    private void emitStdint(File modOut, Module mod)
     {
-        file.writeln("#include<stdint.h>");
+        modOut.writeln("#include<stdint.h>");
     }
 
-    private void emitEntryPoint()
+    private void emitEntrypoint(File modOut, Module mod)
+    {
+        ERROR("IMPLEMENT ME");
+        ERROR("IMPLEMENT ME");
+        ERROR("IMPLEMENT ME");
+        ERROR("IMPLEMENT ME");
+        ERROR("We have NOT YET implemented the init method");
+
+        // modOut.writeln("fok");
+
+        // TODO: In future, for runtime init,
+        // I will want to co-opt main(int, args)
+        // for use for runtime init to then
+        // call ANOTHER REAL main (specified)
+        // by the user
+
+        // Therefore there must be some sort
+        // of renaming stage somewhere
+    }
+
+    private void emitTestingEntrypoint(File modOut, Module mod)
     {
         // TODO: Implement me
 
         // Test for `simple_functions.t` (function call testing)
-        if(cmp(typeChecker.getModule().getName(), "simple_functions") == 0)
+        if(cmp(mod.getName(), "simple_functions") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1070,9 +1442,9 @@ int main()
 }`);
         }
         // Test for `simple_function_recursion_factorial.t` (recursive function call testing)
-        else if(cmp(typeChecker.getModule().getName(), "simple_function_recursion_factorial") == 0)
+        else if(cmp(mod.getName(), "simple_function_recursion_factorial") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1085,9 +1457,9 @@ int main()
 }`);
         }
         // Test for `simple_direct_func_call.t` (statement-level function call)
-        else if(cmp(typeChecker.getModule().getName(), "simple_direct_func_call") == 0)
+        else if(cmp(mod.getName(), "simple_direct_func_call") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1104,9 +1476,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_while") == 0)
+        else if(cmp(mod.getName(), "simple_while") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1118,9 +1490,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_for_loops") == 0)
+        else if(cmp(mod.getName(), "simple_for_loops") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1132,9 +1504,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_pointer") == 0)
+        else if(cmp(mod.getName(), "simple_pointer") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1146,9 +1518,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_array_syntax") == 0)
+        else if(cmp(mod.getName(), "simple_pointer_array_syntax") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1160,9 +1532,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_cast_le") == 0)
+        else if(cmp(mod.getName(), "simple_pointer_cast_le") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1174,9 +1546,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_pointer_malloc") == 0)
+        else if(cmp(mod.getName(), "simple_pointer_malloc") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1188,9 +1560,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_extern") == 0)
+        else if(cmp(mod.getName(), "simple_extern") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1202,9 +1574,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_stack_array_coerce") == 0)
+        else if(cmp(mod.getName(), "simple_stack_array_coerce") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1216,9 +1588,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "complex_stack_array_coerce") == 0)
+        else if(cmp(mod.getName(), "complex_stack_array_coerce") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1233,9 +1605,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_stack_array_coerce_ptr_syntax") == 0)
+        else if(cmp(mod.getName(), "simple_stack_array_coerce_ptr_syntax") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1247,9 +1619,9 @@ int main()
     return 0;
 }`);
         }
-        else if(cmp(typeChecker.getModule().getName(), "simple_stack_arrays4") == 0)
+        else if(cmp(mod.getName(), "simple_stack_arrays4") == 0)
         {
-            file.writeln(`
+            modOut.writeln(`
 #include<stdio.h>
 #include<assert.h>
 int main()
@@ -1262,7 +1634,7 @@ int main()
         }
         else
         {
-            file.writeln(`
+            modOut.writeln(`
 int main()
 {
     return 0;
@@ -1271,39 +1643,137 @@ int main()
         }
     }
 
-
-
-
-
-
-
-
-
-
-
+    /** 
+     * Performs the compilation step
+     *
+     * This requires that the `emit()`
+     * step must have already been completed
+     */
     public override void finalize()
     {
+        import tlang.compiler.symbols.data : Program;
+        Program program = this.typeChecker.getProgram();
+        Module[] programModules = program.getModules();
+
+        string[] srcFiles;
+        string[] objectFiles;
+
+        // import tlang.compiler.configuration;
+        // config.addConfig(ConfigEntry("dgen:afterexit:clean_c_files", true));
+        // config.addConfig(ConfigEntry("dgen:afterexit:clean_obj_files", true));
+
+        scope(exit)
+        {
+            // Clean up all generated C files
+            if(config.hasConfig("dgen:afterexit:clean_c_files") && config.getConfig("dgen:afterexit:clean_c_files").getBoolean())
+            {
+                foreach(string srcFile; srcFiles)
+                {
+                    DEBUG("Cleaning up source file '"~srcFile~"'...");
+                    import std.stdio : remove;
+                    remove(srcFile.ptr);
+
+                    if(!remove(srcFile.ptr))
+                    {
+                        ERROR("There was an error cleaning up source file '"~srcFile~"'"); // TODO: Add error code
+                    }
+                }
+            }
+
+            // Clean up all generates object files
+            if(config.hasConfig("dgen:afterexit:clean_obj_files") && config.getConfig("dgen:afterexit:clean_obj_files").getBoolean())
+            {
+                foreach(string objFile; objectFiles)
+                {
+                    DEBUG("Cleaning up object file '"~objFile~"'...");
+                    import std.stdio : remove;
+                    remove(objFile.ptr);
+
+                    if(!remove(objFile.ptr))
+                    {
+                        ERROR("There was an error cleaning up object file '"~objFile~"'"); // TODO: Add error code
+                    }
+                }
+            }
+        }
+
         try
         {
             string systemCompiler = config.getConfig("dgen:compiler").getText();
-            gprintln("Using system C compiler '"~systemCompiler~"' for compilation");
-
-            string[] compileArgs = [systemCompiler, "-o", "tlang.out", file.name()];
+            INFO("Using system C compiler '"~systemCompiler~"' for compilation");
 
             // Check for object files to be linked in
             string[] objectFilesLink;
             if(config.hasConfig("linker:link_files"))
             {
                 objectFilesLink = config.getConfig("linker:link_files").getArray();
-                gprintln("Object files to be linked in: "~to!(string)(objectFilesLink));
+                INFO("Object files to be linked in: "~to!(string)(objectFilesLink));
             }
             else
             {
-                gprintln("No files to link in");
+                INFO("No files to link in");
             }
-            
-            Pid ccPID = spawnProcess(compileArgs~objectFilesLink);
 
+            // Total compilation time
+            Duration total = Duration.zero();
+
+            // TODO: Do for-each generation of `.o` files here with `-c`
+            foreach(Module curMod; programModules)
+            {
+                string modFileSrcPath = format("%s.c", curMod.getName());
+                srcFiles ~= modFileSrcPath;
+                string modFileObjPath = format("%s.o", curMod.getName());
+
+                string[] args = [systemCompiler, "-c", modFileSrcPath, "-o", modFileObjPath];
+
+                INFO("Compiling now with arguments: "~to!(string)(args));
+
+                StopWatch watch = StopWatch(AutoStart.yes);
+                Pid ccPID = spawnProcess(args);
+                int code = wait(ccPID);
+                if(code)
+                {
+                    //NOTE: Make this a TLang exception
+                    throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
+                }
+
+                Duration compTime = watch.peek();
+                INFO(format("Compiled %s in %sms", curMod.getName(), compTime.total!("msecs")()));
+                total = dur!("msecs")(total.total!("msecs")()+compTime.total!("msecs")());
+
+                // Only add it to the list of files if it was generated
+                // (this guards against the clean up routines spitting out errors
+                // for object files which were never generated in the first place)
+                objectFiles ~= modFileObjPath;
+            }
+
+            INFO(format("Total compilation time took %s", total));
+
+            // Now determine the entry point module
+            // Module entryModule;
+            // Function _;
+            // if(findEntrypoint(entryModule, _))
+            // {
+                
+            // }
+
+            // Perform linking
+            string[] args = [systemCompiler];
+
+            // Tack on all generated object files
+            args ~= objectFiles;
+
+            // Tack on any objects to link that were specified in Config
+            args ~= objectFilesLink;
+
+            // Tack on the output filename (TODO: Fix the output file name)
+            args ~= ["-o", "./tlang.out"]; 
+
+            
+
+            // Now link all object files (the `.o`'s) together
+            // and perform linking
+            Pid ccPID = spawnProcess(args);
             int code = wait(ccPID);
 
             if(code)
@@ -1314,8 +1784,83 @@ int main()
         }
         catch(ProcessException e)
         {
-            gprintln("NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?", DebugType.ERROR);
+            ERROR("NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?");
             assert(false);
         }
     }
+}
+
+import tlang.compiler.symbols.data : Entity, AccessorType;
+import niknaks.functional : Predicate, predicateOf;
+
+/** 
+ * Derives a closure predicate which captires
+ * the provided access modifier type and will
+ * apply a logic which disregards any non-`Function`
+ * `Entity`, however if a `Function`-typed entity
+ * IS found then it will determine if its access
+ * modifier matches that of the provided one
+ *
+ * Params:
+ *   accModType = the access modifier to filter
+ * by
+ *
+ * Returns: a `Predicate!(Entity)`
+ */
+private Predicate!(Entity) derive_functionAccMod(AccessorType accModType)
+{
+    bool match(Entity entity)
+    {
+        Function func = cast(Function)entity;
+
+        // Disregard any non-Function
+        if(func is null)
+        {
+            return false;
+        }
+        // Onyl care about those with a matching
+        // modifier
+        else
+        {
+            return func.getAccessorType() == accModType;
+        }
+    }
+
+    return &match;
+}
+
+/** 
+ * Derives a closure predicate which captires
+ * the provided access modifier type and will
+ * apply a logic which disregards any non-`Variable`
+ * `Entity`, however if a `Variable`-typed entity
+ * IS found then it will determine if its access
+ * modifier matches that of the provided one
+ *
+ * Params:
+ *   accModType = the access modifier to filter
+ * by
+ *
+ * Returns: a `Predicate!(Entity)`
+ */
+private Predicate!(Entity) derive_variableAccMod(AccessorType accModType)
+{
+    bool match(Entity entity)
+    {
+        Variable var = cast(Variable)entity;
+
+        // Disregard any non-Variable
+        if(var is null)
+        {
+            return false;
+        }
+        // Onyl care about those with a matching
+        // modifier
+        else
+        {
+            return var.getAccessorType() == accModType;
+        }
+    }
+
+    return &match;
 }
