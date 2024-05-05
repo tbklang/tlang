@@ -1993,6 +1993,61 @@ public final class Parser
         /* Check for semi-colon (var dec) */
         else if (symbolType == SymbolType.SEMICOLON)
         {
+            Entity varEnt;
+            AccessorType potAccMod = AccessorType.PRIVATE;
+            InitScope potInitScp = InitScope.UNKNOWN;
+
+            if(hasModifierItems())
+            {
+                ModifierItem moditem = peekModifier();
+
+                if(moditem.isAccessModifier())
+                {
+                    if(allowModifiers)
+                    {
+                        potAccMod = popModifierFront().getAccessModifier();
+                    }
+                    else
+                    {
+                        expect("Access modifiers are not allowed on variables in this context");
+                    }
+                }
+                else if(moditem.isInitScope())
+                {
+                    if(allowsInitScopeOnDec)
+                    {
+                        potInitScp = popModifierFront().getInitScope();
+                    }
+                    else
+                    {
+                        expect("Init scopes are not allowed on variables in this context");
+                    }
+                }
+
+                // Only allow something to follow if we have [ACC_MOD, ...]
+                // where we are the `...`
+                if(hasModifierItems() && potAccMod != AccessorType.UNKNOWN)
+                {
+                    moditem = peekModifier();
+
+                    if(moditem.isInitScope())
+                    {
+                        if(allowsInitScopeOnDec)
+                        {
+                            potInitScp = popModifierFront().getInitScope();
+                        }
+                        else
+                        {
+                            expect("Init scopes are not allowed on variables in this context");
+                        }
+                    }
+                    else
+                    {
+                        expect("An initscope is expected after an access modifier");
+                    }
+                }
+            }
+
             // Only continue if variable declarations are allowed
             if(allowVarDec)
             {
@@ -2000,16 +2055,86 @@ public final class Parser
                 DEBUG("Semi: "~to!(string)(lexer.getCurrentToken()));
                 WARN("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")");
 
-                generated = new Variable(type, identifier);
+                varEnt = new Variable(type, identifier);
+                generated = varEnt;
             }
             else
             {
                 expect("Variables declarations are not allowed.");
             }
+
+            /**
+             * Set any ACC_MOD and INIT_SCOPE
+             */
+            if(potAccMod != AccessorType.UNKNOWN)
+            {
+                DEBUG(format("Setting explict access modifier of %s to %s", potAccMod, varEnt));
+                varEnt.setAccessorType(potAccMod);
+            }
+            if(potInitScp != InitScope.UNKNOWN)
+            {
+                DEBUG(format("Setting explicit init scope modifier of %s to %s", potInitScp, varEnt));
+                varEnt.setModifierType(potInitScp);
+            }
         }
         /* Check for `=` (var dec) */
         else if (symbolType == SymbolType.ASSIGN && (arrayIndexing == false))
         {
+            Entity varEnt;
+            AccessorType potAccMod = AccessorType.PRIVATE;
+            InitScope potInitScp = InitScope.UNKNOWN;
+
+            if(hasModifierItems())
+            {
+                ModifierItem moditem = peekModifier();
+
+                if(moditem.isAccessModifier())
+                {
+                    if(allowModifiers)
+                    {
+                        potAccMod = popModifierFront().getAccessModifier();
+                    }
+                    else
+                    {
+                        expect("Access modifiers are not allowed on variables in this context");
+                    }
+                }
+                else if(moditem.isInitScope())
+                {
+                    if(allowsInitScopeOnDec)
+                    {
+                        potInitScp = popModifierFront().getInitScope();
+                    }
+                    else
+                    {
+                        expect("Init scopes are not allowed on variables in this context");
+                    }
+                }
+
+                // Only allow something to follow if we have [ACC_MOD, ...]
+                // where we are the `...`
+                if(hasModifierItems() && potAccMod != AccessorType.UNKNOWN)
+                {
+                    moditem = peekModifier();
+
+                    if(moditem.isInitScope())
+                    {
+                        if(allowsInitScopeOnDec)
+                        {
+                            potInitScp = popModifierFront().getInitScope();
+                        }
+                        else
+                        {
+                            expect("Init scopes are not allowed on variables in this context");
+                        }
+                    }
+                    else
+                    {
+                        expect("An initscope is expected after an access modifier");
+                    }
+                }
+            }
+
             // Only continue if variable declarations are allowed
             if(allowVarDec)
             {
@@ -2032,7 +2157,8 @@ public final class Parser
 
                     varAssign.setVariable(variable);
 
-                    generated = variable;
+                    varEnt = variable;
+                    generated = varEnt;
                 }
                 else
                 {
@@ -2042,6 +2168,20 @@ public final class Parser
             else
             {
                 expect("Variables declarations are not allowed.");
+            }
+
+            /**
+             * Set any ACC_MOD and INIT_SCOPE
+             */
+            if(potAccMod != AccessorType.UNKNOWN)
+            {
+                DEBUG(format("Setting explict access modifier of %s to %s", potAccMod, varEnt));
+                varEnt.setAccessorType(potAccMod);
+            }
+            if(potInitScp != InitScope.UNKNOWN)
+            {
+                DEBUG(format("Setting explicit init scope modifier of %s to %s", potInitScp, varEnt));
+                varEnt.setModifierType(potInitScp);
             }
         }
         /* Check for `=` (array indexed assignment) */

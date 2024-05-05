@@ -4,7 +4,7 @@ import niks.c, b;
 
 public ubyte j = 0;
 
-int ident(int i)
+public int ident(int i)
 {
 	c.k();
 	return i;
