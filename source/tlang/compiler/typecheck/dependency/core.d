@@ -451,35 +451,70 @@ public class DNodeGenerator
         throw new DependencyException(DependencyError.GENERAL_ERROR, message);
     }
 
-
     /** 
-     * Checks whether you can access a given entity
-     * via the current context; that being the
-     * container the reference is being made from
+     * Performs an access check to the given
+     * entity but from the accessing-environment
+     * of the provided statement
      *
      * Params:
-     *   yourContainer = the `Container` the reference
-     * is being made from
-     *   toCheck = the `Entity` being referenced, of
-     * which we are meant to perform the check against
-     * Returns: `true` if access is allowed, `false`
-     * if not
+     *   stmtCtx = the `Statement` to derive the
+     * access environment from
+     *   referent = the `Entity` being referred
+     * to
+     *   ignoreAccessModifiers = is we should
+     * ignore thie check entirely (default: `false`)
+     * Returns: `true` if allowed, `false`
+     * otherwise
      */
-    private bool accessCheck(Container yourContainer, Entity toCheck)
+    private bool accessCheck
+    (
+        Statement stmtCtx, Entity referent,
+        bool ignoreAccessModifiers = false
+    )
     {
-        // Determine if `toCheck` resides within `yourContainer`
-        // (somewhere along the path as one of its immediate
-        // or non-immediate children) and if so then return `true`.
-        // If NOT, then check if the access modifier of the entity
-        // is public and then return `true`, else return `false`
-        
-        if(resolver.isDescendant(yourContainer, toCheck))
+        // If ignoring mode then always allow accesses
+        if(ignoreAccessModifiers)
         {
             return true;
         }
+
+        // Find the top-most container (the module)
+        // of the incoming statement, this determines
+        // the accessing-environment
+        Container accEnv = resolver.findContainerOfType(Module.classinfo, stmtCtx);
+        assert(accEnv);
+
+        // If the referent is in the same module
+        // (TODO: See if we should do respecting WITHIN the same module)
+        if(resolver.isDescendant(accEnv, referent))
+        {
+            return true;
+        }
+        // Else, check if public
         else
         {
-            return toCheck.getAccessorType() == AccessorType.PUBLIC;
+            return referent.getAccessorType() == AccessorType.PUBLIC;
+        }
+    }
+
+    private void accessCheckAuto
+    (
+        Statement stmtCtx, Entity referent,
+        bool ignoreAccessModifiers = false
+    )
+    {
+        if(accessCheck(stmtCtx, referent, ignoreAccessModifiers))
+        {
+            DEBUG("Access check passed for accEnv: ", stmtCtx, " with referentEnt: ", referent);
+        }
+        else
+        {
+            DEBUG("Access check FAILED for accEnv: ", stmtCtx, " with referentEnt: ", referent);
+            // TODO: Make the error below way nicer, also maybe include module idk
+            // expect("Cannot access '"~to!(string)(referent)~"' from statement '"~to!(string)(stmtCtx));
+
+            import tlang.compiler.typecheck.dependency.exceptions : AccessViolation;
+            throw new AccessViolation(stmtCtx, referent);
         }
     }
 
@@ -651,6 +686,9 @@ public class DNodeGenerator
             /* TODO: We need to fetch the cached function definition here and call it */
             Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
             assert(funcEntity);
+
+            // Access check
+            accessCheckAuto(exp, funcEntity);
             
             // FIXME: The below is failing (we probably need a forward look ahead?)
             // OR use the addFuncDef list?
@@ -755,6 +793,9 @@ public class DNodeGenerator
             if(namedEntity)
             {
                 /* FIXME: Below assumes basic variable declarations at module level, fix later */
+
+                // Access check
+                accessCheckAuto(exp, namedEntity);
 
                 /** 
                  * If `namedEntity` is a `Variable`
