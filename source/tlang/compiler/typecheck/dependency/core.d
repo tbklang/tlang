@@ -12,7 +12,7 @@ import tlang.compiler.typecheck.exceptions;
 import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
-import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
+import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError, AccessViolation;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
@@ -478,25 +478,45 @@ public class DNodeGenerator
             return true;
         }
 
-        // Find the top-most container (the module)
-        // of the incoming statement, this determines
-        // the accessing-environment
-        Container accEnv = resolver.findContainerOfType(Module.classinfo, stmtCtx);
-        assert(accEnv);
+        // Container of the accessing-environment
+        Container accCntnr = stmtCtx.parentOf();
 
-        // If the referent is in the same module
-        // (TODO: See if we should do respecting WITHIN the same module)
-        if(resolver.isDescendant(accEnv, referent))
+        // Container of the referent
+        Container refCntnr = referent.parentOf();
+
+        // If they are in the same container (exactly)
+        // then access should be allowed, irrespective
+        // of access modifiers
+        if(refCntnr == accCntnr)
         {
             return true;
         }
-        // Else, check if public
+        // If the accessing-environment is in
+        // a container that is descendant
+        // of that of the referent's,
+        // in such a case access modifiers
+        // TOO can be ignored
+        else if(resolver.isDescendant(refCntnr, cast(Entity)accCntnr))
+        {
+            return true;
+        }
+        // If not, then base the check on access modifiers
         else
         {
+            // Obtain the access modifier of the referent
+            AccessorType accMod = referent.getAccessorType();
+
             return referent.getAccessorType() == AccessorType.PUBLIC;
         }
     }
 
+    /** 
+     * Throws an exception if there
+     * would be an access violation
+     * performing the given access
+     *
+     * See_Also: `accessCheck`
+     */
     private void accessCheckAuto
     (
         Statement stmtCtx, Entity referent,
@@ -510,10 +530,6 @@ public class DNodeGenerator
         else
         {
             DEBUG("Access check FAILED for accEnv: ", stmtCtx, " with referentEnt: ", referent);
-            // TODO: Make the error below way nicer, also maybe include module idk
-            // expect("Cannot access '"~to!(string)(referent)~"' from statement '"~to!(string)(stmtCtx));
-
-            import tlang.compiler.typecheck.dependency.exceptions : AccessViolation;
             throw new AccessViolation(stmtCtx, referent);
         }
     }
