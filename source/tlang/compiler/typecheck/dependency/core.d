@@ -462,7 +462,7 @@ public class DNodeGenerator
      *   referent = the `Entity` being referred
      * to
      *   ignoreAccessModifiers = is we should
-     * ignore thie check entirely (default: `false`)
+     * ignore this check entirely (default: `false`)
      * Returns: `true` if allowed, `false`
      * otherwise
      */
