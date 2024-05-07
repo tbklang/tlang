@@ -1505,13 +1505,12 @@ public class DNodeGenerator
         /* If this is a Module then it must become the root */
         if(cast(Module)namedContainer)
         {
-            root = node;
+            
         }
         /* NOTE: 1st October: Just for now ignore funciton stuff InitScvope? */
         else if(cast(Function)namedContainer)
         {
             ignoreInitScope=false;
-            root=pool(cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, namedContainer));
         }
 
 
