@@ -1223,9 +1223,9 @@ public class DNodeGenerator
             func.context = context;
 
             /* Add funtion definition */
-            DEBUG("Hello"); // TODO: Check `root`, just use findContainerOfType
-            // Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func));
-            this.funcDefStore.addFunctionDef(cast(Module)root.entity, func);
+            DEBUG("Hello");
+            Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func);
+            this.funcDefStore.addFunctionDef(owner, func);
 
             return null;
         }
