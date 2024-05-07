@@ -451,9 +451,6 @@ public class DNodeGenerator
         throw new DependencyException(DependencyError.GENERAL_ERROR, message);
     }
 
-    public DNode root;
-
-
     public DNode generate()
     {
         DNode[] moduleDNodes;
