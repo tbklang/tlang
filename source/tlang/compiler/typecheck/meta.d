@@ -57,11 +57,11 @@ public class MetaProcessor
         {
             DEBUG("MetaProcessor: Examining AST node '"~curStmt.toString()~"'...");
 
+            // Perform alias expression replacement
+            doAliasExpression(container, curStmt);
+
             // Perform replacement of all type alises to concrete types, such as `size_t`
             doTypeAlias(container, curStmt);
-
-            // Perform alias expression replacement (TODO: Should this be here?)
-            doAliasExpression(container, curStmt);
 
             /**
              * Search for any `sizeof(<ident_type>)` expressions
