@@ -68,3 +68,87 @@ public interface MCloneable
      */
     public Statement clone(Container newParent = null);
 }
+
+/** 
+ * Any AST type which implements this
+ * then will provide the ability to
+ * compare the AST nodes within itself
+ * (what that means is up to the implementing
+ * node)
+ */
+public interface MComparable
+{
+    /** 
+     * Compares the two nodes and reports
+     * on the position of `thiz` relative
+     * to `that`.
+     *
+     * Params:
+     *   thiz = the first AST node
+     *   that = the second AST node
+     * Returns: a `Pos`
+     */
+    public Pos compare(Statement thiz, Statement that);
+
+    /** 
+     * Compares the two statements and returns
+     * a value depending on which AST node
+     * precedes the other.
+     *
+     * Params:
+     *   thiz = the first AST node 
+     *   that = the second AST node
+     * Returns: `true` if `thiz` comes before
+     * `that`, `false` otherwise
+     */
+    public final bool isBefore(Statement thiz, Statement that)
+    {
+        return compare(thiz, that) == Pos.BEFORE;
+    }
+
+    /** 
+     * Compares the two statements and returns
+     * a value depending on which AST node
+     * proceeds the other.
+     *
+     * Params:
+     *   thiz = the first AST node 
+     *   that = the second AST node
+     * Returns: `true` if `thiz` comes after
+     * `that`, `false` otherwise
+     */
+    public final bool isAfter(Statement thiz, Statement that)
+    {
+        return compare(thiz, that) == Pos.AFTER;
+    }
+
+    public enum Pos
+    {
+        /**
+         * If the position is the
+         * first node coming before
+         * the other
+         */
+        BEFORE,
+
+        /**
+         * If the position is the
+         * first node coming after
+         * the other
+         */
+        AFTER,
+
+        /**
+         * If both nodes are infact
+         * the same node
+         */
+        SAME,
+
+        /** 
+         * To be returned on an error
+         * dependant on implementation
+         */
+        ERROR
+    }
+
+}
