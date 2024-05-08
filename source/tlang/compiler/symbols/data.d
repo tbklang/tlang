@@ -73,8 +73,42 @@ public final class Program : Container
 
     public bool replace(Statement thiz, Statement that)
     {
-        // TODO: Implement me
-        return false;
+        /* We cannot replace ourselves */
+        if(thiz == this)
+        {
+            return false;
+        }
+        /* If not ourselves, then search our body */
+        else
+        {
+            /* Check for module replacement */
+            for(size_t i = 0; i < this.modules.length; i++)
+            {
+                Module mod = this.modules[i];
+
+                /* If we are replacing a module */
+                if(thiz == mod)
+                {
+                    this.modules[i] = cast(Module)that;
+                    that.parentTo(this);
+                    return true;
+                }
+            }
+
+            /* Check for replacement WITHIN each module */
+            for(size_t i = 0; i < this.modules.length; i++)
+            {
+                Module mod = this.modules[i];
+
+                /* If we are replacing WITHIN a module */
+                if(mod.replace(thiz, that))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 
     public void addStatement(Statement statement)
