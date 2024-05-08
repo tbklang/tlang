@@ -9,9 +9,13 @@ int cnt()
 
 alias expr = cnt();
 
+alias inner = 1;
+
 int main()
 {
+	alias inner = 0;
 	int i = expr;
 	int p = expr;
-	return i+p;
+	int o = inner;
+	return i+p+o;
 }
