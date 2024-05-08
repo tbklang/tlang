@@ -9,6 +9,8 @@ import tlang.compiler.typecheck.core;
 import tlang.misc.logging;
 import std.conv : to;
 import tlang.compiler.configuration;
+import tlang.compiler.symbols.aliases : AliasDeclaration;
+import std.string : format;
 
 /** 
  * The `MetaProcessor` is used to do a pass over a `Container`
@@ -57,6 +59,9 @@ public class MetaProcessor
 
             // Perform replacement of all type alises to concrete types, such as `size_t`
             doTypeAlias(container, curStmt);
+
+            // Perform alias expression replacement (TODO: Should this be here?)
+            doAliasExpression(container, curStmt);
 
             /**
              * Search for any `sizeof(<ident_type>)` expressions
@@ -117,6 +122,182 @@ public class MetaProcessor
                 process(cast(Container)curStmt);
             }
         }
+    }
+
+    // FIXME: This should climb upwards and search for the stuff
+    private AliasDeclaration[] obtainAliases(Container container)
+    {
+        AliasDeclaration[] aliases;
+        foreach(Statement stmt; container.getStatements())
+        {
+            AliasDeclaration aliasDecl = cast(AliasDeclaration)stmt;
+            if(aliasDecl)
+            {
+                DEBUG(format("Found an alias declared as '%s'", aliasDecl));
+                aliases ~= aliasDecl;
+            }
+        }
+
+        return aliases;
+    }
+
+    import niknaks.arrays : filter;
+    import niknaks.functional : predicateOf, Predicate;
+    import tlang.compiler.symbols.data : VariableExpression;
+    import std.string : cmp;
+
+    private void doAliasExpression(Container container, Statement curStmt)
+    {
+        bool oldCode = false;
+
+        import tlang.compiler.typecheck.resolution : Resolver;
+        Resolver resolver = tc.getResolver();
+
+        // Discover all declared aliases in current container
+        // TODO: Ordering might be a parameter to set (as this discovers alias declared even AFTER they are used)
+        bool isAliasDecl(Statement stmt)
+        {
+            return cast(AliasDeclaration)stmt !is null;
+        }
+        Statement[] declaredAliasesStmts;
+        resolver.collectUpwards(container, predicateOf!(isAliasDecl), declaredAliasesStmts);
+        AliasDeclaration[] declaredAliases = cast(AliasDeclaration[])declaredAliasesStmts;
+
+        DEBUG(format("All aliases available from (cntnr:%s, stmt=%s) upwards: %s", container, curStmt, declaredAliases));
+
+        if(!oldCode)
+        {
+            // Find any VariableExpression(s) from curStmt (TODO: should be container or nah?)
+            MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
+            if(searchableStmt)
+            {
+                VariableExpression[] foundStmts = cast(VariableExpression[])searchableStmt.search(VariableExpression.classinfo);
+
+                // Now, for all VariableExpressions, do
+                foreach(VariableExpression varExp; foundStmts)
+                {
+                    // Extract the name/referent, then match all aliases
+                    // that have the same name
+                    // (these should have been generated from closest to
+                    // furthest when obtained from the resolver, so any
+                    // tie breaking would be the logically closest 
+                    // alias with the same name)
+                    AliasDeclaration[] matched;
+                    string varExpIdent = varExp.getName();
+                    bool filterAliasesToName(AliasDeclaration aliasDecl)
+                    {
+                        return cmp(aliasDecl.getName(), varExpIdent) == 0;
+                    }    
+                    filter!(AliasDeclaration)(declaredAliases, predicateOf!(filterAliasesToName), matched);
+
+                    DEBUG(format("Matched aliases for VarExp '%s': %s", varExpIdent, matched));
+
+                    // If there is no match then it isn't an alias referent
+                    // hence we only care IF it IS an alias referent
+                    if(matched.length)
+                    {
+                        // Nearest matched alias
+                        AliasDeclaration nearestAlias = matched[0];
+
+                        // Now extract the alias's expression and clone it
+                        // and make its parent the VariableExpression's
+                        // (as it will take its exact place)
+                        MCloneable cloneableExpr = cast(MCloneable)nearestAlias.getExpr();
+                        assert(cloneableExpr);
+                        Expression clonedExpr = cast(Expression)cloneableExpr.clone(varExp.parentOf());
+
+                        // Now, from the current container, replace the
+                        // VariableExpression with the cloned expression
+                        MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
+                        assert(containerRepl);
+                        assert(containerRepl.replace(varExp, clonedExpr));
+
+                    }
+                }
+            }
+            else
+            {
+                DEBUG("Skipping non MStatementSearchable node");
+            }
+        }
+        else
+        {
+            // TODO: After finding we must then remove the aliss declaration itself
+            DEBUG(format("doAliasExpression(%s, %s): Enter", container, curStmt));
+
+            /**
+            * Search for any `VariableExpression` expressions
+            * and replace them with an `Expression` derived
+            * from one of our aliases
+            */
+            if(cast(MStatementSearchable)curStmt && cast(MStatementReplaceable)curStmt)
+            {
+                MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
+                VariableExpression[] foundStmts = cast(VariableExpression[])searchableStmt.search(VariableExpression.classinfo);
+                
+                DEBUG("All VarExp in '", curStmt, "': ", foundStmts);
+
+                foreach(VariableExpression varExp; foundStmts)
+                {
+                    ERROR("Sherlock is inspecting VarExp: ", varExp, cast(void*)varExp);
+                    // TODO: Cache the list of declared aliases (instead of searching for them every-single-darn-time)
+                    AliasDeclaration[] aliases = obtainAliases(container);
+
+                    string varExpIdent = varExp.getName();
+                    bool filterAliasesToName(AliasDeclaration aliasDecl)
+                    {
+                        return cmp(aliasDecl.getName(), varExpIdent) == 0;
+                    }
+
+                    AliasDeclaration[] matched;
+                    filter!(AliasDeclaration)(aliases, predicateOf!(filterAliasesToName), matched);
+                    
+                    // TODO: ENsure there is only ever one
+                    if(matched.length)
+                    {
+                        AliasDeclaration aliasDeclMatch = matched[0];
+                        DEBUG("Filtered down aliases to: ", matched);
+                        DEBUG("Proccing: ", curStmt);
+                        DEBUG("VariableExpression with name: ", varExp);
+
+                        /** 
+                        * Traverse down from the `Container` we are processing
+                        * and then apply the replacement by swapping out the
+                        * `VariableExpression` with the `Expression` referred
+                        * to by the alias.
+                        *
+                        * Also, before this, make sure you clone said expression
+                        */
+                        MCloneable cloneable = cast(MCloneable)aliasDeclMatch.getExpr();
+                        DEBUG("Cloned alias expression to: ", cloneable);
+                        assert(cloneable);
+                        MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
+                        assert(containerRepl.replace(varExp, cloneable.clone(varExp.parentOf())));
+                        DEBUG("Parent: ", varExp.parentOf());
+                        
+                    }
+                    else
+                    {
+                        WARN("Skipping?");
+                    }
+                }
+            }
+
+            if(cast(Function)curStmt)
+            {
+                import tlang.compiler.symbols.data : VariableAssignment;
+                MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
+                VariableAssignment[] foundStmts = cast(VariableAssignment[])searchableStmt.search(VariableAssignment.classinfo);
+                DEBUG("Vars now: ", foundStmts);
+                foreach(i; foundStmts)
+                {
+                    DEBUG(i.getExpression());
+                }
+            }
+        }
+       
+
+        
     }
 
     /** 
