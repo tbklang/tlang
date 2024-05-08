@@ -12,6 +12,7 @@ import tlang.compiler.parsing.exceptions;
 import tlang.compiler.core : Compiler;
 import std.string : format;
 import tlang.compiler.modman;
+import tlang.compiler.symbols.aliases;
 
 // TODO: Technically we could make a core parser etc
 public final class Parser
@@ -2324,6 +2325,43 @@ public final class Parser
         }
     }
 
+    /** 
+     * Parses an alias declaration
+     *
+     * Returns: an `AliasDeclaration`
+     */
+    private AliasDeclaration parseAliasDeclaration()
+    {
+        WARN("parseAliasDeclaration(): Enter");
+
+        AliasDeclaration aliasDecl;
+
+        /* Pop off the `alias` */
+        lexer.nextToken();
+
+        /* Consume the alias's name */
+        Token tok = lexer.getCurrentToken();
+        expect(SymbolType.IDENT_TYPE, tok);
+        string aliasName = tok.getToken();
+
+        /* Next token, expect `=` */
+        lexer.nextToken();
+        expect(SymbolType.ASSIGN, lexer.getCurrentToken());
+
+        /* Now consume an expression */
+        lexer.nextToken();
+        Expression aliasExpr = parseExpression();
+        expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+        lexer.nextToken();
+
+        /* Construct an alias with the name and expression */
+        aliasDecl = new AliasDeclaration(aliasName, aliasExpr);
+
+        WARN("parseAliasDeclaration(): Leave");
+
+        return aliasDecl;
+    }
+
     // TODO: We need to add `parseComment()`
     // support here (see issue #84)
     // TODO: This ic currently dead code and ought to be used/implemented
@@ -2404,6 +2442,11 @@ public final class Parser
         {
             ERROR("COMMENTS NOT YET PROPERLY SUPOORTED");
             parseComment();
+        }
+        /* If it is an alias declaration */
+        else if(symbol == SymbolType.ALIAS)
+        {
+            statement = parseAliasDeclaration();
         }
         /* Error out */
         else
@@ -2793,6 +2836,11 @@ public final class Parser
             {
                 ERROR("COMMENTS NOT YET PROPERLY SUPOORTED");
                 parseComment();
+            }
+            /* If it is an alias declaration */
+            else if(symbol == SymbolType.ALIAS)
+            {
+                modulle.addStatement(parseAliasDeclaration());
             }
             else
             {
