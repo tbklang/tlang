@@ -144,21 +144,6 @@ public class MetaProcessor
 
     private void doAliasExpression(Container container, Statement curStmt)
     {
-        bool oldCode = false;
-
-        import tlang.compiler.typecheck.resolution : Resolver;
-        Resolver resolver = tc.getResolver();
-
-        // // Discover all declared aliases in current container
-        // // TODO: Ordering might be a parameter to set (as this discovers alias declared even AFTER they are used)
-        // bool isAliasDecl(Statement stmt)
-        // {
-        //     return cast(AliasDeclaration)stmt !is null;
-        // }
-        // Statement[] declaredAliasesStmts;
-        // resolver.collectUpwards(container, predicateOf!(isAliasDecl), declaredAliasesStmts);
-        // AliasDeclaration[] declaredAliases = cast(AliasDeclaration[])declaredAliasesStmts;
-
         DEBUG(format("doAliasExpression(cntnr:%s, stmt=%s)", container, curStmt));
 
         // Find any VariableExpression(s) from curStmt (TODO: should be container or nah?)
