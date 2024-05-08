@@ -11,7 +11,7 @@ alias expr = cnt();
 
 int main()
 {
-	int i = cnt();
-	int p = cnt();
+	int i = expr;
+	int p = expr;
 	return i+p;
 }
