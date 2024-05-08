@@ -129,6 +129,19 @@ public class MetaProcessor
     import tlang.compiler.symbols.data : VariableExpression;
     import std.string : cmp;
 
+    import tlang.compiler.typecheck.resolution : Resolver;
+        
+    private AliasDeclaration[] findAliasesFrom(Container from)
+    {
+        Resolver resolver = tc.getResolver(); // TODO: Remove from here, make a field
+
+        // Predicate to only find aliases (amongst all the different types of statements)
+        bool isAliasDecl(Statement stmt) { return cast(AliasDeclaration)stmt !is null; }
+        Statement[] declaredAliasesStmts;
+        resolver.collectUpwards(from, predicateOf!(isAliasDecl), declaredAliasesStmts);
+        return cast(AliasDeclaration[])declaredAliasesStmts;
+    }
+
     private void doAliasExpression(Container container, Statement curStmt)
     {
         bool oldCode = false;
@@ -136,17 +149,17 @@ public class MetaProcessor
         import tlang.compiler.typecheck.resolution : Resolver;
         Resolver resolver = tc.getResolver();
 
-        // Discover all declared aliases in current container
-        // TODO: Ordering might be a parameter to set (as this discovers alias declared even AFTER they are used)
-        bool isAliasDecl(Statement stmt)
-        {
-            return cast(AliasDeclaration)stmt !is null;
-        }
-        Statement[] declaredAliasesStmts;
-        resolver.collectUpwards(container, predicateOf!(isAliasDecl), declaredAliasesStmts);
-        AliasDeclaration[] declaredAliases = cast(AliasDeclaration[])declaredAliasesStmts;
+        // // Discover all declared aliases in current container
+        // // TODO: Ordering might be a parameter to set (as this discovers alias declared even AFTER they are used)
+        // bool isAliasDecl(Statement stmt)
+        // {
+        //     return cast(AliasDeclaration)stmt !is null;
+        // }
+        // Statement[] declaredAliasesStmts;
+        // resolver.collectUpwards(container, predicateOf!(isAliasDecl), declaredAliasesStmts);
+        // AliasDeclaration[] declaredAliases = cast(AliasDeclaration[])declaredAliasesStmts;
 
-        DEBUG(format("All aliases available from (cntnr:%s, stmt=%s) upwards: %s", container, curStmt, declaredAliases));
+        DEBUG(format("doAliasExpression(cntnr:%s, stmt=%s)", container, curStmt));
 
         // Find any VariableExpression(s) from curStmt (TODO: should be container or nah?)
         MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
@@ -163,6 +176,10 @@ public class MetaProcessor
                 // furthest when obtained from the resolver, so any
                 // tie breaking would be the logically closest 
                 // alias with the same name)
+                //
+                // Achor the search to start from the VarExp
+                AliasDeclaration[] declaredAliases = findAliasesFrom(varExp.parentOf());
+                DEBUG("DeclAlis: ", declaredAliases);
                 AliasDeclaration[] matched;
                 string varExpIdent = varExp.getName();
                 bool filterAliasesToName(AliasDeclaration aliasDecl)
