@@ -352,42 +352,6 @@ public class DNode
     }
 }
 
-
-/**
-* DNodeGenerator (Next-generation) base
-*
-* This is a base class for a DNode generator,
-* all it requires to construct is:
-*
-* 1. Context (to know what we are in or so)
-* 2. Statements[] (to know what to process)
-* 3. TypeChecker (to know how to resolve names)
-*
-*/
-public class DNodeGeneratorBase
-{
-    /* Type checker (for name lookups) */
-    private TypeChecker tc;
-
-    /* Statements to process */
-    private Statement[] statements;
-
-    /* Information about our current container for said statements (and initscope) */
-    private Context context;
-
-    this(TypeChecker tc, Statement[] statements, Context context)
-    {
-        this.tc = tc;
-        this.statements = statements;
-        this.context = context;
-    }
-}
-
-
-
-
-
-
 public final class DFunctionInnerGenerator : DNodeGenerator
 {
     private Function func;
