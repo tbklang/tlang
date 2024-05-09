@@ -152,3 +152,23 @@ public interface MComparable
     }
 
 }
+
+/** 
+ * Defines an interface for determining
+ * the position of an AST node nested
+ * within the implementing one
+ */
+public interface MPositionable
+{
+    /** 
+     * Determines the position of the
+     * given AST node within this
+     * node
+     *
+     * Params:
+     *   statement = the statement
+     * Returns: the position or -1
+     * if invalid
+     */
+    public size_t position(Statement statement);
+}
