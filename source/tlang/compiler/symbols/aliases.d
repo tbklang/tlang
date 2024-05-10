@@ -30,6 +30,6 @@ public final class AliasDeclaration : Statement
 
     public override string toString()
     {
-        return format("Alias [name: %s]", this.aliasName);
+        return format("Alias [name: %s, expr: %s]", this.aliasName, this.aliasExpr);
     }
 }
