@@ -75,6 +75,36 @@ public interface Container : MStatementSearchable, MStatementReplaceable
      * Returns: a `Statement[]`
      */
     public Statement[] getStatements();
+
+    /** 
+     * Finds the index whereby the given
+     * AST node occurs within this container.
+     *
+     * If not directly found then the
+     * nodes contained within, of which
+     * are `MStatementSearchable`, will
+     * be queried. Such searchable node
+     * will have its position returned.
+     *
+     * Params:
+     *   statement = the AST node
+     * Returns: the position or `-1` if
+     * not found
+     */
+    public size_t indexOf(Statement statement);
+
+    /** 
+     * Inserts the given AST node at the
+     * provided index.
+     *
+     * This will reparent the AST node
+     * to this container.
+     *
+     * Params:
+     *   index = the index to insert at
+     *   statement = the AST node to insert
+     */
+    public void insertAt(size_t index, Statement statement);
 }
 
 
