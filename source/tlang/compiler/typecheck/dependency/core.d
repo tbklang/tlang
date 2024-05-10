@@ -1023,6 +1023,9 @@ public class DNodeGenerator
             DNode dnode = poolT!(VariableNode, Variable)(varParamDec);
             dnode.markVisited();
 
+            /* Add an entry to the reference counting map */
+            tc.touch(varParamDec);
+
             return null;
         }
         /**
