@@ -75,6 +75,10 @@ public interface MStatementReplaceable
      * Returns: `true` if the replacement succeeded, `false` otherwise
      */
     public bool replace(Statement thiz, Statement that);
+
+    public bool insertBefore(Statement thiz, Statement that);
+    public bool insertAfter(Statement thiz, Statement that);
+    public bool remove(Statement thiz);
 }
 
 /** 
