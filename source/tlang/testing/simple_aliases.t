@@ -11,11 +11,16 @@ alias expr = cnt();
 
 alias inner = 1;
 
+int identity(int i)
+{
+	return i;
+}
+
 int main()
 {
-	alias inner = 0;
+	alias inner = sizeof(ubyte)-cast(ubyte)1;
 	int i = expr;
 	int p = expr;
-	int o = inner;
+	int o = identity(inner);
 	return i+p+o;
 }
