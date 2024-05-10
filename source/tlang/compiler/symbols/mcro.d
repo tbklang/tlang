@@ -30,6 +30,33 @@ public interface MStatementSearchable
      * Returns: an array of `Statement` (a `Statement[]`)
      */
     public Statement[] search(TypeInfo_Class clazzType);
+
+    /** 
+     * Searches to see if a given AST
+     * node is present.
+     *
+     * This basically uses the type
+     * of the node to search,
+     * then filters based on that.
+     *
+     * Params:
+     *   statement = the AST node
+     * Returns: `true` if found,
+     * `false` otherwise
+     */
+    public final bool isPresent(Statement statement)
+    {
+        Statement[] typeMatches = search(statement.classinfo);
+        foreach(Statement stmt; typeMatches)
+        {
+            if(stmt == statement)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 /** 
