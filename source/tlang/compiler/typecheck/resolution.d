@@ -55,7 +55,6 @@ public class ResolutionError : TError
      * whereby the entity was not found
      * within the given container during
      * a within-based search
-     
      *
      * Params:
      *   cntnr = the container
