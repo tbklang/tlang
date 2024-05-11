@@ -1144,6 +1144,9 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
     {
         super(functionName);
         this.arguments = arguments;
+
+        /* Weighted as 2 */
+        weight = 2;
     }
 
     public override string toString()
