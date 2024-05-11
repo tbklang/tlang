@@ -153,6 +153,12 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
         }
     }
 
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Nowhere to insert within us
+        return false;
+    }
+
     /** 
      * Clones this binery operator expression recursively
      * returning a fresh new copy of itself and its
