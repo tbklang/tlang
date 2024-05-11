@@ -77,8 +77,8 @@ public interface MStatementReplaceable
     public bool replace(Statement thiz, Statement that);
 
     public bool insertBefore(Statement thiz, Statement that);
-    public bool insertAfter(Statement thiz, Statement that);
-    public bool remove(Statement thiz);
+    // public bool insertAfter(Statement thiz, Statement that);
+    // public bool remove(Statement thiz);
 }
 
 /** 
