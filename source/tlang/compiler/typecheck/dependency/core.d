@@ -451,9 +451,6 @@ public class DNodeGenerator
         throw new DependencyException(DependencyError.GENERAL_ERROR, message);
     }
 
-    public DNode root;
-
-
     public DNode generate()
     {
         DNode[] moduleDNodes;
@@ -1229,9 +1226,9 @@ public class DNodeGenerator
             func.context = context;
 
             /* Add funtion definition */
-            DEBUG("Hello"); // TODO: Check `root`, just use findContainerOfType
-            // Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func));
-            this.funcDefStore.addFunctionDef(cast(Module)root.entity, func);
+            DEBUG("Hello");
+            Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func);
+            this.funcDefStore.addFunctionDef(owner, func);
 
             return null;
         }
@@ -1511,13 +1508,12 @@ public class DNodeGenerator
         /* If this is a Module then it must become the root */
         if(cast(Module)namedContainer)
         {
-            root = node;
+            
         }
         /* NOTE: 1st October: Just for now ignore funciton stuff InitScvope? */
         else if(cast(Function)namedContainer)
         {
             ignoreInitScope=false;
-            root=pool(cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, namedContainer));
         }
 
 
