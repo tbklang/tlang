@@ -9,6 +9,67 @@ import tlang.compiler.core;
 import std.string : format;
 import niknaks.functional : Predicate, predicateOf;
 
+import tlang.misc.exceptions : TError;
+
+public class ResolutionError : TError
+{
+    private enum ResErrType
+    {
+        NAME_FAIL_WITHIN
+    }
+
+    private ResErrType errType;
+    private Container cntnr;
+    private string name;
+
+    private this
+    (
+        ResErrType errType,
+        Container cntnr,
+        string name
+    )
+    {
+        this.errType = errType;
+        this.cntnr = cntnr;
+        this.name = name;
+
+        super(genMsg());
+    }
+
+    public static ResolutionError failWithin(Container cntnr, string name)
+    {
+        return new ResolutionError(ResErrType.NAME_FAIL_WITHIN, cntnr, name);
+    }
+
+    private string genMsg()
+    {
+        string message;
+
+        // If resolution of a name within a container failed
+        if(this.errType == ResErrType.NAME_FAIL_WITHIN)
+        {    
+            if(cast(Program)cntnr)
+            {
+                message = format("Cannot find %s within the program", name);
+            }
+            else if(cast(Entity)cntnr)
+            {
+                // TODO: Make more specific, function, class, etc.
+                Entity cntnrEntity = cast(Entity)cntnr;
+                message = format("Cannot find %s inside the %s", name, cntnrEntity.getName());
+            }
+            else
+            {
+                ERROR("Developer error, this should never happen");
+                assert(false);
+            }
+        }
+
+        return message;
+    }
+}
+
+
 /** 
  * The resolver provides a mechanism to
  * search the AST tree for all named
@@ -388,6 +449,34 @@ public final class Resolver
         // Apply search with custom name-based matching predicate
         DEBUG(format("resolveWithin(cntnr=%s, name=%s) entering with predicate", currentContainer, name));
         return resolveWithin(currentContainer, derive_nameMatch(name));
+    }
+
+    /** 
+     * Performs a horizontal-based search of then
+     * provided `Container`, searching for any
+     * `Entity` which matches the given name.
+     * When a match is found we return
+     * immediately.
+     *
+     * Params:
+     *   currentContainer = the container to
+     * search within
+     *   name = the name to search for
+     * Returns: the found `Entity`
+     * Throws:
+     *   ResolverError when no entity by
+     * the given name could be found
+     */
+    public Entity resolveWithin_Safe(Container currentContainer, string name)
+    {
+        Entity potEnt = resolveWithin(currentContainer, name);
+
+        if(!potEnt)
+        {
+            throw ResolutionError.failWithin(currentContainer, name);
+        }
+
+        return potEnt;
     }
 
     /** 
