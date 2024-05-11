@@ -81,6 +81,37 @@ public interface MStatementReplaceable
     // public bool remove(Statement thiz);
 }
 
+/**
+ * Tests out the `MStatementReplaceable` API
+ * in order to insert a new AST node (in
+ * this case a `FunctionCall`) in front
+ * of the `ReturnStmt`
+ */
+unittest
+{
+    import tlang.compiler.symbols.data : Statement, Variable, ReturnStmt, VariableExpression;
+    Variable v1 = new Variable("int", "var1");
+    Variable v2 = new Variable("int", "var2");
+    ReturnStmt ret = new ReturnStmt(new VariableExpression("v1"));
+
+
+    import tlang.compiler.symbols.data : Function;
+    Statement[] stmts = [v1, v2, ret];
+    Function func = new Function("main", "int", stmts, null);
+
+    // Should contain the added statements
+    assert(func.getStatements() == [v1, v2, ret]);
+
+    // Insert a function call before the return statement
+    FunctionCall funcCall = new FunctionCall("cleanUp", null);
+    assert(func.insertBefore(funcCall, ret));
+
+    // Confirm that it added in the correct position
+    import std.stdio;
+    stderr.writeln( func.getStatements());
+    assert(func.getStatements() == [v1, v2, funcCall, ret]);
+}
+
 /** 
  * Anything which implements this can make a full
  * deep clone of itself
