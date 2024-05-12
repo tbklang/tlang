@@ -17,11 +17,34 @@ import tlang.misc.exceptions : TError;
  */
 public class ResolutionError : TError
 {
+    /** 
+     * The type of resolution error
+     */
     private enum ResErrType
     {
+        /** 
+         * A search within a container
+         * failed as no entity with the
+         * given name could not be found
+         */
         NAME_WITHIN_NO_ENT,
+
+        /** 
+         * A best-effort search starting
+         * at a given container failed
+         * as an entity with the given
+         * name could not be found
+         */
         NAME_BEST_NO_ENT,
 
+        /** 
+         * A best-effort search starting
+         * at a given container failed
+         * as an entity with the given
+         * name WAS found however its
+         * type was not a kind-of the
+         * type requested
+         */
         NAME_BEST_ENT_MISMATCH
     }
 
@@ -187,7 +210,6 @@ public class ResolutionError : TError
         return message;
     }
 }
-
 
 /** 
  * The resolver provides a mechanism to
