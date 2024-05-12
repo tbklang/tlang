@@ -617,7 +617,7 @@ public class DNodeGenerator
             DEBUG("FuncCall: "~funcCall.getName());
 
             /* TODO: We need to fetch the cached function definition here and call it */
-            Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
+            Entity funcEntity = resolver.resolveBest_Safe(context.container, funcCall.getName(), Function.classinfo);
             assert(funcEntity);
             
             // FIXME: The below is failing (we probably need a forward look ahead?)
@@ -716,7 +716,7 @@ public class DNodeGenerator
             varExp.setContext(context);
            
             // Resolve the entity the name refers to
-            Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
+            Entity namedEntity = tc.getResolver().resolveBest_Safe(context.getContainer(), nearestName, Variable.classinfo);
 
 
             /* If the entity was found */
@@ -1149,7 +1149,7 @@ public class DNodeGenerator
             // resolveBest, if that fails, then it is an error (see #46)
             assert(tc.getResolver().resolveBest(c, vAsStdAl.getVariableName()));
             DEBUG("YEAST ENJOYER");
-            Variable variable = cast(Variable)tc.getResolver().resolveBest(c, vAsStdAl.getVariableName());
+            Variable variable = cast(Variable)tc.getResolver().resolveBest_Safe(c, vAsStdAl.getVariableName(), Variable.classinfo);
             assert(variable);
 
             /* Assinging to a variable is usage, therefore increment the reference count */
