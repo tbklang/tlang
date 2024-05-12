@@ -45,7 +45,16 @@ public class ResolutionError : TError
          * type was not a kind-of the
          * type requested
          */
-        NAME_BEST_ENT_MISMATCH
+        NAME_BEST_ENT_MISMATCH,
+
+        /** 
+         * A search within a container
+         * failed as an entity with the
+         * given name WAS found however
+         * its type was not a kind-of
+         * the type requested
+         */
+        NAME_WITHIN_END_MISMATCH
     }
 
     private ResErrType errType;
@@ -103,6 +112,23 @@ public class ResolutionError : TError
     public static ResolutionError failBest(Container cntnr, string name)
     {
         return new ResolutionError(ResErrType.NAME_BEST_NO_ENT, cntnr, name);
+    }
+
+    /** 
+     * Generates an exception for the case
+     * whereby the entity found within
+     * the given container is not of the
+     * requested type
+     *
+     * Params:
+     *   cntnr = the container
+     *   foundEnt = the found entity
+     *   expectedType = the type expected
+     * Returns: a `ResolutionError`
+     */
+    public static ResolutionError failWithinMismatchType(Container cntnr, Entity foundEnt, TypeInfo_Class expectedType)
+    {
+        return new ResolutionError(ResErrType.NAME_WITHIN_END_MISMATCH, cntnr, null, expectedType, foundEnt);
     }
 
     /** 
@@ -603,18 +629,26 @@ public final class Resolver
      *   currentContainer = the container to
      * search within
      *   name = the name to search for
+     *   expectedEntType = the type to enforce
+     * a found entity to
      * Returns: the found `Entity`
      * Throws:
-     *   ResolverError when no entity by
-     * the given name could be found
+     *   ResolutionError when the entity is
+     * not found, or it is found but the
+     * types mismatch
      */
-    public Entity resolveWithin_Safe(Container currentContainer, string name)
+    public Entity resolveWithin_Safe(Container currentContainer, string name, TypeInfo_Class expectedEntType)
     {
         Entity potEnt = resolveWithin(currentContainer, name);
 
         if(!potEnt)
         {
             throw ResolutionError.failWithin(currentContainer, name);
+        }
+        // Something was found but not of the type requested (kind-of)
+        else if(!expectedEntType.isBaseOf(potEnt.classinfo))
+        {
+            throw ResolutionError.failWithinMismatchType(currentContainer, potEnt, expectedEntType);
         }
 
         return potEnt;
@@ -1260,6 +1294,39 @@ int g;
         string bestName = tc.getResolver().generateNameBest(var);
         DEBUG(format("bestName: %s", bestName));
         assert(bestName == "resolution_test_1.g");
+
+
+        // Try to find the variable `d` by starting at the module-level
+        // but use the safe resolver and ensure the type is a `Variable`
+        var = tc.getResolver().resolveBest_Safe(modulle, "g", Variable.classinfo);
+        assert(var);
+        assert(cast(Variable)var); // Ensure it is a variable
+
+        // Try to find the variable `d` by starting at the module-level
+        // but use the safe resolver and ensure the the type is a `Function`
+        // which SHOULD FAIL as it is a `Variable` and NOT a `Function`
+        try
+        {
+            tc.getResolver().resolveBest_Safe(modulle, "g", Function.classinfo);
+            assert(false);
+        }
+        catch(ResolutionError e) {}
+
+        // Try to find the variable `d` by searching within module but
+        // by using the safe reslution methods to ensure the type is a `Variable`
+        var = tc.getResolver().resolveWithin_Safe(modulle, "g", Variable.classinfo);
+        assert(var);
+        assert(cast(Variable)var); // Ensure it is a variable
+
+        // Try to find the variable `d` by searching within module but
+        // by using the safe reslution methods to ensure the type is a `Function`
+        // which SHOULD fail as it is a `Variable` and NOT a `Function`
+        try
+        {
+            tc.getResolver().resolveWithin_Safe(modulle, "g", Function.classinfo);
+            assert(false);
+        }
+        catch(ResolutionError e) {}
     }
     catch(TError e)
     {
