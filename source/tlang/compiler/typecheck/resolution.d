@@ -1327,6 +1327,23 @@ int g;
             assert(false);
         }
         catch(ResolutionError e) {}
+
+        // Try to find something within the module which doesn't exist
+        try
+        {
+            tc.getResolver().resolveWithin_Safe(modulle, "a", Variable.classinfo);
+            assert(false);
+        }
+        catch(ResolutionError e) {}
+
+        // Try to find something starting at the module-level which doesn't
+        // exist
+        try
+        {
+            tc.getResolver().resolveBest_Safe(modulle, "a", Variable.classinfo);
+            assert(false);
+        }
+        catch(ResolutionError e) {}
     }
     catch(TError e)
     {
