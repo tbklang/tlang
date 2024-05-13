@@ -597,6 +597,8 @@ public class DNodeGenerator
         WARN("expressionPass(Exp): Processing "~exp.toString());
         DEBUG("expressionPass(Exp): Context coming in "~to!(string)(context));
 
+        // TODO: Automatic dnode.getStatement().context = context?
+
         /* TODO: Add pooling */
 
         /**
