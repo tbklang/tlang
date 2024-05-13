@@ -716,7 +716,7 @@ public class DNodeGenerator
             varExp.setContext(context);
            
             // Resolve the entity the name refers to
-            Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
+            Entity namedEntity = tc.getResolver().resolveBest(varExp.parentOf(), nearestName);
 
 
             /* If the entity was found */
