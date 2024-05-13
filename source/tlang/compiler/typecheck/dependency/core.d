@@ -617,7 +617,7 @@ public class DNodeGenerator
             DEBUG("FuncCall: "~funcCall.getName());
 
             /* TODO: We need to fetch the cached function definition here and call it */
-            Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
+            Entity funcEntity = resolver.resolveBest(funcCall.parentOf(), funcCall.getName());
             assert(funcEntity);
             
             // FIXME: The below is failing (we probably need a forward look ahead?)
