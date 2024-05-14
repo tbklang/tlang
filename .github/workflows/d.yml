@@ -92,7 +92,7 @@ jobs:
 
   syntaxcheck:
     needs: [build, unittests]
-    name: Syntax checking (fine typecheck home)
+    name: Syntax checking
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
