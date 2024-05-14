@@ -2055,6 +2055,16 @@ public final class Parser
                         Expression[] actualArguments = funcCall.getCallArguments();
                         parentToContainer(container, cast(Statement[])actualArguments);
                     }
+                    /**
+                     * If we have a `CastedExpression`
+                     */
+                    else if(cast(CastedExpression)statement)
+                    {
+                        CastedExpression castExpr = cast(CastedExpression)statement;
+
+                        Expression toCast = castExpr.getEmbeddedExpression();
+                        parentToContainer(container, [toCast]);
+                    }
                     /** 
                      * If we have a `ReturnStmt`
                      * then we must process its
