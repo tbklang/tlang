@@ -597,6 +597,8 @@ public class DNodeGenerator
         WARN("expressionPass(Exp): Processing "~exp.toString());
         DEBUG("expressionPass(Exp): Context coming in "~to!(string)(context));
 
+        // TODO: Automatic dnode.getStatement().context = context?
+
         /* TODO: Add pooling */
 
         /**
@@ -617,7 +619,7 @@ public class DNodeGenerator
             DEBUG("FuncCall: "~funcCall.getName());
 
             /* TODO: We need to fetch the cached function definition here and call it */
-            Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
+            Entity funcEntity = resolver.resolveBest(funcCall.parentOf(), funcCall.getName());
             assert(funcEntity);
             
             // FIXME: The below is failing (we probably need a forward look ahead?)
@@ -716,7 +718,7 @@ public class DNodeGenerator
             varExp.setContext(context);
            
             // Resolve the entity the name refers to
-            Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
+            Entity namedEntity = tc.getResolver().resolveBest(varExp.parentOf(), nearestName);
 
 
             /* If the entity was found */
