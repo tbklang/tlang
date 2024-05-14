@@ -2017,8 +2017,6 @@ public final class Parser
 
                         parentToContainer(container, [binOpExp.getLeftExpression(), binOpExp.getRightExpression()]);
                     }
-
-
                     /** 
                      * If we have an `UnaryOperatorExpression`
                      * then we want to parent its inner
