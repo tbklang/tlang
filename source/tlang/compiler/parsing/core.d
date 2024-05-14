@@ -2017,6 +2017,50 @@ public final class Parser
 
                         parentToContainer(container, [binOpExp.getLeftExpression(), binOpExp.getRightExpression()]);
                     }
+
+
+                    /** 
+                     * If we have an `UnaryOperatorExpression`
+                     * then we want to parent its inner
+                     * expression
+                     */
+                    else if(cast(UnaryOperatorExpression)statement)
+                    {
+                        UnaryOperatorExpression unaryOp = cast(UnaryOperatorExpression)statement;
+                        Expression opExpr = unaryOp.getExpression();
+
+                        parentToContainer(container, [opExpr]);
+                    }
+                    /** 
+                     * If we have an `ArrayIndex` then
+                     * we will want to parent its inner
+                     * expression which is what the
+                     * index itself is formed out of.
+                     *
+                     * We will also want to parent the
+                     * expression being indexed itself.
+                     */
+                    else if(cast(ArrayIndex)statement)
+                    {
+                        ArrayIndex indexOp = cast(ArrayIndex)statement;
+                        Expression indexedExpr = indexOp.getIndexed();
+                        Expression indexExpr = indexOp.getIndex();
+
+                        parentToContainer(container, [indexedExpr, indexExpr]);
+                    }
+                    /** 
+                     * If we have an `ArrayAssignment` then
+                     * we will want to parent its inner
+                     * index-expression
+                     */
+                    else if(cast(ArrayAssignment)statement)
+                    {
+                        ArrayAssignment arrAss = cast(ArrayAssignment)statement;
+                        Expression indexExpr = arrAss.getArrayLeft();
+                        Expression assExpr = arrAss.getAssignmentExpression();
+
+                        parentToContainer(container, [indexExpr, assExpr]);
+                    }
                     /** 
                      * If we have a `VariableAssignmentStdAlone`
                      * then we must parent its expression
