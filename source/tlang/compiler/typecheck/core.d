@@ -2623,14 +2623,6 @@ public final class TypeChecker
             else if(cast(WhileLoop)statement)
             {
                 WhileLoop whileLoop = cast(WhileLoop)statement;
-
-                // FIXME: Do-while loops are still being considered in terms of dependency construction
-                if(whileLoop.isDoWhile)
-                {
-                    DEBUG("Still looking at dependency construction in this thing (do while loops )");
-                    assert(false);
-                }
-
                 Branch branch = whileLoop.getBranch();
 
                 /* The condition `Value` instruction should be on the stack */
@@ -2664,7 +2656,7 @@ public final class TypeChecker
                 * 2. Set the context
                 * 3. Add the instruction
                 */
-                WhileLoopInstruction whileLoopInstruction = new WhileLoopInstruction(branchInstr);
+                WhileLoopInstruction whileLoopInstruction = new WhileLoopInstruction(branchInstr, whileLoop.isDoWhileLoop());
                 whileLoopInstruction.setContext(whileLoop.getContext());
                 addInstrB(whileLoopInstruction);
             }
