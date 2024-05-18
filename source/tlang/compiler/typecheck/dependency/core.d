@@ -1326,7 +1326,7 @@ public class DNodeGenerator
             DEBUG("Branch: "~to!(string)(whileBranch));
 
             // If this is a while-loop
-            if(!whileLoopStmt.isDoWhile)
+            if(!whileLoopStmt.isDoWhileLoop())
             {
                 // Extract the condition
                 Expression branchCondition = whileBranch.getCondition();
