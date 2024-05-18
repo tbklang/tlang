@@ -452,7 +452,7 @@ jobs:
           ./tlang compile source/tlang/testing/simple_while.t
           ./tlang.out
       - name: Simple do-while
-       run: |
+        run: |
           ./tlang compile source/tlang/testing/simple_do_while.t
 
           set +e
