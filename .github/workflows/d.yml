@@ -451,10 +451,10 @@ jobs:
         run: |
           ./tlang compile source/tlang/testing/simple_while.t
           ./tlang.out
-      #- name: Simple do-while
-      #  run: |
-      #    ./tlang compile source/tlang/testing/simple_do_while.t
-      #    ./tlang.out
+      - name: Simple do-while
+       run: |
+         ./tlang compile source/tlang/testing/simple_do_while.t
+         ./tlang.out
       - name: Simple for-loops
         run: |
           ./tlang compile source/tlang/testing/simple_for_loops.t
