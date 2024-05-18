@@ -462,18 +462,39 @@ public final class DCodeEmitter : CodeEmitter
 
             string emit;
 
-            /* Generate the `while(<expr>)` and opening curly brace */
-            emit = "while("~transform(conditionInstr)~")\n";
-            emit~=genTabs(transformDepth)~"{\n"; 
-
-            /* Transform each body statement */
-            foreach(Instruction curBodyInstr; bodyInstructions)
+            /* While-loop */
+            if(!whileLoopInstr.isDoWhileLoop())
             {
-                emit~=genTabs(transformDepth)~"\t"~transform(curBodyInstr)~"\n";
-            }
+                /* Generate the `while(<expr>)` and opening curly brace */
+                emit = "while("~transform(conditionInstr)~")\n";
+                emit~=genTabs(transformDepth)~"{\n"; 
 
-            /* Closing curly brace */
-            emit~=genTabs(transformDepth)~"}";
+                /* Transform each body statement */
+                foreach(Instruction curBodyInstr; bodyInstructions)
+                {
+                    emit~=genTabs(transformDepth)~"\t"~transform(curBodyInstr)~"\n";
+                }
+
+                /* Closing curly brace */
+                emit~=genTabs(transformDepth)~"}";
+            }
+            /* Do-while loop */
+            else
+            {
+                /* Generate `do {` */
+                emit = "do\n";
+                emit~=genTabs(transformDepth)~"{\n";
+
+                /* Transform each body statement */
+                foreach(Instruction curBodyInstr; bodyInstructions)
+                {
+                    emit~=genTabs(transformDepth)~"\t"~transform(curBodyInstr)~"\n";
+                }
+
+                /* Closing curly brace and `while(<expr>)` */
+                emit~=genTabs(transformDepth)~"}\n";
+                emit~=genTabs(transformDepth)~"while("~transform(conditionInstr)~");";
+            }
 
             emmmmit = emit;
         }
