@@ -1277,7 +1277,7 @@ public final class WhileLoop : Entity, Container
 {
     private Branch branch;
     private static ulong whileStmtContainerRollingNameCounter = 0;
-    public const bool isDoWhile;
+    private bool isDoWhile;
 
     /** 
      * Creates a new While Loop parser node, optionally specifying
@@ -1377,6 +1377,11 @@ public final class WhileLoop : Entity, Container
         {
             return branch.replace(thiz, that);
         }
+    }
+
+    public bool isDoWhileLoop()
+    {
+        return this.isDoWhile;
     }
 }
 
