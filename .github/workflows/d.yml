@@ -453,8 +453,19 @@ jobs:
           ./tlang.out
       - name: Simple do-while
        run: |
-         ./tlang compile source/tlang/testing/simple_do_while.t
-         ./tlang.out
+          ./tlang compile source/tlang/testing/simple_do_while.t
+
+          set +e
+          ./tlang.out
+
+          if [ $? = 6 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
       - name: Simple for-loops
         run: |
           ./tlang compile source/tlang/testing/simple_for_loops.t
