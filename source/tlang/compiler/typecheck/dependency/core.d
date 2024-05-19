@@ -1325,7 +1325,9 @@ public class DNodeGenerator
             DNode branchDNode = pool(whileBranch);
             DEBUG("Branch: "~to!(string)(whileBranch));
 
-            // If this is a while-loop
+            /**
+             * while-loop
+             */
             if(!whileLoopStmt.isDoWhileLoop())
             {
                 // Extract the condition
@@ -1345,13 +1347,15 @@ public class DNodeGenerator
                 // Finally make the branchDNode depend on the body dnode (above)
                 branchDNode.needs(branchBodyDNode);
             }
-            // If this is a do-while loop
-            // TODO: I don't think we really need to reverse this?
-            // Logically we should, but the typechecker will add this things in the correct order anyways?
-            // We need to look into this!
-            // Our nodes at the back will always be placed at the back, and the expression will end ip upfront
-            // i think it is a problem oif maybe other expressions are left on the stack but is that ever a problem
-            //now with the statement <-> instruction mapping (like will that ever even occur?)
+            /** 
+             * do-while loop
+             *
+             * The order of dependencies is basically
+             * switched from [expr, stmts...] to
+             * [stmts..., expr] but at the end of the
+             * day the way it is processed by the
+             * typechecker won't change
+             */
             else
             {
                 // Pass over the statements in the branch's body
@@ -1375,8 +1379,6 @@ public class DNodeGenerator
             /* Make the while-loop/do-while loop depend on the branchDNode */
             whileLoopDNode.needs(branchDNode);
 
-            /* Make the node of this generalPass we are in depend on the whileLoop's DNode */
-            // node.needs(whileLoopDNode);
             return whileLoopDNode;
         }
         /**
