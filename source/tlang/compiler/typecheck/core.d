@@ -1821,10 +1821,16 @@ public final class TypeChecker
                         }
                     }
                 }
+                // If both left and right operands are pointers
+                else if(isPointerType(vLhsType) && isPointerType(vRhsType)) // <a> is Pointer, <b> is Pointer
+                {
+                    expect("Both left hand side and right hand side cannot be pointers in any arithmetic operation");
+                }
                 else
                 {
                     // See issue #141: Binary Operators support for non-Integer types (https://deavmi.assigned.network/git/tlang/tlang/issues/141)
                     ERROR("FIXME: We need to add support for this, class equality, and others like floats");
+                    assert(false);
                 }
 
                 
