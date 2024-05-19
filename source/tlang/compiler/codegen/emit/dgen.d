@@ -304,11 +304,13 @@ public final class DCodeEmitter : CodeEmitter
              * the cast out me thinks.
              * 
              * See issue #140 (https://deavmi.assigned.network/git/tlang/tlang/issues/140#issuecomment-1892)
+             *
+             * Note, this would NOT be the case for equality
              */
             Type leftHandOpType = (cast(Value)binOpInstr.lhs).getInstrType();
             Type rightHandOpType = (cast(Value)binOpInstr.rhs).getInstrType();
 
-            if(typeChecker.isPointerType(leftHandOpType))
+            if(typeChecker.isPointerType(leftHandOpType) && binOpInstr.operator != SymbolType.EQUALS)
             {
                 // Sanity check the other side should have been coerced to CastedValueInstruction
                 CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.rhs;
@@ -319,7 +321,7 @@ public final class DCodeEmitter : CodeEmitter
                 // Relax the CV-instr to prevent it from emitting explicit cast code
                 cvInstr.setRelax(true);
             }
-            else if(typeChecker.isPointerType(rightHandOpType))
+            else if(typeChecker.isPointerType(rightHandOpType) && binOpInstr.operator != SymbolType.EQUALS)
             {
                 // Sanity check the other side should have been coerced to CastedValueInstruction
                 CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.lhs;
@@ -614,7 +616,7 @@ public final class DCodeEmitter : CodeEmitter
                     emit ~= "("~typeTransform(castingTo)~")";
 
                     /* The expression being casted */
-                    emit ~= transform(uncastedInstruction);
+                    emit ~= "("~transform(uncastedInstruction)~")";
                 }
                 else
                 {

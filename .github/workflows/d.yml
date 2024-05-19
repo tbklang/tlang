@@ -391,6 +391,17 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/unused_vars.t --unusedVars true
       - name: Unused variables check (negative case)
         run: ./tlang typecheck source/tlang/testing/unused_vars_none.t --unusedVars true
+
+      - name: Invalid pointer arithmetic (both operands are pointer types)
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/simple_binops_ptr_bad.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
   emit:
     needs: [build, unittests]
@@ -541,6 +552,11 @@ jobs:
               set -e
               exit 1
           fi
+
+      - name: Equality between pointers (both operands are pointers)
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/simple_binops_ptr.t
 
 
 

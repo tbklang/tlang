@@ -1821,13 +1821,23 @@ public final class TypeChecker
                         }
                     }
                 }
+                /**
+                 * If both left and right operands are pointers
+                 * and the operator is not equality
+                 *
+                 * `<a> is Pointer, <b> is Pointer`
+                 */
+                else if(binOperator != SymbolType.EQUALS && isPointerType(vLhsType) && isPointerType(vRhsType))
+                {
+                    expect("Both left hand side and right hand side cannot be pointers in any arithmetic operation, except equality");
+                }
                 else
                 {
                     // See issue #141: Binary Operators support for non-Integer types (https://deavmi.assigned.network/git/tlang/tlang/issues/141)
                     ERROR("FIXME: We need to add support for this, class equality, and others like floats");
                 }
 
-                
+
                 /**
                  * Refresh types as instructions may have changed in
                  * the above enforcement call
@@ -1848,8 +1858,17 @@ public final class TypeChecker
                 Type chosenType;
                 if(isSameType(vLhsType, vRhsType))
                 {
-                    /* Left type + Right type = left/right type (just use left - it doesn't matter) */
-                    chosenType = vLhsType;
+                    /* If equality then result is `ubyte` */
+                    if(binOperator == SymbolType.EQUALS)
+                    {
+                        chosenType = getType(this.program, "ubyte");
+                    }
+                    /* Other cases */
+                    else
+                    {
+                        /* Left type + Right type = left/right type (just use left - it doesn't matter) */
+                        chosenType = vLhsType;
+                    }
                 }
                 else
                 {
