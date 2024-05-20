@@ -441,9 +441,54 @@ public final class Parser
         return assignment;
     }
 
+    // x.y.z -> [(x.y) . z]
+    private bool obtainDotPath(ref string path, Expression exp)
+    {
+        BinaryOperatorExpression binOp = cast(BinaryOperatorExpression)exp;
+        IdentExpression ident = cast(IdentExpression)exp;
+
+        // Recurse on left-and-right operands
+        if(binOp && binOp.getOperator() == SymbolType.DOT)
+        {
+            string lhsText;
+            obtainDotPath(lhsText, binOp.getLeftExpression());
+
+            string rhsText;
+            obtainDotPath(rhsText, binOp.getRightExpression());
+
+            path ~= lhsText~"."~rhsText;
+
+            return true;
+        }
+        // Found an ident
+        else if(ident)
+        {
+            path = ident.getName();
+            return true;
+        }
+        // Anything else is invalid
+        else
+        {
+            WARN("Found nothing else");
+            return false;
+        }
+    }
+
     public Statement parseName(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
     {
         Statement ret;
+
+        // TODO: We must do a sort-of greedby lookahead here until
+        // we hit a `;` or `=`
+        //
+        // we either have [<expr>, =]
+        // or
+        // [<dotPath> <path> =/;]
+
+        // commonality: <expr>
+        //
+        // then have a isDotPath(Expression)
+        // and dependent on that then move to next steo
 
         /* Save the name or type */
         string nameTYpe = lexer.getCurrentToken().getToken();
