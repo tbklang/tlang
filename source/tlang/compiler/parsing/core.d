@@ -510,7 +510,16 @@ public final class Parser
         /* Assignment */
         else if(type == SymbolType.ASSIGN)
         {
+            // Rewind from `... =`, from the `=` token
+            // TODO: Shit a lot more rewinding would be
+            // needed
             lexer.previousToken();
+
+
+            // TODO: Here we need to parse an expression until we hit a terminating symbol of `=`
+            // ... this expression will be the `to`
+
+
             ret = parseAssignment(terminatingSymbol);
         }
         /* Any other case */
@@ -2809,6 +2818,49 @@ public final class Parser
         DEBUG("Done parsing module '"~modulle.getName()~"' from file '"~modulle.getFilePath()~"'");
 
         return modulle;
+    }
+
+    private string parseNamePath()
+    {
+        /* Expect an IDENT_TYPE */
+        expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
+
+        /* Consume the name and move to next token */
+        string name = lexer.getCurrentToken().getToken();
+        lexer.nextToken();
+
+        return name;
+    }
+
+    private string parseNamePathDotted()
+    {
+        string buildUp;
+        Token curTok;
+        do
+        {
+            /* Get current token, expect an ident and build up */
+            curTok = lexer.getCurrentToken();
+            expect(SymbolType.IDENT_TYPE, curTok);
+            buildUp ~= curTok.getToken();
+
+            lexer.nextToken();
+            curTok = lexer.getCurrentToken();
+
+            /* Optional */
+            if(getSymbolType(curTok) == SymbolType.DOT)
+            {
+                buildUp ~= ".";
+                lexer.nextToken();
+            }
+            /* Anything else, then exit */
+            else
+            {
+                break;
+            }
+        }
+        while(true);
+
+        return buildUp;
     }
 }
 
