@@ -1567,7 +1567,8 @@ public final class Parser
         return retExpression[0];
     }
 
-    private bool tryParseTypeName(ref string type, SymbolType terminator)
+    // FIXME: This should STILL work pre-dot and post-dot fixeup
+    private string tryParseTypeName()
     {
         string buildUp;
         Token cur;
@@ -1576,10 +1577,7 @@ public final class Parser
         {
             /* Ident */
             cur = this.lexer.getCurrentToken();
-            if(getSymbolType(cur) != SymbolType.IDENT_TYPE)
-            {
-                return false;
-            }
+            expect(SymbolType.IDENT_TYPE, cur);
             buildUp ~= cur.getToken();
 
             this.lexer.nextToken();
@@ -1593,22 +1591,12 @@ public final class Parser
                 this.lexer.nextToken();
                 continue;
             }
-            /* Terminator */
-            else if(sym == terminator)
-            {
-                break;
-            }
-            /* Anything else (error) */
-            else
-            {
-                return false;
-            }
-            
 
+            break;
         }
         while(true);
 
-        return true;
+        return buildUp;
     }
 
     // TODO: Update to `Statement` as this can return an ArrayAssignment now
@@ -1622,10 +1610,12 @@ public final class Parser
 
 
         /* TODO: Save type */
-        string type = lexer.getCurrentToken().getToken();
-        string identifier;
-        lexer.nextToken();
+        string type = tryParseTypeName();
+        DEBUG(format("tryParseName: %s", type));
+        DEBUG(lexer.getCurrentToken());
 
+
+        string identifier;
       
 
         /* Potential array index expressions (assignment) */
