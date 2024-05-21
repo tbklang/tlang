@@ -2244,29 +2244,27 @@ public final class Parser
 
     /** 
      * Handles cases where we start
-     * with the `*` token. This could
-     * include `*ptr = ...` or, perhaps,
-     * a function call with `*n.n()`
+     * with the `*` token.
      *
-     * FIXME: Last one sounds stupid
-     * asf
+     * This would essentially
+     * only ever be for pointer
+     * dereferences in assignment
+     * form
      *
      * Returns: a `Statement`
      */
     private Statement parseStar()
     {
         WARN("parseStar(): Enter");
-
         Statement stmt = parseDerefAssignment();
-
-
-
-
         WARN("parseStar(): Leave");
         return stmt;
     }
 
-
+    /** 
+     * Parses a pointer dereference
+     * Returns: 
+     */
     private Statement parseDerefAssignment()
     {
         WARN("parseDerefAssignment(): Enter");
