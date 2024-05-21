@@ -2248,6 +2248,9 @@ public final class Parser
      * include `*ptr = ...` or, perhaps,
      * a function call with `*n.n()`
      *
+     * FIXME: Last one sounds stupid
+     * asf
+     *
      * Returns: a `Statement`
      */
     private Statement parseStar()
