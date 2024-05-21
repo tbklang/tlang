@@ -1567,7 +1567,82 @@ public final class Parser
         return retExpression[0];
     }
 
-    
+    private bool tryParseTypeName(ref string type, SymbolType terminator)
+    {
+        string buildUp;
+        Token cur;
+
+        do
+        {
+            /* Ident */
+            cur = this.lexer.getCurrentToken();
+            if(getSymbolType(cur) != SymbolType.IDENT_TYPE)
+            {
+                return false;
+            }
+            buildUp ~= cur.getToken();
+
+            this.lexer.nextToken();
+            cur = this.lexer.getCurrentToken();
+            SymbolType sym = getSymbolType(cur);
+
+            /* (Optional) Dot */
+            if(sym == SymbolType.DOT)
+            {
+                buildUp ~= ".";
+                this.lexer.nextToken();
+                continue;
+            }
+            /* Terminator */
+            else if(sym == terminator)
+            {
+                break;
+            }
+            /* Anything else (error) */
+            else
+            {
+                return false;
+            }
+            
+
+        }
+        while(true);
+
+        return true;
+    }
+
+    // private string tryParseArrayType()
+    // {
+    //     string buildUp;
+    //     Token cur;
+
+    //     do
+    //     {
+    //         /* [ (We enter on this) */
+    //         cur = this.lexer.getCurrentToken();
+    //         buildUp ~= cur.getToken();
+
+    //         this.lexer.nextToken();
+    //         cur = this.lexer.getCurrentToken();
+
+    //         /* Numerical */
+    //         if(getSymbolType(cur) == SymbolType.NUMBER_LITERAL)
+    //         {
+    //             // FIXME: Don't allow floating points
+    //             buildUp ~= cur.getToken();
+    //             this.lexer.nextToken();
+    //             cur = this.lexer.getCurrentToken();
+    //         }
+            
+    //         /* Closing `]` */
+    //         expect(SymbolType.CBRACKET, cur);
+    //         this.lexer.nextToken();
+    //     }
+    //     while(true);
+
+
+    //     return buildUp;
+    // }
 
     // TODO: Update to `Statement` as this can return an ArrayAssignment now
     private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true, bool onlyType = false)
