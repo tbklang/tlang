@@ -1568,7 +1568,7 @@ public final class Parser
     }
 
     // FIXME: This should STILL work pre-dot and post-dot fixeup
-    private string tryParseTypeName()
+    private string parseTypeNameOnly()
     {
         string buildUp;
         Token cur;
@@ -1610,7 +1610,7 @@ public final class Parser
 
 
         /* TODO: Save type */
-        string type = tryParseTypeName();
+        string type = parseTypeNameOnly();
         DEBUG(format("tryParseName: %s", type));
         DEBUG(lexer.getCurrentToken());
 
