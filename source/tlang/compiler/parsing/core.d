@@ -2242,29 +2242,6 @@ public final class Parser
         }
     }
 
-    /** 
-     * Handles cases where we start
-     * with the `*` token.
-     *
-     * This would essentially
-     * only ever be for pointer
-     * dereferences in assignment
-     * form
-     *
-     * Returns: a `Statement`
-     */
-    private Statement parseStar()
-    {
-        WARN("parseStar(): Enter");
-        Statement stmt = parseDerefAssignment();
-        WARN("parseStar(): Leave");
-        return stmt;
-    }
-
-    /** 
-     * Parses a pointer dereference
-     * Returns: 
-     */
     private Statement parseDerefAssignment()
     {
         WARN("parseDerefAssignment(): Enter");
@@ -2503,10 +2480,10 @@ public final class Parser
             /* Parse the discard statement */
             statement = parseDiscard();
         }
-        /* If it is a dereference (a `*`) */
+        /* If it is a dereference assigment (a `*`) */
         else if(symbol == SymbolType.STAR)
         {
-            statement = parseStar();
+            statement = parseDerefAssignment();
         }
         /* If it is a kind-of comment */
         else if(symbol == SymbolType.SINGLE_LINE_COMMENT || symbol == SymbolType.MULTI_LINE_COMMENT)
