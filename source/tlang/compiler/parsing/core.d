@@ -1611,39 +1611,6 @@ public final class Parser
         return true;
     }
 
-    // private string tryParseArrayType()
-    // {
-    //     string buildUp;
-    //     Token cur;
-
-    //     do
-    //     {
-    //         /* [ (We enter on this) */
-    //         cur = this.lexer.getCurrentToken();
-    //         buildUp ~= cur.getToken();
-
-    //         this.lexer.nextToken();
-    //         cur = this.lexer.getCurrentToken();
-
-    //         /* Numerical */
-    //         if(getSymbolType(cur) == SymbolType.NUMBER_LITERAL)
-    //         {
-    //             // FIXME: Don't allow floating points
-    //             buildUp ~= cur.getToken();
-    //             this.lexer.nextToken();
-    //             cur = this.lexer.getCurrentToken();
-    //         }
-            
-    //         /* Closing `]` */
-    //         expect(SymbolType.CBRACKET, cur);
-    //         this.lexer.nextToken();
-    //     }
-    //     while(true);
-
-
-    //     return buildUp;
-    // }
-
     // TODO: Update to `Statement` as this can return an ArrayAssignment now
     private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true, bool onlyType = false)
     {
@@ -2783,9 +2750,9 @@ public final class Parser
         lexer.nextToken();
 
         /* Module name may NOT be dotted (TODO: Maybe it should be yeah) */
-        expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
-        string moduleName = lexer.getCurrentToken().getToken();
-        lexer.nextToken();
+        // expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
+        string moduleName = parseNamePathDotted();
+        // lexer.nextToken();
 
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
