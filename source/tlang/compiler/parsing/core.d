@@ -2242,6 +2242,28 @@ public final class Parser
         }
     }
 
+    /** 
+     * Handles cases where we start
+     * with the `*` token. This could
+     * include `*ptr = ...` or, perhaps,
+     * a function call with `*n.n()`
+     *
+     * Returns: a `Statement`
+     */
+    private Statement parseStar()
+    {
+        WARN("parseStar(): Enter");
+
+        Statement stmt = parseDerefAssignment();
+
+
+
+
+        WARN("parseStar(): Leave");
+        return stmt;
+    }
+
+
     private Statement parseDerefAssignment()
     {
         WARN("parseDerefAssignment(): Enter");
@@ -2480,10 +2502,10 @@ public final class Parser
             /* Parse the discard statement */
             statement = parseDiscard();
         }
-        /* If it is a dereference assigment (a `*`) */
+        /* If it is a dereference (a `*`) */
         else if(symbol == SymbolType.STAR)
         {
-            statement = parseDerefAssignment();
+            statement = parseStar();
         }
         /* If it is a kind-of comment */
         else if(symbol == SymbolType.SINGLE_LINE_COMMENT || symbol == SymbolType.MULTI_LINE_COMMENT)
