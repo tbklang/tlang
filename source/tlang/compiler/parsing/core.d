@@ -1567,6 +1567,31 @@ public final class Parser
         return retExpression[0];
     }
 
+    /** 
+     * Attempts to parse an expression, however,
+     * if there is any error then this is simply
+     * returned as a boolean flag rather than
+     * the entire process crashing
+     *
+     * Params:
+     *   expression = the found expression, in
+     * the case of no errors
+     * Returns: `true` if an expression parsed
+     * successfully, `false` otherwise
+     */
+    private bool tryParseExpression(ref Expression expression)
+    {
+        try
+        {
+            expression = parseExpression();
+            return true;
+        }
+        catch(ParserException e)
+        {
+            return false;
+        }
+    }
+
     // FIXME: This should STILL work pre-dot and post-dot fixeup
     private string parseTypeNameOnly()
     {
@@ -1607,6 +1632,9 @@ public final class Parser
 
         /* Generated object */
         Statement generated;
+
+
+        ulong entrancePos = lexer.getCursor();
 
 
         /* TODO: Save type */
@@ -1736,6 +1764,9 @@ public final class Parser
         DEBUG("ParseTypedDec: SymbolType=" ~ to!(string)(symbolType));
         if (symbolType == SymbolType.LBRACE)
         {
+            // FIXME: Rewind to `entrancePos` here and then capture the name as an Expression
+            
+
             // Only continue is function definitions are allowed
             if(allowFuncDef)
             {
