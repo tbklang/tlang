@@ -1076,14 +1076,21 @@ public class DNodeGenerator
             {
                 // TODO: For array support not all too sure what I shoudl put here, perhap nothing?
                 StackArray arrayType = cast(StackArray)variableType;
+                DEBUG(format("StackArray (type): %s", arrayType));
 
                 // TODO: We might need to do pointer magic
 
                 // (TODO) Check component type
                 Type componentType = arrayType.getComponentType();
+                DEBUG(format("componentType: %s", componentType.classinfo));
 
                 // If the component type is a primitive type
                 if(cast(Primitive)componentType)
+                {
+                    /* Do nothing (I presume?) */
+                }
+                // If the component type is a stack array
+                else if(cast(StackArray)componentType)
                 {
                     /* Do nothing (I presume?) */
                 }
