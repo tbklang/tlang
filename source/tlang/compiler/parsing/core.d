@@ -2608,12 +2608,6 @@ public final class Parser
         {
             statement = parseFor();
         }
-        /* If it is a function call (further inspection needed) */
-        else if(symbol == SymbolType.IDENT_TYPE)
-        {
-            /* Function calls can have dotted identifiers */
-            parseFuncCall();
-        }
         /* If it is the return keyword */
         //TODO: We should add a flag to prevent return being used in generla bodies? or wait we have a non parseBiody already
         else if(symbol == SymbolType.RETURN)
