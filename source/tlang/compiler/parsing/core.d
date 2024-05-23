@@ -972,13 +972,60 @@ public final class Parser
         /* TODO: Add support for default values for function arguments */
     }
 
+    /** 
+     * Parses the parameter declaration
+     * of `<type> <name>` and exits on
+     * the token following `<name>`,
+     * returning a `TypedEntity` packaging
+     * together the type and name information
+     * for the parameter.
+     *
+     * Entrance token should be the beginning
+     * of a path (with or without dots)
+     *
+     * Returns: a `TypedEntity`
+     */
+    private TypedEntity parseFunctionParameter()
+    {
+        TypedEntity ent = cast(TypedEntity)parseTypedDeclaration(false, false, false, true);
+        assert(ent);
+        return ent;
+    }
+
+    /** 
+     * Wraps the result in a new `VariableParameter`
+     * 
+     * See_Also: `parseFunctionParameter()`
+     * Returns: a `VariableParameter`
+     */
+    private VariableParameter parseFunctionParameter2()
+    {
+        /* Get the type and name */
+        TypedEntity bogusEntity = parseFunctionParameter();
+        string type = bogusEntity.getType();
+        string name = bogusEntity.getName();
+
+        DEBUG(format("Parameter (type): %s", type));
+        DEBUG(format("Parameter (name): %s", name));
+
+        DEBUG(lexer.getCurrentToken());
+
+        return new VariableParameter(type, name);
+    }
+
+    /** 
+     * Represents the parameters
+     * and statements (which make
+     * up the body) of a function
+     * definition
+     */
     private struct funcDefPair
     {
         Statement[] bodyStatements;
         VariableParameter[] params;
     }
 
-    private funcDefPair parseFuncDef(bool wantsBody = true)
+    private bool parseFuncDef(ref funcDefPair def, bool forgiving = false, bool wantsBody = true)
     {
         WARN("parseFuncDef(): Enter");
 
@@ -1002,25 +1049,12 @@ public final class Parser
             /* Check if the first thing is a type */
             if(getSymbolType(lexer.getCurrentToken()) == SymbolType.IDENT_TYPE)
             {
-                /* Get the type */
-                TypedEntity bogusEntity = cast(TypedEntity)parseTypedDeclaration(false, false, false, true);
-                string type = bogusEntity.getType();
-
-                /* Get the identifier (This CAN NOT be dotted) */
-                expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
-                if(!isIdentifier_NoDot(lexer.getCurrentToken()))
-                {
-                    expect("Identifier can not be path");
-                }
-                string identifier = lexer.getCurrentToken().getToken();
-                lexer.nextToken();
-
+                /* Parse a parameter */
+                VariableParameter parameter = parseFunctionParameter2();
 
                 /* Add the local variable (parameter variable) */
-                parameterList ~= new VariableParameter(type, identifier);
-
+                parameterList ~= parameter;
                 moreArgs = false;
-
                 parameterCount++;
             }
             /* If we get a comma */
@@ -1092,7 +1126,9 @@ public final class Parser
         bruh.bodyStatements = statements;
         bruh.params = parameterList;
 
-        return bruh;
+        def = bruh;
+
+        return true;
     }
 
 
@@ -1576,14 +1612,27 @@ public final class Parser
      * Params:
      *   expression = the found expression, in
      * the case of no errors
+     *   exclusions = optional list of the
+     * types of AST nodes to exclude and,
+     * hence, fail on
      * Returns: `true` if an expression parsed
      * successfully, `false` otherwise
      */
-    private bool tryParseExpression(ref Expression expression)
+    private bool tryParseExpression(ref Expression expression, TypeInfo_Class[] exclusions = [])
     {
         try
         {
-            expression = parseExpression();
+            Expression parsedExpr = parseExpression();
+
+            foreach(TypeInfo_Class e; exclusions)
+            {
+                if(e.isBaseOf(parsedExpr.classinfo))
+                {
+                    return false;
+                }
+            }
+
+            expression = parsedExpr;
             return true;
         }
         catch(ParserException e)
@@ -1624,8 +1673,98 @@ public final class Parser
         return buildUp;
     }
 
+    private bool parseStarOrArrayType(ref string typeOut)
+    {
+        string type;
+
+
+        /* Whilst we have an `[` or `*` */
+        while(getSymbolType(lexer.getCurrentToken()) == SymbolType.OBRACKET || getSymbolType(lexer.getCurrentToken()) == SymbolType.STAR)
+        {
+            type ~= lexer.getCurrentToken().getToken();
+
+            /* Accumulate any stars */
+            if(getSymbolType(lexer.getCurrentToken()) == SymbolType.STAR)
+            {
+               lexer.nextToken();
+               continue;
+            }
+            /* Process indice */
+            else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.OBRACKET)
+            {
+                lexer.nextToken();
+
+                Token indexToken = lexer.getCurrentToken();
+
+                /* If it is `]` */
+                if(getSymbolType(indexToken) == SymbolType.CBRACKET)
+                {
+                    type ~= "]";
+                    lexer.nextToken();
+                    continue;
+                }
+                /* If it is not a numeric, then exit with error */
+                else if(getSymbolType(indexToken) != SymbolType.NUMBER_LITERAL)
+                {
+                    return false;
+                }
+                
+                /* Process the `<numeric> ]` */
+                type ~= indexToken.getToken();
+
+                lexer.nextToken();
+                expect(SymbolType.CBRACKET, lexer.getCurrentToken());
+                type ~= "]";
+
+                lexer.nextToken();
+                continue;
+            }
+        }
+
+        typeOut = type;
+
+        return true;
+    }
+
+    private bool tryParseType(ref string typeOut)
+    {
+        string type;
+
+        WARN("tryParseType(): Enter");
+
+        // Obtain the named part
+        type = parseTypeNameOnly();
+
+        DEBUG(format("tryParseType(): named part %s", type));
+        DEBUG(lexer.getCurrentToken());
+
+        // Optional `*`, `[]` and `[<numeric>]`
+        if(getSymbolType(lexer.getCurrentToken()) == SymbolType.OBRACKET || getSymbolType(lexer.getCurrentToken()) == SymbolType.STAR)
+        {
+            DEBUG("Arry time");
+            string arrType;
+            if(parseStarOrArrayType(arrType))
+            {
+                type ~= arrType;
+            }
+            // In the case this ISN'T a array/pointer type
+            else
+            {
+                return false;
+            }
+        }
+        
+
+        typeOut = type;
+        
+        WARN(format("tryParseType(): Exit with type = '%s'", type));
+
+        return true;
+    }
+
+    // TODO: This should have a forgiving mode, potentially or should it?
     // TODO: Update to `Statement` as this can return an ArrayAssignment now
-    private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true, bool onlyType = false)
+    private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true, bool onlySignature = false)
     {
         WARN("parseTypedDeclaration(): Enter");
 
@@ -1633,284 +1772,261 @@ public final class Parser
         /* Generated object */
         Statement generated;
 
-
+        /* Save the position of the entrance token (for potential rollback) */
         ulong entrancePos = lexer.getCursor();
 
+        /* The type (if declaration) */
+        string type;
 
-        /* TODO: Save type */
-        string type = parseTypeNameOnly();
-        DEBUG(format("tryParseName: %s", type));
-        DEBUG(lexer.getCurrentToken());
+        /* Array indices (if any) */
+        // Expression[] arrayIndices;
 
-
-        string identifier;
-      
-
-        /* Potential array index expressions (assignment) */
-        // Think myArray[i][1] -> [`i`, `1`]
-        Expression[] arrayIndexExprs;
-
-        // We are currently 1 past the "type" (the identifier) so go back one
-        ulong arrayAssignTokenBeginPos = lexer.getCursor()-1;
-
-        /* Potential stack-array type size (declaration) */
-        string potentialStackSize;
-
-        /* Handling of pointer and array types */
-        while(getSymbolType(lexer.getCurrentToken()) == SymbolType.STAR || getSymbolType(lexer.getCurrentToken()) == SymbolType.OBRACKET)
+        /* Try parse type of `<type> <name> ...` */
+        if(tryParseType(type))
         {
-            /* If we have `[` then expect a number and/or a `]` */
-            if(getSymbolType(lexer.getCurrentToken()) == SymbolType.OBRACKET)
+            DEBUG(format("Now we are at %s", lexer.getCurrentToken()));
+
+            /* Expect eitg */
+
+            /** 
+             * Expect either:
+             *
+             * A name: i.e. <type> <name> ... (where we are at `<name>`)
+             * An assignment: <name> = (where we are at `=`) [rollback and do expression parse]
+             */
+            string name;
+            if(parseNamePath(name, true))
             {
-                lexer.nextToken();
-                SymbolType nextType = getSymbolType(lexer.getCurrentToken());
-                
+                DEBUG(format("Got name: %s", name));
+                DEBUG(onlySignature);
 
-                /* Check if the next symbol is NOT a `]` */
-                if(nextType != SymbolType.CBRACKET)
+                /* If `onlyType` is requested then stop right now */
+                if(onlySignature)
                 {
-                    
+                    return new TypedEntity(name, type);
+                }
 
-                    arrayIndexExprs ~= parseExpression();
+                /* Now decide on whether we have `;` or `=` or `(` */
+                DEBUG(lexer.getCurrentToken());
 
-                    /**
-                     * If it is the case it is a number literal then save it
-                     * anyways just for the case whereby we may be declaring
-                     * a stack-array type
-                     *
-                     * TODO: Double check any error checking here which should be deferred to later
-                     */
-                    if(nextType == SymbolType.NUMBER_LITERAL)
+                /* If followed by a `;` then we have a declaration-without-assignment */
+                if(getSymbolType(lexer.getCurrentToken()) == SymbolType.SEMICOLON)
+                {
+                    // Only continue if variable declarations are allowed
+                    if(allowVarDec)
                     {
-                        // TODO: Ensure the returned thing is a number
-                        // TODO: Ensure said number is non-negative
-                        // TODO: May as well now start adding `]` as a seperator or stopper or something
-                        IntegerLiteral stackArraySize = cast(IntegerLiteral)arrayIndexExprs[$-1];
+                        DEBUG("Semi: "~to!(string)(lexer.getCurrentToken()));
+                        DEBUG("Semi: "~to!(string)(lexer.getCurrentToken()));
+                        WARN("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ name ~ ")");
 
-                        // If the expression is an integer (which it should be)
-                        if(stackArraySize)
+                        generated = new Variable(type, name);
+                        return generated;
+                    }
+                    else
+                    {
+                        expect("Variables declarations are not allowed.");
+                    }
+                }
+                /* If followed by `=` then we have a declaration-with-assignment */
+                else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.ASSIGN)
+                {
+                    // Only continue if variable declarations are allowed
+                    if(allowVarDec)
+                    {
+                        // Only continue if assignments are allowed
+                        if(wantsBody)
                         {
-                            DEBUG("StackArraySize: "~stackArraySize.toString());
-                            potentialStackSize = stackArraySize.getNumber();
+                            /* Consume the `=` token */
+                            lexer.nextToken();
+
+                            /* Now parse an expression */
+                            Expression expression = parseExpression();
+
+                            VariableAssignment varAssign = new VariableAssignment(expression);
+
+                            WARN("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
+                                    ~ type ~ ", Identifier: " ~ name ~ ")");
+                            
+                            Variable variable = new Variable(type, name);
+                            variable.addAssignment(varAssign);
+
+                            varAssign.setVariable(variable);
+
+                            generated = variable;
+
+                            return generated;
                         }
-                        // If not, then error
                         else
                         {
-                            ERROR("Expected an integer as stack-array size but got iets ander");
-                            // TODO: Rather throw a parsing error
-                            assert(false);
+                            expect("Variable assignments+declarations are not allowed.");
                         }
                     }
-                }
-
-                
-
-                expect(SymbolType.CBRACKET, lexer.getCurrentToken());
-                type=type~"["~potentialStackSize~"]";
-            }
-            /* If we have `*` */
-            else
-            {
-                type=type~"*";
-            }
-            
-            lexer.nextToken();
-        }
-
-        /* If were requested to only find a type, then stop here and return it */
-        if(onlyType)
-        {
-            /* Create a bogus TypedEntity for the sole purpose of returning the type */
-            generated = new TypedEntity("BOGUS_NAME_STOP_SHORT_OF_IDENTIFIER_TYPE_FETCH", type);
-
-            return generated;
-        }
-
-        /* If we are going to be assigning into an array (indexed) */
-        bool arrayIndexing = false;
-
-
-        /* If the current token is ASSIGN then array indexing is occuring */
-        if(getSymbolType(lexer.getCurrentToken()) == SymbolType.ASSIGN)
-        {
-            // Then we are doing an array-indexed assignment
-            arrayIndexing = true;
-        }
-        /* If we have an identifier the a declaration is occuring */
-        else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.IDENT_TYPE)
-        {
-            /* Expect an identifier (CAN NOT be dotted) */
-            expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
-            if(!isIdentifier_NoDot(lexer.getCurrentToken()))
-            {
-                expect("Identifier cannot be dotted");
-            }
-            identifier = lexer.getCurrentToken().getToken();
-
-            lexer.nextToken();
-            DEBUG("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ lexer.getCurrentToken().getToken());
-        }
-        /* Anything else is an error */
-        else
-        {
-            expect("Either a identity or an assignment symbol is expected");
-        }
-
-
-       
-
-        /* Check if it is `(` (func dec) */
-        SymbolType symbolType = getSymbolType(lexer.getCurrentToken());
-        DEBUG("ParseTypedDec: SymbolType=" ~ to!(string)(symbolType));
-        if (symbolType == SymbolType.LBRACE)
-        {
-            // FIXME: Rewind to `entrancePos` here and then capture the name as an Expression
-            
-
-            // Only continue is function definitions are allowed
-            if(allowFuncDef)
-            {
-                /* Will consume the `}` (or `;` if wantsBody-false) */
-                funcDefPair pair = parseFuncDef(wantsBody);
-
-                
-
-                generated = new Function(identifier, type, pair.bodyStatements, pair.params);
-
-                /**
-                 * If this function definition has a body (i.e. `wantsBody == true`)
-                 * and if the return type is non-void, THEN ensure we have a `ReturnStmt`
-                 * (return statement)
-                 */
-                if(wantsBody && type != "void")
-                {
-                    /* Recurse down to find a `ReturnStmt` */
-                    bool hasReturn = existsWithin(typeid(ReturnStmt), cast(Container)generated);
-
-                    // Error if no return statement exists
-                    if(!hasReturn)
+                    else
                     {
-                        expect("Function '"~identifier~"' declared with return type does not contain a return statement");
+                        expect("Variables declarations are not allowed.");
                     }
                 }
-                
-                import std.stdio;
-                writeln(to!(string)((cast(Function)generated).getVariables()));
-
-                // Parent the parameters of the function to the Function
-                parentToContainer(cast(Container)generated, cast(Statement[])pair.params);
-
-                // Parent the statements that make up the function to the Function
-                parentToContainer(cast(Container)generated, pair.bodyStatements);
-            }
-            else
-            {
-                expect("Function definitions not allowed");
-            }
-        }
-        /* Check for semi-colon (var dec) */
-        else if (symbolType == SymbolType.SEMICOLON)
-        {
-            // Only continue if variable declarations are allowed
-            if(allowVarDec)
-            {
-                DEBUG("Semi: "~to!(string)(lexer.getCurrentToken()));
-                DEBUG("Semi: "~to!(string)(lexer.getCurrentToken()));
-                WARN("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")");
-
-                generated = new Variable(type, identifier);
-            }
-            else
-            {
-                expect("Variables declarations are not allowed.");
-            }
-        }
-        /* Check for `=` (var dec) */
-        else if (symbolType == SymbolType.ASSIGN && (arrayIndexing == false))
-        {
-            // Only continue if variable declarations are allowed
-            if(allowVarDec)
-            {
-                // Only continue if assignments are allowed
-                if(wantsBody)
+                /**
+                * If followed by a `(` then we have a a fork
+                *
+                * Either we are going to have: `(int i, int k)` (a function definition)
+                * or a function call: `(1,2)`
+                */
+                else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.LBRACE)
                 {
-                    /* Consume the `=` token */
-                    lexer.nextToken();
+                    DEBUG("parseTypedDecl(): begin func def outer");
 
-                    /* Now parse an expression */
-                    Expression expression = parseExpression();
+                    /* Try to parse a function definition and fail gracefully if it wasn't one */
+                    funcDefPair potFuncDef;
+                    if(parseFuncDef(potFuncDef, true, wantsBody))
+                    {
+                        DEBUG(format("Got function definition for '%s': %s", name, potFuncDef));
 
-                    VariableAssignment varAssign = new VariableAssignment(expression);
+                        /* Function definitions - are they allowed here? */
+                        if(allowFuncDef)
+                        {
+                            generated = new Function(name, type, potFuncDef.bodyStatements, potFuncDef.params);
 
-                    WARN("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
-                            ~ type ~ ", Identifier: " ~ identifier ~ ")");
-                    
-                    Variable variable = new Variable(type, identifier);
-                    variable.addAssignment(varAssign);
+                            /**
+                            * If this function definition has a body (i.e. `wantsBody == true`)
+                            * and if the return type is non-void, THEN ensure we have a `ReturnStmt`
+                            * (return statement)
+                            */
+                            if(wantsBody && type != "void")
+                            {
+                                /* Recurse down to find a `ReturnStmt` */
+                                bool hasReturn = existsWithin(typeid(ReturnStmt), cast(Container)generated);
 
-                    varAssign.setVariable(variable);
+                                // Error if no return statement exists
+                                if(!hasReturn)
+                                {
+                                    expect("Function '"~name~"' declared with return type does not contain a return statement");
+                                }
+                            }
+                            
+                            import std.stdio;
+                            writeln(to!(string)((cast(Function)generated).getVariables()));
 
-                    generated = variable;
+                            // Parent the parameters of the function to the Function
+                            parentToContainer(cast(Container)generated, cast(Statement[])potFuncDef.params);
+
+                            // Parent the statements that make up the function to the Function
+                            parentToContainer(cast(Container)generated, potFuncDef.bodyStatements);
+
+                            return generated;
+                        }
+                        else
+                        {
+                            expect("Function definitions not allowed");
+                        }
+                    }
+                    else
+                    {
+                        WARN("We tried parsing a function definition, but it must be a call, rewinding");
+                        lexer.setCursor(entrancePos);
+                    }
                 }
+                /**
+                * We may have hit a case wher: `<type/exprPot> = <expr>`
+                * and where type=<type>, name=`=` and now we are on <expr>
+                */
                 else
                 {
-                    expect("Variable assignments+declarations are not allowed.");
+                    // TODO: Should we reind here in case ONLY of `=`? or what
+
+                    
+                    DEBUG(format("Type is '%s'", type));
+                    DEBUG(format("name is '%s'", name));
+                    DEBUG(format("We are on '%s'", lexer.getCurrentToken()));
+
+                    // expect("Was expecting either an `=`, `;` or `(`");
+                    lexer.setCursor(entrancePos);
                 }
             }
             else
             {
-                expect("Variables declarations are not allowed.");
+                WARN("parseNamePath(): Rolling back as we have some sort of standalone assignment");
+                lexer.setCursor(entrancePos);
             }
         }
-        /* Check for `=` (array indexed assignment) */
-        else if (symbolType == SymbolType.ASSIGN && (arrayIndexing == true))
+        /* On failure, rollback */
+        else
         {
-            // Set the token pointer back to the beginning
-            lexer.setCursor(arrayAssignTokenBeginPos);
-            DEBUG("Looking at: "~to!(string)(lexer.getCurrentToken()));
+            lexer.setCursor(entrancePos);
+            DEBUG("Cursor rewind as failed to find a valid type");
+        }
 
-            // TODO: Move all below code to the branch below that handles this case
-            WARN("We have an array assignment, here is the indexers: "~to!(string)(arrayIndexExprs));
+        /** 
+         * In this case then parse an expression
+         *
+         * Standalone assignment: `arr[0] = ... ;`
+         * Function call: `x.y.z();`
+         *
+         * In both cases we want an expression
+         * and want to halt when we get a `;`
+         * or `=``
+         *
+         * Note that `*ptr = 1` is never
+         * considered within this function
+         * because the starting symbol
+         * creates a call to `parseDerefAssignment()`
+         * instead
+         */
+        Expression lhsExpr = parseExpression();
+        DEBUG(format("lhsExpr: %s", lhsExpr));
 
-            // Our identifier will be some weird malformed-looking `mrArray[][1]` (because os atck array size declarations no-number literal)
-            // ... expressions don't make it in (we have arrayIndexExprs for that). Therefore what we must do is actually
-            // strip the array bracket syntax away to get the name
-            import std.string : indexOf;
-            long firstBracket = indexOf(type, "[");
-            assert(firstBracket > -1);
-            identifier = type[0..firstBracket];
-            DEBUG("Then identifier is type actually: "~identifier);
+        // If next token is `=` then it is some standalone array-index assignment
+        if(getSymbolType(lexer.getCurrentToken()) == SymbolType.ASSIGN)
+        {
+            /* The index expression */
+            ArrayIndex indexApr = cast(ArrayIndex)lhsExpr;
+            DEBUG("indexApr: "~indexApr.toString());
 
-
-            ERROR("We are still implenenting array assignments");
-
-            ArrayIndex muhIndex = cast(ArrayIndex)parseExpression();
-            DEBUG("Expback: "~muhIndex.toString());
-
-            /* Expect a `=` and consume it */
-            DEBUG(lexer.getCurrentToken());
-            expect(SymbolType.ASSIGN, lexer.getCurrentToken());
+            /* Consume the `=` */
             lexer.nextToken();
 
             /* Parse the expression being assigned followed by a semi-colon `;` */
-            Expression expressionBeingAssigned = parseExpression();
+            Expression assExpr = parseExpression();
             expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
 
-            // TODO: Get the expression after the `=`
-            ArrayAssignment arrayAssignment = new ArrayAssignment(muhIndex, expressionBeingAssigned);
+            DEBUG(format("Assigning to: %s", indexApr));
+            DEBUG(format("Assigning of: %s", assExpr));
+
+            /* Create the assignment */
+            ArrayAssignment arrayAssignment = new ArrayAssignment(indexApr, assExpr);
             DEBUG("Created array assignment: "~arrayAssignment.toString());
-            // assert(false);
+            return arrayAssignment;
 
             generated = arrayAssignment;
+
+            return generated;
+        }
+        // If next token is `;` then it is some standalone expression (like a function call)
+        else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.SEMICOLON)
+        {
+            // FIXME: Implement me; currently nothing gets catched here
+            // because this entire fucntion isn't called for function
+            // calls
+
+            /* Expect a semi-colon */
+            expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+
+            /**
+             * Create a function call and flag
+             * it as statement-level
+             */
+            FunctionCall funcCall = cast(FunctionCall)lhsExpr;
+            assert(funcCall);
+            funcCall.makeStatementLevel();
+            
+            return funcCall;
         }
         else
         {
-            expect("Expected one of the following: (, ; or =");
-        }
-
-        WARN("parseTypedDeclaration(): Leave");
-
-        return generated;
+            // FIXME: Add better message here
+            expect("Unknown typed declaration");
+            assert(false);
+        }       
     }
 
     /**
@@ -2928,16 +3044,28 @@ public final class Parser
         return modulle;
     }
 
-    private string parseNamePath()
+    private bool parseNamePath(ref string pathOut, bool forgiving = false)
     {
         /* Expect an IDENT_TYPE */
-        expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
+        if(!getSymbolType(lexer.getCurrentToken()) == SymbolType.IDENT_TYPE)
+        {
+            /* If forgiving return gracefully */
+            if(forgiving)
+            {
+                return false;
+            }
+
+            /* Else: Error out */
+            expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
+        }
+        
 
         /* Consume the name and move to next token */
         string name = lexer.getCurrentToken().getToken();
         lexer.nextToken();
 
-        return name;
+        pathOut = name;
+        return true;
     }
 
     private string parseNamePathDotted()
