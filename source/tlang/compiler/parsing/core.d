@@ -1996,10 +1996,6 @@ public final class Parser
             ArrayAssignment arrayAssignment = new ArrayAssignment(indexApr, assExpr);
             DEBUG("Created array assignment: "~arrayAssignment.toString());
             return arrayAssignment;
-
-            generated = arrayAssignment;
-
-            return generated;
         }
         // If next token is `;` then it is some standalone expression (like a function call)
         else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.SEMICOLON)
