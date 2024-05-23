@@ -257,26 +257,31 @@ public final class BasicLexer : LexerInterface
                 */
                 import tlang.misc.utils;
 
+                DEBUG("fdsdfdf");
                 if (currentChar == LS.DOT)
                 {
-                    if (isBackward() && isWhite(sourceCode[position - 1]))
-                    {
-                        throw new LexerException(this, "Character '.' is not allowed to follow a whitespace.");
-                    }
-                    if (isForward() && isWhite(sourceCode[position + 1]))
-                    {
-                        throw new LexerException(this, "Character '.' is not allowed to precede a whitespace.");
-                    }
-                    else if (!hasToken() && (isBackward() && !isValidDotPrecede(
-                            sourceCode[position - 1])))
-                    {
-                        throw new LexerException(this, "Character '.' should be preceded by valid identifier or numerical.");
-                    }
-                    else
-                    {
-                        splitterToken = EMPTY ~ currentChar;
-                        improvedAdvance();
-                    }
+                    DEBUG("DOOOT");
+                    // if (isBackward() && isWhite(sourceCode[position - 1]))
+                    // {
+                    //     throw new LexerException(this, "Character '.' is not allowed to follow a whitespace.");
+                    // }
+                    // if (isForward() && isWhite(sourceCode[position + 1]))
+                    // {
+                    //     throw new LexerException(this, "Character '.' is not allowed to precede a whitespace.");
+                    // }
+                    // else if (!hasToken() && (isBackward() && !isValidDotPrecede(
+                    //         sourceCode[position - 1])))
+                    // {
+                    //     throw new LexerException(this, "Character '.' should be preceded by valid identifier or numerical.");
+                    // }
+                    // else
+                    // {
+                    //     splitterToken = EMPTY ~ currentChar;
+                    //     improvedAdvance();
+                    // }
+
+                     splitterToken = ".";
+                    improvedAdvance(2, false);
                 }else if (currentChar == LS.AMPERSAND && (position + 1) != sourceCode.length && sourceCode[position + 1] == LS.AMPERSAND)
                 {
                     splitterToken = "&&";
