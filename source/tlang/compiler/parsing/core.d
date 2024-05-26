@@ -1726,6 +1726,15 @@ public final class Parser
         return true;
     }
 
+    /** 
+     * Tries to parse a type signature
+     * such as `k.int*[][6]`
+     *
+     * Params:
+     *   typeOut = the found type
+     * Returns: `true` if successfully
+     * parsed, `false` otherwise
+     */
     private bool tryParseType(ref string typeOut)
     {
         string type;
