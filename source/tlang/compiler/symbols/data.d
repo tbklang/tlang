@@ -1015,6 +1015,9 @@ public class Call : IdentExpression
     }
 }
 
+// TODO: A call should probably be its own thing
+// and not an ident expression, as it isn't really
+
 // FIXME: Finish adding proper `MStatementSearchable` and `MStatementReplaceable` to `FunctionCall`
 public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable
 {
