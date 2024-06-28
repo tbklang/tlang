@@ -2955,6 +2955,10 @@ public final class TypeChecker
     {
         Type foundType;
 
+        // TODO: Below is somewhat badly named
+        // as it handles the pointer types `<type>*`
+        // and accounts for more than just built-in
+        // types then
         /* Check if the type is built-in */
         foundType = getBuiltInType(this, c, typeString);
 
