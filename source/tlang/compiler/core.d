@@ -418,6 +418,8 @@ unittest
 
 
                         "source/tlang/testing/simple_pointer_array_syntax.t",
+
+                        "source/tlang/testing/simple_func_statement.t"
                         ];
     foreach(string testFile; testFiles)
     {
