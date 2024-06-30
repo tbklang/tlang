@@ -677,8 +677,12 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
     // ... stack-array being index-assigned into
     private string arrayName;
 
-    // TODO: We then also need a `Value` field for the index expression instruction
-    private Value index;
+    /** 
+     * The indices (from left-to-right)
+     * of this stack array indexed
+     * assignment
+     */
+    private Value[] indices;
 
     // TODO: We then also need another `Value` field for the expression instruction
     // ... being assigned into the stack-array at said index
@@ -687,8 +691,13 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
     this(string arrayName, Value index, Value assignment)
     {
         this.arrayName = arrayName;
-        this.index = index;
+        appendIndex(index);
         this.assignment = assignment;
+    }
+
+    public void appendIndex(Value index)
+    {
+        this.indices ~= index;
     }
 
     public string getArrayName()
@@ -696,9 +705,20 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
         return arrayName;
     }
 
+    public Value[] getIndexInstructions()
+    {
+        return this.indices;
+    }
+
+    public bool isUniDimensional()
+    {
+        return this.indices.length == 1;
+    }
+
     public Value getIndexInstr()
     {
-        return index;
+        assert(isUniDimensional());
+        return this.indices[0];
     }
 
     public Value getAssignedValue()
@@ -708,6 +728,6 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
 
     public override string toString()
     {
-        return "StackArrayASSIGN [name: "~arrayName~", index: "~index.toString()~", Assignment: "~assignment.toString()~"]";
+        return "StackArrayASSIGN [name: "~arrayName~", indices: "~to!(string)(this.indices)~", Assignment: "~assignment.toString()~"]";
     }
 }
