@@ -261,6 +261,33 @@ public class Assignment : Statement
 }
 
 /** 
+ * Represents an assignment to
+ * _some_ name of which we are
+ * assigning to such an entity
+ * _some_ expression
+ */
+public final class Assignment_V2 : Statement
+{
+    private Expression named;
+    private Expression assValue;
+
+    /** 
+     * Constructs a new assignment
+     * 
+     * Params:
+     *   name = the entity being
+     * assigned to
+     *   value = the value to
+     * assign
+     */
+    this(Expression name, Expression value)
+    {
+        this.named = name;
+        this.assValue = value;
+    }
+}
+
+/** 
  * Entity
  *
  * Declared variables, defined classes and functions
