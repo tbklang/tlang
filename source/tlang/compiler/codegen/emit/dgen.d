@@ -796,14 +796,35 @@ public final class DCodeEmitter : CodeEmitter
                 emit ~= transform(assignmentInstr);
                 emit ~= ";";
 
-
-                // return "(StackArrAssignmentInstr: TODO)";
-
                 emmmmit = emit;
             }
+            /* Multi-dimensional assignment */
             else
             {
+                /* Obtain the multiple index expressions */
+                Value[] indices = stackArrAssInstr.getIndexInstructions();
+
+                /* Obtain the expresison being assigned */
+                Value assignmentInstr = stackArrAssInstr.getAssignedValue();
+
+                /** 
+                * Emit <arrayName>[<index1>][<index2>]...[<indexN>] = <expression>;
+                */
+                string emit = arrayNameMapped;
+
+                foreach(Value index; indices)
+                {
+                    emit ~= "[";
+                    emit ~= transform(index);
+                    emit ~= "]";
+                }
+                
+                emit ~= " = ";
+                emit ~= transform(assignmentInstr);
+                emit ~= ";";                
+
                 ERROR("Please add support for emitting muti-dimensional stack array index assignments");
+                ERROR(format("So far, I did try this:\n\n%s", emit));
                 assert(false);
             }
         }
