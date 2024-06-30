@@ -775,28 +775,37 @@ public final class DCodeEmitter : CodeEmitter
             // FIXME: Set proper scope type
             string arrayNameMapped = mapper.map(arrayVariable, ScopeType.GLOBAL);
 
-            /* Obtain the index expression */
-            Value indexInstr = stackArrAssInstr.getIndexInstr();
+            /* Uni-dimensional assignment */
+            if(stackArrAssInstr.isUniDimensional())
+            {
+                /* Obtain the single index expression */
+                Value indexInstr = stackArrAssInstr.getIndexInstr();
 
-            /* Obtain the expresison being assigned */
-            Value assignmentInstr = stackArrAssInstr.getAssignedValue();
+                /* Obtain the expresison being assigned */
+                Value assignmentInstr = stackArrAssInstr.getAssignedValue();
 
-            /** 
-             * Emit <arrayName>[<index>] = <expression>;
-             */
-            string emit = arrayNameMapped;
-            emit ~= "[";
-            emit ~= transform(indexInstr);
-            emit ~= "]";
+                /** 
+                * Emit <arrayName>[<index>] = <expression>;
+                */
+                string emit = arrayNameMapped;
+                emit ~= "[";
+                emit ~= transform(indexInstr);
+                emit ~= "]";
 
-            emit ~= " = ";
-            emit ~= transform(assignmentInstr);
-            emit ~= ";";
+                emit ~= " = ";
+                emit ~= transform(assignmentInstr);
+                emit ~= ";";
 
 
-            // return "(StackArrAssignmentInstr: TODO)";
+                // return "(StackArrAssignmentInstr: TODO)";
 
-            emmmmit = emit;
+                emmmmit = emit;
+            }
+            else
+            {
+                ERROR("Please add support for emitting muti-dimensional stack array index assignments");
+                assert(false);
+            }
         }
         // TODO: MAAAAN we don't even have this yet
         // else if(cast(StringExpression))
