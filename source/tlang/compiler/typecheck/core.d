@@ -2801,8 +2801,8 @@ public final class TypeChecker
                 Value arrayRefInstruction = cast(Value)popInstr();
                 Value assignmentInstr = cast(Value)popInstr();
 
-                WARN("indexInstruction: "~indexInstruction.toString());
                 WARN("arrayRefInstruction: "~arrayRefInstruction.toString());
+                WARN("indexInstruction: "~indexInstruction.toString());
                 WARN("assignmentInstr: "~assignmentInstr.toString());
 
 
@@ -2812,6 +2812,9 @@ public final class TypeChecker
 
                 // TODO: We need to add a check here for if the `arrayRefInstruction` is a name
                 // ... and if so if its type is `StackArray`, else we will enter the wrong thing below
+                // FIXME: Add support for multi-dimensional stack array assignments
+                // in which case we will need to rethink the conditionals here
+                // to do more thurrough checks
                 bool isStackArray = isStackArrayIndex(arrayRefInstruction);
                 ERROR("isStackArray (being assigned to)?: "~to!(string)(isStackArray));
 
@@ -2832,35 +2835,77 @@ public final class TypeChecker
     
                     // StackArrayIndexInstruction stackArrayIndex = cast(StackArrayIndexInstruction)arrayRefInstruction;
                     
-                    FetchValueVar arrayFetch = cast(FetchValueVar)arrayRefInstruction;
-
                     /** 
-                     * Hoist out the declared stack array variable
+                     * You are either doing something
+                     * akin to: `stackArr[0] = ...`
+                     * or `stackArr[0][0] = ...`
+                     *
+                     * In the first case it is simple
+                     * enough to assume the `arrayrefInstruction`
+                     * will be a `FetchValueVar` instruction.
+                     *
+                     * However, in the latter case
+                     * the `arrayRefInstruction`
+                     * will be a `StackArrayIndexInstruction`
                      */
-                    Context stackVarContext = arrayFetch.getContext();
-                    assert(stackVarContext); //TODO: We must set the Context when we make the `StackArrayIndexInstruction`
+                    if(cast(FetchValueVar)arrayRefInstruction)
+                    {
+                        FetchValueVar arrayFetch = cast(FetchValueVar)arrayRefInstruction;
+                        DEBUG("We have a uni-dimensional stack array index for our assignment");
+                        
+                        /** 
+                         * Hoist out the declared stack array variable
+                         */
+                        Context stackVarContext = arrayFetch.getContext();
+                        assert(stackVarContext); //TODO: We must set the Context when we make the `StackArrayIndexInstruction`
+                        
+                        Variable arrayVariable = cast(Variable)resolver.resolveBest(stackVarContext.container, arrayFetch.varName);
+                        Type arrayVariableDeclarationType = getType(stackVarContext.container, arrayVariable.getType());
+
+                        ERROR("TODO: We are still working on generating an assignment instruction for assigning to stack arrays");
+                        ERROR("TODO: Implement instruction generation for stack-based arrays");
+
+                        // TODO: Use StackArrayIndexAssignmentInstruction
+                        StackArrayIndexAssignmentInstruction stackAssignmentInstr = new StackArrayIndexAssignmentInstruction(arrayFetch.varName, indexInstruction, assignmentInstr);
+
+                        // TODO: See issue on `Stack-array support` for what to do next
+                        // assert(false);
+                        generatedInstruction = stackAssignmentInstr;
+
+                        // TODO: Set context
+                        /* Set the context */
+                        stackAssignmentInstr.setContext(arrayAssignment.getContext());
+
+
+                        DEBUG(">>>>> "~stackAssignmentInstr.toString());
+                        DEBUG("Assigning into this array: "~to!(string)(assignmentInstr));
+                        // assert(false);
+                    }
+                    // FIXME: Implement me
+                    else if(cast(StackArrayIndexInstruction)arrayRefInstruction)
+                    {
+                        /**
+                         * In order to implement something like this
+                         * we would need to actually walk the entire
+                         * indices.
+                         *
+                         * i.e. `stackArray[0][1][2]` we would need
+                         * to extract the paths of `0, 1, 2` out
+                         * and then also update the `StackArrayIndexAssignmentInstruction`
+                         * to support that
+                         */
+                        ERROR("Add support for multi-dimensional stack array index assignments");
+                        assert(false);
+                    }
+                    // Sanity check: Should never happen
+                    else
+                    {
+                        ERROR("Somehow you accomplished to do a stack array index assignment onto something which is not uni-dimensional or multi-dimensional");
+                        assert(false);
+                    }
+
+
                     
-                    Variable arrayVariable = cast(Variable)resolver.resolveBest(stackVarContext.container, arrayFetch.varName);
-                    Type arrayVariableDeclarationType = getType(stackVarContext.container, arrayVariable.getType());
-
-                    ERROR("TODO: We are still working on generating an assignment instruction for assigning to stack arrays");
-                    ERROR("TODO: Implement instruction generation for stack-based arrays");
-
-                    // TODO: Use StackArrayIndexAssignmentInstruction
-                    StackArrayIndexAssignmentInstruction stackAssignmentInstr = new StackArrayIndexAssignmentInstruction(arrayFetch.varName, indexInstruction, assignmentInstr);
-
-                    // TODO: See issue on `Stack-array support` for what to do next
-                    // assert(false);
-                    generatedInstruction = stackAssignmentInstr;
-
-                    // TODO: Set context
-                    /* Set the context */
-                    stackAssignmentInstr.setContext(arrayAssignment.getContext());
-
-
-                    DEBUG(">>>>> "~stackAssignmentInstr.toString());
-                    DEBUG("Assigning into this array: "~to!(string)(assignmentInstr));
-                    // assert(false);
                 }
                 /* Array type `<componentType>[]` */
                 else if(cast(Pointer)indexingOnType)
