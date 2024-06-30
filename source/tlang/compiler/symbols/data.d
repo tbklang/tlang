@@ -285,6 +285,16 @@ public final class Assignment_V2 : Statement
         this.named = name;
         this.assValue = value;
     }
+
+    public Expression getName()
+    {
+        return this.named;
+    }
+
+    public Expression getAssignedValue()
+    {
+        return this.assValue;
+    }
 }
 
 /** 
