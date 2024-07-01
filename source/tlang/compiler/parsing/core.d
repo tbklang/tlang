@@ -496,6 +496,10 @@ public final class Parser
 
         /* TODO: The problem here is I don't want to progress the token */
 
+
+
+        
+
         /* Get next token */
         lexer.nextToken();
         SymbolType type = getSymbolType(lexer.getCurrentToken());
@@ -1821,6 +1825,9 @@ public final class Parser
                 /* If followed by a `;` then we have a declaration-without-assignment */
                 if(getSymbolType(lexer.getCurrentToken()) == SymbolType.SEMICOLON)
                 {
+                    // Consume the semi-colon
+                    lexer.nextToken();
+
                     // Only continue if variable declarations are allowed
                     if(allowVarDec)
                     {
@@ -1839,6 +1846,7 @@ public final class Parser
                 /* If followed by `=` then we have a declaration-with-assignment */
                 else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.ASSIGN)
                 {
+                    DEBUG("HJHHHH");
                     // Only continue if variable declarations are allowed
                     if(allowVarDec)
                     {
@@ -1850,6 +1858,9 @@ public final class Parser
 
                             /* Now parse an expression */
                             Expression expression = parseExpression();
+
+                            /* Consume the `;` */
+                            lexer.nextToken();
 
                             VariableAssignment varAssign = new VariableAssignment(expression);
 
@@ -1984,12 +1995,19 @@ public final class Parser
         Expression lhsExpr = parseExpression();
         DEBUG(format("lhsExpr: %s", lhsExpr));
 
+        DEBUG(format("Current token (rewind) case pre-enter: %s", lexer.getCurrentToken()));
+
         // If next token is `=` then it is some standalone array-index assignment
+        // FIXME: No, it could be ANYTHING actually, like a avriable assignment too
         if(getSymbolType(lexer.getCurrentToken()) == SymbolType.ASSIGN)
         {
-            /* The index expression */
-            ArrayIndex indexApr = cast(ArrayIndex)lhsExpr;
-            DEBUG("indexApr: "~indexApr.toString());
+            // Now we make a kind-of assigbnment depending on the left-hand
+            // ... side ish?
+            //
+            // Or just store it as is?
+
+            /* The entity being assigned to */
+            Expression toEntity = lhsExpr;
 
             /* Consume the `=` */
             lexer.nextToken();
@@ -1998,13 +2016,16 @@ public final class Parser
             Expression assExpr = parseExpression();
             expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
 
-            DEBUG(format("Assigning to: %s", indexApr));
+            /* Consume the `;` */
+            lexer.nextToken();
+
+            DEBUG(format("Assigning to: %s", toEntity));
             DEBUG(format("Assigning of: %s", assExpr));
 
             /* Create the assignment */
-            ArrayAssignment arrayAssignment = new ArrayAssignment(indexApr, assExpr);
-            DEBUG("Created array assignment: "~arrayAssignment.toString());
-            return arrayAssignment;
+            Assignment_V2 assignment = new Assignment_V2(toEntity, assExpr);
+            DEBUG("Created assignment: "~assignment.toString());
+            return assignment;
         }
         // If next token is `;` then it is some standalone expression (like a function call)
         else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.SEMICOLON)
@@ -2012,19 +2033,25 @@ public final class Parser
             // FIXME: Implement me; currently nothing gets catched here
             // because this entire fucntion isn't called for function
             // calls
+            DEBUG("ExpressionStatement");
+
+            /* The statement-level expression */
+            Expression stmtLvlExpr = lhsExpr;
+
+            /** 
+             * Create a new statement
+             * that holds our expression
+             */
+            ExpressionStatement exprStmt = new ExpressionStatement(stmtLvlExpr);
+            DEBUG(format("Constructed a ExpressionStatement %s", exprStmt));
 
             /* Expect a semi-colon */
             expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
 
-            /**
-             * Create a function call and flag
-             * it as statement-level
-             */
-            FunctionCall funcCall = cast(FunctionCall)lhsExpr;
-            assert(funcCall);
-            funcCall.makeStatementLevel();
-            
-            return funcCall;
+            /* Consume the `;` */
+            lexer.nextToken();
+
+            return exprStmt;
         }
         else
         {
@@ -2254,6 +2281,12 @@ public final class Parser
                         BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
 
                         parentToContainer(container, [binOpExp.getLeftExpression(), binOpExp.getRightExpression()]);
+                    }
+                    else if(cast(ExpressionStatement)statement)
+                    {
+                        ExpressionStatement exprStmt = cast(ExpressionStatement)statement;
+
+                        parentToContainer(container, [exprStmt.getExpr()]);
                     }
                     /** 
                      * If we have a `VariableAssignmentStdAlone`
@@ -2581,7 +2614,8 @@ public final class Parser
         if(symbol == SymbolType.IDENT_TYPE)
         {
             /* Might be a function, might be a variable, or assignment */
-            statement = parseName(terminatingSymbol);
+            // statement = parseName(terminatingSymbol);
+            statement = parseTypedDeclaration(); // TODO: Any args to pass?
         }
         /* If it is an accessor */
         else if(isAccessor(tok))
