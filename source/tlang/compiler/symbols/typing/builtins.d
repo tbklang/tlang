@@ -144,6 +144,11 @@ public Type getBuiltInType(TypeChecker tc, Container container, string typeStrin
         DEBUG(format("Got long form primitive of '%s' from '%s'", typeOut, typeString));
         return typeOut;
     }
+    /* A module */
+    else if(cmp(typeString, "module") == 0)
+    {
+        return new ModuleType();
+    }
     /* Stack-based array handling `<componentType>[<number>]` */
     else if(isStackArray(typeString))
     {

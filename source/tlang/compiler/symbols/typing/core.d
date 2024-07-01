@@ -294,3 +294,11 @@ public class StackArray : Type
         return arraySize;
     }
 }
+
+public final class ModuleType : Type
+{
+    this()
+    {
+        super("module");
+    }
+}
