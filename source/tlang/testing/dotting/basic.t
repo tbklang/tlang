@@ -5,6 +5,11 @@ void k()
 	
 }
 
+int y()
+{
+	return 69;
+}
+
 int main()
 {
 	int[2][2] stackArr;
@@ -17,7 +22,9 @@ int main()
 
 	basic.k();
 
-	int f = 1+(basic.k());
+	y()+y();
+
+	int f = 1+(basic.y());
 
 	*(arr+1) = 54;
 
