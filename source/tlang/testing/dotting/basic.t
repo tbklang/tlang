@@ -15,7 +15,9 @@ int main()
 	
 	main.arr = 0;
 
-	basic.k();	
+	basic.k();
+
+	int f = 1+(basic.k());
 
 	*(arr+1) = 54;
 
