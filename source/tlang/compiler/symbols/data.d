@@ -295,6 +295,12 @@ public final class Assignment_V2 : Statement
     {
         return this.assValue;
     }
+
+    public override string toString()
+    {
+        import std.string : format;
+        return format("AssignmentV2 [name: %s, value: %s]", this.named, this.assValue);
+    }
 }
 
 /** 
@@ -1051,6 +1057,50 @@ public class Call : IdentExpression
         super(ident);
     }
 }
+
+
+public final class ExpressionStatement : Statement, MStatementSearchable
+{
+    private Expression path;
+
+    this(Expression path)
+    {
+        this.path = path;
+
+        /* Weighted as 2 */
+        weight = 2;
+    }
+
+    public Expression getExpr()
+    {
+        return this.path;
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /**
+         * Recurse on the path `Expression` (if possible)
+         */
+
+        MStatementSearchable innerStmt = cast(MStatementSearchable)this.path;
+        if(innerStmt)
+        {
+            matches ~= innerStmt.search(clazzType); 
+        }
+
+        return matches;
+    }
+}
+
 
 // TODO: A call should probably be its own thing
 // and not an ident expression, as it isn't really
