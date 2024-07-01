@@ -134,6 +134,11 @@ public final class FetchValueVar : Value
 
         addInfo = "fetchVarValName: "~varName~", VarLen: "~to!(string)(length);
     }
+
+    public string getTarget()
+    {
+        return this.varName;
+    }
 }
 
 /* Used for integers */
