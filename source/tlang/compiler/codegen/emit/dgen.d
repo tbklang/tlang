@@ -812,6 +812,14 @@ public final class DCodeEmitter : CodeEmitter
              */
             string emit = transform(valInstr)~";";
 
+            // TODO: Note C will give a warning about unused values (-Wunused-value)
+            // ... if you do something like y()+something.
+            // So anything _other_ than a function call (at least so far)
+            if(!cast(FuncCallInstr)valInstr)
+            {
+                WARN("Emitting a statement-level expression other than a direct function call; you may notice a CC warning");
+            }
+
             emmmmit = emit;
         }
         // TODO: MAAAAN we don't even have this yet
