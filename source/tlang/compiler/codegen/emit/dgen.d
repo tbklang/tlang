@@ -798,6 +798,22 @@ public final class DCodeEmitter : CodeEmitter
 
             emmmmit = emit;
         }
+        /** 
+         * Statement-level value instructions
+         */
+        else if(cast(ExpressionStatementInstruction)instruction)
+        {
+            ExpressionStatementInstruction exprStmtInstr = cast(ExpressionStatementInstruction)instruction;
+            Value valInstr = exprStmtInstr.getExprInstruction();
+
+            // TODO: Is there anything else which need be done? Things C really wouldn't support straightfoward-ly?
+            /**
+             * Emit transform(<valInstr>) ;
+             */
+            string emit = transform(valInstr)~";";
+
+            emmmmit = emit;
+        }
         // TODO: MAAAAN we don't even have this yet
         // else if(cast(StringExpression))
         /** 
