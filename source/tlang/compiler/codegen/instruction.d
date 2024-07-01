@@ -359,6 +359,25 @@ public class FuncCallInstr : CallInstr
     }
 }
 
+/** 
+ * An instruction of whom's job
+ * is to execute an arbitrary
+ * `Value`-based instruction
+ */
+public final class ExpressionStatementInstruction : Instruction
+{
+    private Value exprInstr;
+
+    this(Value expressionInstruction)
+    {
+        this.exprInstr = expressionInstruction;
+    }
+
+    public Value getExprInstruction()
+    {
+        return this.exprInstr;
+    }
+}
 
 public final class ReturnInstruction : Instruction
 {
