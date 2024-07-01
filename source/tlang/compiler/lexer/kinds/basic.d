@@ -256,8 +256,10 @@ public final class BasicLexer : LexerInterface
                 * preceding us were all good for an identifier
                 */
                 import tlang.misc.utils;
+                import std.string : format;
 
                 DEBUG("fdsdfdf");
+                DEBUG(format("char: %c", currentChar));
                 if (currentChar == LS.DOT)
                 {
                     DEBUG("DOOOT");
@@ -281,7 +283,7 @@ public final class BasicLexer : LexerInterface
                     // }
 
                      splitterToken = ".";
-                    improvedAdvance(2, false);
+                    improvedAdvance();
                 }else if (currentChar == LS.AMPERSAND && (position + 1) != sourceCode.length && sourceCode[position + 1] == LS.AMPERSAND)
                 {
                     splitterToken = "&&";
@@ -393,16 +395,17 @@ public final class BasicLexer : LexerInterface
         }
 
         while (true) {
-            if (currentChar == LS.DOT) {
-                if (isForward() && (isSplitter(sourceCode[position + 1]) || isDigit(sourceCode[position + 1]))) {
-                    throw new LexerException(this, "Invalid character in identifier build up.");
-                } else {
-                    if (!buildAdvance()) {
-                        throw new LexerException(this, "Invalid character in identifier build up.");
-                        //return false;
-                    }
-                }
-            } else if (isSplitter(currentChar)) {
+            // if (currentChar == LS.DOT) {
+            //     if (isForward() && (isSplitter(sourceCode[position + 1]) || isDigit(sourceCode[position + 1]))) {
+            //         throw new LexerException(this, "Invalid character in identifier build up.");
+            //     } else {
+            //         if (!buildAdvance()) {
+            //             throw new LexerException(this, "Invalid character in identifier build up.");
+            //             //return false;
+            //         }
+            //     }
+            // } else
+            if (isSplitter(currentChar)) {
                 flush();
                 return true;
             } else if (!(isAlpha(currentChar) || isDigit(currentChar) || currentChar == LS.UNDERSCORE)) {
