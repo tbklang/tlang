@@ -16,7 +16,7 @@ import tlang.compiler.typecheck.dependency.exceptions : DependencyException, Dep
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
-
+import tlang.misc.utils : panic;
 
 /**
 * Passed around
@@ -812,111 +812,16 @@ public class DNodeGenerator
             /* Get the binary operator expression */
             BinaryOperatorExpression binOp = cast(BinaryOperatorExpression)exp;
 
-            
+            /* Apply context */
+            binOp.setContext(context);
 
-            /**
-            * If the operator is a dot operator
-            *
-            * We then treat that as an accessor
-            *
-            * Example: func().p1
-            * Example: new A().p1
-            */
-            if(binOp.getOperator() == SymbolType.DOT)
-            {
-                /**
-                * Get the left-node (the thing being accessed)
-                *
-                * Either a `new A()`, `A()`
-                */
-                Expression leftExp = binOp.getLeftExpression();
-                
+            /* Process left and right */
+            DNode leftNode = expressionPass(binOp.getLeftExpression(), context);
+            DNode rightNode = expressionPass(binOp.getRightExpression(), context);
 
-                /**
-                * Process the right-hand side expression
-                * but we should give it the Context that
-                * it is accessing some sort of class for example
-                * such that resolution can work properly
-                * (hence the need for `Context` in this function)
-                *
-                * 1. The Container is the type of the object and
-                * we then call expresssionPass on it which
-                * will eensure static init of class type etc
-                */
-
-                /* The NewExpression */
-                NewExpression newExpression = cast(NewExpression)leftExp;
-
-                /* Get the FunctionCall */
-                FunctionCall constructorCall = newExpression.getFuncCall();
-
-                /* Get the name of the class the function call referes to */
-                string className = constructorCall.getName();
-                Type type = tc.getType(context.container, className);
-
-                Clazz clazzType = cast(Clazz)type;
-                Container clazzContainer = cast(Container)clazzType;
-
-
-
-                
-                Context objectContext = new Context(clazzContainer, InitScope.VIRTUAL);
-                /* Also, only resolve within */
-                objectContext.noAllowUp();
-
-
-                /**
-                * Pass the newExpression and static init the class
-                * using current context
-                *
-                * We now know the class is static inited, and also
-                * the object
-                */
-                DNode lhsNode = expressionPass(leftExp, context);
-
-                /**
-                * Now using this pass the right-hand side with context
-                * being that the object access has virtual (static and
-                * non-static access as it is, well, an object `new A()`)
-                *
-                * Context being eithin the object and its class
-                */
-                DNode rhsNode = expressionPass(binOp.getRightExpression(), objectContext);
-                
-
-                // if(cast(NewExpression)leftExp)
-
-                /**
-                * TODO
-                *
-                * 1. Split up and recurse down the path (rhsExpression)
-                * 2. Above is done already in varExp (well needs to be implemented)
-                * 3. Make the rhsNode finanly depend on lhsNode
-                * 4. dnode (whole expression, dot operator expresiosn) relies on rhsNode
-                *
-                */
-                dnode.needs(lhsNode);
-                lhsNode.needs(rhsNode);
-                
-
-                
-            }
-            /**
-            * Anything else are mutually exlsuive (i.e. not chained)
-            *
-            * FIXME: For now
-            */
-            else
-            {
-                /* Process left and right */
-                DNode leftNode = expressionPass(binOp.getLeftExpression(), context);
-                DNode rightNode = expressionPass(binOp.getRightExpression(), context);
-
-                /* Require the evaluation of these */
-                /* TODO: Add specific DNode type dependent on the type of operator */
-                dnode.needs(leftNode);
-                dnode.needs(rightNode);
-            }
+            /* Require the evaluation of these */
+            dnode.needs(leftNode);
+            dnode.needs(rightNode);
         }
         /**
         * Unary operator
@@ -1490,6 +1395,27 @@ public class DNodeGenerator
             DNode funcCallDNode = expressionPass(funcCall, context);
 
             return funcCallDNode;
+        }
+        else if(cast(ExpressionStatement)entity)
+        {
+            ExpressionStatement exprStmt = cast(ExpressionStatement)entity;
+            // call.setContext(context);
+
+            ERROR("Still working on implementing support for PathExpession");
+
+            /** 
+             * Create a dependency node
+             * for the expression statement
+             * and then attach a dependency of
+             * its `path`
+             */
+            DNode exprStmtDNode = pool(exprStmt);
+            Expression expr = exprStmt.getExpr();
+            DEBUG("Before expPass");
+            exprStmtDNode.needs(expressionPass(expr, context));
+            DEBUG("After expPass");
+
+            return exprStmtDNode;
         }
 
         return null;
