@@ -99,3 +99,19 @@ public class VariableAssignmentNode : DNode
         name = to!(string)(associatedVariable)~" (assignment)";
     }
 }
+
+public class AssignmentOf : DNode
+{
+    this()
+    {
+
+    }
+}
+
+public class AssignmentTo : DNode
+{
+    this()
+    {
+        
+    }
+}
