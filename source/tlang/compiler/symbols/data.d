@@ -284,6 +284,9 @@ public final class Assignment_V2 : Statement
     {
         this.named = name;
         this.assValue = value;
+
+        /* Weighted as 2 */
+        weight = 2;
     }
 
     public Expression getName()
