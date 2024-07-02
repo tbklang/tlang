@@ -1044,6 +1044,36 @@ public class DNodeGenerator
             // node.needs(variableDNode);
             return variableDNode;
         }
+        /** 
+         * Handles assignments
+         */
+        else if(cast(Assignment_V2)entity)
+        {
+            Assignment_V2 varAss = cast(Assignment_V2)entity;
+            DNode varAssDNode = pool(varAss);
+            
+            /* Extract the expression being assigned to */
+            Expression toExpr = varAss.getName();
+
+            /* Extract the expression being assigned of */
+            Expression ofExpr = varAss.getAssignedValue();
+
+            /* Pool `toExpr` and make an `AssignmentTo` dep-node depend on it */
+            DNode assToDNode = new AssignmentTo();
+            DNode toExprDNode = expressionPass(toExpr, context);
+            assToDNode.needs(toExprDNode);
+
+            /* Pool `ofExpr` and make an `AssignmentOf` dep-node depend on it */
+            DNode assOfDNode = new AssignmentOf();
+            DNode ofExprDNode = expressionPass(ofExpr, context);
+            assOfDNode.needs(ofExprDNode);
+
+            /* Make the `varAssDNode` depend on the assTo and assOf dep-nodes */
+            varAssDNode.needs(assToDNode);
+            varAssDNode.needs(assOfDNode);
+
+            return varAssDNode;
+        }
         /**
         * Variable asignments
         */
