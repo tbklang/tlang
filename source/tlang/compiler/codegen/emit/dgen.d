@@ -765,18 +765,11 @@ public final class DCodeEmitter : CodeEmitter
             Context context = stackArrAssInstr.getContext();
             assert(context);
 
-            /** 
-             * Obtain the stack array being assigned to
-             */
-            string arrayName = stackArrAssInstr.getArrayName();
-            Variable arrayVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), arrayName);
-
-            /* Perform symbol mapping */
-            // FIXME: Set proper scope type
-            string arrayNameMapped = mapper.map(arrayVariable, ScopeType.GLOBAL);
+            /* Obtain the stack array being indexed on */
+            Value indexOnInstr = stackArrAssInstr.getArrayInstr();
 
             /* Obtain the index expression */
-            Value indexInstr = stackArrAssInstr.getIndexInstr();
+            Value indexInstr = stackArrAssInstr.getArrayIndexInstruction();
 
             /* Obtain the expresison being assigned */
             Value assignmentInstr = stackArrAssInstr.getAssignedValue();
@@ -784,7 +777,7 @@ public final class DCodeEmitter : CodeEmitter
             /** 
              * Emit <arrayName>[<index>] = <expression>;
              */
-            string emit = arrayNameMapped;
+            string emit = transform(indexOnInstr);
             emit ~= "[";
             emit ~= transform(indexInstr);
             emit ~= "]";
@@ -792,9 +785,6 @@ public final class DCodeEmitter : CodeEmitter
             emit ~= " = ";
             emit ~= transform(assignmentInstr);
             emit ~= ";";
-
-
-            // return "(StackArrAssignmentInstr: TODO)";
 
             emmmmit = emit;
         }
