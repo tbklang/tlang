@@ -398,6 +398,7 @@ unittest
                         "source/tlang/testing/simple_variables_only_decs.t",
                         "source/tlang/testing/simple_variables_decls_ass.t",
                         "source/tlang/testing/simple_while.t",
+                        "source/tlang/testing/simple_do_while.t",
                         
                         "source/tlang/testing/simple_for_loops.t",
                         "source/tlang/testing/simple_cast.t",

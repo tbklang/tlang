@@ -405,10 +405,12 @@ public final class IfStatementInstruction : Instruction
 public final class WhileLoopInstruction : Instruction
 {
     private BranchInstruction branchInstruction;
+    private bool isDoWhile;
 
-    this(BranchInstruction branchInstruction)
+    this(BranchInstruction branchInstruction, bool isDoWhile = false)
     {
         this.branchInstruction = branchInstruction;
+        this.isDoWhile = isDoWhile;
 
         addInfo = "Branch: "~to!(string)(branchInstruction);
     }
@@ -417,6 +419,12 @@ public final class WhileLoopInstruction : Instruction
     {
         return branchInstruction;
     }
+
+    public bool isDoWhileLoop()
+    {
+        return this.isDoWhile;
+    }
+
 }
 
 public final class ForLoopInstruction : Instruction
