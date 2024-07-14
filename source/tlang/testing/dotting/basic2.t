@@ -1,14 +1,14 @@
 module basic2;
 
-void k(int.int i, int* p)
+void k(int i, int* p)
 {
-	
+	p[0] = i;
 }
 
 int main()
 {
-	int* arr;
-	basic2.k(1, arr);
+	int[2] arr;
+	basic2.k(257, arr);
 
-	return 0;
+	return arr[0];
 }

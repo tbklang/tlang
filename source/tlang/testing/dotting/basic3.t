@@ -7,7 +7,7 @@ void k()
 
 int main()
 {
-	basic.k();
+	basic3.k();
 	
 	
 	return 0;

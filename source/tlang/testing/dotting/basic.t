@@ -14,22 +14,23 @@ int main()
 {
 	int[2][2] stackArr;
 
+	int[2] stack;
+
 	int* arr;
 	int[] d;
 
 	
-	main.arr = 0;
+	*basic.main.arr = 50;
 
-	basic.k();
+	*basic.main.arr = 51;
 
-	y()+y();
+	*basic.main.arr = basic.y()+1;
 
-	int f = 1+(basic.y());
+	*(basic.main.d+1) = 2;
 
-	*(arr+1) = 54;
-
-	arr[0][1] = 69;
+	basic.main.d[69] = 7;
 	
-	
+	basic.main.stack[basic.y()] = basic.y();
+
 	return 0;
 }
