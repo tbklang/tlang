@@ -391,7 +391,18 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/unused_vars.t --unusedVars true
       - name: Unused variables check (negative case)
         run: ./tlang typecheck source/tlang/testing/unused_vars_none.t --unusedVars true
-        
+
+      - name: Function call parameter v.s. argument count mismatch
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_function_bad_arg.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
   emit:
     needs: [build, unittests]
     name: Emit tests

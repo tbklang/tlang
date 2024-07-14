@@ -619,6 +619,30 @@ public class DNodeGenerator
             /* TODO: We need to fetch the cached function definition here and call it */
             Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
             assert(funcEntity);
+
+            /* Extract the parameter count of the function */
+            Function funcEntityAsFunc = cast(Function)funcEntity;
+            assert(funcEntityAsFunc);
+            ulong paramCount = funcEntityAsFunc.getParams().length;
+
+            /* Get the arguments to the function call */
+            Expression[] arguments = funcCall.getCallArguments();
+            ulong argCount = arguments.length;
+
+            /* Ensure correct number of arguments */
+            if(paramCount != argCount)
+            {
+                expect
+                (
+                    format
+                    (
+                        "The function %s has %d-many parameters but %d arguments were provided",
+                        funcEntity.getName(),
+                        paramCount,
+                        argCount
+                    )
+                );
+            }
             
             // FIXME: The below is failing (we probably need a forward look ahead?)
             // OR use the addFuncDef list?
@@ -636,7 +660,7 @@ public class DNodeGenerator
             /**
             * Go through each argument generating a fresh DNode for each expression
             */
-            foreach(Expression actualArgument; funcCall.getCallArguments())
+            foreach(Expression actualArgument; arguments)
             {
                 ExpressionDNode actualArgumentDNode = poolT!(ExpressionDNode, Expression)(actualArgument);
                 // dnode.needs(actualArgumentDNode);
