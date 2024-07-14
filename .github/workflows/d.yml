@@ -544,6 +544,23 @@ jobs:
               exit 1
           fi
 
+      - name: Alias expression test that returns 3
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/simple_aliases.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 3 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
 
 
 ##################################

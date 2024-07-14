@@ -390,6 +390,42 @@ public final class Resolver
         return resolveWithin(currentContainer, derive_nameMatch(name));
     }
 
+    public void collectWithin(Container currentContainer, Predicate!(Statement) pred, ref Statement[] collection)
+    {
+        Statement[] statements = currentContainer.getStatements();
+        foreach(Statement statement; statements)
+        {
+            if(pred(statement))
+            {
+                collection ~= statement;
+            }
+        }
+    }
+
+    public void collectUpwards(Container currentContainer, Predicate!(Statement) pred, ref Statement[] collected)
+    {
+        // Collect everything at the current level
+        collectWithin(currentContainer, pred, collected);
+
+        // If the current container a Statement
+        if(cast(Statement)currentContainer)
+        {
+            Statement cntnrStmt = cast(Statement)currentContainer;
+            if(pred(cntnrStmt))
+            {
+                collected ~= cntnrStmt;
+            }
+
+            // Does it have a parent?
+            Container parent = cntnrStmt.parentOf();
+            if(parent)
+            {
+                collectUpwards(parent, pred, collected);
+            }
+        }
+    }
+
+
     /** 
      * Performs a horizontal-based search of the given
      * `Container`, returning the first `Entity` found

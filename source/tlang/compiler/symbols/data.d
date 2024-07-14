@@ -73,8 +73,42 @@ public final class Program : Container
 
     public bool replace(Statement thiz, Statement that)
     {
-        // TODO: Implement me
-        return false;
+        /* We cannot replace ourselves */
+        if(thiz == this)
+        {
+            return false;
+        }
+        /* If not ourselves, then search our body */
+        else
+        {
+            /* Check for module replacement */
+            for(size_t i = 0; i < this.modules.length; i++)
+            {
+                Module mod = this.modules[i];
+
+                /* If we are replacing a module */
+                if(thiz == mod)
+                {
+                    this.modules[i] = cast(Module)that;
+                    that.parentTo(this);
+                    return true;
+                }
+            }
+
+            /* Check for replacement WITHIN each module */
+            for(size_t i = 0; i < this.modules.length; i++)
+            {
+                Module mod = this.modules[i];
+
+                /* If we are replacing WITHIN a module */
+                if(mod.replace(thiz, that))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 
     public void addStatement(Statement statement)
@@ -1016,7 +1050,7 @@ public class Call : IdentExpression
 }
 
 // FIXME: Finish adding proper `MStatementSearchable` and `MStatementReplaceable` to `FunctionCall`
-public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable
+public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable, MCloneable
 {
     /* Whether this is statement-level function call or not */
 
@@ -1120,7 +1154,39 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
         // {
         //     return false;
         // }
-        return true;
+        return false;
+    }
+
+    /** 
+     * Clones this integer literal
+     *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone(Container newParent = null)
+    {
+        // Clone arguments
+        Expression[] clonedArgs;
+        foreach(Expression arg; clonedArgs)
+        {
+            MCloneable argClonable = cast(MCloneable)arg;
+            if(argClonable)
+            {
+                clonedArgs ~= cast(Expression)argClonable.clone();
+            }
+        }
+
+        FunctionCall clonedFuncCall = new FunctionCall(this.name, clonedArgs);
+
+        DEBUG("haram");
+
+        // Parent outselves to the given parent
+        clonedFuncCall.parentTo(newParent);
+
+        return clonedFuncCall;
     }
 }
 
