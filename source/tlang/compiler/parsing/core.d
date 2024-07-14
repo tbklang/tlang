@@ -1651,7 +1651,11 @@ public final class Parser
                 /* Add the expression */
                 addRetExp(toAdd);
             }
-            /* TODO: New addition (UNTESTED, remove if problem causer) */
+            /** 
+             * Dot operator
+             *
+             * <expr>.<expr>
+             */
             else if(symbol == SymbolType.DOT)
             {
                 /* Pop the previous expression */
