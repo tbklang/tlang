@@ -1343,29 +1343,60 @@ public final class Parser
         return toAdd;
     }
 
-    // TODO: Parsing something that can follow an operator
+    /** 
+     * Checks if the provided expression
+     * is one of the following:
+     *
+     * 1. A numeric literal
+     * 2. A string literal
+     * 3. An identifier
+     *
+     * Params:
+     *   expr = 
+     * Returns: `true` if the rules are
+     * satisfied, `false` otherwise
+     */
+    private bool isBasicExpression(Expression expr)
+    {
+        return
+            cast(NumberLiteral)expr ||
+            cast(StringExpression)expr ||
+            cast(IdentExpression)expr;
+    }
+
+    /** 
+     * Parses basic expressions
+     *
+     * See_Also: isBasicExpression
+     * Returns: the `Expression`
+     * parsed
+     */
     private Expression parseBasic()
     {
         Token ct = lexer.getCurrentToken();
         SymbolType cs = getSymbolType(ct);
 
+        Expression retExpr;
+
         if(cs == SymbolType.NUMBER_LITERAL)
         {
-            return parseNumber();
+            retExpr = parseNumber();
         }
         else if(cs == SymbolType.CHARACTER_LITERAL)
         {
-            return parseCharacter();
+            retExpr = parseCharacter();
         }
         else if(cs == SymbolType.IDENT_TYPE)
         {
-            return parseIdent();
+            retExpr = parseIdent();
         }
         else
         {
             expect("Expected either a number literal, character literal or identifier");
-            return null;
         }
+
+        assert(isBasicExpression(retExpr)); // Sanity check
+        return retExpr;
     }
 
     /** 
@@ -1626,18 +1657,54 @@ public final class Parser
                 /* Pop the previous expression */
                 Expression previousExpression = removeExp();
 
-                // FIXME: Ensure that previousExpression
-                // is "basic" just like the right-hand will
-                // be assumed to be
 
-                /* TODO: Get next expression */
+                /** 
+                 * Checks to see if the provided expression
+                 * is either a basic expression or, in the
+                 * case it is not, if the expression is a
+                 * binary operation with a dot operator
+                 *
+                 * Params:
+                 *   expr = thye `Expression` to check
+                 * Returns: `true` if the rules are
+                 * satisfied, `false` otherwise
+                 */
+                bool isLeftHandSideValid(Expression expr)
+                {
+                    if(isBasicExpression(expr))
+                    {
+                        return true;
+                    }
+                    else if(cast(BinaryOperatorExpression)expr)
+                    {
+                        BinaryOperatorExpression binOpExpr = cast(BinaryOperatorExpression)expr;
+                        return binOpExpr.getOperator() == SymbolType.DOT;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                // Validate left-hand operand
+                if(!(isLeftHandSideValid(previousExpression)))
+                {
+                    expect
+                    (
+                        format
+                        (
+                            "The left-hand side expression '%s' is not a basic expresssion or dotted binary operation",
+                            previousExpression
+                        )
+                    );
+                }
+
+                /* Get next expression */
                 lexer.nextToken();
                 Expression item = parseBasic();
 
-                /* TODO: Construct accessor expression from both and addRetExp */
-
+                /* Create the binary operator expression */
                 BinaryOperatorExpression binOp = new BinaryOperatorExpression(SymbolType.DOT, previousExpression, item);
-
                 addRetExp(binOp);
             }
             else
