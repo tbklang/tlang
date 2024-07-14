@@ -693,36 +693,29 @@ public final class StackArrayIndexInstruction : Value
     }
 }
 
-// TODO: StackArrayIndexAssignmentInstruction
 public final class StackArrayIndexAssignmentInstruction : Instruction
 {
-    // TODO: We need a `string` field here which is looked up with the 
-    // ... associated context of this instruction and refers to the
-    // ... stack-array being index-assigned into
-    private string arrayName;
+    // Who is being indexed on and the index itself
+    private ArrayIndexInstruction arrAndIndex;
 
-    // TODO: We then also need a `Value` field for the index expression instruction
-    private Value index;
-
-    // TODO: We then also need another `Value` field for the expression instruction
+    // We then also need another `Value` field for the expression instruction
     // ... being assigned into the stack-array at said index
     private Value assignment;
 
-    this(string arrayName, Value index, Value assignment)
+    this(ArrayIndexInstruction arrAndIndex, Value assignment)
     {
-        this.arrayName = arrayName;
-        this.index = index;
+        this.arrAndIndex = arrAndIndex;
         this.assignment = assignment;
     }
 
-    public string getArrayName()
+    public Value getArrayInstr()
     {
-        return arrayName;
+        return arrAndIndex.getIndexedToInstr();
     }
 
-    public Value getIndexInstr()
+    public Value getArrayIndexInstruction()
     {
-        return index;
+        return arrAndIndex.getIndexInstr();
     }
 
     public Value getAssignedValue()
@@ -732,6 +725,13 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
 
     public override string toString()
     {
-        return "StackArrayASSIGN [name: "~arrayName~", index: "~index.toString()~", Assignment: "~assignment.toString()~"]";
+        import std.string : format;
+        return format
+        (
+            "StackArrayASSIGN [to: %s, index: %s, assignment: %s]",
+            getArrayInstr(),
+            getArrayIndexInstruction(),
+            assignment
+        );
     }
 }
