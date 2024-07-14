@@ -12,6 +12,7 @@ import tlang.compiler.parsing.exceptions;
 import tlang.compiler.core : Compiler;
 import std.string : format;
 import tlang.compiler.modman;
+import tlang.misc.utils : panic;
 
 // TODO: Technically we could make a core parser etc
 public final class Parser
@@ -1210,6 +1211,175 @@ public final class Parser
         return castedExpression;
     }
 
+    private NumberLiteral parseNumber()
+    {
+        string numberLiteralStr = lexer.getCurrentToken().getToken();
+        NumberLiteral numberLiteral;
+
+        // If floating point literal
+        if(isFloatLiteral(numberLiteralStr))
+        {
+            // TODO: Issue #94, siiliar to below for integers
+            numberLiteral = new FloatingLiteral(lexer.getCurrentToken().getToken());
+        }
+        // Else, then an integer literal
+        else
+        {
+            // TODO: Issue #94, we should be checking the range here
+            // ... along with any explicit encoders and setting it
+            // ... for now default to SIGNED_INTEGER.
+            IntegerLiteralEncoding chosenEncoding;
+            // TODO (X-platform): Use `size_t` here
+            ulong literalValue;
+
+
+            
+            
+            // TODO: Add a check for the `U`, `UL` stuff here
+            import std.algorithm.searching : canFind;
+            // Explicit integer encoding (unsigned long)
+            if(canFind(numberLiteralStr, "UL"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
+
+                // Strip the `UL` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
+            }
+            // Explicit integer encoding (signed long)
+            else if(canFind(numberLiteralStr, "L"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+
+                // Strip the `L` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
+            }
+            // Explicit integer encoding (unsigned int)
+            else if(canFind(numberLiteralStr, "UI"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_INTEGER;
+
+                // Strip the `UI` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
+            }
+            // Explicit integer encoding (signed int)
+            else if(canFind(numberLiteralStr, "I"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+
+                // Strip the `I` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
+            }
+            else
+            {
+                try
+                {
+                    // TODO (X-platform): Use `size_t` here
+                    literalValue = to!(ulong)(numberLiteralStr);
+                    
+
+                    // Signed integer range [0, 2_147_483_647]
+                    if(literalValue >= 0 && literalValue <= 2_147_483_647)
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+                    }
+                    // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
+                    else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+                    }
+                    // Unsigned long range [9_223_372_036_854_775_808, 18_446_744_073_709_551_615]
+                    else
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
+                    }
+                }
+                catch(ConvException e)
+                {
+                    throw new ParserException(this, ParserException.ParserErrorType.LITERAL_OVERFLOW, "Literal '"~numberLiteralStr~"' would overflow");
+                }
+            }
+
+            numberLiteral = new IntegerLiteral(numberLiteralStr, chosenEncoding);
+        }
+
+        return numberLiteral;
+    }
+
+    private Expression parseCharacter()
+    {
+        ERROR("Please implement me, parseCharacter()");
+        assert(false);
+        return null;
+    }
+
+    private Expression parseIdent()
+    {
+        string identifier = lexer.getCurrentToken().getToken();
+
+        lexer.nextToken();
+
+        Expression toAdd;
+
+        /* If the symbol is `(` then function call */
+        if (getSymbolType(lexer.getCurrentToken()) == SymbolType.LBRACE)
+        {
+            /* TODO: Implement function call parsing */
+            lexer.previousToken();
+            toAdd = parseFuncCall();
+        }
+        else
+        {
+            /* TODO: Leave the token here */
+            /* TODO: Just leave it, yeah */
+            // expect("poes");
+            toAdd = new VariableExpression(identifier);
+
+            /**
+            * FIXME: To properly support function handles I think we are going to need a new type
+            * Well not here, this should technically be IdentExpression.
+            */
+        }
+
+        return toAdd;
+    }
+
+    // TODO: Parsing something that can follow an operator
+    private Expression parseBasic()
+    {
+        Token ct = lexer.getCurrentToken();
+        SymbolType cs = getSymbolType(ct);
+
+        if(cs == SymbolType.NUMBER_LITERAL)
+        {
+            return parseNumber();
+        }
+        else if(cs == SymbolType.CHARACTER_LITERAL)
+        {
+            return parseCharacter();
+        }
+        else if(cs == SymbolType.IDENT_TYPE)
+        {
+            return parseIdent();
+        }
+        else
+        {
+            expect("Expected either a number literal, character literal or identifier");
+            return null;
+        }
+    }
+
+    /** 
+     * Helper methods
+     *
+     * (TODO: These should be moved elsewhere)
+     */
+    private bool isFloatLiteral(string numberLiteral)
+    {
+        import std.string : indexOf;
+        bool isFloat = indexOf(numberLiteral, ".") > -1; 
+        return isFloat;
+    }
+
     /**
     * Parses an expression
     *
@@ -1226,19 +1396,6 @@ public final class Parser
     private Expression parseExpression()
     {
         WARN("parseExpression(): Enter");
-
-
-        /** 
-         * Helper methods
-         *
-         * (TODO: These should be moved elsewhere)
-         */
-        bool isFloatLiteral(string numberLiteral)
-        {
-            import std.string : indexOf;
-            bool isFloat = indexOf(numberLiteral, ".") > -1; 
-            return isFloat;
-        }
 
 
         /* The expression to be returned */
@@ -1294,94 +1451,7 @@ public final class Parser
             /* If it is a number literal */
             if (symbol == SymbolType.NUMBER_LITERAL)
             { 
-                string numberLiteralStr = lexer.getCurrentToken().getToken();
-                NumberLiteral numberLiteral;
-
-                // If floating point literal
-                if(isFloatLiteral(numberLiteralStr))
-                {
-                    // TODO: Issue #94, siiliar to below for integers
-                    numberLiteral = new FloatingLiteral(lexer.getCurrentToken().getToken());
-                }
-                // Else, then an integer literal
-                else
-                {
-                    // TODO: Issue #94, we should be checking the range here
-                    // ... along with any explicit encoders and setting it
-                    // ... for now default to SIGNED_INTEGER.
-                    IntegerLiteralEncoding chosenEncoding;
-                    // TODO (X-platform): Use `size_t` here
-                    ulong literalValue;
-
-
-                    
-                    
-                    // TODO: Add a check for the `U`, `UL` stuff here
-                    import std.algorithm.searching : canFind;
-                    // Explicit integer encoding (unsigned long)
-                    if(canFind(numberLiteralStr, "UL"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
-
-                        // Strip the `UL` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
-                    }
-                    // Explicit integer encoding (signed long)
-                    else if(canFind(numberLiteralStr, "L"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
-
-                        // Strip the `L` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
-                    }
-                    // Explicit integer encoding (unsigned int)
-                    else if(canFind(numberLiteralStr, "UI"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_INTEGER;
-
-                        // Strip the `UI` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
-                    }
-                    // Explicit integer encoding (signed int)
-                    else if(canFind(numberLiteralStr, "I"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
-
-                        // Strip the `I` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
-                    }
-                    else
-                    {
-                        try
-                        {
-                            // TODO (X-platform): Use `size_t` here
-                            literalValue = to!(ulong)(numberLiteralStr);
-                            
-
-                            // Signed integer range [0, 2_147_483_647]
-                            if(literalValue >= 0 && literalValue <= 2_147_483_647)
-                            {
-                                chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
-                            }
-                            // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
-                            else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
-                            {
-                                chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
-                            }
-                            // Unsigned long range [9_223_372_036_854_775_808, 18_446_744_073_709_551_615]
-                            else
-                            {
-                                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
-                            }
-                        }
-                        catch(ConvException e)
-                        {
-                            throw new ParserException(this, ParserException.ParserErrorType.LITERAL_OVERFLOW, "Literal '"~numberLiteralStr~"' would overflow");
-                        }
-                    }
-
-                    numberLiteral = new IntegerLiteral(numberLiteralStr, chosenEncoding);
-                }
+                NumberLiteral numberLiteral = parseNumber();
                 
                 /* Add expression to stack */
                 addRetExp(numberLiteral);
@@ -1482,39 +1552,16 @@ public final class Parser
                 // gprintln(lexer.getCurrentToken());
 
                 ArrayIndex arrayIndexExpr = new ArrayIndex(indexTo, index);
+                // DEBUG("Created: ", arrayIndexExpr);
+                // panic("Panic!");
                 addRetExp(arrayIndexExpr);
             }
             /* If it is an identifier */
             else if (symbol == SymbolType.IDENT_TYPE)
             {
-                string identifier = lexer.getCurrentToken().getToken();
+                Expression identExpr = parseIdent();
 
-                lexer.nextToken();
-
-                Expression toAdd;
-
-                /* If the symbol is `(` then function call */
-                if (getSymbolType(lexer.getCurrentToken()) == SymbolType.LBRACE)
-                {
-                    /* TODO: Implement function call parsing */
-                    lexer.previousToken();
-                    toAdd = parseFuncCall();
-                }
-                else
-                {
-                    /* TODO: Leave the token here */
-                    /* TODO: Just leave it, yeah */
-                    // expect("poes");
-                    toAdd = new VariableExpression(identifier);
-
-                    /**
-                    * FIXME: To properly support function handles I think we are going to need a new type
-                    * Well not here, this should technically be IdentExpression.
-                    */
-                }
-
-                /* TODO: Change this later, for now we doing this */
-                addRetExp(toAdd);
+                addRetExp(identExpr);
             }
             /* Detect if this expression is coming to an end, then return */
             else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE ||
@@ -1579,9 +1626,13 @@ public final class Parser
                 /* Pop the previous expression */
                 Expression previousExpression = removeExp();
 
+                // FIXME: Ensure that previousExpression
+                // is "basic" just like the right-hand will
+                // be assumed to be
+
                 /* TODO: Get next expression */
                 lexer.nextToken();
-                Expression item = parseExpression();
+                Expression item = parseBasic();
 
                 /* TODO: Construct accessor expression from both and addRetExp */
 
@@ -2421,6 +2472,29 @@ public final class Parser
                         // branch the container as we have
                         // done so above
                         parentToContainer(branch, branchBody);
+                    }
+                    /** 
+                     * An expresison such as `<expr>[<expr>]`
+                     * where both the item BEING indexed-ON
+                     * and the index ITSELF should be recursively
+                     * parented
+                     */
+                    else if(cast(ArrayIndex)statement)
+                    {
+                        ArrayIndex arrIndex = cast(ArrayIndex)statement;
+
+                        parentToContainer(container, [arrIndex.getIndexed(), arrIndex.getIndex()]);
+                    }
+                    /** 
+                     * Any sort of assignment, we must paint
+                     * the entity being assigned-to and
+                     * the assigned expression
+                     */
+                    else if(cast(Assignment_V2)statement)
+                    {
+                        Assignment_V2 ass = cast(Assignment_V2)statement;
+
+                        parentToContainer(container, [ass.getName(), ass.getAssignedValue()]);
                     }
                 }
             }
