@@ -2013,77 +2013,81 @@ public final class TypeChecker
                 /* Pop all args per type */
                 else
                 {
-                    ulong parmCount = paremeters.length-1;
-                    ERROR("Kachow: "~to!(string)(parmCount));
+                    ulong parmCount = paremeters.length;
+                    DEBUG("parmCount: "~to!(string)(parmCount));
 
-                    while(!isInstrEmpty())
+                    do
                     {
                         Instruction instr = popInstr();
-                        
+
+                        /* Firstly there must be some argument */
+                        if(instr is null)
+                        {
+                            expect
+                            (
+                                format
+                                (
+                                    "Lacking argument %d for function call to %s",
+                                    parmCount,
+                                    func.getName()
+                                )
+                            );
+                        }
+
+                        /* Should be a value-based instruction (expression-derived argument) */
                         Value valueInstr = cast(Value)instr;
+                        if(valueInstr is null)
+                        {
+                            expect
+                            (
+                                format
+                                (
+                                    "Argument %d for function call to %s is not an expression",
+                                    parmCount,
+                                    func.getName()
+                                )
+                            );
+                        }
+
+                        /* Decrement the parameter index (right-to-left, so move to left) */
+                        parmCount--;
+
+                        /* Get the argument's type */
+                        Type argType = valueInstr.getInstrType();
+
+                        /* Get the parameter's type */
+                        Variable parameter = paremeters[parmCount];
+                        Type parmType = getType(func.parentOf(), parameter.getType());
+
+
+                        /* Scratch type used only for stack-array coercion */
+                        Type coercionScratchType;
+
+                        /**
+                         * We need to enforce the `valueInstr`'s' (the `Value`-based
+                         * instruction being passed as an argument) type to be that
+                         * of the `parmType` (the function's parameter type)
+                         */
+                        typeEnforce(parmType, valueInstr, valueInstr, true);
+
+                        /**
+                         * Refresh the `argType` as `valueInstr` may have been
+                         * updated and we need the new type
+                         */
+                        argType = valueInstr.getInstrType();
                         
 
-                        /* Must be a value instruction */
-                        if(valueInstr && parmCount!=-1)
-                        {
-                            /* TODO: Determine type and match up */
-                            DEBUG("Yeah");
-                            DEBUG(valueInstr);
-                            Type argType = valueInstr.getInstrType();
-                            // gprintln(argType);
+                        // Sanity check
+                        assert(isSameType(argType, parmType));
 
-                            Variable parameter = paremeters[parmCount];
-                            // gprintln(parameter);
-                            
-
-                            Type parmType = getType(func.parentOf(), parameter.getType());
-                            // gprintln("FuncCall(Actual): "~argType.getName());
-                            // gprintln("FuncCall(Formal): "~parmType.getName());
-                            // gprintln("FuncCall(Actual): "~valueInstr.toString());
-
-                            /* Scratch type used only for stack-array coercion */
-                            Type coercionScratchType;
-
-
-
-                            /**
-                             * We need to enforce the `valueInstr`'s' (the `Value`-based
-                             * instruction being passed as an argument) type to be that
-                             * of the `parmType` (the function's parameter type)
-                             */
-                            typeEnforce(parmType, valueInstr, valueInstr, true);
-
-                            /**
-                             * Refresh the `argType` as `valueInstr` may have been
-                             * updated and we need the new type
-                             */
-                            argType = valueInstr.getInstrType();
-                            
-
-                            // Sanity check
-                            assert(isSameType(argType, parmType));
-
-                            
-                            /* Add the instruction into the FunctionCallInstr */
-                            funcCallInstr.setEvalInstr(parmCount, valueInstr);
-                            DEBUG(funcCallInstr.getEvaluationInstructions());
-                            
-                            /* Decrement the parameter index (right-to-left, so move to left) */
-                            parmCount--;
-                        }
-                        else
-                        {
-                            // TODO: This should enver happen, see book and remove soon (see Cleanup: Remove any pushbacks #101)
-                            /* Push it back */
-                            addInstr(instr);
-                            break;
-                        }
+                        
+                        /* Add the instruction into the FunctionCallInstr */
+                        funcCallInstr.setEvalInstr(parmCount, valueInstr);
+                        DEBUG(funcCallInstr.getEvaluationInstructions());
                     }
+                    while(parmCount);
                 }
 
-                
-                
-                
 
                 /**
                 * Codegen
