@@ -1312,6 +1312,16 @@ public final class Parser
         return null;
     }
 
+    /** 
+     * Parses an identifier which
+     * means this can lead to
+     * parsing either a standalone
+     * identifier (i.e. a variable
+     * reference) or a function
+     * call
+     *
+     * Returns: an `Expression`
+     */
     private Expression parseIdent()
     {
         string identifier = lexer.getCurrentToken().getToken();
