@@ -1211,6 +1211,11 @@ public final class Parser
         return castedExpression;
     }
 
+    /** 
+     * Parses a numeric literal
+     *
+     * Returns: a `NumericLiteral`
+     */
     private NumberLiteral parseNumber()
     {
         string numberLiteralStr = lexer.getCurrentToken().getToken();
