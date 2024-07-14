@@ -391,6 +391,39 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/unused_vars.t --unusedVars true
       - name: Unused variables check (negative case)
         run: ./tlang typecheck source/tlang/testing/unused_vars_none.t --unusedVars true
+
+      - name: Simple entity found but not requested type
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_found_but_bad_type.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Simple entity not found (1)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_not_found_funccall.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Simple entity not found (2)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/simple_not_found_var.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
   emit:
     needs: [build, unittests]

@@ -9,6 +9,234 @@ import tlang.compiler.core;
 import std.string : format;
 import niknaks.functional : Predicate, predicateOf;
 
+import tlang.misc.exceptions : TError;
+
+/** 
+ * An error during the resolution
+ * process
+ */
+public class ResolutionError : TError
+{
+    /** 
+     * The type of resolution error
+     */
+    private enum ResErrType
+    {
+        /** 
+         * A search within a container
+         * failed as no entity with the
+         * given name could not be found
+         */
+        NAME_WITHIN_NO_ENT,
+
+        /** 
+         * A best-effort search starting
+         * at a given container failed
+         * as an entity with the given
+         * name could not be found
+         */
+        NAME_BEST_NO_ENT,
+
+        /** 
+         * A best-effort search starting
+         * at a given container failed
+         * as an entity with the given
+         * name WAS found however its
+         * type was not a kind-of the
+         * type requested
+         */
+        NAME_BEST_ENT_MISMATCH,
+
+        /** 
+         * A search within a container
+         * failed as an entity with the
+         * given name WAS found however
+         * its type was not a kind-of
+         * the type requested
+         */
+        NAME_WITHIN_END_MISMATCH
+    }
+
+    private ResErrType errType;
+    private Container cntnr;
+    private string name;
+
+    private TypeInfo_Class mismatchType;
+    private Entity foundEnt;
+
+    private this
+    (
+        ResErrType errType,
+        Container cntnr,
+        string name,
+        TypeInfo_Class mismatchType = null,
+        Entity foundEnt = null
+    )
+    {
+        this.errType = errType;
+        this.cntnr = cntnr;
+        this.name = name;
+        this.mismatchType = mismatchType;
+        this.foundEnt = foundEnt;
+
+        super(genMsg());
+    }
+
+    /** 
+     * Generates an exception for the case
+     * whereby the entity was not found
+     * within the given container during
+     * a within-based search
+     *
+     * Params:
+     *   cntnr = the container
+     *   name = the name requested
+     * Returns: a `ResolutionError`
+     */
+    public static ResolutionError failWithin(Container cntnr, string name)
+    {
+        return new ResolutionError(ResErrType.NAME_WITHIN_NO_ENT, cntnr, name);
+    }
+
+    /** 
+     * Generates an exception for the case
+     * whereby the entity was not found
+     * within the given container during
+     * a best effort search
+     *
+     * Params:
+     *   cntnr = the container
+     *   name = the name requested
+     * Returns: a `ResolutionError`
+     */
+    public static ResolutionError failBest(Container cntnr, string name)
+    {
+        return new ResolutionError(ResErrType.NAME_BEST_NO_ENT, cntnr, name);
+    }
+
+    /** 
+     * Generates an exception for the case
+     * whereby the entity found within
+     * the given container is not of the
+     * requested type
+     *
+     * Params:
+     *   cntnr = the container
+     *   foundEnt = the found entity
+     *   expectedType = the type expected
+     * Returns: a `ResolutionError`
+     */
+    public static ResolutionError failWithinMismatchType(Container cntnr, Entity foundEnt, TypeInfo_Class expectedType)
+    {
+        return new ResolutionError(ResErrType.NAME_WITHIN_END_MISMATCH, cntnr, null, expectedType, foundEnt);
+    }
+
+    /** 
+     * Generates an exception for the case
+     * whereby the entity found within
+     * the given container is not of the
+     * requested type
+     *
+     * Params:
+     *   cntnr = the container
+     *   foundEnt = the found entity
+     *   expectedType = the type expected
+     * Returns: a `ResolutionError`
+     */
+    public static ResolutionError failBestMismatchType(Container cntnr, Entity foundEnt, TypeInfo_Class expectedType)
+    {
+        return new ResolutionError(ResErrType.NAME_BEST_ENT_MISMATCH, cntnr, null, expectedType, foundEnt);
+    }
+
+    /** 
+     * Generates the error message text
+     * based on the nature of the error
+     *
+     * Returns: a string
+     */
+    private string genMsg()
+    {
+        string message;
+
+        // If resolution of a name within a container failed
+        if(this.errType == ResErrType.NAME_WITHIN_NO_ENT)
+        {    
+            if(cast(Program)cntnr)
+            {
+                message = format("Cannot find %s at the program level", name);
+            }
+            else if(cast(Entity)cntnr)
+            {
+                // TODO: Make more specific, function, class, etc.
+                Entity cntnrEntity = cast(Entity)cntnr;
+                message = format("Cannot find %s inside the %s", name, cntnrEntity.getName());
+            }
+            else
+            {
+                ERROR("Developer error, this should never happen");
+                assert(false);
+            }
+        }
+        // If best-effort name resolution failed
+        else if(this.errType == ResErrType.NAME_BEST_NO_ENT)
+        {
+            if(cast(Program)cntnr)
+            {
+                message = format("Could not find %s at the program level", name);
+            }
+            else if(cast(Entity)cntnr)
+            {
+                // TODO: Make more specific, function, class, etc.
+                Entity cntnrEntity = cast(Entity)cntnr;
+                message = format("Could not find %s whilst searching from %s upwards", name, cntnrEntity.getName());
+            }
+            else
+            {
+                ERROR("Developer error, this should never happen");
+                assert(false);
+            }
+        }
+        // TODO: If resolution of a name starting from a given container failed
+        // else
+        // TODO (Above): Might be the same asabove?
+
+        // If best-effort name resolution failed because of a type mismatch
+        else if(this.errType == ResErrType.NAME_BEST_ENT_MISMATCH)
+        {
+            if(cast(Program)cntnr)
+            {
+                message = format
+                (
+                    "Found %s at the program level but it a %s, not the a %s",
+                    foundEnt.getName(),
+                    foundEnt.classinfo,
+                    mismatchType
+                );
+            }
+            else if(cast(Entity)cntnr)
+            {
+                // TODO: Make more specific, function, class, etc.
+                Entity cntnrEntity = cast(Entity)cntnr;
+                message = format
+                (
+                    "Found %s whilst searching from %s upwards but it is of type %s, not %s",
+                    foundEnt.getName(),
+                    cntnrEntity.getName(),
+                    foundEnt.classinfo,
+                    mismatchType
+                );
+            }
+            else
+            {
+                ERROR("Developer error, this should never happen");
+                assert(false);
+            }
+        }
+
+        return message;
+    }
+}
+
 /** 
  * The resolver provides a mechanism to
  * search the AST tree for all named
@@ -388,6 +616,42 @@ public final class Resolver
         // Apply search with custom name-based matching predicate
         DEBUG(format("resolveWithin(cntnr=%s, name=%s) entering with predicate", currentContainer, name));
         return resolveWithin(currentContainer, derive_nameMatch(name));
+    }
+
+    /** 
+     * Performs a horizontal-based search of then
+     * provided `Container`, searching for any
+     * `Entity` which matches the given name.
+     * When a match is found we return
+     * immediately.
+     *
+     * Params:
+     *   currentContainer = the container to
+     * search within
+     *   name = the name to search for
+     *   expectedEntType = the type to enforce
+     * a found entity to
+     * Returns: the found `Entity`
+     * Throws:
+     *   ResolutionError when the entity is
+     * not found, or it is found but the
+     * types mismatch
+     */
+    public Entity resolveWithin_Safe(Container currentContainer, string name, TypeInfo_Class expectedEntType)
+    {
+        Entity potEnt = resolveWithin(currentContainer, name);
+
+        if(!potEnt)
+        {
+            throw ResolutionError.failWithin(currentContainer, name);
+        }
+        // Something was found but not of the type requested (kind-of)
+        else if(!expectedEntType.isBaseOf(potEnt.classinfo))
+        {
+            throw ResolutionError.failWithinMismatchType(currentContainer, potEnt, expectedEntType);
+        }
+
+        return potEnt;
     }
 
     /** 
@@ -854,6 +1118,37 @@ public final class Resolver
     }
 
     /** 
+     * See_Also: `resolveBest(Container, string)`
+     *
+     * Params:
+     *   c = the container
+     *   name = the name of the entity
+     *   expectedEntType = the type to enforce
+     * a found entity to
+     * Throws:
+     *   ResolutionError when the entity is
+     * not found, or it is found but the
+     * types mismatch
+     */
+    public Entity resolveBest_Safe(Container c, string name, TypeInfo_Class expectedEntType)
+    {
+        Entity potEnt = resolveBest(c, name);
+
+        // Nothing was found by that name
+        if(!potEnt)
+        {
+            throw ResolutionError.failBest(c, name);
+        }
+        // Something was found but not of the type requested (kind-of)
+        else if(!expectedEntType.isBaseOf(potEnt.classinfo))
+        {
+            throw ResolutionError.failBestMismatchType(c, potEnt, expectedEntType);
+        }
+
+        return potEnt;
+    }
+
+    /** 
      * Given a type-of `Container` and a starting `Statement` (AST node) this will
      * swim upwards to try and find the first matching parent of which is of the given
      * type (exactly, not kind-of).
@@ -999,6 +1294,56 @@ int g;
         string bestName = tc.getResolver().generateNameBest(var);
         DEBUG(format("bestName: %s", bestName));
         assert(bestName == "resolution_test_1.g");
+
+
+        // Try to find the variable `d` by starting at the module-level
+        // but use the safe resolver and ensure the type is a `Variable`
+        var = tc.getResolver().resolveBest_Safe(modulle, "g", Variable.classinfo);
+        assert(var);
+        assert(cast(Variable)var); // Ensure it is a variable
+
+        // Try to find the variable `d` by starting at the module-level
+        // but use the safe resolver and ensure the the type is a `Function`
+        // which SHOULD FAIL as it is a `Variable` and NOT a `Function`
+        try
+        {
+            tc.getResolver().resolveBest_Safe(modulle, "g", Function.classinfo);
+            assert(false);
+        }
+        catch(ResolutionError e) {}
+
+        // Try to find the variable `d` by searching within module but
+        // by using the safe reslution methods to ensure the type is a `Variable`
+        var = tc.getResolver().resolveWithin_Safe(modulle, "g", Variable.classinfo);
+        assert(var);
+        assert(cast(Variable)var); // Ensure it is a variable
+
+        // Try to find the variable `d` by searching within module but
+        // by using the safe reslution methods to ensure the type is a `Function`
+        // which SHOULD fail as it is a `Variable` and NOT a `Function`
+        try
+        {
+            tc.getResolver().resolveWithin_Safe(modulle, "g", Function.classinfo);
+            assert(false);
+        }
+        catch(ResolutionError e) {}
+
+        // Try to find something within the module which doesn't exist
+        try
+        {
+            tc.getResolver().resolveWithin_Safe(modulle, "a", Variable.classinfo);
+            assert(false);
+        }
+        catch(ResolutionError e) {}
+
+        // Try to find something starting at the module-level which doesn't
+        // exist
+        try
+        {
+            tc.getResolver().resolveBest_Safe(modulle, "a", Variable.classinfo);
+            assert(false);
+        }
+        catch(ResolutionError e) {}
     }
     catch(TError e)
     {

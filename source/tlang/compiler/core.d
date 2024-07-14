@@ -558,7 +558,11 @@ unittest
                         "source/tlang/testing/simple_literals4.t",
                         "source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t",
                         "source/tlang/testing/universal_coerce/simple_coerce_literal_bad_stdalon.t",
-                        "source/tlang/testing/simple_function_return_type_check_bad.t"
+                        "source/tlang/testing/simple_function_return_type_check_bad.t",
+
+                        "source/tlang/testing/simple_found_but_bad_type.t",
+                        "source/tlang/testing/simple_not_found_funccall.t",
+                        "source/tlang/testing/simple_not_found_var.t"
     ];
 
     foreach(string testFileFail; testFilesFail)
