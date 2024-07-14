@@ -1164,11 +1164,6 @@ public final class Parser
         return discardStatement;
     }
 
-    /**
-    * Parses the `new Class()` expression
-    */
-
-
     private CastedExpression parseCast()
     {
         CastedExpression castedExpression;
