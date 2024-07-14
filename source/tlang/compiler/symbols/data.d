@@ -13,6 +13,8 @@ import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable
 // Module entry management
 import tlang.compiler.modman : ModuleEntry;
 
+import niknaks.arrays : insertAt;
+
 /** 
  * The _program_ holds a bunch of _modules_ as
  * its _body statements_ (hence being a `Container` type).
@@ -74,6 +76,39 @@ public final class Program : Container
     public bool replace(Statement thiz, Statement that)
     {
         // TODO: Implement me
+        return false;
+    }
+
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Direct replacement
+        for(size_t i = 0; i < this.modules.length; i++)
+        {
+            if(that == this.modules[i])
+            {
+                Module modThiz = cast(Module)thiz;
+                assert(modThiz);
+
+                // Insert and re-parent
+                this.modules = insertAt(this.modules, i, modThiz);
+                thiz.parentTo(this);
+                return true;
+            }
+        }
+
+        // Matching within
+        for(size_t i = 0; i < this.modules.length; i++)
+        {
+            MStatementReplaceable replaceable = cast(MStatementReplaceable)this.modules[i];
+            if(replaceable)
+            {
+                if(replaceable.insertBefore(thiz, that))
+                {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
@@ -543,6 +578,38 @@ public class Function : TypedEntity, Container
             return false;
         }
     }
+
+    // FIXME: Allow for parameter replacement?
+    // FIXME: Don't allow for this (offgset array?)
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Direct replacement
+        for(size_t i = 0; i < this.bodyStatements.length; i++)
+        {
+            if(that == this.bodyStatements[i])
+            {
+                // Insert and re-parent
+                this.bodyStatements = insertAt(this.bodyStatements, i, thiz);
+                thiz.parentTo(this);
+                return true;
+            }
+        }
+
+        // Matching within
+        for(size_t i = 0; i < this.bodyStatements.length; i++)
+        {
+            MStatementReplaceable replaceable = cast(MStatementReplaceable)this.bodyStatements[i];
+            if(replaceable)
+            {
+                if(replaceable.insertBefore(thiz, that))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
 
 public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable, MCloneable
@@ -620,6 +687,21 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
         {
             return false;
         }
+    }
+
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Matching within
+        MStatementReplaceable replaceable = cast(MStatementReplaceable)this.assignment;
+        if(replaceable)
+        {
+            if(replaceable.insertBefore(thiz, that))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** 
@@ -752,6 +834,21 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
         }
     }
 
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Matching within
+        MStatementReplaceable replaceable = cast(MStatementReplaceable)this.expression;
+        if(replaceable)
+        {
+            if(replaceable.insertBefore(thiz, that))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** 
      * Clones this variable assignment by recursively cloning
      * the fields within (TODO: finish description)
@@ -868,6 +965,12 @@ public class VariableAssignmentStdAlone : Statement, MStatementSearchable, MStat
         {
             return false;
         }
+    }
+
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Nowhere to insert within us
+        return false;
     }
 }
 
@@ -989,6 +1092,12 @@ public class IdentExpression : Expression, MStatementSearchable, MStatementRepla
     public override bool replace(Statement thiz, Statement that)
     {
         // Nothing to replace within us
+        return false;
+    }
+
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Nowhere to insert within us
         return false;
     }
 }
@@ -1121,6 +1230,12 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
         //     return false;
         // }
         return true;
+    }
+
+    public override bool insertBefore(Statement thiz, Statement that)
+    {
+        // Nowhere to insert within us
+        return false;
     }
 }
 
@@ -1269,6 +1384,39 @@ public final class IfStatement : Entity, Container
             return false;
         }
     }
+
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Direct replacement
+        for(size_t i = 0; i < this.branches.length; i++)
+        {
+            if(that == this.branches[i])
+            {
+                Branch thizBranch = cast(Branch)thiz;
+                assert(thizBranch);
+
+                // Insert and re-parent
+                this.branches = insertAt(this.branches, i, thizBranch);
+                thiz.parentTo(this);
+                return true;
+            }
+        }
+
+        // Matching within
+        for(size_t i = 0; i < this.branches.length; i++)
+        {
+            MStatementReplaceable replaceable = cast(MStatementReplaceable)this.branches[i];
+            if(replaceable)
+            {
+                if(replaceable.insertBefore(thiz, that))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
 
 /** 
@@ -1380,6 +1528,21 @@ public final class WhileLoop : Entity, Container
         {
             return branch.replace(thiz, that);
         }
+    }
+
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Matching within
+        MStatementReplaceable replaceable = cast(MStatementReplaceable)this.branch;
+        if(replaceable)
+        {
+            if(replaceable.insertBefore(thiz, that))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
@@ -1527,6 +1690,21 @@ public final class ForLoop : Entity, Container
         {
             return branch.replace(thiz, that);
         }
+    }
+
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Matching within
+        MStatementReplaceable replaceable = cast(MStatementReplaceable)this.branch;
+        if(replaceable)
+        {
+            if(replaceable.insertBefore(thiz, that))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
@@ -1696,6 +1874,39 @@ public final class Branch : Entity, Container
             return false;
         }
     }
+
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Direct replacement
+        for(size_t i = 0; i < this.branchBody.length; i++)
+        {
+            if(that == this.branchBody[i])
+            {
+                Branch thizBranch = cast(Branch)thiz;
+                assert(thizBranch);
+
+                // Insert and re-parent
+                this.branchBody = insertAt(this.branchBody, i, thizBranch);
+                thiz.parentTo(this);
+                return true;
+            }
+        }
+
+        // Matching within
+        for(size_t i = 0; i < this.branchBody.length; i++)
+        {
+            MStatementReplaceable replaceable = cast(MStatementReplaceable)this.branchBody[i];
+            if(replaceable)
+            {
+                if(replaceable.insertBefore(thiz, that))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
 
 public final class DiscardStatement : Statement, MStatementSearchable, MStatementReplaceable
@@ -1766,6 +1977,12 @@ public final class DiscardStatement : Statement, MStatementSearchable, MStatemen
         {
             return false;
         }
+    }
+
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Nowhere to insert within us
+        return false;
     }
 }
 

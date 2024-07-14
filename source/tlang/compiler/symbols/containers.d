@@ -6,6 +6,7 @@ import tlang.compiler.symbols.typing.core;
 
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
+import niknaks.arrays : insertAt;
 
 /**
 * Used so often that we may as well
@@ -204,6 +205,46 @@ public class Module : Entity, Container
         }
     }
 
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Direct replacement
+        for(size_t i = 0; i < this.statements.length; i++)
+        {
+            if(that == this.statements[i])
+            {
+                // Insert and re-parent
+                this.statements = insertAt(this.statements, i, thiz);
+                thiz.parentTo(this);
+                return true;
+            }
+        }
+
+        // Matching within
+        for(size_t i = 0; i < this.statements.length; i++)
+        {
+            MStatementReplaceable replaceable = cast(MStatementReplaceable)this.statements[i];
+            if(replaceable)
+            {
+                if(replaceable.insertBefore(thiz, that))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // public bool insertAfter(Statement thiz, Statement that)
+    // {
+
+    // }
+
+    // public bool remove(Statement thiz)
+    // {
+
+    // }
+
     /** 
      * Provides a string representation of
      * this module
@@ -319,6 +360,36 @@ public class Struct : Type, Container, MCloneable
 
             return false;
         }
+    }
+
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Direct replacement
+        for(size_t i = 0; i < this.statements.length; i++)
+        {
+            if(that == this.statements[i])
+            {
+                // Insert and re-parent
+                this.statements = insertAt(this.statements, i, thiz);
+                thiz.parentTo(this);
+                return true;
+            }
+        }
+
+        // Matching within
+        for(size_t i = 0; i < this.statements.length; i++)
+        {
+            MStatementReplaceable replaceable = cast(MStatementReplaceable)this.statements[i];
+            if(replaceable)
+            {
+                if(replaceable.insertBefore(thiz, that))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /** 
@@ -482,6 +553,35 @@ public class Clazz : Type, Container
         }
     }
     
+    public bool insertBefore(Statement thiz, Statement that)
+    {
+        // Direct replacement
+        for(size_t i = 0; i < this.statements.length; i++)
+        {
+            if(that == this.statements[i])
+            {
+                // Insert and re-parent
+                this.statements = insertAt(this.statements, i, thiz);
+                thiz.parentTo(this);
+                return true;
+            }
+        }
+
+        // Matching within
+        for(size_t i = 0; i < this.statements.length; i++)
+        {
+            MStatementReplaceable replaceable = cast(MStatementReplaceable)this.statements[i];
+            if(replaceable)
+            {
+                if(replaceable.insertBefore(thiz, that))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
 
 
