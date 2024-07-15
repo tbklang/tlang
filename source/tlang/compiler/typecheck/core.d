@@ -2775,49 +2775,6 @@ public final class TypeChecker
                     addInstrB(arrDerefAssInstr);
                 }
             }
-            /* VariableAssignmentStdAlone */
-            else if(cast(VariableAssignmentStdAlone)statement)
-            {
-                VariableAssignmentStdAlone vasa = cast(VariableAssignmentStdAlone)statement;
-                string variableName = vasa.getVariableName();
-
-                /* Extract information about the variable declaration of the avriable being assigned to */
-                Context variableContext = vasa.getContext();
-                Variable variable = cast(Variable)resolver.resolveBest(variableContext.container, variableName);
-                Type variableDeclarationType = getType(variableContext.container, variable.getType());
-
-                /**
-                * Codegen
-                *
-                * 1. Get the variable's name
-                * 2. Pop Value-instruction
-                * 3. Generate VarAssignInstruction with Value-instruction
-                */
-                Instruction instr = popInstr();
-                assert(instr);
-                Value assignmentInstr = cast(Value)instr;
-                assert(assignmentInstr);
-
-                
-                Type assignmentType = assignmentInstr.getInstrType();
-                assert(assignmentType);
-
-
-                /**
-                 * Here we will do the enforcing of the types
-                 *
-                 * Will will allow coercion of the provided
-                 * type (the value being assigned to our variable)
-                 * to the to-type (our Variable's declared type)
-                 */
-                typeEnforce(variableDeclarationType, assignmentInstr, assignmentInstr, true);
-                assert(isSameType(variableDeclarationType, assignmentInstr.getInstrType())); // Sanity check
-
-                /* Generate a variable assignment instruction and add it to the codequeue */
-                VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, assignmentInstr);
-                vAInstr.setContext(vasa.getContext());
-                addInstrB(vAInstr);
-            }
             /**
             * Return statement (ReturnStmt)
             */
