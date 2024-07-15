@@ -756,46 +756,9 @@ public class DNodeGenerator
                         expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
                     }
                 }
-                /** 
-                 * If `namedEntity` is a `Function`
-                 *
-                 * Think of a function handle
-                 */
-                else if(cast(Function)namedEntity)
-                {
-                    /**
-                    * FIXME: Yes it isn't a funcall not, and it is not a variable and is probably
-                    * being returned as the lookup, so a FUnction node i guess 
-                    */
-                    Function funcHandle = cast(Function)namedEntity;
-                    
-                    /**
-                    * FIXME: Find the best place for this. Functions will always
-                    * be declared (atleast for basic examples as like now) in
-                    * the module level
-                    */
-                    Context cont = new Context(tc.getResolver().findContainerOfType(Module.classinfo, funcHandle), InitScope.STATIC);
-                    // cont.container = tc.getModule();
-                    // cont.
-                    funcHandle.setContext(cont);
-
-                    // funcHandle
-                    
-
-                    /**
-                    * FIXME: Do we have to visit the function, I am not sure, like maybe declaration
-                    * or surely it is already declared??!?!?
-                    *
-                    * Does pooling it make sense? Do we force a visitation?
-                    */
-                    FuncDecNode funcDecNode = poolT!(FuncDecNode, Function)(funcHandle);
-                    dnode.needs(funcDecNode);
-
-                    WARN("Muh function handle: "~namedEntity.toString());
-                }
                 else
                 {
-                    /* TODO: Add check ? */
+                    dnode.needs(pool(varExp));
                 }   
             }
             /* If the entity could not be found */
@@ -815,6 +778,8 @@ public class DNodeGenerator
             /* Apply context */
             binOp.setContext(context);
 
+            // DEBUG(format("Depgen binop: %s", binOp));
+
             /* Process left and right */
             DNode leftNode = expressionPass(binOp.getLeftExpression(), context);
             DNode rightNode = expressionPass(binOp.getRightExpression(), context);
@@ -822,6 +787,10 @@ public class DNodeGenerator
             /* Require the evaluation of these */
             dnode.needs(leftNode);
             dnode.needs(rightNode);
+
+            // DEBUG(format("leftDNode: %s", leftNode));
+            // DEBUG(format("rightDNode: %s", rightNode));
+            // panic("here");
         }
         /**
         * Unary operator
@@ -874,6 +843,13 @@ public class DNodeGenerator
             Expression indexedExp = arrayIndex.getIndexed();
             DNode indexedExpDNode = expressionPass(indexedExp, context);
             dnode.needs(indexedExpDNode);
+
+            // DEBUG("ArrIdx: ", arrayIndex);
+            // panic("ArrayIndex generated");
+        }
+        else if(cast(IdentExpression)exp)
+        {
+            panic("Fok");
         }
         else
         {
@@ -1050,6 +1026,7 @@ public class DNodeGenerator
         else if(cast(Assignment_V2)entity)
         {
             Assignment_V2 varAss = cast(Assignment_V2)entity;
+            varAss.setContext(context);
             DNode varAssDNode = pool(varAss);
             
             /* Extract the expression being assigned to */
@@ -1061,17 +1038,27 @@ public class DNodeGenerator
             /* Pool `toExpr` and make an `AssignmentTo` dep-node depend on it */
             DNode assToDNode = new AssignmentTo();
             DNode toExprDNode = expressionPass(toExpr, context);
+            DEBUG("");
+            DEBUG("");
+            DEBUG("");
+            DEBUG("toExprDNode dependencies: ", toExprDNode.dependencies);
+            DEBUG("toExprDNode dependencies[0]'s deps: ", toExprDNode.dependencies[0].dependencies);
+            DEBUG("toExprDNode dependencies[1]'s deps: ", toExprDNode.dependencies[1].dependencies);
+            // panic("Alex fokken mouton");
+            
+            assert(toExprDNode);
             assToDNode.needs(toExprDNode);
 
             /* Pool `ofExpr` and make an `AssignmentOf` dep-node depend on it */
             DNode assOfDNode = new AssignmentOf();
             DNode ofExprDNode = expressionPass(ofExpr, context);
+            assert(ofExprDNode);
             assOfDNode.needs(ofExprDNode);
 
             /* Make the `varAssDNode` depend on the assTo and assOf dep-nodes */
             varAssDNode.needs(assToDNode);
             varAssDNode.needs(assOfDNode);
-
+            
             return varAssDNode;
         }
         /**
@@ -1118,46 +1105,6 @@ public class DNodeGenerator
                 expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
                 return null;
             }            
-        }
-        /**
-        * Array assignments
-        */
-        else if(cast(ArrayAssignment)entity)
-        {
-            ArrayAssignment arrayAssignment = cast(ArrayAssignment)entity;
-            arrayAssignment.setContext(context);
-            DNode arrayAssDerefDNode = pool(arrayAssignment);
-
-            /* Pass the expression to be assigned */
-            Expression assignedExpression = arrayAssignment.getAssignmentExpression();
-            DNode assignmentExpressionDNode = expressionPass(assignedExpression, context);
-            arrayAssDerefDNode.needs(assignmentExpressionDNode);
-
-            /**
-            * Extract the ArrayIndex expression
-            *
-            * This consists of two parts (e.g. `myArray[i]`):
-            *
-            * 1. The indexTo `myArray`
-            * 2. The index `i`
-            */
-            ArrayIndex arrayIndexExpression = arrayAssignment.getArrayLeft();
-            Expression indexTo = arrayIndexExpression.getIndexed();
-            Expression index = arrayIndexExpression.getIndex();
-
-            DNode indexToExpression = expressionPass(indexTo, context);
-            arrayAssDerefDNode.needs(indexToExpression);
-
-            DNode indexExpression = expressionPass(index, context);
-            arrayAssDerefDNode.needs(indexExpression);
-            
-
-
-
-            ERROR("Please implement array assignment dependency generation");
-            // assert(false);
-
-            return arrayAssDerefDNode;
         }
         /**
         * Function definitions
@@ -1448,6 +1395,7 @@ public class DNodeGenerator
             return exprStmtDNode;
         }
 
+        // panic("fok");
         return null;
     }
 
