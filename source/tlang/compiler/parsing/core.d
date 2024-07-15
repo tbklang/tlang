@@ -413,35 +413,6 @@ public final class Parser
         return forLoop;
     }
 
-    public VariableAssignmentStdAlone parseAssignment(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
-    {
-        /* Generated Assignment statement */
-        VariableAssignmentStdAlone assignment;
-
-        /* The identifier being assigned to */
-        string identifier = lexer.getCurrentToken().getToken();
-        lexer.nextToken();
-        lexer.nextToken();
-        DEBUG(lexer.getCurrentToken());
-
-        /* Expression */
-        Expression assignmentExpression = parseExpression();
-
-
-        assignment = new VariableAssignmentStdAlone(identifier, assignmentExpression);
-
-        /* TODO: Support for (a=1)? */
-        /* Expect a the terminating symbol */
-        // expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-        expect(terminatingSymbol, lexer.getCurrentToken());
-
-        /* Move off terminating symbol */
-        lexer.nextToken();
-        
-
-        return assignment;
-    }
-
     // x.y.z -> [(x.y) . z]
     private bool obtainDotPath(ref string path, Expression exp)
     {
@@ -563,7 +534,8 @@ public final class Parser
             // ... this expression will be the `to`
 
 
-            ret = parseAssignment(terminatingSymbol);
+            // ret = parseAssignment(terminatingSymbol);
+            panic("You tryig to call the old parseAssignment? Impossible that you even made it into parseName() to begin with");
         }
         /* Any other case */
         else
@@ -2412,18 +2384,6 @@ public final class Parser
                         ExpressionStatement exprStmt = cast(ExpressionStatement)statement;
 
                         parentToContainer(container, [exprStmt.getExpr()]);
-                    }
-                    /** 
-                     * If we have a `VariableAssignmentStdAlone`
-                     * then we must parent its expression
-                     * (the assignment) to the same `Container`
-                     */
-                    else if(cast(VariableAssignmentStdAlone)statement)
-                    {
-                        VariableAssignmentStdAlone varAss = cast(VariableAssignmentStdAlone)statement;
-                        Expression varAssExp = varAss.getExpression();
-                        
-                        parentToContainer(container, [varAssExp]);
                     }
                     /**
                      * If we have a `PointerDereferenceAssignment`
