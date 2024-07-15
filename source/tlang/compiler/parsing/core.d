@@ -3881,7 +3881,7 @@ void function()
         assert(outerLoopBranchBody.length == 3);
 
         /* Check for [varAssStdAlone, ] */
-        VariableAssignmentStdAlone outerLoopBranchBodyStmt1 = cast(VariableAssignmentStdAlone)outerLoopBranchBody[0];
+        Assignment_V2 outerLoopBranchBodyStmt1 = cast(Assignment_V2)outerLoopBranchBody[0];
         assert(outerLoopBranchBodyStmt1);
 
         /* Check for [, forLoop, ] */
@@ -3889,7 +3889,7 @@ void function()
         assert(innerLoop);
 
         /* Check for [, postIteration] */
-        VariableAssignmentStdAlone outerLoopBranchBodyStmt3 = cast(VariableAssignmentStdAlone)outerLoopBranchBody[2];
+        Assignment_V2 outerLoopBranchBodyStmt3 = cast(Assignment_V2)outerLoopBranchBody[2];
         assert(outerLoopBranchBodyStmt3);
 
         /* Start examining the inner for-loop */
