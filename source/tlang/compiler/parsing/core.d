@@ -544,13 +544,6 @@ public final class Parser
                 expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
                 lexer.nextToken();
             }
-            /* If it is an arrau assignment */
-            else if(cast(ArrayAssignment)ret)
-            {
-                /* Expect a semicolon and consume it */
-                expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-                lexer.nextToken();
-            }
             /* This should never happen */
             else
             {
