@@ -266,7 +266,7 @@ public class Assignment : Statement
  * assigning to such an entity
  * _some_ expression
  */
-public final class Assignment_V2 : Statement
+public final class Assignment_V2 : Statement, MStatementSearchable, MStatementReplaceable
 {
     private Expression named;
     private Expression assValue;
@@ -303,6 +303,87 @@ public final class Assignment_V2 : Statement
     {
         import std.string : format;
         return format("AssignmentV2 [name: %s, value: %s]", this.named, this.assValue);
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /** 
+         * Recurse on the entity
+         * being assigned to
+         */
+        MStatementSearchable toExpr = cast(MStatementSearchable)named;
+        if(toExpr)
+        {
+            matches ~= toExpr.search(clazzType); 
+        }
+
+        /** 
+         * Recurse on the expression
+         * being assigned
+         */
+        MStatementSearchable ofExpr = cast(MStatementSearchable)assValue;
+        if(ofExpr)
+        {
+            matches ~= ofExpr.search(clazzType); 
+        }        
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we, the `Assignment_V2`, are the `thiz` then we cannot perform replacement */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* Check if we should replace the entity being assigned to? */
+        else if(thiz == named)
+        {
+            named = cast(Expression)that;
+            return true;
+        }
+        /* Check if we should replace the `Expression` being assigned? */
+        else if(thiz == assValue)
+        {
+            assValue = cast(Expression)that;
+            return true;
+        }
+        else
+        {
+            bool res = false;
+
+            /** 
+             * Recurse on the entity
+             * being assigned to
+             */
+            MStatementReplaceable toExpr = cast(MStatementReplaceable)named;
+            if(toExpr)
+            {
+                res |= toExpr.replace(thiz, that);
+            }
+
+            /** 
+             * Recurse on the expression
+             * being assigned
+             */
+            MStatementReplaceable ofExpr = cast(MStatementReplaceable)assValue;
+            if(ofExpr)
+            {
+                res |= ofExpr.replace(thiz, that);
+            }
+
+            return res;
+        }
     }
 }
 
@@ -832,88 +913,6 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
         clonedVarAss.parentTo(newParent);
 
         return clonedVarAss;
-    }
-}
-
-/**
-* TODO: Rename to ``
-*/
-public class VariableAssignmentStdAlone : Statement, MStatementSearchable, MStatementReplaceable
-{
-    private Expression expression;
-    private string varName;
-
-    this(string varName, Expression expression)
-    {
-        this.varName = varName;
-        this.expression = expression;
-
-        /* Weighted as 2 */
-        weight = 2;
-    }
-
-    public Expression getExpression()
-    {
-        return expression;
-    }
-
-    public string getVariableName()
-    {
-        return varName;
-    }
-
-    public override string toString()
-    {
-        return "[varAssignStdAlone: To: "~varName~"]";
-    }
-
-    public override Statement[] search(TypeInfo_Class clazzType)
-    {
-        /* List of returned matches */
-        Statement[] matches;
-
-        /* Are we (ourselves) of this type? */
-        if(clazzType.isBaseOf(this.classinfo))
-        {
-            matches ~= [this];
-        }
-
-        /**
-         * Recurse on the assigned `Expression`
-         */
-        MStatementSearchable assignedStmtCasted = cast(MStatementSearchable)expression;
-        if(assignedStmtCasted)
-        {
-            matches ~= assignedStmtCasted.search(clazzType); 
-        }
-
-        return matches;
-    }
-
-    public override bool replace(Statement thiz, Statement that)
-    {
-        /* If we, the `VariableAssignmentStdAlone`, are the `thiz` then we cannot perform replacement */
-        if(this == thiz)
-        {
-            return false;
-        }
-        /* Check if we should replace the `Expression` being assigned? */
-        else if(thiz == expression)
-        {
-            expression = cast(Expression)that;
-            return true;
-        }
-        /* Recurse on the assigned `Expression` (if possible) */
-        else if(cast(MStatementReplaceable)expression)
-        {
-            MStatementReplaceable expressionCasted = cast(MStatementReplaceable)expression;
-            return expressionCasted.replace(thiz, that);
-        }
-        /* None */
-        else
-        {
-            return false;
-        }
     }
 }
 
