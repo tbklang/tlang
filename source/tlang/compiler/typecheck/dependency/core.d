@@ -1065,51 +1065,6 @@ public class DNodeGenerator
             return varAssDNode;
         }
         /**
-        * Variable asignments
-        */
-        else if(cast(VariableAssignmentStdAlone)entity)
-        {
-            VariableAssignmentStdAlone vAsStdAl = cast(VariableAssignmentStdAlone)entity;
-            vAsStdAl.setContext(context);
-
-            /* TODO: CHeck avriable name even */
-            DEBUG("YEAST ENJOYER");
-
-
-            // FIXME: The below assert fails for function definitions trying to refer to global values
-            // as a reoslveBest (up) is needed. We should firstly check if within fails, if so,
-            // resolveBest, if that fails, then it is an error (see #46)
-            assert(tc.getResolver().resolveBest(c, vAsStdAl.getVariableName()));
-            DEBUG("YEAST ENJOYER");
-            Variable variable = cast(Variable)tc.getResolver().resolveBest(c, vAsStdAl.getVariableName());
-            assert(variable);
-
-            /* Assinging to a variable is usage, therefore increment the reference count */
-            tc.touch(variable);
-
-
-            /* Pool the variable */
-            DNode varDecDNode = pool(variable);
-
-            /* TODO: Make sure a DNode exists (implying it's been declared already) */
-            if(varDecDNode.isVisisted())
-            {
-                /* Pool varass stdalone */
-                DNode vStdAlDNode = pool(vAsStdAl);
-
-                /* Pool the expression and make the vAStdAlDNode depend on it */
-                DNode expression = expressionPass(vAsStdAl.getExpression(), context);
-                vStdAlDNode.needs(expression);
-
-                return vStdAlDNode;
-            }
-            else
-            {
-                expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
-                return null;
-            }            
-        }
-        /**
         * Function definitions
         */
         else if(cast(Function)entity)
