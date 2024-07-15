@@ -1038,12 +1038,15 @@ public class DNodeGenerator
             /* Pool `toExpr` and make an `AssignmentTo` dep-node depend on it */
             DNode assToDNode = new AssignmentTo();
             DNode toExprDNode = expressionPass(toExpr, context);
+
             DEBUG("");
             DEBUG("");
             DEBUG("");
             DEBUG("toExprDNode dependencies: ", toExprDNode.dependencies);
-            DEBUG("toExprDNode dependencies[0]'s deps: ", toExprDNode.dependencies[0].dependencies);
-            DEBUG("toExprDNode dependencies[1]'s deps: ", toExprDNode.dependencies[1].dependencies);
+            import niknaks.debugging : dumpArray;
+            DNode[] dbg_deps = toExprDNode.dependencies;
+            DEBUG(dumpArray!(dbg_deps));
+            
             // panic("Alex fokken mouton");
             
             assert(toExprDNode);
