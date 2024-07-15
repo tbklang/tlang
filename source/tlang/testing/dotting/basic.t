@@ -16,6 +16,9 @@ int main()
 
 	int[2] stack;
 
+	int i = 1;
+	i=1;
+
 	int* arr;
 	int[] d;
 
