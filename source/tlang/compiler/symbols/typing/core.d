@@ -301,6 +301,11 @@ public final class ModuleType : Type
     {
         super("module");
     }
+
+    public override string toString()
+    {
+        return "ModuleType";
+    }
 }
 
 public final class ContainerType : Type
@@ -312,6 +317,6 @@ public final class ContainerType : Type
 
     public override string toString()
     {
-        return "containerType";
+        return "ContainerType";
     }
 }
