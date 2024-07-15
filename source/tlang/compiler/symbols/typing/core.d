@@ -302,3 +302,16 @@ public final class ModuleType : Type
         super("module");
     }
 }
+
+public final class ContainerType : Type
+{
+    this()
+    {
+        super("container");
+    }
+
+    public override string toString()
+    {
+        return "containerType";
+    }
+}

@@ -149,6 +149,11 @@ public Type getBuiltInType(TypeChecker tc, Container container, string typeStrin
     {
         return new ModuleType();
     }
+    /* A container */
+    else if(cmp(typeString, "container") == 0)
+    {
+        return new ContainerType();
+    }
     /* Stack-based array handling `<componentType>[<number>]` */
     else if(isStackArray(typeString))
     {
