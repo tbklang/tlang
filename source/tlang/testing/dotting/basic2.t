@@ -8,7 +8,7 @@ void k(int i, int* p)
 int main()
 {
 	int[2] arr;
-	basic2.k(257, arr);
+	basic2.k(258, arr);
 
 	return arr[0];
 }
