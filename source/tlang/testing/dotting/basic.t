@@ -10,6 +10,8 @@ int y()
 	return 69;
 }
 
+int global;
+
 int main()
 {
 	int[2][2] stackArr;
