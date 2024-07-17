@@ -17,6 +17,8 @@ public interface LexerInterface
      * Returns the token at the current cursor
      * position
      *
+     * Throws: LexerException if the cursor
+     * is out-of-bounds
      * Returns: the `Token`
      */
     public Token getCurrentToken();
