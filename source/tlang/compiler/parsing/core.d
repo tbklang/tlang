@@ -1831,8 +1831,6 @@ public final class Parser
                     // Only continue if variable declarations are allowed
                     if(allowVarDec)
                     {
-                        DEBUG("Semi: "~to!(string)(lexer.getCurrentToken()));
-                        DEBUG("Semi: "~to!(string)(lexer.getCurrentToken()));
                         WARN("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ name ~ ")");
 
                         generated = new Variable(type, name);
