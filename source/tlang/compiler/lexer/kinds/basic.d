@@ -40,7 +40,15 @@ public final class BasicLexer : LexerInterface
      */
     public override Token getCurrentToken()
     {
-        /* TODO: Throw an exception here when we try get more than we can */
+        if(!hasTokens)
+        {
+            throw new LexerException
+            (
+                this,
+                LexerError.EXHAUSTED_TOKENS
+            );
+        }
+
         return tokens[tokenPtr];
     }
 
