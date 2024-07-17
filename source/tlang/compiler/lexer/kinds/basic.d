@@ -1224,7 +1224,11 @@ unittest
             new Token("(", 0, 0),
             new Token(")", 0, 0),
             new Token(".", 0, 0),
-            new Token("l.p.p", 0, 0),
+            new Token("l", 0, 0),
+            new Token(".", 0, 0),
+            new Token("p", 0, 0),
+            new Token(".", 0, 0),
+            new Token("p", 0, 0),
             new Token(";", 0, 0)
         ]);
 }
