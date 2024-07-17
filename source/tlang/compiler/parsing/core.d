@@ -446,110 +446,6 @@ public final class Parser
         }
     }
 
-    public Statement parseName(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
-    {
-        Statement ret;
-
-        // TODO: We must do a sort-of greedby lookahead here until
-        // we hit a `;` or `=`
-        //
-        // we either have [<expr>, =]
-        // or
-        // [<dotPath> <path> =/;]
-
-        // commonality: <expr>
-        //
-        // then have a isDotPath(Expression)
-        // and dependent on that then move to next steo
-
-        /* Save the name or type */
-        string nameTYpe = lexer.getCurrentToken().getToken();
-        DEBUG("parseName(): Current token: "~lexer.getCurrentToken().toString());
-
-        /* TODO: The problem here is I don't want to progress the token */
-
-
-
-        
-
-        /* Get next token */
-        lexer.nextToken();
-        SymbolType type = getSymbolType(lexer.getCurrentToken());
-
-        /* If we have `(` then function call */
-        if(type == SymbolType.LBRACE)
-        {
-            lexer.previousToken();
-            FunctionCall funcCall = parseFuncCall();
-            ret = funcCall;
-
-            /* Set the flag to say this is a statement-level function call */
-            funcCall.makeStatementLevel();
-
-             /* Expect a semi-colon */
-            expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-            lexer.nextToken();
-        }
-        /**
-        * Either we have:
-        *
-        * 1. `int ptr` (and we looked ahead to `ptr`)
-        * 2. `int* ptr` (and we looked ahead to `*`)
-        * 3. `int[] thing` (and we looked ahead to `[`)
-        */
-        /* If we have an identifier/type then declaration */
-        else if(type == SymbolType.IDENT_TYPE || type == SymbolType.STAR || type == SymbolType.OBRACKET)
-        {
-            lexer.previousToken();
-            ret = parseTypedDeclaration();
-
-            /* If it is a function definition, then do nothing */
-            if(cast(Function)ret)
-            {
-                // The ending `}` would have already been consumed
-            }
-            /* If it is a variable declaration then */
-            else if(cast(Variable)ret)
-            {
-                /* Expect a semicolon and consume it */
-                expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-                lexer.nextToken();
-            }
-            /* This should never happen */
-            else
-            {
-                assert(false);
-            }
-        }
-        /* Assignment */
-        else if(type == SymbolType.ASSIGN)
-        {
-            // Rewind from `... =`, from the `=` token
-            // TODO: Shit a lot more rewinding would be
-            // needed
-            lexer.previousToken();
-
-
-            // TODO: Here we need to parse an expression until we hit a terminating symbol of `=`
-            // ... this expression will be the `to`
-
-
-            // ret = parseAssignment(terminatingSymbol);
-            panic("You tryig to call the old parseAssignment? Impossible that you even made it into parseName() to begin with");
-        }
-        /* Any other case */
-        else
-        {
-            DEBUG(lexer.getCurrentToken());
-            expect("Error expected ( for var/func def");
-        }
-       
-
-
-
-        return ret;
-    }
-
     /* TODO: Implement me, and call me */
     private Struct parseStruct()
     {
@@ -863,7 +759,7 @@ public final class Parser
         else if(symbolType == SymbolType.IDENT_TYPE)
         {
             /* TODO: Set accesor on returned thing */
-            entity = cast(Entity)parseName();
+            entity = cast(Entity)parseTypedDeclaration(true, true, true, false, true, false, false);
 
             if(!entity)
             {
@@ -913,7 +809,7 @@ public final class Parser
         else if(symbolType == SymbolType.IDENT_TYPE)
         {
             /* TODO: Set accesor on returned thing */
-            entity = cast(Entity)parseName();
+            entity = cast(Entity)parseTypedDeclaration(true, true, true, false, true, false, false);
 
             if(!entity)
             {
@@ -1872,9 +1768,16 @@ public final class Parser
         return true;
     }
 
-    // TODO: This should have a forgiving mode, potentially or should it?
-    // TODO: Update to `Statement` as this can return an ArrayAssignment now
-    private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true, bool onlySignature = false)
+    private Statement parseTypedDeclaration
+    (
+        bool wantsBody = true,
+        bool allowVarDec = true,
+        bool allowFuncDef = true,
+        bool onlySignature = false,
+        bool allowVarDecWithAssignment = true,
+        bool allowAssignments = true,
+        bool allowFuncCall = true
+    )
     {
         WARN("parseTypedDeclaration(): Enter");
 
@@ -1948,7 +1851,7 @@ public final class Parser
                     if(allowVarDec)
                     {
                         // Only continue if assignments are allowed
-                        if(wantsBody)
+                        if(allowVarDecWithAssignment)
                         {
                             /* Consume the `=` token */
                             lexer.nextToken();
@@ -2098,6 +2001,12 @@ public final class Parser
         // FIXME: No, it could be ANYTHING actually, like a avriable assignment too
         if(getSymbolType(lexer.getCurrentToken()) == SymbolType.ASSIGN)
         {
+            // Are standalone assignments allowed?
+            if(!allowAssignments)
+            {
+                expect("Assignments are not allowed here");
+            }
+
             // Now we make a kind-of assigbnment depending on the left-hand
             // ... side ish?
             //
@@ -2127,6 +2036,12 @@ public final class Parser
         // If next token is `;` then it is some standalone expression (like a function call)
         else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.SEMICOLON)
         {
+            // Are function calls allowed? (standalone expressions)
+            if(!allowFuncCall)
+            {
+                expect("Function calls not allowed here");
+            }
+
             // FIXME: Implement me; currently nothing gets catched here
             // because this entire fucntion isn't called for function
             // calls
@@ -2722,8 +2637,7 @@ public final class Parser
         if(symbol == SymbolType.IDENT_TYPE)
         {
             /* Might be a function, might be a variable, or assignment */
-            // statement = parseName(terminatingSymbol);
-            statement = parseTypedDeclaration(); // TODO: Any args to pass?
+            statement = parseTypedDeclaration();
         }
         /* If it is an accessor */
         else if(isAccessor(tok))
@@ -2865,11 +2779,18 @@ public final class Parser
         /* External function symbol */
         if(externType == SymbolType.EXTERN_EFUNC)
         {
-            // TODO: (For one below)(we should also disallow somehow assignment) - evar
-
             // We now parse function definition but with `wantsBody` set to false
             // indicating no body should be allowed.
-            pseudoEntity = cast(TypedEntity)parseTypedDeclaration(false, false, true);
+            pseudoEntity = cast(TypedEntity)parseTypedDeclaration
+            (
+                false,
+                false,
+                true,
+                true,
+                false,
+                false,
+                false
+            );
 
             // TODO: Add a check for this cast (AND parse wise if it is evan possible)
             assert(pseudoEntity);
@@ -2877,9 +2798,18 @@ public final class Parser
         /* External variable symbol */
         else if(externType == SymbolType.EXTERN_EVAR)
         {
-            // We now parse a variable declaration but with the `wantsBody` set to false
-            // indicating no assignment should be allowed.
-            pseudoEntity = cast(TypedEntity)parseTypedDeclaration(false, true, false);
+            // We now parse a variable declaration but indicating
+            // that no assignments to it should be allowed.
+            pseudoEntity = cast(TypedEntity)parseTypedDeclaration
+            (
+                false,
+                true,
+                false,
+                true,
+                false,
+                false,
+                false
+            );
 
             // TODO: Add a check for this cast (AND parse wise if it is evan possible)
             assert(pseudoEntity);
@@ -3102,13 +3032,26 @@ public final class Parser
             /* If it is a type */
             if (symbol == SymbolType.IDENT_TYPE)
             {
-                /* Might be a function, might be a variable, or assignment */
-                Statement statement = parseName();
+                /** 
+                 * Might be a function, might be a variable
+                 * but definately not a standalone assignment
+                 * and no function calls
+                 */
+                Statement statement = parseTypedDeclaration
+                (
+                    true,
+                    true,
+                    true,
+                    false,
+                    true,
+                    false,
+                    false
+                );
                 
                 /**
-                * If it is an Entity then mark it as static
-                * as all Entities at module-level are static
-                */
+                 * If it is an Entity then mark it as static
+                 * as all Entities at module-level are static
+                 */
                 if(cast(Entity)statement)
                 {
                     Entity entity = cast(Entity)statement;
