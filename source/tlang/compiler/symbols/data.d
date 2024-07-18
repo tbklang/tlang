@@ -1099,6 +1099,11 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
         return arguments;
     }
 
+    public size_t getArgCount()
+    {
+        return this.arguments.length;
+    }
+
     /** 
      * Mark this function call as statement-level
      */
