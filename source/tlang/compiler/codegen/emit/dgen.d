@@ -342,7 +342,7 @@ public final class DCodeEmitter : CodeEmitter
             Context context = funcCallInstr.getContext();
             assert(context);
 
-            Function functionToCall = cast(Function)typeChecker.getResolver().resolveBest(context.getContainer(), funcCallInstr.functionName); //TODO: Remove `auto`
+            Function functionToCall = cast(Function)typeChecker.getResolver().resolveBest(context.getContainer(), funcCallInstr.getTarget()); //TODO: Remove `auto`
 
             // TODO: SymbolLookup?
 
