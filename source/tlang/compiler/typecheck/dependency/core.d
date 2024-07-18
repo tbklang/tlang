@@ -616,22 +616,8 @@ public class DNodeGenerator
             FunctionCall funcCall = cast(FunctionCall)exp;
             DEBUG("FuncCall: "~funcCall.getName());
 
-            /* TODO: We need to fetch the cached function definition here and call it */
-            Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
-            assert(funcEntity);
-            
-            // FIXME: The below is failing (we probably need a forward look ahead?)
-            // OR use the addFuncDef list?
-            //WAIT! We don't need a funcDefNode actually. No, we lierally do not.
-            //Remmeber, they are done in a seperate pass, what we need is just our FUncCall DNode
-            // WHICH we have below as `dnode`!!!!
-            // DNode funcDefDNode = retrieveFunctionDefinitionNode(tc.getResolver().generateName(tc.getModule(), funcEntity));
-            // gprintln("FuncCall (FuncDefNode): "~to!(string)(funcDefDNode));
-            // dnode.needs(funcDefDNode); /* NOTE: New code as of 4th October 2022 */
-
             //NOTE: Check if we need to set a context here to that of the context we occuring in
             funcCall.context = context;
-
 
             /**
             * Go through each argument generating a fresh DNode for each expression
