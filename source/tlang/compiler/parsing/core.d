@@ -1050,9 +1050,13 @@ public final class Parser
          * which means we can call `getType()` and extract
          * the type string
          */
-        TypedEntity bogusEntity = cast(TypedEntity)parseTypedDeclaration(false, false, false, true);
-        assert(bogusEntity);
-        string toType = bogusEntity.getType();
+
+        string toType;
+        if(!tryParseType(toType))
+        {
+            expect("Was expecting a type to cast to");
+        }
+        DEBUG(format("parseCast(): Got to-type '%s'", toType));
 
         /* Expect a `)` closing brace */
         expect(SymbolType.RBRACE, lexer.getCurrentToken());
@@ -1776,10 +1780,18 @@ public final class Parser
         bool onlySignature = false,
         bool allowVarDecWithAssignment = true,
         bool allowAssignments = true,
-        bool allowFuncCall = true
+        bool allowFuncCall = true,
+        SymbolType terminatingSymbol = SymbolType.SEMICOLON
     )
     {
-        WARN("parseTypedDeclaration(): Enter");
+        WARN
+        (
+            format
+            (
+                "parseTypedDeclaration(): Enter with terminating symbol '%s'",
+                terminatingSymbol
+            )
+        );
 
 
         /* Generated object */
@@ -2016,9 +2028,9 @@ public final class Parser
             /* Consume the `=` */
             lexer.nextToken();
 
-            /* Parse the expression being assigned followed by a semi-colon `;` */
+            /* Parse the expression being assigned followed by the terminating symbol */
             Expression assExpr = parseExpression();
-            expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+            expect(terminatingSymbol, lexer.getCurrentToken());
 
             /* Consume the `;` */
             lexer.nextToken();
@@ -2066,6 +2078,7 @@ public final class Parser
         else
         {
             // FIXME: Add better message here
+            DEBUG(format("Terminating symbol: '%s' but we have? '%s'", terminatingSymbol, lexer.getCurrentToken()));
             expect("Unknown typed declaration");
             assert(false);
         }       
@@ -2171,11 +2184,16 @@ public final class Parser
             if (symbolType == SymbolType.IDENT_TYPE)
             {
                 /* Might be a function definition or variable declaration */
-                structMember = parseTypedDeclaration();
-                
-                /* Should have a semi-colon and consume it */
-                expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-                lexer.nextToken();
+                structMember = parseTypedDeclaration
+                (
+                    true,
+                    true,
+                    true,
+                    false,
+                    true,
+                    false,
+                    false
+                );
             }
             /* If it is a class */
             else if(symbolType == SymbolType.CLASS)
@@ -2635,7 +2653,18 @@ public final class Parser
         if(symbol == SymbolType.IDENT_TYPE)
         {
             /* Might be a function, might be a variable, or assignment */
-            statement = parseTypedDeclaration();
+            DEBUG("kek");
+            statement = parseTypedDeclaration
+            (
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                terminatingSymbol
+            );
         }
         /* If it is an accessor */
         else if(isAccessor(tok))
@@ -2904,11 +2933,7 @@ public final class Parser
         lexer.nextToken();
 
         /* Get the module's name */
-        expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
-        string moduleName = lexer.getCurrentToken().getToken();
-
-        /* Consume the token */
-        lexer.nextToken();
+        string moduleName = parseNamePathDotted();
 
         /* All modules to be imported */
         string[] collectedModuleNames = [moduleName];
@@ -2920,12 +2945,8 @@ public final class Parser
             lexer.nextToken();
 
             /* Get the module's name */
-            expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
-            string curModuleName = lexer.getCurrentToken().getToken();
+            string curModuleName = parseNamePathDotted();
             collectedModuleNames ~= curModuleName;
-
-            /* Consume the name */
-            lexer.nextToken();
         }
 
         /* Expect a semi-colon and consume it */
@@ -3158,6 +3179,7 @@ public final class Parser
         {
             /* Get current token, expect an ident and build up */
             curTok = lexer.getCurrentToken();
+            DEBUG("curTok: ", curTok);
             expect(SymbolType.IDENT_TYPE, curTok);
             buildUp ~= curTok.getToken();
 
@@ -3177,6 +3199,9 @@ public final class Parser
             }
         }
         while(true);
+
+        DEBUG("Ret with: ", buildUp);
+        DEBUG("Curtok (on leave): ", lexer.getCurrentToken());
 
         return buildUp;
     }
@@ -4051,7 +4076,7 @@ unittest
         Function c_func = cast(Function)resolver.resolveBest(module_c, "k");
         assert(c_func);
     }
-    catch(TError e)
+    catch(TError)
     {
         assert(false);
     }
