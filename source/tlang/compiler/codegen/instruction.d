@@ -314,7 +314,7 @@ public class FuncCallInstr : CallInstr
     /* Per-argument instrructions */
     private Value[] evaluationInstructions;
 
-    public const string functionName;
+    private string functionName;
 
     this(string functionName, ulong argEvalInstrsSize)
     {
