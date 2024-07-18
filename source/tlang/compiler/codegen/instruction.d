@@ -343,6 +343,11 @@ public class FuncCallInstr : CallInstr
         return evaluationInstructions;
     }
 
+    public size_t getArgCount()
+    {
+        return evaluationInstructions.length;
+    }
+
     /** 
      * Determines whether this function call instruction
      * is within an expression or a statement itself
@@ -361,6 +366,11 @@ public class FuncCallInstr : CallInstr
     public void markStatementLevel()
     {
         statementLevel = true;
+    }
+
+    public string getTarget()
+    {
+        return this.functionName;
     }
 }
 
