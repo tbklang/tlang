@@ -1670,6 +1670,36 @@ public final class TypeChecker
         return current_assData.ofInstr;
     }
 
+    import niknaks.functional;
+    /** 
+     * Instruction context
+     *
+     * This provides helper
+     * information
+     */
+    private struct InstrCtx
+    {
+        // The container with which
+        // the instruction being validated
+        // is a member of
+        private Container memberOf;
+
+        public void setContainer(Container membersContainer)
+        {
+            this.memberOf = membersContainer;
+        }
+
+        public Optional!(Container) getContainer()
+        {
+            return memberOf is null ? Optional!(Container)() : Optional!(Container)(memberOf);
+        }
+    }
+
+
+    private Instruction completePartial(InstrCtx ctx, Instruction inputInstr)
+    {
+        return null;
+    }
 
     public void typeCheckThing(DNode dnode)
     {
@@ -1869,7 +1899,6 @@ public final class TypeChecker
 
                 DEBUG("Sir shitsalot");
 
-
                 if(binOperator == SymbolType.DOT)
                 {
                     // panic("Implement dot operator typecheck/codegen");
@@ -1990,6 +2019,7 @@ public final class TypeChecker
                         {
                             FuncCallInstr funcCallRight = cast(FuncCallInstr)vRhsInstr;
                             addInstr(funcCallRight);
+
                             return;
                         }
                         else
@@ -2270,19 +2300,18 @@ public final class TypeChecker
                 assert(belongsTo);
 
                 /* TODO: Look up func def to know when popping stops (types-based delimiting) */
+                ERROR("Name of func call: "~funcCall.getName());
                 Function func = cast(Function)resolver.resolveBest(belongsTo, funcCall.getName());
                 assert(func);
                 VariableParameter[] paremeters = func.getParams();
 
-                /* TODO: Pass in FUnction, so we get function's body for calling too */
-                DEBUG(format("funcCall.getName() %s", funcCall.getName()));
+                // Create new call instruction
                 FuncCallInstr funcCallInstr = new FuncCallInstr(funcCall.getName(), paremeters.length);
-                ERROR("Name of func call: "~func.getName());
-
+                
                 /* If there are paremeters for this function (as per definition) */
                 if(!paremeters.length)
                 {
-                    ERROR("No parameters for deez nuts: "~func.getName());
+                    ERROR(format("No parameters for function: %s", func.getName()));
                 }
                 /* Pop all args per type */
                 else
@@ -2321,16 +2350,16 @@ public final class TypeChecker
 
 
                             /**
-                                * We need to enforce the `valueInstr`'s' (the `Value`-based
-                                * instruction being passed as an argument) type to be that
-                                * of the `parmType` (the function's parameter type)
-                                */
+                             * We need to enforce the `valueInstr`'s' (the `Value`-based
+                             * instruction being passed as an argument) type to be that
+                             * of the `parmType` (the function's parameter type)
+                             */
                             typeEnforce(parmType, valueInstr, valueInstr, true);
 
                             /**
-                                * Refresh the `argType` as `valueInstr` may have been
-                                * updated and we need the new type
-                                */
+                             * Refresh the `argType` as `valueInstr` may have been
+                             * updated and we need the new type
+                             */
                             argType = valueInstr.getInstrType();
                             
 
