@@ -525,6 +525,11 @@ public class Function : TypedEntity, Container
         return params;
     }
 
+    public size_t getArity()
+    {
+        return params.length;
+    }
+
     public bool hasParams()
     {
         return params.length != 0;
