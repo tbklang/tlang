@@ -785,6 +785,7 @@ public class DNodeGenerator
         {
             /* Get the unary operator expression */
             UnaryOperatorExpression unaryOp = cast(UnaryOperatorExpression)exp;
+            unaryOp.setContext(context);
 
             /* Process the expression */
             DNode expressionNode = expressionPass(unaryOp.getExpression(), context);
@@ -1155,6 +1156,7 @@ public class DNodeGenerator
 
             // Extract the branch (body Statement[] + condition)
             Branch whileBranch = whileLoopStmt.getBranch();
+            whileBranch.setContext(context);
             DNode branchDNode = pool(whileBranch);
             DEBUG("Branch: "~to!(string)(whileBranch));
 
