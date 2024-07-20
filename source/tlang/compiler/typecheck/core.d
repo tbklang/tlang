@@ -2277,56 +2277,6 @@ public final class TypeChecker
                 assert(false);
             }
         }
-        /* VariableAssigbmentDNode */
-        else if(cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode)
-        {
-            import tlang.compiler.typecheck.dependency.variables;
-
-            /* Get the variable's name */
-            string variableName;
-            VariableAssignmentNode varAssignDNode = cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
-            Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
-            variableName = resolver.generateName(this.program, assignTo);
-            DEBUG("VariableAssignmentNode: "~to!(string)(variableName));
-
-            /* Get the Context of the Variable Assigmnent */
-            Context variableAssignmentContext = (cast(VariableAssignment)varAssignDNode.getEntity()).context;
-
-
-            /**
-            * FIXME: Now with ClassStaticAllocate we will have wrong instructoins for us
-            * ontop of the stack (at the beginning of the queue), I think this leads us
-            * to potentially opping wrong thing off - we should filter pop perhaps
-            */
-
-            /**
-            * Codegen
-            *
-            * 1. Get the variable's name
-            * 2. Pop Value-instruction
-            * 3. Generate VarAssignInstruction with Value-instruction
-            * 4. Set the VarAssignInstr's Context to that of the Variable assigning to
-            */
-            Instruction instr = popInstr();
-            assert(instr);
-            Value valueInstr = cast(Value)instr;
-            assert(valueInstr);
-            WARN("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr));
-
-
-            Type rightHandType = valueInstr.getInstrType();
-            DEBUG("RightHandType (assignment): "~to!(string)(rightHandType));
-
-            
-
-        
-            DEBUG(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
-            VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
-            varAssInstr.setContext(variableAssignmentContext);
-            // NOTE: No need setting `varAssInstr.type` as the type if in `getEmbeddedInstruction().type`
-            
-            addInstr(varAssInstr);
-        }
         /* TODO: Add support */
         /**
         * TODO: We need to emit different code dependeing on variable declaration TYPE
