@@ -1320,7 +1320,7 @@ public class DNodeGenerator
         else if(cast(ExpressionStatement)entity)
         {
             ExpressionStatement exprStmt = cast(ExpressionStatement)entity;
-            // call.setContext(context);
+            exprStmt.setContext(context);
 
             ERROR("Still working on implementing support for PathExpession");
 
