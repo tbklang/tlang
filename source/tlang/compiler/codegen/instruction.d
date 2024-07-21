@@ -7,8 +7,9 @@ import tlang.compiler.symbols.data : SymbolType;
 import tlang.compiler.symbols.check : getCharacter;
 import gogga;
 import tlang.compiler.symbols.typing.core : Type;
+import tlang.misc.logging;
 
-public class Instruction
+public abstract class Instruction
 {
     /* Context for the Instruction (used in emitter for name resolution) */
     private Context context; //TODO: Make this private and add a setCOntext
@@ -371,6 +372,11 @@ public class FuncCallInstr : CallInstr
     public string getTarget()
     {
         return this.functionName;
+    }
+
+    public void setTarget(string targetName)
+    {
+        this.functionName = targetName;
     }
 }
 
