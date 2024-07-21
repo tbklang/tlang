@@ -2060,46 +2060,6 @@ public final class TypeChecker
             {
                 VariableExpression g  = cast(VariableExpression)statement;
                 string targetName = g.getName();
-                assert(g);
-
-                // /* FIXME: It would seem that g.getContext() is returning null, so within function body's context is not being set */
-                // DEBUG("VarExp: "~g.getName());
-                // DEBUG(g.getContext());
-                // Entity gVar = cast(Entity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
-                // DEBUG("gVar nullity?: "~to!(string)(gVar is null));
-
-
-                // // TODO: Throw exception if name is not found
-
-                // /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
-                // string variableName = resolver.generateName(this.program, gVar);
-                // variableName = g.getName();
-
-                // /* Type determined for instruction */
-                // Type instrType;
-
-                // // If a module is being referred to
-                // if(cast(Module)gVar)
-                // {
-                //     instrType = getType(this.program, "module");
-                // }
-                // // If it is some kind-of typed entity
-                // else if(cast(TypedEntity)gVar)
-                // {
-                //     TypedEntity typedEntity = cast(TypedEntity)gVar;
-                //     instrType = getType(gVar.getContext().getContainer(), typedEntity.getType());
-                // }
-                // //
-                // else
-                // {
-                //     panic(format("Please add support for VariableExpression typecheck/codegen for handling: %s", gVar.classinfo));
-                // }
-
-
-                
-
-                DEBUG("Yaa, it's rewind time");
-
 
                 /**
                 * Codegen
@@ -2112,11 +2072,8 @@ public final class TypeChecker
                 FetchValueVar fVV = new FetchValueVar(targetName, 4);
                 fVV.setContext(g.getContext());
 
-
+                /* Push instruction to top of stack */
                 addInstr(fVV);
-
-                /* The type of a FetchValueInstruction is the type of the variable being fetched */
-                // fVV.setInstrType(instrType);
             }
             // else if(cast()) !!!! Continue here 
             else if(cast(BinaryOperatorExpression)statement)
