@@ -1,5 +1,10 @@
 module basic;
 
+void g(int d)
+{
+
+}
+
 void k()
 {
 	
@@ -56,6 +61,8 @@ int main()
 	*(cast(int*)y()) = y();
 
 	getptr()[0] = 1;
+
+	g(1);
 
 	return 0;
 }
