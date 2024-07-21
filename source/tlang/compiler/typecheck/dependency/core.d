@@ -696,62 +696,73 @@ public class DNodeGenerator
         {
             // Extract the variable's name
             VariableExpression varExp = cast(VariableExpression)exp;
-            string nearestName = varExp.getName();
+            // string nearestName = varExp.getName();
 
             // Set the context of the variable expression
             varExp.setContext(context);
            
-            // Resolve the entity the name refers to
-            Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
+            // // Resolve the entity the name refers to
+            // Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
 
+            // DEBUG("namedEntity: ", namedEntity);
+            // DEBUG("ctx.getContainer(): ", context.getContainer());
 
-            /* If the entity was found */
-            if(namedEntity)
-            {
-                /* FIXME: Below assumes basic variable declarations at module level, fix later */
+            // /* If the entity was found */
+            // if(namedEntity)
+            // {
+            //     /* FIXME: Below assumes basic variable declarations at module level, fix later */
 
-                /** 
-                 * If `namedEntity` is a `Variable`
-                 *
-                 * Think of, well, a variable
-                 */
-                if(cast(Variable)namedEntity)
-                {
-                    /* Get the entity as a Variable */
-                    Variable variable = cast(Variable)namedEntity;
+            //     /** 
+            //      * If `namedEntity` is a `Variable`
+            //      *
+            //      * Think of, well, a variable
+            //      */
+            //     if(cast(Variable)namedEntity)
+            //     {
+            //         /* Get the entity as a Variable */
+            //         Variable variable = cast(Variable)namedEntity;
 
-                    /* Variable reference count must increase */
-                    tc.touch(variable);
+            //         /* Variable reference count must increase */
+            //         tc.touch(variable);
 
-                    /* Pool the node */
-                    VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
+            //         /* Pool the node */
+            //         VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
 
-                    /**
-                     * Check if the variable being referenced has been
-                     * visited (i.e. declared)
-                     *
-                     * If it has then setup dependency, if not then error
-                     * out
-                     */
-                    if(varDecNode.isVisisted())
-                    {
-                        dnode.needs(varDecNode);
-                    }
-                    else
-                    {
-                        expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
-                    }
-                }
-                else
-                {
-                    dnode.needs(pool(varExp));
-                }   
-            }
-            /* If the entity could not be found */
-            else
-            {
-                expect("No entity by the name "~nearestName~" exists (at all)");
-            }
+            //         /**
+            //          * Check if the variable being referenced has been
+            //          * visited (i.e. declared)
+            //          *
+            //          * If it has then setup dependency, if not then error
+            //          * out
+            //          */
+            //         if(varDecNode.isVisisted())
+            //         {
+            //             dnode.needs(varDecNode);
+            //         }
+            //         else
+            //         {
+            //             expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
+            //         }
+            //     }
+            //     else
+            //     {
+            //         dnode.needs(pool(varExp));
+            //     }   
+            // }
+            // /* If the entity could not be found */
+            // else
+            // {
+            //     expect("No entity by the name "~nearestName~" exists (at all)");
+            // }
+
+            /**
+             * FIXME: We must find a place to call
+             * touch. But it cannot be done here as
+             * we should not be resolving variables
+             * here (technically speaking) but only
+             * in the typecheck/codegen where we 
+             * have validation
+             */
         }
         /**
         * Binary operator
