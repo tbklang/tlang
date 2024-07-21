@@ -1926,6 +1926,12 @@ public final class TypeChecker
                 {
                     TypedEntity typedEntity = cast(TypedEntity)gVar;
                     instrType = getType(cntnr, typedEntity.getType());
+
+                    // If it is a variable increase its "touch" count
+                    if(cast(Variable)typedEntity)
+                    {
+                        touch(cast(Variable)typedEntity);
+                    }
                 }
                 //
                 else
