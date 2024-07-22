@@ -15,7 +15,7 @@ int function()
     stackArr[0] = &val1;
     stackArr[1] = &val2;
     
-    discard coerce(stackArr);
+    coerce(stackArr);
 
     return val1+val2;
 }
