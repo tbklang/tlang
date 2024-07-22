@@ -565,21 +565,6 @@ public final class DCodeEmitter : CodeEmitter
             emmmmit = emit;
         }
         /**
-        * Discard instruction (DiscardInstruction)
-        */
-        else if(cast(DiscardInstruction)instruction)
-        {
-            DiscardInstruction discardInstruction = cast(DiscardInstruction)instruction;
-            Value valueInstruction = discardInstruction.getExpressionInstruction();
-
-            string emit;
-
-            /* Transform the expression */
-            emit ~= transform(valueInstruction)~";";
-
-            emmmmit = emit;
-        }
-        /**
         * Type casting instruction (CastedValueInstruction)
         */
         else if(cast(CastedValueInstruction)instruction)

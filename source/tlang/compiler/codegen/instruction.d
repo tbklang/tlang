@@ -515,21 +515,6 @@ public final class PointerDereferenceAssignmentInstruction : Instruction
     }
 }
 
-public final class DiscardInstruction : Instruction
-{
-    private Value exprInstr;
-
-    this(Value exprInstr)
-    {
-        this.exprInstr = exprInstr;
-    }
-
-    public Value getExpressionInstruction()
-    {
-        return exprInstr;
-    }
-}
-
 public final class CastedValueInstruction : Value
 {
     /* The uncasted original instruction that must be executed-then-trimmed (casted) */
