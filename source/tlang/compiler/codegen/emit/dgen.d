@@ -257,7 +257,7 @@ public final class DCodeEmitter : CodeEmitter
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
 
-            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.varName); //TODO: Remove `auto`
+            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.getTarget()); //TODO: Remove `auto`
 
             /* If it is not external */
             if(!typedEntityVariable.isExternal())
@@ -729,7 +729,7 @@ public final class DCodeEmitter : CodeEmitter
             // TODO: Investigate, nroamlly we do a `FetchValueVar` as like the instr which is fine actually
             FetchValueVar array = cast(FetchValueVar)stackArrInstr.getIndexedToInstr();
             assert(array);
-            Variable arrayVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), array.varName);
+            Variable arrayVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), array.getTarget());
 
             /* Perform symbol mapping */
             // FIXME: Set proper scope type
