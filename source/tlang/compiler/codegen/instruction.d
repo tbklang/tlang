@@ -123,10 +123,11 @@ public final class VariableDeclaration : StorageDeclaration
 public final class FetchValueVar : Value
 {
     /* Name of variable to fetch from */
-    public string varName;
+    private string varName;
 
     /* Length */
-    public byte length;
+    // TODO: deprecate? i look these names up in emitter or wherever i am sure so this isn't needed
+    private byte length;
 
     this(string varName, byte len)
     {
@@ -139,6 +140,11 @@ public final class FetchValueVar : Value
     public string getTarget()
     {
         return this.varName;
+    }
+
+    public void setTarget(string target)
+    {
+        this.varName = target;
     }
 }
 
