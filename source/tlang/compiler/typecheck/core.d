@@ -1980,7 +1980,7 @@ public final class TypeChecker
                 DEBUG("cntnr: ", cntnr);
                 assert(cntnr);
 
-                Entity gVar = cast(Entity)resolver.resolveBest(cntnr, targetName);
+                Entity gVar = resolver.resolveBest(cntnr, targetName);
 
                 // Did lookup succeed?
                 if(gVar is null)
@@ -1997,7 +1997,6 @@ public final class TypeChecker
                     );
                 }
 
-                /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
                 string variableName = resolver.generateName(this.program, gVar);
 
                 /* Type determined for instruction */
