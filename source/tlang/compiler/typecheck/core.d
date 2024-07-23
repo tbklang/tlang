@@ -1386,7 +1386,7 @@ public final class TypeChecker
                 * and obtain it's declared type
                 */
             Context potFVVCtx = potFVV.getContext();
-            Variable potStackArrVar = cast(Variable)resolver.resolveBest(potFVVCtx.getContainer(), potFVV.varName);
+            Variable potStackArrVar = cast(Variable)resolver.resolveBest(potFVVCtx.getContainer(), potFVV.getTarget());
             Type variableDeclaredType = getType(potFVVCtx.getContainer(), potStackArrVar.getType());
 
             /**
@@ -2210,27 +2210,21 @@ public final class TypeChecker
                             {
                                 DEBUG("memberEnt is a variable");
 
-                                // Create a new FetchValueVar
-                                // with the full name
+                                // Update the `FetchValueVar`'s name
+                                // to be the full path `<targetName>.<member>`
                                 string newName = targetName~"."~member;
-                                FetchValueVar newFetchInstr = new FetchValueVar(newName, 8);
-                                newFetchInstr.setContext(binOpCtx);
+                                fetchValVarRight.setTarget(newName);
 
-                                // TODO: Instead of making new instruction
-                                // just update its details
                                 // FIXME: Validation should set correct VarLen, actually
                                 // the instr type dictates this, deprecate the VarLen in `FetchValueVar`
 
                                 // Push the right hand side then
                                 // BACK to the top of stack
-                                // FetchValueVar rightFetch = cast(FetchValueVar)vRhsInstr;
-                                addInstr(newFetchInstr);
+                                addInstr(fetchValVarRight);
 
-    
                                 // Validate it with the container-left as context
-                                validate(InstrCtx(containerLeft), newFetchInstr);
-
-                                assert(newFetchInstr.getInstrType());
+                                validate(InstrCtx(containerLeft), fetchValVarRight);
+                                assert(fetchValVarRight.getInstrType());
 
                                 return;
                             }
