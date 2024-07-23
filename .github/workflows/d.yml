@@ -290,7 +290,28 @@ jobs:
           else
               exit 1
           fi
-        
+
+      - name: "Use-before-declare: use_before_declare.t"
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/use_before_declare.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+      - name: "Use-before-declare: use_before_declare_arr.t"
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/use_before_declare_arr.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
       - name: Else if without if
         run: |
           set +e
