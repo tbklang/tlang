@@ -125,16 +125,11 @@ public final class FetchValueVar : Value
     /* Name of variable to fetch from */
     private string varName;
 
-    /* Length */
-    // TODO: deprecate? i look these names up in emitter or wherever i am sure so this isn't needed
-    private byte length;
-
-    this(string varName, byte len)
+    this(string varName)
     {
         this.varName = varName;
-        this.length = len;
-
-        addInfo = "fetchVarValName: "~varName~", VarLen: "~to!(string)(length);
+        
+        addInfo = "fetchVarValName: "~varName;
     }
 
     public string getTarget()
