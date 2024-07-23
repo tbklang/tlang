@@ -1864,13 +1864,11 @@ public final class TypeChecker
                 FuncCallInstr fcInstr = cast(FuncCallInstr)inputInstr;
 
                 // Resolve the Function and extract its formal paremeters
-                Function func = cast(Function)resolver.resolveBest(cntnr, fcInstr.getTarget());
-                DEBUG("fcInstr: ", fcInstr);
-                DEBUG("fcInstr (target): ", fcInstr.getTarget());
-                DEBUG("cntnr: ", cntnr);
+                Entity funcEnt = resolver.resolveBest(cntnr, fcInstr.getTarget());
+                
 
                 // Did lookup succeed?
-                if(func is null)
+                if(funcEnt is null)
                 {
                     throw new TypeCheckerException
                     (
@@ -1883,6 +1881,27 @@ public final class TypeChecker
                         )
                     );
                 }
+
+                Function func = cast(Function)funcEnt;
+
+                // Is the target a function? If not, then error
+                if(func is null)
+                {
+                    throw new TypeCheckerException
+                    (
+                        this,
+                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                        format
+                        (
+                            "Cannot call entity named '%s' as it is not a function",
+                            fcInstr.getTarget()
+                        )
+                    );
+                }
+
+                DEBUG("fcInstr: ", fcInstr);
+                DEBUG("fcInstr (target): ", fcInstr.getTarget());
+                DEBUG("cntnr: ", cntnr);
 
                 assert(func);
                 VariableParameter[] paremeters = func.getParams();
