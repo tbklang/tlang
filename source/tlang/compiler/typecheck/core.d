@@ -1671,6 +1671,66 @@ public final class TypeChecker
         return current_assData.ofInstr;
     }
 
+    private struct EntityVisitNode
+    {
+        private TypedEntity te;
+        private bool declared;
+
+        @disable
+        this();
+
+        this(TypedEntity te)
+        {
+            this.te = te;
+            this.declared = false;
+        }
+
+        public void markDeclared()
+        {
+            this.declared = true;
+        }
+
+        public bool isDeclared()
+        {
+            return this.declared;
+        }
+    }
+
+    private EntityVisitNode[TypedEntity] decl_fstMap;
+
+    private void clear_declMap()
+    {
+        this.decl_fstMap.empty();
+        DEBUG("Cleared out decl_fstMap");
+    }
+
+    private void declare(TypedEntity te)
+    {
+        // This also initializes for us, never inline!
+        bool check = !isDeclared(te);
+        assert(check);
+
+        // Get node and mark as declared
+        EntityVisitNode* evn_ptr = te in this.decl_fstMap;
+        evn_ptr.markDeclared();
+    }
+
+    private bool isDeclared(TypedEntity te)
+    {
+        EntityVisitNode* evn_ptr = te in this.decl_fstMap;
+
+        // If not yet present then
+        // add a false entry and
+        // return that
+        if(evn_ptr is null)
+        {
+            this.decl_fstMap[te] = EntityVisitNode(te);
+            return isDeclared(te);
+        }
+
+        return evn_ptr.isDeclared();
+    }
+
     /** 
      * Instruction context
      *
@@ -1808,6 +1868,22 @@ public final class TypeChecker
                 DEBUG("fcInstr: ", fcInstr);
                 DEBUG("fcInstr (target): ", fcInstr.getTarget());
                 DEBUG("cntnr: ", cntnr);
+
+                // Did lookup succeed?
+                if(func is null)
+                {
+                    throw new TypeCheckerException
+                    (
+                        this,
+                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                        format
+                        (
+                            "Could not reference function named '%s' as no such entity exists",
+                            fcInstr.getTarget()
+                        )
+                    );
+                }
+
                 assert(func);
                 VariableParameter[] paremeters = func.getParams();
                 size_t arity = func.getArity();
@@ -1905,7 +1981,21 @@ public final class TypeChecker
                 assert(cntnr);
 
                 Entity gVar = cast(Entity)resolver.resolveBest(cntnr, targetName);
-                assert(gVar);
+
+                // Did lookup succeed?
+                if(gVar is null)
+                {
+                    throw new TypeCheckerException
+                    (
+                        this,
+                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                        format
+                        (
+                            "Could not reference variable named '%s' as no such entity exists",
+                            targetName
+                        )
+                    );
+                }
 
 
                 // TODO: Throw exception if name is not found
@@ -1926,6 +2016,21 @@ public final class TypeChecker
                 {
                     TypedEntity typedEntity = cast(TypedEntity)gVar;
                     instrType = getType(cntnr, typedEntity.getType());
+
+                    // If not yet declared, that is then an error
+                    if(!isDeclared(typedEntity))
+                    {
+                        throw new TypeCheckerException
+                        (
+                            this,
+                            TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                            format
+                            (
+                                "Usage of entity '%s' prior to declaration",
+                                variableName
+                            )
+                        );
+                    }
 
                     // If it is a variable increase its "touch" count
                     if(cast(Variable)typedEntity)
@@ -2836,6 +2941,9 @@ public final class TypeChecker
             Context ctx = variablePNode.getContext();
             assert(ctx);
             DEBUG("HELLO FELLA");
+
+            // Mark as declared
+            declare(variablePNode);
 
             string variableName = resolver.generateName(this.program, variablePNode);
             DEBUG("HELLO FELLA (name): "~variableName);
