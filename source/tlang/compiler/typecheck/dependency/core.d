@@ -822,31 +822,9 @@ public class DNodeGenerator
 
 
         /**
-        * Variable paremeters (for functions)
-        */
-        if(cast(VariableParameter)entity)
-        {
-            VariableParameter varParamDec = cast(VariableParameter)entity;
-
-            // Set context
-            entity.setContext(context);
-
-            // Pool and mark as visited
-            // NOTE: I guess for now use VariableDNode as that is what is used in expressionPass
-            // with the poolT! constrcutor, doing otherwise causes a cast failure and hence
-            // null: /git/tlang/tlang/issues/52#issuecomment-325
-            DNode dnode = poolT!(VariableNode, Variable)(varParamDec);
-            dnode.markVisited();
-
-            /* Add an entry to the reference counting map */
-            tc.touch(varParamDec);
-
-            return null;
-        }
-        /**
         * Variable declarations
         */
-        else if(cast(Variable)entity)
+        if(cast(Variable)entity)
         {
             /* Get the Variable and information */
             Variable variable = cast(Variable)entity;
