@@ -701,6 +701,11 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
         return assignment;
     }
 
+    public bool hasAssignment()
+    {
+        return this.assignment !is null;
+    }
+
     public override string toString()
     {
         return "Variable (Ident: "~name~", Type: "~type~")";
