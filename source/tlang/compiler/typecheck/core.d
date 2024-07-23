@@ -2198,9 +2198,13 @@ public final class TypeChecker
                                 // which takes `<leftName>.<rightName>`
                                 // and makes that the new name?
                                 string newName = targetName~"."~member;
-                                FetchValueVar newfetchInstr = new FetchValueVar(newName, 8);
-                                newfetchInstr.setInstrType(getType(this.program, "container"));
-                                addInstr(newfetchInstr);
+                                fetchValVarRight.setTarget(newName);
+
+                                // Instruction type is a container type
+                                fetchValVarRight.setInstrType(getType(this.program, "container"));
+
+                                // Push back to top of stack
+                                addInstr(fetchValVarRight);
 
                                 return;
                             }
