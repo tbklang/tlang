@@ -198,46 +198,58 @@ public final class DCodeEmitter : CodeEmitter
 
             Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
 
-            /* If the variable is not external */
-            if(!typedEntityVariable.isExternal())
+            /* Don't emit parameters */
+            if(cast(VariableParameter)typedEntityVariable)
             {
-                //NOTE: We should remove all dots from generated symbol names as it won't be valid C (I don't want to say C because
-                // a custom CodeEmitter should be allowed, so let's call it a general rule)
-                //
-                //simple_variables.x -> simple_variables_x
-                //NOTE: We may need to create a symbol table actually and add to that and use that as these names
-                //could get out of hand (too long)
-                // NOTE: Best would be identity-mapping Entity's to a name
-                // FIXME: Set proper scope type
-                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
-
-
-                // Check if the type is a stack-based array
-                // ... if so then take make symbolName := `<symbolName>[<stackArraySize>]`
-                if(cast(StackArray)varDecInstr.varType)
-                {
-                    StackArray stackArray = cast(StackArray)varDecInstr.varType;
-                    renamedSymbol~="["~to!(string)(stackArray.getAllocatedSize())~"]";
-                }
-
-                // Check to see if this declaration has an assignment attached
-                if(typedEntityVariable.getAssignment())
-                {
-                    Value varAssInstr = varDecInstr.getAssignmentInstr();
-                    DEBUG("VarDec(with assignment): My assignment type is: "~varAssInstr.getInstrType().getName());
-
-                    // Generate the code to emit
-                    emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
-                }
-                else
-                {
-                    emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~";";
-                }
+                string s = format("Not emitting for parameter '%s'", typedEntityVariable);
+                DEBUG(s);
+                // TODO: I don't like the whitespace, but that is the writeln()-er
+                emmmmit = format("// %s", s);
             }
-            /* If the variable is external */
+            /* Non-parameters (normal variables in the body) */
             else
             {
-                emmmmit = "extern "~typeTransform(cast(Type)varDecInstr.varType)~" "~typedEntityVariable.getName()~";";
+                /* If the variable is not external */
+                if(!typedEntityVariable.isExternal())
+                {
+                    //NOTE: We should remove all dots from generated symbol names as it won't be valid C (I don't want to say C because
+                    // a custom CodeEmitter should be allowed, so let's call it a general rule)
+                    //
+                    //simple_variables.x -> simple_variables_x
+                    //NOTE: We may need to create a symbol table actually and add to that and use that as these names
+                    //could get out of hand (too long)
+                    // NOTE: Best would be identity-mapping Entity's to a name
+                    // FIXME: Set proper scope type
+                    string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
+
+
+                    // Check if the type is a stack-based array
+                    // ... if so then take make symbolName := `<symbolName>[<stackArraySize>]`
+                    if(cast(StackArray)varDecInstr.varType)
+                    {
+                        StackArray stackArray = cast(StackArray)varDecInstr.varType;
+                        renamedSymbol~="["~to!(string)(stackArray.getAllocatedSize())~"]";
+                    }
+
+                    // Check to see if this declaration has an assignment attached
+                    if(typedEntityVariable.getAssignment())
+                    {
+                        Value varAssInstr = varDecInstr.getAssignmentInstr();
+                        DEBUG("VarDec(with assignment): My assignment type is: "~varAssInstr.getInstrType().getName());
+
+                        // Generate the code to emit
+                        emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
+                    }
+                    else
+                    {
+                        emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~";";
+                    }
+                }
+                /* If the variable is external */
+                else
+                {
+                    emmmmit = "extern "~typeTransform(cast(Type)varDecInstr.varType)~" "~typedEntityVariable.getName()~";";
+                }
             }
         }
         /* LiteralValue */
