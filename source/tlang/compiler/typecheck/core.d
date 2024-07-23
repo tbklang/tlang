@@ -1997,9 +1997,6 @@ public final class TypeChecker
                     );
                 }
 
-
-                // TODO: Throw exception if name is not found
-
                 /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
                 string variableName = resolver.generateName(this.program, gVar);
 
