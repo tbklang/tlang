@@ -392,7 +392,7 @@ public final class ArrayIndex : Expression
  * alongside the actual argument
  * expression-value itself.
  */
-public final class ArgumentNode : Expression
+public final class ArgumentNode : Expression, MStatementSearchable
 {
     private union ArgPos
     {
@@ -450,5 +450,28 @@ public final class ArgumentNode : Expression
     public Expression getExpr()
     {
         return this.value;
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /**
+         * Recurse on the `Expression` (if possible)
+         */
+        MStatementSearchable innerStmt = cast(MStatementSearchable)value;
+        if(innerStmt)
+        {
+            matches ~= innerStmt.search(clazzType); 
+        }
+
+        return matches;
     }
 }
