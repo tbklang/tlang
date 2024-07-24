@@ -381,3 +381,74 @@ public final class ArrayIndex : Expression
         return "ArrayIndex [to: "~indexInto.toString()~", idx: "~index.toString()~"]";
     }
 }
+
+/** 
+ * Represents an argument
+ *
+ * The reason for this to have
+ * its own distinct AST node
+ * type is because named parameters
+ * require meta-data to be stored
+ * alongside the actual argument
+ * expression-value itself.
+ */
+public final class ArgumentNode : Expression
+{
+    private union ArgPos
+    {
+        string paramName;
+        size_t paramPos;
+    }
+
+    private bool usingNamedParam;
+    private ArgPos pos;
+    private Expression value;
+
+    private this
+    (
+        bool isNamedParameter,
+        ArgPos pos,
+        Expression value
+    )
+    {
+        this.usingNamedParam = isNamedParameter;
+        this.pos = pos;
+        this.value = value;
+    }
+
+    public static ArgumentNode namedArgument(Expression expr, string paramName)
+    {
+        ArgPos p;
+        p.paramName = paramName;
+        return new ArgumentNode(true, p, expr);
+    }
+
+    public static ArgumentNode positionalArgument(Expression expr, size_t argPos)
+    {
+        ArgPos p;
+        p.paramPos = argPos;
+        return new ArgumentNode(false, p, expr);
+    }
+
+    public bool isNamedParameter()
+    {
+        return this.usingNamedParam;
+    }
+
+    public string getParamName()
+    {
+        assert(isNamedParameter());
+        return pos.paramName;
+    }
+
+    public size_t getArgPos()
+    {
+        assert(!isNamedParameter());
+        return pos.paramPos;
+    }
+
+    public Expression getExpr()
+    {
+        return this.value;
+    }
+}
