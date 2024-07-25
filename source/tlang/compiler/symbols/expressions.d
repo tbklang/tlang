@@ -394,40 +394,43 @@ public final class ArrayIndex : Expression
  */
 public final class ArgumentNode : Expression, MStatementSearchable
 {
-    private union ArgPos
-    {
-        string paramName;
-        size_t paramPos;
-    }
-
     private bool usingNamedParam;
-    private ArgPos pos;
+    private string paramName;
+    private size_t appearancePosition;
     private Expression value;
 
     private this
     (
         bool isNamedParameter,
-        ArgPos pos,
+        size_t appearancePosition,
         Expression value
     )
     {
         this.usingNamedParam = isNamedParameter;
-        this.pos = pos;
+        this.appearancePosition = appearancePosition;
         this.value = value;
     }
 
-    public static ArgumentNode namedArgument(Expression expr, string paramName)
+    public static ArgumentNode namedArgument
+    (
+        Expression expr,
+        string paramName,
+        size_t appearancePosition
+    )
     {
-        ArgPos p;
-        p.paramName = paramName;
-        return new ArgumentNode(true, p, expr);
+        ArgumentNode arg = new ArgumentNode(true, appearancePosition, expr);
+        arg.paramName = paramName;
+        return arg;
     }
 
-    public static ArgumentNode positionalArgument(Expression expr, size_t argPos)
+    public static ArgumentNode positionalArgument
+    (
+        Expression expr,
+        size_t appearancePosition
+    )
     {
-        ArgPos p;
-        p.paramPos = argPos;
-        return new ArgumentNode(false, p, expr);
+        ArgumentNode arg = new ArgumentNode(false, appearancePosition, expr);
+        return arg;
     }
 
     public bool isNamedParameter()
@@ -438,13 +441,12 @@ public final class ArgumentNode : Expression, MStatementSearchable
     public string getParamName()
     {
         assert(isNamedParameter());
-        return pos.paramName;
+        return this.paramName;
     }
 
     public size_t getArgPos()
     {
-        assert(!isNamedParameter());
-        return pos.paramPos;
+        return this.appearancePosition;
     }
 
     public Expression getExpr()
@@ -473,5 +475,21 @@ public final class ArgumentNode : Expression, MStatementSearchable
         }
 
         return matches;
+    }
+
+    public override string toString()
+    {
+        import std.string : format;
+        string s = format("appearancePos: %d, expr: %s", getArgPos(), getExpr());;
+        if(isNamedParameter())
+        {
+            s ~= format(", name: %s", getParamName());
+        }
+
+        return format
+        (
+            "ArgumentNode [%s]",
+            s
+        );
     }
 }
