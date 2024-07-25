@@ -2114,7 +2114,7 @@ public final class Parser
         string[] inheritList;
 
         /* TODO: If we have the inherit symbol `:` */
-        if(getSymbolType(lexer.getCurrentToken()) == SymbolType.INHERIT_OPP)
+        if(getSymbolType(lexer.getCurrentToken()) == SymbolType.COLON)
         {
             /* TODO: Loop until `}` */
 
@@ -2339,7 +2339,7 @@ public final class Parser
                     {
                         FunctionCall funcCall = cast(FunctionCall)statement;
 
-                        Expression[] actualArguments = funcCall.getCallArguments();
+                        ArgumentNode[] actualArguments = funcCall.getCallArguments();
                         parentToContainer(container, cast(Statement[])actualArguments);
                     }
                     /** 
@@ -2731,6 +2731,55 @@ public final class Parser
         return statement;
     }
 
+    private bool tryParseNamedArgument
+    (
+        ref ArgumentNode namedArg,
+        size_t appearancePos
+    )
+    {
+        // Save cursor position
+        ulong curPos = lexer.getCursor();
+
+        Token potIdent = lexer.getCurrentToken();
+
+        scope(exit)
+        {
+            DEBUG("Nai exit");
+        }
+
+        if(getSymbolType(potIdent) == SymbolType.IDENT_TYPE)
+        {
+            string paramName = potIdent.getToken();
+            lexer.nextToken();
+
+            if(getSymbolType(lexer.getCurrentToken()) == SymbolType.COLON)
+            {
+                lexer.nextToken();
+
+                // Obtain the argument expression
+                Expression argV = parseExpression();
+
+                // Create named argument
+                namedArg = ArgumentNode.namedArgument(argV, paramName, appearancePos);
+                return true;
+            }
+            // Not a colon
+            else
+            {
+                // Rewind and fail
+                lexer.setCursor(curPos);
+                return false;
+            }
+        }
+        // Not the name
+        else
+        {
+            // Rewind and fail
+            lexer.setCursor(curPos);
+            return false;
+        }
+    }
+
     private FunctionCall parseFuncCall()
     {
         WARN("parseFuncCall(): Enter");
@@ -2738,7 +2787,7 @@ public final class Parser
         /* TODO: Save name */
         string functionName = lexer.getCurrentToken().getToken();
 
-        Expression[] arguments;
+        ArgumentNode[] arguments;
 
         lexer.nextToken();
 
@@ -2754,13 +2803,27 @@ public final class Parser
         /* If not expect arguments */
         else
         {
+            size_t appearancePos = 0;
             while(true)
             {
-                /* Get the Expression */
-                Expression exp = parseExpression();
+                ArgumentNode foundArg;
+
+                // Named argument
+                if(tryParseNamedArgument(foundArg, appearancePos))
+                {
+
+                }
+                // Positional argument
+                else
+                {
+                    /* Get the Expression */
+                    Expression exp = parseExpression();
+                    foundArg = ArgumentNode.positionalArgument(exp, appearancePos);
+                }
 
                 /* Add it to list */
-                arguments ~= exp;
+                DEBUG("Got arg: ", foundArg);
+                arguments ~= foundArg;
 
                 /* Check if we exiting */
                 if(getSymbolType(lexer.getCurrentToken()) == SymbolType.RBRACE)
@@ -2778,6 +2841,8 @@ public final class Parser
                 {
                     expect("Function call closed on ;, invalid");
                 }
+
+                appearancePos++;
             }
         }
 
