@@ -57,6 +57,46 @@ public class Value : Instruction
     }
 }
 
+public final class ArgumentInstruction : Value
+{
+    public struct Node
+    {
+        private bool hasName;
+        private size_t appPos;
+        private string argName;
+
+        this
+        (
+            size_t appPos,
+            string argName
+        )
+        {
+            this(appPos);
+            this.hasName = true;
+            this.argName = argName;
+        }
+
+        this(size_t appPos)
+        {
+            this.appPos = appPos;
+            this.hasName = false;
+        }
+    }
+
+    private Value val;
+    private Node node;
+
+    this
+    (
+        Value exprInstr,
+        Node node
+    )
+    {
+        this.val = exprInstr;
+        this.node = node;
+    }
+}
+
 public class StorageDeclaration : Instruction
 {
 
