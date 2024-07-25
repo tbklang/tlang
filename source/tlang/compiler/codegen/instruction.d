@@ -8,6 +8,7 @@ import tlang.compiler.symbols.check : getCharacter;
 import gogga;
 import tlang.compiler.symbols.typing.core : Type;
 import tlang.misc.logging;
+import std.string : format;
 
 public abstract class Instruction
 {
@@ -95,6 +96,8 @@ public final class ArgumentInstruction : Value
     {
         this.val = exprInstr;
         this.node = node;
+
+        this.addInfo = format("Node: %s, Type: %s, Val: %s", this.node, this.type, this.val);
     }
 }
 
