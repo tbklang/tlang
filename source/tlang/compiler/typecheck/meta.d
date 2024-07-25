@@ -9,6 +9,7 @@ import tlang.compiler.typecheck.core;
 import tlang.misc.logging;
 import std.conv : to;
 import tlang.compiler.configuration;
+import tlang.compiler.symbols.expressions : ArgumentNode;
 
 /** 
  * The `MetaProcessor` is used to do a pass over a `Container`
@@ -75,7 +76,7 @@ public class MetaProcessor
                     if(curFuncCall.getName() == "sizeof")
                     {
                         DEBUG("Elo");
-                        Expression[] arguments = curFuncCall.getCallArguments();
+                        ArgumentNode[] arguments = curFuncCall.getCallArguments();
                         if(arguments.length == 1)
                         {
                             IdentExpression potentialIdentExp = cast(IdentExpression)arguments[0];
