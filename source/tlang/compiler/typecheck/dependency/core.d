@@ -622,18 +622,19 @@ public class DNodeGenerator
             /**
             * Go through each argument generating a fresh DNode for each expression
             */
-            foreach(Expression actualArgument; funcCall.getCallArguments())
+            foreach(ArgumentNode actualArgument; funcCall.getCallArguments())
             {
-                ExpressionDNode actualArgumentDNode = poolT!(ExpressionDNode, Expression)(actualArgument);
-                // dnode.needs(actualArgumentDNode);
+                /* Pool the argument node */
+                DNode argNodeDep = pool(actualArgument);
+                assert(argNodeDep);
+                
+                /* Dep-gen on the embedded expression */
+                DNode actualArgumentDNode = expressionPass(actualArgument.getExpr(), context);
+                assert(actualArgumentDNode);
+                argNodeDep.needs(actualArgumentDNode);
 
-                // gprintln("We need to add recursion here", DebugType.ERROR);
-                // gprintln("Func?: "~to!(string)(cast(FunctionCall)actualArgument));
-                // gprintln("Literal?: "~to!(string)(cast(NumberLiteral)actualArgument));
-                // gprintln("Hello baba", DebugType.ERROR);
 
-                /* TODO: Ensure the correct context */
-                dnode.needs(expressionPass(actualArgument, context));
+                dnode.needs(argNodeDep);
             }
         }
         /**
