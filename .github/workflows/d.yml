@@ -91,7 +91,7 @@ jobs:
           path: \*.lst
 
   syntaxcheck:
-    needs: [build, unittests]
+    needs: [build]
     name: Syntax checking
     runs-on: ubuntu-latest
     steps:
@@ -138,7 +138,7 @@ jobs:
         run: ./tlang syntaxcheck source/tlang/testing/return/simple_return_expressionless.t
 
   typecheck:
-    needs: [build, unittests]
+    needs: [build]
     name: Typechecking tests
     runs-on: ubuntu-latest
     steps:
@@ -290,7 +290,28 @@ jobs:
           else
               exit 1
           fi
-        
+
+      - name: "Use-before-declare: use_before_declare.t"
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/use_before_declare.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+      - name: "Use-before-declare: use_before_declare_arr.t"
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/use_before_declare_arr.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
       - name: Else if without if
         run: |
           set +e
@@ -393,7 +414,7 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/unused_vars_none.t --unusedVars true
         
   emit:
-    needs: [build, unittests]
+    needs: [build]
     name: Emit tests
     runs-on: ubuntu-latest
     steps:
@@ -544,7 +565,53 @@ jobs:
               exit 1
           fi
 
+      - name: "Dotting: basic.t"
+        run: ./tlang compile source/tlang/testing/dotting/basic.t
 
+      - name: "Dotting: basic3.t"
+        run: ./tlang compile source/tlang/testing/dotting/basic3.t
+
+      - name: "Dotting: ptr_call.t"
+        run: ./tlang compile source/tlang/testing/dotting/ptr_call.t
+
+      - name: "Dotting: simple_func_2.t"
+        run: ./tlang compile source/tlang/testing/dotting/simple_func_2.t
+
+      - name: "Dotting: simple_func_1.t"
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/dotting/simple_func_1.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 9 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
+
+      - name: "Dotting: basic2.t"
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/dotting/basic2.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 2 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
 
 ##################################
 ####### Deployment section #######

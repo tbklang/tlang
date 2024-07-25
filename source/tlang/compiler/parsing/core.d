@@ -842,18 +842,19 @@ public final class Parser
      * Parses the parameter declaration
      * of `<type> <name>` and exits on
      * the token following `<name>`,
-     * returning a `TypedEntity` packaging
+     * returning a `Variable` packaging
      * together the type and name information
      * for the parameter.
      *
      * Entrance token should be the beginning
      * of a path (with or without dots)
      *
-     * Returns: a `TypedEntity`
+     * Returns: a `Variable`
      */
-    private TypedEntity parseFunctionParameter()
+    private Variable parseFunctionParameter()
     {
-        TypedEntity ent = cast(TypedEntity)parseTypedDeclaration(false, false, false, true);
+        Variable ent = cast(Variable)parseTypedDeclaration(false, true, false, true);
+
         assert(ent);
         return ent;
     }
@@ -867,9 +868,9 @@ public final class Parser
     private VariableParameter parseFunctionParameter2()
     {
         /* Get the type and name */
-        TypedEntity bogusEntity = parseFunctionParameter();
-        string type = bogusEntity.getType();
-        string name = bogusEntity.getName();
+        Variable param = parseFunctionParameter();
+        string type = param.getType();
+        string name = param.getName();
 
         DEBUG(format("Parameter (type): %s", type));
         DEBUG(format("Parameter (name): %s", name));
@@ -1777,7 +1778,7 @@ public final class Parser
         bool wantsBody = true,
         bool allowVarDec = true,
         bool allowFuncDef = true,
-        bool onlySignature = false,
+        bool onlyVarPrototype = false,
         bool allowVarDecWithAssignment = true,
         bool allowAssignments = true,
         bool allowFuncCall = true,
@@ -1823,12 +1824,20 @@ public final class Parser
             if(parseNamePath(name, true))
             {
                 DEBUG(format("Got name: %s", name));
-                DEBUG(onlySignature);
+                DEBUG("onlyVarPrototype: ", onlyVarPrototype);
 
-                /* If `onlyType` is requested then stop right now */
-                if(onlySignature)
+                /**
+                 * If only a variable prototype is requested
+                 * then stop right now
+                 *
+                 * TODO: In future this could be cleane dup
+                 * by reusing below code with a no-consume
+                 * clause and also a multiple stopping
+                 * terminal thing idk
+                 */
+                if(onlyVarPrototype)
                 {
-                    return new TypedEntity(name, type);
+                    return new Variable(type, name);
                 }
 
                 /* Now decide on whether we have `;` or `=` or `(` */
@@ -2873,16 +2882,20 @@ public final class Parser
         {
             // We now parse function definition but with `wantsBody` set to false
             // indicating no body should be allowed.
-            pseudoEntity = cast(TypedEntity)parseTypedDeclaration
-            (
-                false,
-                false,
-                true,
-                true,
-                false,
-                false,
-                false
-            );
+            pseudoEntity = cast(TypedEntity)parseTypedDeclaration(false);
+
+            // Ensure we got a function definition
+            if(!cast(Function)pseudoEntity)
+            {
+                expect(format("Was expecting a function prototype but got '%s'", pseudoEntity));
+            }
+
+            /**
+             * We end up on the exiting token, which SHOULD
+             * be a SEMICOLON, then consume it
+             */
+            expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+            lexer.nextToken();
 
             // TODO: Add a check for this cast (AND parse wise if it is evan possible)
             assert(pseudoEntity);
@@ -2892,16 +2905,34 @@ public final class Parser
         {
             // We now parse a variable declaration but indicating
             // that no assignments to it should be allowed.
-            pseudoEntity = cast(TypedEntity)parseTypedDeclaration
-            (
-                false,
-                true,
-                false,
-                true,
-                false,
-                false,
-                false
-            );
+            // We now parse a typed declaration and then after
+            // this we ensure it is a `Variable` with no
+            // assignment
+            pseudoEntity = cast(TypedEntity)parseTypedDeclaration();
+
+            Variable v = cast(Variable)pseudoEntity;
+            if(v is null)
+            {
+                expect(format("Was expecting a variable prototype but got '%s'", pseudoEntity));
+            }
+            else
+            {
+                if(v.hasAssignment())
+                {
+                    expect
+                    (
+                        format
+                        (
+                            "Variable prototype '%s' cannot have assignment '%s'",
+                            v,
+                            v.getAssignment()
+                        )
+                    );
+                }
+            }
+
+            // We end with token already onto the next one
+            // it should be one
 
             // TODO: Add a check for this cast (AND parse wise if it is evan possible)
             assert(pseudoEntity);
@@ -2911,10 +2942,6 @@ public final class Parser
         {
             expect("Expected either extern function (efunc) or extern variable (evar)");
         }
-
-        /* Expect a semicolon to end it all and then consume it */
-        expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
-        lexer.nextToken();
 
         externStmt = new ExternStmt(pseudoEntity, externType);
 

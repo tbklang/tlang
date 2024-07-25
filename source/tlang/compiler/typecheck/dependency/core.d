@@ -697,62 +697,9 @@ public class DNodeGenerator
         {
             // Extract the variable's name
             VariableExpression varExp = cast(VariableExpression)exp;
-            string nearestName = varExp.getName();
 
             // Set the context of the variable expression
             varExp.setContext(context);
-           
-            // Resolve the entity the name refers to
-            Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
-
-
-            /* If the entity was found */
-            if(namedEntity)
-            {
-                /* FIXME: Below assumes basic variable declarations at module level, fix later */
-
-                /** 
-                 * If `namedEntity` is a `Variable`
-                 *
-                 * Think of, well, a variable
-                 */
-                if(cast(Variable)namedEntity)
-                {
-                    /* Get the entity as a Variable */
-                    Variable variable = cast(Variable)namedEntity;
-
-                    /* Variable reference count must increase */
-                    tc.touch(variable);
-
-                    /* Pool the node */
-                    VariableNode varDecNode = poolT!(VariableNode, Variable)(variable);
-
-                    /**
-                     * Check if the variable being referenced has been
-                     * visited (i.e. declared)
-                     *
-                     * If it has then setup dependency, if not then error
-                     * out
-                     */
-                    if(varDecNode.isVisisted())
-                    {
-                        dnode.needs(varDecNode);
-                    }
-                    else
-                    {
-                        expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
-                    }
-                }
-                else
-                {
-                    dnode.needs(pool(varExp));
-                }   
-            }
-            /* If the entity could not be found */
-            else
-            {
-                expect("No entity by the name "~nearestName~" exists (at all)");
-            }
         }
         /**
         * Binary operator
@@ -786,6 +733,7 @@ public class DNodeGenerator
         {
             /* Get the unary operator expression */
             UnaryOperatorExpression unaryOp = cast(UnaryOperatorExpression)exp;
+            unaryOp.setContext(context);
 
             /* Process the expression */
             DNode expressionNode = expressionPass(unaryOp.getExpression(), context);
@@ -875,31 +823,9 @@ public class DNodeGenerator
 
 
         /**
-        * Variable paremeters (for functions)
-        */
-        if(cast(VariableParameter)entity)
-        {
-            VariableParameter varParamDec = cast(VariableParameter)entity;
-
-            // Set context
-            entity.setContext(context);
-
-            // Pool and mark as visited
-            // NOTE: I guess for now use VariableDNode as that is what is used in expressionPass
-            // with the poolT! constrcutor, doing otherwise causes a cast failure and hence
-            // null: /git/tlang/tlang/issues/52#issuecomment-325
-            DNode dnode = poolT!(VariableNode, Variable)(varParamDec);
-            dnode.markVisited();
-
-            /* Add an entry to the reference counting map */
-            tc.touch(varParamDec);
-
-            return null;
-        }
-        /**
         * Variable declarations
         */
-        else if(cast(Variable)entity)
+        if(cast(Variable)entity)
         {
             /* Get the Variable and information */
             Variable variable = cast(Variable)entity;
@@ -1156,6 +1082,7 @@ public class DNodeGenerator
 
             // Extract the branch (body Statement[] + condition)
             Branch whileBranch = whileLoopStmt.getBranch();
+            whileBranch.setContext(context);
             DNode branchDNode = pool(whileBranch);
             DEBUG("Branch: "~to!(string)(whileBranch));
 
@@ -1321,7 +1248,7 @@ public class DNodeGenerator
         else if(cast(ExpressionStatement)entity)
         {
             ExpressionStatement exprStmt = cast(ExpressionStatement)entity;
-            // call.setContext(context);
+            exprStmt.setContext(context);
 
             ERROR("Still working on implementing support for PathExpession");
 

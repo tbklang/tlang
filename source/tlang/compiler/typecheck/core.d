@@ -23,6 +23,7 @@ import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.misc.utils : panic;
 import tlang.compiler.typecheck.dependency.variables;
+import niknaks.functional : Optional;
 
 /**
 * The Parser only makes sure syntax
@@ -1385,7 +1386,7 @@ public final class TypeChecker
                 * and obtain it's declared type
                 */
             Context potFVVCtx = potFVV.getContext();
-            Variable potStackArrVar = cast(Variable)resolver.resolveBest(potFVVCtx.getContainer(), potFVV.varName);
+            Variable potStackArrVar = cast(Variable)resolver.resolveBest(potFVVCtx.getContainer(), potFVV.getTarget());
             Type variableDeclaredType = getType(potFVVCtx.getContainer(), potStackArrVar.getType());
 
             /**
@@ -1670,7 +1671,66 @@ public final class TypeChecker
         return current_assData.ofInstr;
     }
 
-    import niknaks.functional;
+    private struct EntityVisitNode
+    {
+        private TypedEntity te;
+        private bool declared;
+
+        @disable
+        this();
+
+        this(TypedEntity te)
+        {
+            this.te = te;
+            this.declared = false;
+        }
+
+        public void markDeclared()
+        {
+            this.declared = true;
+        }
+
+        public bool isDeclared()
+        {
+            return this.declared;
+        }
+    }
+
+    private EntityVisitNode[TypedEntity] decl_fstMap;
+
+    private void clear_declMap()
+    {
+        this.decl_fstMap.empty();
+        DEBUG("Cleared out decl_fstMap");
+    }
+
+    private void declare(TypedEntity te)
+    {
+        // This also initializes for us, never inline!
+        bool check = !isDeclared(te);
+        assert(check);
+
+        // Get node and mark as declared
+        EntityVisitNode* evn_ptr = te in this.decl_fstMap;
+        evn_ptr.markDeclared();
+    }
+
+    private bool isDeclared(TypedEntity te)
+    {
+        EntityVisitNode* evn_ptr = te in this.decl_fstMap;
+
+        // If not yet present then
+        // add a false entry and
+        // return that
+        if(evn_ptr is null)
+        {
+            this.decl_fstMap[te] = EntityVisitNode(te);
+            return isDeclared(te);
+        }
+
+        return evn_ptr.isDeclared();
+    }
+
     /** 
      * Instruction context
      *
@@ -1695,10 +1755,328 @@ public final class TypeChecker
         }
     }
 
+    /** 
+     * Used to know whether or not
+     * an instruction was already
+     * validated or not
+     *
+     * TODO: We could clear this
+     * after each dep-gen code/gen
+     * run
+     */
+    private bool[Instruction] validationMap;
 
-    private Instruction completePartial(InstrCtx ctx, Instruction inputInstr)
+    /** 
+     * Checks if the given instruction
+     * has been validated yet
+     *
+     * Params:
+     *   instr = the `Instruction` to
+     * check
+     * Returns: `true` if it has been
+     * validated, `false` otherwise
+     */
+    private bool isValidated(Instruction instr)
     {
-        return null;
+        bool* flag = instr in this.validationMap;
+
+        // If not present, add a `false` entry
+        if(flag is null)
+        {
+            this.validationMap[instr] = false;
+            return isValidated(instr);
+        }
+
+        return *flag;
+    }
+
+    /** 
+     * Marks the given instruction
+     * as validated
+     *
+     * Params:
+     *   instr = the `Instruction`
+     * to mark as validated
+     */
+    private void markAsValidated(Instruction instr)
+    {
+        if(isValidated(instr))
+        {
+            ERROR("Attempt to double validate instruction ", instr);
+            assert(false);
+        }
+
+        this.validationMap[instr] = true;
+    }
+
+    /** 
+     * Performs the partial filling of certain aspects
+     * of the given instruction via the provided
+     * context.
+     *
+     * This can vary from setting the correct type for
+     * the instruction to performing further type
+     * checking on the instruction.
+     *
+     * The reason this exists is that certain instructions
+     * can only have such information determined (and thereafter
+     * set) once certain context is provided - which normally
+     * is only available in later instructions used
+     * in tandum with the one provided here.
+     *
+     * Params:
+     *   ctx = the `InstrCtx`
+     *   inputInstr = the `Instruction` to validate
+     */
+    private void validate(InstrCtx ctx, Instruction inputInstr)
+    {
+        scope(exit)
+        {
+            DEBUG
+            (
+                format
+                (
+                    "Validation exiting (InstrCtx: %s, Instruction: %s)",
+                    ctx,
+                    inputInstr
+                )
+            );
+        }
+
+        // Skip instructions which are already validated
+        if(isValidated(inputInstr))
+        {
+            WARN("Not validating '", inputInstr, "' as it is already validated");
+            return;
+        }
+
+        Optional!(Container) cOpt = ctx.getContainer();
+        DEBUG("getContainer()? present: ", cOpt.isPresent());
+
+        if(cOpt.isPresent())
+        {
+            Container cntnr = cOpt.get();
+            DEBUG("validate() cntnr: ", cntnr);
+            
+            // FuncCallInstr
+            if(cast(FuncCallInstr)inputInstr)
+            {
+                FuncCallInstr fcInstr = cast(FuncCallInstr)inputInstr;
+
+                // Resolve the Function and extract its formal paremeters
+                Entity funcEnt = resolver.resolveBest(cntnr, fcInstr.getTarget());
+                
+
+                // Did lookup succeed?
+                if(funcEnt is null)
+                {
+                    throw new TypeCheckerException
+                    (
+                        this,
+                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                        format
+                        (
+                            "Could not reference function named '%s' as no such entity exists",
+                            fcInstr.getTarget()
+                        )
+                    );
+                }
+
+                Function func = cast(Function)funcEnt;
+
+                // Is the target a function? If not, then error
+                if(func is null)
+                {
+                    throw new TypeCheckerException
+                    (
+                        this,
+                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                        format
+                        (
+                            "Cannot call entity named '%s' as it is not a function",
+                            fcInstr.getTarget()
+                        )
+                    );
+                }
+
+                DEBUG("fcInstr: ", fcInstr);
+                DEBUG("fcInstr (target): ", fcInstr.getTarget());
+                DEBUG("cntnr: ", cntnr);
+
+                assert(func);
+                VariableParameter[] paremeters = func.getParams();
+                size_t arity = func.getArity();
+
+                // Argument count
+                size_t argCnt = fcInstr.getArgCount();
+                Value[] arguments = fcInstr.getEvaluationInstructions();
+
+                // Arity mismatch check
+                if(arity != argCnt)
+                {
+                    throw new TypeCheckerException
+                    (
+                        this,
+                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                        format
+                        (
+                            "Function '%s' expects %d arguments but %d were provided",
+                            func.getName(),
+                            arity,
+                            argCnt
+                        )
+                    );
+                }
+
+                DEBUG(format("Function parameters: %s", paremeters));
+                DEBUG(format("Function arguments: %s", arguments));
+                
+                // Type-check every argument against its
+                // formal parameter counterpart and perform
+                // type coercion whilst doing so
+                for(size_t i = 0; i < arity; i++)
+                {
+                    // Current parameter
+                    VariableParameter param = paremeters[i];
+                    Type parmType = getType(cntnr, param.getType());
+
+                    // Current argument
+                    Value arg = arguments[i];
+
+                    // Validate the current argument by using
+                    // the context at the callsite (at the `FuncCallInstr`)
+                    Context fCS_Ctx = fcInstr.getContext();
+                    assert(fCS_Ctx);
+                    DEBUG("About to validate argument ", arg, " with ctx: ", ctx);
+                    validate(InstrCtx(fCS_Ctx.getContainer()), arg);
+
+                    // Now get the current argument's type
+                    Type argType = arg.getInstrType();
+                    assert(argType);
+
+                    
+
+                    
+
+
+                    /* Scratch type used only for stack-array coercion */
+                    Type coercionScratchType;
+
+                    /**
+                     * We need to enforce the `valueInstr`'s' (the `Value`-based
+                     * instruction being passed as an argument) type to be that
+                     * of the `parmType` (the function's parameter type)
+                     */
+                    typeEnforce(parmType, arg, arg, true);
+
+
+                    /**
+                     * Refresh the `argType` as `valueInstr` may have been
+                     * updated and we need the new type
+                     */
+                    argType = arg.getInstrType();
+                    
+
+                    // Sanity check
+                    assert(isSameType(argType, parmType));
+                }
+                
+                /* Set the instruction's type to that of the function's return type */
+                Type funcCallInstrType = getType(cntnr, func.getType());
+                fcInstr.setInstrType(funcCallInstrType);
+
+                /* Mark as validated */
+                markAsValidated(fcInstr);
+            }
+            // FetchValueVar
+            else if(cast(FetchValueVar)inputInstr)
+            {
+                FetchValueVar fVV = cast(FetchValueVar)inputInstr;
+
+                /* Resolve the target against the provided container context */
+                string targetName = fVV.getTarget();
+                DEBUG("FVV: targetName: ", targetName);
+                DEBUG("cntnr: ", cntnr);
+                assert(cntnr);
+
+                Entity gVar = resolver.resolveBest(cntnr, targetName);
+
+                // Did lookup succeed?
+                if(gVar is null)
+                {
+                    throw new TypeCheckerException
+                    (
+                        this,
+                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                        format
+                        (
+                            "Could not reference variable named '%s' as no such entity exists",
+                            targetName
+                        )
+                    );
+                }
+
+                string variableName = resolver.generateName(this.program, gVar);
+
+                /* Type determined for instruction */
+                Type instrType;
+
+                // If a module is being referred to
+                if(cast(Module)gVar)
+                {
+                    instrType = getType(cntnr, "module");
+                }
+                // If it is some kind-of typed entity
+                else if(cast(TypedEntity)gVar)
+                {
+                    TypedEntity typedEntity = cast(TypedEntity)gVar;
+                    instrType = getType(cntnr, typedEntity.getType());
+
+                    // If not yet declared, that is then an error
+                    if(!isDeclared(typedEntity))
+                    {
+                        throw new TypeCheckerException
+                        (
+                            this,
+                            TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                            format
+                            (
+                                "Usage of entity '%s' prior to declaration",
+                                variableName
+                            )
+                        );
+                    }
+
+                    // If it is a variable increase its "touch" count
+                    if(cast(Variable)typedEntity)
+                    {
+                        touch(cast(Variable)typedEntity);
+                    }
+                }
+                //
+                else
+                {
+                    panic(format("Please add support for VariableExpression typecheck/codegen for handling: %s", gVar.classinfo));
+                }
+
+                /* Set the type accordingly */
+                fVV.setInstrType(instrType);
+
+                /* Mark as validated */
+                markAsValidated(fVV);
+            }
+            else
+            {
+                WARN
+                (
+                    format
+                    (
+                        "Container-based validation for '%s' ignored as no case handles it",
+                        inputInstr
+                    )
+                );
+            }
+        }
     }
 
     public void typeCheckThing(DNode dnode)
@@ -1807,63 +2185,19 @@ public final class TypeChecker
             else if(cast(VariableExpression)statement)
             {
                 VariableExpression g  = cast(VariableExpression)statement;
-                assert(g);
-
-                /* FIXME: It would seem that g.getContext() is returning null, so within function body's context is not being set */
-                DEBUG("VarExp: "~g.getName());
-                DEBUG(g.getContext());
-                Entity gVar = cast(Entity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
-                DEBUG("gVar nullity?: "~to!(string)(gVar is null));
-
-
-                // TODO: Throw exception if name is not found
-
-                /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
-                string variableName = resolver.generateName(this.program, gVar);
-                variableName = g.getName();
-
-                /* Type determined for instruction */
-                Type instrType;
-
-                // If a module is being referred to
-                if(cast(Module)gVar)
-                {
-                    instrType = getType(this.program, "module");
-                }
-                // If it is some kind-of typed entity
-                else if(cast(TypedEntity)gVar)
-                {
-                    TypedEntity typedEntity = cast(TypedEntity)gVar;
-                    instrType = getType(gVar.getContext().getContainer(), typedEntity.getType());
-                }
-                //
-                else
-                {
-                    panic(format("Please add support for VariableExpression typecheck/codegen for handling: %s", gVar.classinfo));
-                }
-
-
-                
-
-                DEBUG("Yaa, it's rewind time");
-
+                string targetName = g.getName();
 
                 /**
                 * Codegen
                 *
-                * FIXME: Add type info, length
-                *
                 * 1. Generate the instruction
                 * 2. Set the Context of it to where the VariableExpression occurred
                 */
-                FetchValueVar fVV = new FetchValueVar(variableName, 4);
+                FetchValueVar fVV = new FetchValueVar(targetName);
                 fVV.setContext(g.getContext());
 
-
+                /* Push instruction to top of stack */
                 addInstr(fVV);
-
-                /* The type of a FetchValueInstruction is the type of the variable being fetched */
-                fVV.setInstrType(instrType);
             }
             // else if(cast()) !!!! Continue here 
             else if(cast(BinaryOperatorExpression)statement)
@@ -1892,16 +2226,13 @@ public final class TypeChecker
                 DEBUG("vLhsInstr: ", vLhsInstr);
                 DEBUG("vRhsInstr: ", vRhsInstr);
 
-                Type vRhsType = vRhsInstr.getInstrType();
-                Type vLhsType = vLhsInstr.getInstrType();
-                DEBUG("vLhsType: ", vLhsType);
-                DEBUG("vRhsType: ", vRhsType);
-
                 DEBUG("Sir shitsalot");
 
                 if(binOperator == SymbolType.DOT)
                 {
                     // panic("Implement dot operator typecheck/codegen");
+
+                    DEBUG("Humburger");
 
                     // lhs=FetchValueVar rhs=<undetermined>
                     
@@ -1985,9 +2316,13 @@ public final class TypeChecker
                                 // which takes `<leftName>.<rightName>`
                                 // and makes that the new name?
                                 string newName = targetName~"."~member;
-                                FetchValueVar newfetchInstr = new FetchValueVar(newName, 8);
-                                newfetchInstr.setInstrType(getType(this.program, "container"));
-                                addInstr(newfetchInstr);
+                                fetchValVarRight.setTarget(newName);
+
+                                // Instruction type is a container type
+                                fetchValVarRight.setInstrType(getType(this.program, "container"));
+
+                                // Push back to top of stack
+                                addInstr(fetchValVarRight);
 
                                 return;
                             }
@@ -1996,11 +2331,23 @@ public final class TypeChecker
                             else if(cast(Variable)memberEnt)
                             {
                                 DEBUG("memberEnt is a variable");
-                                
+
+                                // Update the `FetchValueVar`'s name
+                                // to be the full path `<targetName>.<member>`
+                                string newName = targetName~"."~member;
+                                fetchValVarRight.setTarget(newName);
+
+                                // FIXME: Validation should set correct VarLen, actually
+                                // the instr type dictates this, deprecate the VarLen in `FetchValueVar`
+
                                 // Push the right hand side then
                                 // BACK to the top of stack
-                                FetchValueVar rightFetch = cast(FetchValueVar)vRhsInstr;
-                                addInstr(rightFetch);
+                                addInstr(fetchValVarRight);
+
+                                // Validate it with the container-left as context
+                                validate(InstrCtx(containerLeft), fetchValVarRight);
+                                assert(fetchValVarRight.getInstrType());
+
                                 return;
                             }
 
@@ -2018,7 +2365,19 @@ public final class TypeChecker
                         else if(cast(FuncCallInstr)vRhsInstr)
                         {
                             FuncCallInstr funcCallRight = cast(FuncCallInstr)vRhsInstr;
+                            
+                            // Validate the `FuncCallInstr` with the container to our left
+                            validate(InstrCtx(containerLeft), funcCallRight);
+
+                            // Push the function call instruction to the stack
                             addInstr(funcCallRight);
+
+                            DEBUG("left: ", containerLeft);
+                            DEBUG("right: ", funcCallRight, ", type: ", funcCallRight.getInstrType());
+
+                            // Update target name to full name <leftContainer>.<ourName>
+                            string newName = targetName~"."~funcCallRight.getTarget();
+                            funcCallRight.setTarget(newName);
 
                             return;
                         }
@@ -2034,6 +2393,18 @@ public final class TypeChecker
                     }
                 }
                 
+                /**
+                 * Perform validation on both the left-hand side
+                 * and right-hand side operands
+                 */
+                validate(InstrCtx(binOpCtx.getContainer()), vLhsInstr);
+                validate(InstrCtx(binOpCtx.getContainer()), vRhsInstr);
+
+
+                Type vRhsType = vRhsInstr.getInstrType();
+                Type vLhsType = vLhsInstr.getInstrType();
+                DEBUG("vLhsType: ", vLhsType);
+                DEBUG("vRhsType: ", vRhsType);
 
                 /** 
                  * ==== Pointer coercion ====
@@ -2169,6 +2540,8 @@ public final class TypeChecker
             else if(cast(UnaryOperatorExpression)statement)
             {
                 UnaryOperatorExpression unaryOpExp = cast(UnaryOperatorExpression)statement;
+                Context uOpCtx = unaryOpExp.getContext();
+                assert(uOpCtx);
                 SymbolType unaryOperator = unaryOpExp.getOperator();
                 
                 /* The type of the eventual UnaryOpInstr */
@@ -2179,6 +2552,10 @@ public final class TypeChecker
                 * Typechecking (TODO)
                 */
                 Value expInstr = cast(Value)popInstr();
+
+                // Validate the expression
+                validate(InstrCtx(uOpCtx.getContainer()), expInstr);
+
                 Type expType = expInstr.getInstrType();
 
                 /* TODO: Ad type check for operator */
@@ -2293,95 +2670,24 @@ public final class TypeChecker
                 assert(funcCall.getContext().getContainer());
                 DEBUG("FuncCall ctx (container): ", funcCall.getContext().getContainer());
 
-                // Find the top-level container of the function being called
-                // and then use this as the container to resolve our function
-                // being-called to (as a starting point)
-                Module belongsTo = cast(Module)resolver.findContainerOfType(Module.classinfo, funcCall);
-                assert(belongsTo);
-
-                /* TODO: Look up func def to know when popping stops (types-based delimiting) */
                 ERROR("Name of func call: "~funcCall.getName());
-                Function func = cast(Function)resolver.resolveBest(belongsTo, funcCall.getName());
-                assert(func);
-                VariableParameter[] paremeters = func.getParams();
+
+                // Parameter count (to know how many to pop)
+                size_t argCount = funcCall.getArgCount();
 
                 // Create new call instruction
-                FuncCallInstr funcCallInstr = new FuncCallInstr(funcCall.getName(), paremeters.length);
-                
-                /* If there are paremeters for this function (as per definition) */
-                if(!paremeters.length)
+                FuncCallInstr funcCallInstr = new FuncCallInstr(funcCall.getName(), argCount);
+
+                // Pop off the arguments back to front and add them
+                while(argCount)
                 {
-                    ERROR(format("No parameters for function: %s", func.getName()));
-                }
-                /* Pop all args per type */
-                else
-                {
-                    ulong parmCount = paremeters.length-1;
-                    ERROR("Kachow: "~to!(string)(parmCount));
+                    Instruction curInstr = popInstr();
+                    assert(curInstr);
+                    Value curInstr_V = cast(Value)curInstr;
+                    assert(curInstr_V);
 
-                    while(!isInstrEmpty())
-                    {
-                        Instruction instr = popInstr();
-                        
-                        Value valueInstr = cast(Value)instr;
-                        
-
-                        /* Must be a value instruction */
-                        if(valueInstr && parmCount!=-1)
-                        {
-                            /* TODO: Determine type and match up */
-                            DEBUG("Yeah");
-                            DEBUG(valueInstr);
-                            Type argType = valueInstr.getInstrType();
-                            // gprintln(argType);
-
-                            Variable parameter = paremeters[parmCount];
-                            // gprintln(parameter);
-                            
-
-                            Type parmType = getType(func.parentOf(), parameter.getType());
-                            // gprintln("FuncCall(Actual): "~argType.getName());
-                            // gprintln("FuncCall(Formal): "~parmType.getName());
-                            // gprintln("FuncCall(Actual): "~valueInstr.toString());
-
-                            /* Scratch type used only for stack-array coercion */
-                            Type coercionScratchType;
-
-
-
-                            /**
-                             * We need to enforce the `valueInstr`'s' (the `Value`-based
-                             * instruction being passed as an argument) type to be that
-                             * of the `parmType` (the function's parameter type)
-                             */
-                            typeEnforce(parmType, valueInstr, valueInstr, true);
-
-                            /**
-                             * Refresh the `argType` as `valueInstr` may have been
-                             * updated and we need the new type
-                             */
-                            argType = valueInstr.getInstrType();
-                            
-
-                            // Sanity check
-                            assert(isSameType(argType, parmType));
-
-                            
-                            /* Add the instruction into the FunctionCallInstr */
-                            funcCallInstr.setEvalInstr(parmCount, valueInstr);
-                            DEBUG(funcCallInstr.getEvaluationInstructions());
-                            
-                            /* Decrement the parameter index (right-to-left, so move to left) */
-                            parmCount--;
-                        }
-                        else
-                        {
-                            // TODO: This should enver happen, see book and remove soon (see Cleanup: Remove any pushbacks #101)
-                            /* Push it back */
-                            addInstr(instr);
-                            break;
-                        }
-                    }
+                    funcCallInstr.setEvalInstr(argCount-1, curInstr_V);
+                    argCount--;
                 }
 
                 /**
@@ -2398,15 +2704,13 @@ public final class TypeChecker
 
                 /* Add instruction to top of stack */
                 addInstr(funcCallInstr);
-
-                /* Set the Value instruction's type */
-                Type funcCallInstrType = getType(func.parentOf(), func.getType());
-                funcCallInstr.setInstrType(funcCallInstrType);
             }
             /* Type cast operator */
             else if(cast(CastedExpression)statement)
             {
                 CastedExpression castedExpression = cast(CastedExpression)statement;
+                Context ctx = castedExpression.getContext();
+                assert(ctx);
                 DEBUG("Context: "~to!(string)(castedExpression.context));
                 DEBUG("ParentOf: "~to!(string)(castedExpression.parentOf()));
                 
@@ -2424,6 +2728,9 @@ public final class TypeChecker
                 */
                 Value uncastedInstruction = cast(Value)popInstr();
                 assert(uncastedInstruction);
+
+                // Validate the uncasted expression instruction
+                validate(InstrCtx(ctx.getContainer()), uncastedInstruction);
 
                 /* Extract the type of the expression being casted */
                 Type typeBeingCasted = uncastedInstruction.getInstrType();
@@ -2445,16 +2752,27 @@ public final class TypeChecker
             else if(cast(ArrayIndex)statement)
             {
                 ArrayIndex arrayIndex = cast(ArrayIndex)statement;
+                Context ctx = arrayIndex.getContext();
+
                 Type accessType;
 
                 /* Pop the thing being indexed (the indexTo expression) */
                 Value indexToInstr = cast(Value)popInstr();
+
+                // Validate the thing-being-indexed instruction
+                validate(InstrCtx(ctx.getContainer()), indexToInstr);
+
                 Type indexToType = indexToInstr.getInstrType();
                 assert(indexToType);
                 DEBUG("ArrayIndex: Type of `indexToInstr`: "~indexToType.toString());
 
                 /* Pop the index instruction (the index expression) */
                 Value indexInstr = cast(Value)popInstr();
+
+                // Validate the index instruction
+                validate(InstrCtx(ctx.getContainer()), indexInstr);
+
+                /* Obtain the type of the index instruction */
                 Type indexType = indexInstr.getInstrType();
                 assert(indexType);
 
@@ -2553,7 +2871,12 @@ public final class TypeChecker
                 ERROR("Array index not yet supported");
                 // assert(false);
 
+                /* Push the instruction to the top of the stack */
                 addInstr(generatedInstruction);
+
+                /* Set context to instruction */
+                generatedInstruction.setContext(ctx);
+                assert(generatedInstruction.getContext());
 
                 printCodeQueue();
             }
@@ -2670,11 +2993,16 @@ public final class TypeChecker
             * Emit a variable declaration instruction
             */
             Variable variablePNode = cast(Variable)dnode.getEntity();
+            Context ctx = variablePNode.getContext();
+            assert(ctx);
             DEBUG("HELLO FELLA");
+
+            // Mark as declared
+            declare(variablePNode);
 
             string variableName = resolver.generateName(this.program, variablePNode);
             DEBUG("HELLO FELLA (name): "~variableName);
-            
+
 
             Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
 
@@ -2686,13 +3014,15 @@ public final class TypeChecker
                 Instruction poppedInstr = popInstr();
                 assert(poppedInstr);
 
+                // Validate the instruction
+                validate(InstrCtx(ctx.getContainer()), poppedInstr);
+
                 // Obtain the value instruction of the variable assignment
                 // ... along with the assignment's type
                 assignmentInstr = cast(Value)poppedInstr;
                 assert(assignmentInstr);
                 Type assignmentType = assignmentInstr.getInstrType();
-
-
+                assert(assignmentType);
 
                 /** 
                  * Here we can call the `typeEnforce` with the popped
@@ -2767,9 +3097,15 @@ public final class TypeChecker
                     // The entity being assigned to
                     FetchValueVar toEntityInstrVV = cast(FetchValueVar)toEntityInstr;
                     Context toCtx = toEntityInstr.getContext();
+                    assert(toCtx);
+                    DEBUG("target: ", toEntityInstrVV.getTarget());
                     Variable ent = cast(Variable) resolver.resolveBest(toCtx.getContainer(), toEntityInstrVV.getTarget());
                     assert(ent);
                     Type variableDeclarationType = getType(toCtx.getContainer(), ent.getType());
+
+
+                    // Validate the instruction being assigned (the expression)
+                    validate(InstrCtx(toCtx.getContainer()), assignmentInstr);
 
                     // Type of expression being assigned
                     Type assignmentType = assignmentInstr.getInstrType();
@@ -2798,6 +3134,10 @@ public final class TypeChecker
                 {
                     StackArrayIndexInstruction arrayRefInstruction = cast(StackArrayIndexInstruction)toEntityInstr;
                     Context arrRefInstrCtx = arrayRefInstruction.getContext();
+                    assert(arrRefInstrCtx);
+
+                    // Validate the instruction being assigned (expression being assigned)
+                    validate(InstrCtx(arrRefInstrCtx.getContainer()), assignmentInstr);
 
                     DEBUG("ArrayRefInstruction: ", arrayRefInstruction);
                     DEBUG("AssigmmentVal instr: ", assignmentInstr);
@@ -2822,11 +3162,14 @@ public final class TypeChecker
                 else if(cast(ArrayIndexInstruction)toEntityInstr)
                 {
                     ArrayIndexInstruction arrayRefInstruction = cast(ArrayIndexInstruction)toEntityInstr;
+                    Context arrRefInstrCtx = arrayRefInstruction.getContext();
+                    assert(arrRefInstrCtx);
 
                     DEBUG("ArrayRefInstruction: ", arrayRefInstruction);
                     DEBUG("AssigmmentVal instr: ", assignmentInstr);
 
-
+                    // Validate the instruction being assigned (expression being assigned)
+                    validate(InstrCtx(arrRefInstrCtx.getContainer()), assignmentInstr);
 
                     /* The type of what is being indexed on */
                     Type indexingOnType = arrayRefInstruction.getInstrType();
@@ -2850,6 +3193,9 @@ public final class TypeChecker
             else if(cast(ReturnStmt)statement)
             {
                 ReturnStmt returnStatement = cast(ReturnStmt)statement;
+                Context ctx = returnStatement.getContext();
+                assert(ctx);
+
                 Function funcContainer = cast(Function)resolver.findContainerOfType(Function.classinfo, returnStatement);
 
                 /* Generated return instruction */
@@ -2904,6 +3250,10 @@ public final class TypeChecker
                     {
                         Value returnExpressionInstr = cast(Value)popInstr();
                         assert(returnExpressionInstr);
+
+                        // Validate the return instruction (expression)
+                        validate(InstrCtx(ctx.getContainer()), returnExpressionInstr);
+
                         Type returnExpressionInstrType = returnExpressionInstr.getInstrType();
 
                         /**
@@ -2957,6 +3307,8 @@ public final class TypeChecker
                 for(ulong branchIdx = branches.length-1; true; branchIdx--)
                 {
                     Branch branch = branches[branchIdx];
+                    Context ctx = branch.getContext();
+                    assert(ctx);
 
                     // Pop off an expression instruction (if it exists)
                     Value branchConditionInstr;
@@ -2967,6 +3319,9 @@ public final class TypeChecker
                         DEBUG("Instr is: "~to!(string)(instr));
                         branchConditionInstr = cast(Value)instr;
                         assert(branchConditionInstr);
+
+                        // Validate the `Value`-based instruction
+                        validate(InstrCtx(ctx.getContainer()), branchConditionInstr);
                     }
 
                     // Get the number of body instructions to pop
@@ -3030,10 +3385,15 @@ public final class TypeChecker
                 }
 
                 Branch branch = whileLoop.getBranch();
+                Context ctx = branch.getContext();
+                assert(ctx);
 
                 /* The condition `Value` instruction should be on the stack */
                 Value valueInstrCondition = cast(Value)popInstr();
                 assert(valueInstrCondition);
+
+                // Validate the `Value`-based instruction
+                validate(InstrCtx(ctx.getContainer()), valueInstrCondition);
 
                 /* Process the body of the while-loop with tail-popping followed by a reverse */
                 Instruction[] bodyInstructions;
@@ -3072,10 +3432,15 @@ public final class TypeChecker
             else if(cast(ForLoop)statement)
             {
                 ForLoop forLoop = cast(ForLoop)statement;
+                Context ctx = forLoop.getContext();
+                assert(ctx);
 
                 /* Pop-off the Value-instruction for the condition */
                 Value valueInstrCondition = cast(Value)popInstr();
                 assert(valueInstrCondition);
+
+                // Validate the condition instruction
+                validate(InstrCtx(ctx.getContainer()), valueInstrCondition);
 
                 /* Calculate the number of instructions representing the body to tailPopInstr() */
                 ulong bodyTailPopNumber = forLoop.getBranch().getStatements().length;
@@ -3125,14 +3490,22 @@ public final class TypeChecker
             else if(cast(PointerDereferenceAssignment)statement)
             {
                 PointerDereferenceAssignment ptrDerefAss = cast(PointerDereferenceAssignment)statement;
+                Context ctx = ptrDerefAss.getContext();
+                assert(ctx);
                 
                 /* Pop off the pointer dereference expression instruction (LHS) */
                 Value lhsPtrExprInstr = cast(Value)popInstr();
                 assert(lhsPtrExprInstr);
 
+                // Validate the pointer dereference instruction (LHS)
+                validate(InstrCtx(ctx.getContainer()), lhsPtrExprInstr);
+
                 /* Pop off the assignment instruction (RHS expression) */
                 Value rhsExprInstr = cast(Value)popInstr();
                 assert(rhsExprInstr);
+
+                // Validate the assignment instruction (RHS)
+                validate(InstrCtx(ctx.getContainer()), rhsExprInstr);
 
                 /**
                 * Code gen
@@ -3169,22 +3542,40 @@ public final class TypeChecker
                 discardInstruction.setContext(discardStatement.context);
                 addInstrB(discardInstruction);
             }
+            /** 
+             * Standalone expression statements
+             */
             else if(cast(ExpressionStatement)statement)
             {
                 ExpressionStatement exprStmt = cast(ExpressionStatement)statement;
+                Context ctx = exprStmt.getContext();
+                assert(ctx);
 
                 /* Pop a single `Value`-based instruction off the stack */
                 Value valInstr = cast(Value)popInstr();
+
+                /* Perform validation on the `Value`-based instruction */
+                validate(InstrCtx(ctx.getContainer()), valInstr);
 
                 /**
                  * If it is anything other than a
                  * direct function call (i.e. a
                  * `FuncCallInstr`) then warn
                  * about unused values
+                 *
+                 * FIXME: Remove this as idk
+                 * what it does
                  */
                 if(!cast(FuncCallInstr)valInstr)
                 {
-                    WARN(format("You may have unused values in this non-function call statement-level expression: %s", valInstr));
+                    WARN
+                    (
+                        format
+                        (
+                            "You may have unused values in this non-function call statement-level expression: %s",
+                            valInstr
+                        )
+                    );
                 }
 
                 /* Create new instruction embedding the `valInstr` */

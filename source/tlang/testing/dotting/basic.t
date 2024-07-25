@@ -1,13 +1,28 @@
 module basic;
 
+void g(int d)
+{
+
+}
+
 void k()
 {
 	
 }
 
-int y()
+int* getptr()
+{
+	return 0;
+}
+
+int sixnine()
 {
 	return 69;
+}
+
+int y()
+{
+	return sixnine()+1;
 }
 
 int global;
@@ -36,6 +51,18 @@ int main()
 	basic.main.d[69] = 7;
 	
 	basic.main.stack[basic.y()] = basic.y();
+
+	stack[y()] = y();
+
+	arr[y()] = y();
+
+	*(arr+1+y()) = 1+y();
+
+	*(cast(int*)y()) = y();
+
+	getptr()[0] = 1;
+
+	g(1);
 
 	return 0;
 }
