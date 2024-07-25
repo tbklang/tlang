@@ -121,11 +121,6 @@ public enum SymbolType
     CLASS,
 
     /**
-     * Inherit keyword `:`
-     */
-    INHERIT_OPP,
-
-    /**
      * Tilde `~`
      */
     TILDE,
@@ -304,6 +299,11 @@ public enum SymbolType
      * Singleiline comment (frwd-slash-slash)
      */
     SINGLE_LINE_COMMENT,
+
+    /**
+     * Colon
+     */
+    COLON,
 
     /** 
      * Unknown symbol
@@ -773,7 +773,7 @@ public SymbolType getSymbolType(Token tokenIn)
     /* Inheritance operator check */
     else if (token[0] == ':')
     {
-        return SymbolType.INHERIT_OPP;
+        return SymbolType.COLON;
     }
     /* Tilde operator check */
     else if (token[0] == '~')
