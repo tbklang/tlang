@@ -2557,6 +2557,46 @@ public final class TypeChecker
 
                 printCodeQueue();
             }
+            /* Argument node */
+            else if(cast(ArgumentNode)statement)
+            {
+                ArgumentNode argNode = cast(ArgumentNode)statement;
+                Context ctx = argNode.getContext();
+                //assert(ctx);// FIXME: Enable, dep-gen must set
+
+                /* Appearance position of the argument */
+                size_t appPos = argNode.getArgPos();
+
+                /* Whether or not named */
+                bool isNamed = argNode.isNamedParameter();
+                
+                /* If named, then retrieve name */
+                string paramName;
+                if(isNamed)
+                {
+                    paramName = argNode.getParamName();
+                }
+
+                /* Pop off the actual expression (argument) */
+                Instruction argExpInstr = popInstr();
+                assert(argExpInstr);
+                Value argExpInstrV = cast(Value)argExpInstr;
+                assert(argExpInstrV);
+
+                ArgumentInstruction arg = new ArgumentInstruction
+                (
+                    argExpInstrV,
+                    isNamed ? ArgumentInstruction.Node(appPos, paramName) : ArgumentInstruction.Node(appPos)
+                );
+
+
+                // TODO: copy type from argExpInstrV as that is effectively
+                // ... our value
+
+                // FIXME: Add (not here) handling for this to `validate(InstrCtx, Instruction)`
+
+                addInstr(arg);
+            }
             else
             {
                 ERROR("This ain't it chief");
