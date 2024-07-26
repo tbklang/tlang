@@ -234,6 +234,54 @@ public final class StringLiteral : Value
     }
 }
 
+/** 
+ * Operator instruction
+ *
+ * This represents any instruction
+ * which has a single operator.
+ */
+public abstract class OperatorInstruction : Value
+{
+    /** 
+     * The operator
+     */
+    protected SymbolType operator;
+
+    /** 
+     * Constructs a new operator
+     * instruction with the given
+     * operator
+     *
+     * Params:
+     *   operator = the operator
+     */
+    this(SymbolType operator)
+    {
+        this.operator = operator;
+    }
+
+    /** 
+     * Sets the operator
+     *
+     * Params:
+     *   operator = the new operator
+     */
+    public final void setOperator(SymbolType operator)
+    {
+        this.operator = operator;
+    }
+
+    /** 
+     * Returns the operator
+     *
+     * Returns: the operator
+     */
+    public final SymbolType getOperator()
+    {
+        return this.operator;
+    }
+}
+
 /**
 * BinOpInstr instruction
 *
