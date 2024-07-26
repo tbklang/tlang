@@ -291,7 +291,7 @@ public final class StringLiteral : Value
  * This represents any instruction
  * which has a single operator.
  */
-public abstract class OperatorInstruction
+public abstract class OperatorInstruction : Value
 {
     /** 
      * The operator
