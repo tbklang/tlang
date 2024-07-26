@@ -331,7 +331,7 @@ public final class DCodeEmitter : CodeEmitter
                 cvInstr.setRelax(true);
             }
 
-            emmmmit = transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
+            emmmmit = transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.getOperator()))~transform(binOpInstr.rhs);
         }
         /* FuncCallInstr */
         else if(cast(FuncCallInstr)instruction)
