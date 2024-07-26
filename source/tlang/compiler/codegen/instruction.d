@@ -287,17 +287,16 @@ public abstract class OperatorInstruction : Value
 *
 * Any sort of Binary Operator
 */
-public class BinOpInstr : Value
+public class BinOpInstr : OperatorInstruction
 {
     public const Value lhs;
     public const Value rhs;
-    public const SymbolType operator;
 
     this(Value lhs, Value rhs, SymbolType operator)
     {
+        super(operator);
         this.lhs = lhs;
         this.rhs = rhs;
-        this.operator = operator;
 
         addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
     }
@@ -308,22 +307,16 @@ public class BinOpInstr : Value
 *
 * Any sort of Unary Operator
 */
-public class UnaryOpInstr : Value
+public class UnaryOpInstr : OperatorInstruction
 {
     private Value exp;
-    private SymbolType operator;
 
     this(Value exp, SymbolType operator)
     {
+        super(operator);
         this.exp = exp;
-        this.operator = operator;
 
         addInfo = "UnaryOpType: "~to!(string)(operator)~", Instr: "~exp.toString();
-    }
-
-    public SymbolType getOperator()
-    {
-        return operator;
     }
 
     public Value getOperand()
