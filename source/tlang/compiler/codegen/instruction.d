@@ -234,60 +234,143 @@ public final class StringLiteral : Value
     }
 }
 
-/**
-* BinOpInstr instruction
-*
-* Any sort of Binary Operator
-*/
-public class BinOpInstr : Value
+/** 
+ * Operator instruction
+ *
+ * This represents any instruction
+ * which has a single operator.
+ */
+public abstract class OperatorInstruction : Value
 {
-    public const Value lhs;
-    public const Value rhs;
-    public const SymbolType operator;
+    /** 
+     * The operator
+     */
+    protected SymbolType operator;
 
-    this(Value lhs, Value rhs, SymbolType operator)
+    /** 
+     * Constructs a new operator
+     * instruction with the given
+     * operator
+     *
+     * Params:
+     *   operator = the operator
+     */
+    this(SymbolType operator)
     {
-        this.lhs = lhs;
-        this.rhs = rhs;
         this.operator = operator;
+    }
 
-        addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
+    /** 
+     * Sets the operator
+     *
+     * Params:
+     *   operator = the new operator
+     */
+    public final void setOperator(SymbolType operator)
+    {
+        this.operator = operator;
+    }
+
+    /** 
+     * Returns the operator
+     *
+     * Returns: the operator
+     */
+    public final SymbolType getOperator()
+    {
+        return this.operator;
     }
 }
 
 /**
-* UnaryOpInstr instruction
+* Binary operator instruction
 *
-* Any sort of Unary Operator
+* Any sort of binary operation
 */
-public class UnaryOpInstr : Value
+public final class BinOpInstr : OperatorInstruction
+{
+    private Value lhs;
+    private Value rhs;
+
+    /** 
+     * Constructs a new binary operator
+     * instruction with the given
+     * parameters
+     *
+     * Params:
+     *   lhs = the left-hand operand 
+     *   rhs = the right-hand operand
+     *   operator = the operator
+     */
+    this(Value lhs, Value rhs, SymbolType operator)
+    {
+        super(operator);
+        this.lhs = lhs;
+        this.rhs = rhs;
+
+        addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
+    }
+
+    /** 
+     * Returns the left-hand operand
+     * instruction
+     *
+     * Returns: the instruction
+     */
+    public Value getLHSInstr()
+    {
+        return this.lhs;
+    }
+
+    /** 
+     * Returns the right-hand operand
+     * instruction
+     *
+     * Returns: the instruction
+     */
+    public Value getRHSInstr()
+    {
+        return this.rhs;
+    }
+}
+
+/**
+* Unary operator instruction
+*
+* Any sort of unary operation
+*/
+public final class UnaryOpInstr : OperatorInstruction
 {
     private Value exp;
-    private SymbolType operator;
 
+    /** 
+     * Constructs a new unary operator
+     * instruction with the given
+     * parameters
+     *
+     * Params:
+     *   exp = the singular operand
+     *   operator = the operator
+     */
     this(Value exp, SymbolType operator)
     {
+        super(operator);
         this.exp = exp;
-        this.operator = operator;
 
         addInfo = "UnaryOpType: "~to!(string)(operator)~", Instr: "~exp.toString();
     }
 
-    public SymbolType getOperator()
-    {
-        return operator;
-    }
-
+    /** 
+     * Returns the singular opernad
+     * instruction
+     *
+     * Returns: the instruction
+     */
     public Value getOperand()
     {
         return exp;
     }
 }
-
-/**
-* 2022 New things
-*
-*/
 
 //public class CallInstr : Instruction
 public class CallInstr : Value
