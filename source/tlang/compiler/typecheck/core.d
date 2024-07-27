@@ -1979,8 +1979,17 @@ public final class TypeChecker
 
                     // Sanity check
                     assert(isSameType(argType, parmType));
+
+
+                    /** 
+                     * The argument value instruction stored
+                     * in `arg` MAY have changed. Therefore
+                     * we must place it back into the function
+                     * call instruction.
+                     */
+                    fcInstr.setEvalInstr(i, arg);
                 }
-                
+
                 /* Set the instruction's type to that of the function's return type */
                 Type funcCallInstrType = getType(cntnr, func.getType());
                 fcInstr.setInstrType(funcCallInstrType);
