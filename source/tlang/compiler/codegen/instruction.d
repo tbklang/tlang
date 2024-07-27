@@ -283,9 +283,9 @@ public abstract class OperatorInstruction : Value
 }
 
 /**
-* BinOpInstr instruction
+* Binary operator instruction
 *
-* Any sort of Binary Operator
+* Any sort of binary operation
 */
 public final class BinOpInstr : OperatorInstruction
 {
@@ -335,9 +335,9 @@ public final class BinOpInstr : OperatorInstruction
 }
 
 /**
-* UnaryOpInstr instruction
+* Unary operator instruction
 *
-* Any sort of Unary Operator
+* Any sort of unary operation
 */
 public final class UnaryOpInstr : OperatorInstruction
 {
