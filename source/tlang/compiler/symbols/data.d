@@ -1076,9 +1076,9 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
     private bool isStatementLevel = false;
 
     /* Argument list */
-    private Expression[] arguments;
+    private ArgumentNode[] arguments;
 
-    this(string functionName, Expression[] arguments)
+    this(string functionName, ArgumentNode[] arguments)
     {
         super(functionName);
         this.arguments = arguments;
@@ -1092,7 +1092,7 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
         return super.toString()~" "~name~"()";
     }
 
-    public Expression[] getCallArguments()
+    public ArgumentNode[] getCallArguments()
     {
         return arguments;
     }

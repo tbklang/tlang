@@ -381,3 +381,115 @@ public final class ArrayIndex : Expression
         return "ArrayIndex [to: "~indexInto.toString()~", idx: "~index.toString()~"]";
     }
 }
+
+/** 
+ * Represents an argument
+ *
+ * The reason for this to have
+ * its own distinct AST node
+ * type is because named parameters
+ * require meta-data to be stored
+ * alongside the actual argument
+ * expression-value itself.
+ */
+public final class ArgumentNode : Expression, MStatementSearchable
+{
+    private bool usingNamedParam;
+    private string paramName;
+    private size_t appearancePosition;
+    private Expression value;
+
+    private this
+    (
+        bool isNamedParameter,
+        size_t appearancePosition,
+        Expression value
+    )
+    {
+        this.usingNamedParam = isNamedParameter;
+        this.appearancePosition = appearancePosition;
+        this.value = value;
+    }
+
+    public static ArgumentNode namedArgument
+    (
+        Expression expr,
+        string paramName,
+        size_t appearancePosition
+    )
+    {
+        ArgumentNode arg = new ArgumentNode(true, appearancePosition, expr);
+        arg.paramName = paramName;
+        return arg;
+    }
+
+    public static ArgumentNode positionalArgument
+    (
+        Expression expr,
+        size_t appearancePosition
+    )
+    {
+        ArgumentNode arg = new ArgumentNode(false, appearancePosition, expr);
+        return arg;
+    }
+
+    public bool isNamedParameter()
+    {
+        return this.usingNamedParam;
+    }
+
+    public string getParamName()
+    {
+        assert(isNamedParameter());
+        return this.paramName;
+    }
+
+    public size_t getArgPos()
+    {
+        return this.appearancePosition;
+    }
+
+    public Expression getExpr()
+    {
+        return this.value;
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /**
+         * Recurse on the `Expression` (if possible)
+         */
+        MStatementSearchable innerStmt = cast(MStatementSearchable)value;
+        if(innerStmt)
+        {
+            matches ~= innerStmt.search(clazzType); 
+        }
+
+        return matches;
+    }
+
+    public override string toString()
+    {
+        import std.string : format;
+        string s = format("appearancePos: %d, expr: %s", getArgPos(), getExpr());;
+        if(isNamedParameter())
+        {
+            s ~= format(", name: %s", getParamName());
+        }
+
+        return format
+        (
+            "ArgumentNode [%s]",
+            s
+        );
+    }
+}
