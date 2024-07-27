@@ -287,11 +287,21 @@ public abstract class OperatorInstruction : Value
 *
 * Any sort of Binary Operator
 */
-public class BinOpInstr : OperatorInstruction
+public final class BinOpInstr : OperatorInstruction
 {
     private Value lhs;
     private Value rhs;
 
+    /** 
+     * Constructs a new binary operator
+     * instruction with the given
+     * parameters
+     *
+     * Params:
+     *   lhs = the left-hand operand 
+     *   rhs = the right-hand operand
+     *   operator = the operator
+     */
     this(Value lhs, Value rhs, SymbolType operator)
     {
         super(operator);
@@ -301,11 +311,23 @@ public class BinOpInstr : OperatorInstruction
         addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
     }
 
+    /** 
+     * Returns the left-hand operand
+     * instruction
+     *
+     * Returns: the instruction
+     */
     public Value getLHSInstr()
     {
         return this.lhs;
     }
 
+    /** 
+     * Returns the right-hand operand
+     * instruction
+     *
+     * Returns: the instruction
+     */
     public Value getRHSInstr()
     {
         return this.rhs;
