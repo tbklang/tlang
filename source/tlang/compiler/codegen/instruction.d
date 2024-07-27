@@ -289,8 +289,8 @@ public abstract class OperatorInstruction : Value
 */
 public class BinOpInstr : OperatorInstruction
 {
-    public const Value lhs;
-    public const Value rhs;
+    private Value lhs;
+    private Value rhs;
 
     this(Value lhs, Value rhs, SymbolType operator)
     {
@@ -299,6 +299,16 @@ public class BinOpInstr : OperatorInstruction
         this.rhs = rhs;
 
         addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
+    }
+
+    public Value getLHSInstr()
+    {
+        return this.lhs;
+    }
+
+    public Value getRHSInstr()
+    {
+        return this.rhs;
     }
 }
 
