@@ -339,10 +339,19 @@ public final class BinOpInstr : OperatorInstruction
 *
 * Any sort of Unary Operator
 */
-public class UnaryOpInstr : OperatorInstruction
+public final class UnaryOpInstr : OperatorInstruction
 {
     private Value exp;
 
+    /** 
+     * Constructs a new unary operator
+     * instruction with the given
+     * parameters
+     *
+     * Params:
+     *   exp = the singular operand
+     *   operator = the operator
+     */
     this(Value exp, SymbolType operator)
     {
         super(operator);
@@ -351,6 +360,12 @@ public class UnaryOpInstr : OperatorInstruction
         addInfo = "UnaryOpType: "~to!(string)(operator)~", Instr: "~exp.toString();
     }
 
+    /** 
+     * Returns the singular opernad
+     * instruction
+     *
+     * Returns: the instruction
+     */
     public Value getOperand()
     {
         return exp;
