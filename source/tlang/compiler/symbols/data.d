@@ -248,18 +248,6 @@ public enum InitScope
     VIRTUAL, STATIC, UNKNOWN
 }
 
-public class Assignment : Statement
-{
-    private string identifier;
-    private Expression assignmentExpression;
-
-    this(string identifier, Expression assignmentExpression)
-    {
-        this.identifier = identifier;
-        this.assignmentExpression = assignmentExpression;
-    }
-}
-
 /** 
  * Represents an assignment to
  * _some_ name of which we are
