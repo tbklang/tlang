@@ -372,11 +372,6 @@ public final class UnaryOpInstr : OperatorInstruction
     }
 }
 
-/**
-* 2022 New things
-*
-*/
-
 //public class CallInstr : Instruction
 public class CallInstr : Value
 {
