@@ -40,15 +40,7 @@ public final class BasicLexer : LexerInterface
      */
     public override Token getCurrentToken()
     {
-        if(!hasTokens)
-        {
-            throw new LexerException
-            (
-                this,
-                LexerError.EXHAUSTED_TOKENS
-            );
-        }
-
+        /* TODO: Throw an exception here when we try get more than we can */
         return tokens[tokenPtr];
     }
 
@@ -264,34 +256,27 @@ public final class BasicLexer : LexerInterface
                 * preceding us were all good for an identifier
                 */
                 import tlang.misc.utils;
-                import std.string : format;
 
-                DEBUG("fdsdfdf");
-                DEBUG(format("char: %c", currentChar));
                 if (currentChar == LS.DOT)
                 {
-                    DEBUG("DOOOT");
-                    // if (isBackward() && isWhite(sourceCode[position - 1]))
-                    // {
-                    //     throw new LexerException(this, "Character '.' is not allowed to follow a whitespace.");
-                    // }
-                    // if (isForward() && isWhite(sourceCode[position + 1]))
-                    // {
-                    //     throw new LexerException(this, "Character '.' is not allowed to precede a whitespace.");
-                    // }
-                    // else if (!hasToken() && (isBackward() && !isValidDotPrecede(
-                    //         sourceCode[position - 1])))
-                    // {
-                    //     throw new LexerException(this, "Character '.' should be preceded by valid identifier or numerical.");
-                    // }
-                    // else
-                    // {
-                    //     splitterToken = EMPTY ~ currentChar;
-                    //     improvedAdvance();
-                    // }
-
-                     splitterToken = ".";
-                    improvedAdvance();
+                    if (isBackward() && isWhite(sourceCode[position - 1]))
+                    {
+                        throw new LexerException(this, "Character '.' is not allowed to follow a whitespace.");
+                    }
+                    if (isForward() && isWhite(sourceCode[position + 1]))
+                    {
+                        throw new LexerException(this, "Character '.' is not allowed to precede a whitespace.");
+                    }
+                    else if (!hasToken() && (isBackward() && !isValidDotPrecede(
+                            sourceCode[position - 1])))
+                    {
+                        throw new LexerException(this, "Character '.' should be preceded by valid identifier or numerical.");
+                    }
+                    else
+                    {
+                        splitterToken = EMPTY ~ currentChar;
+                        improvedAdvance();
+                    }
                 }else if (currentChar == LS.AMPERSAND && (position + 1) != sourceCode.length && sourceCode[position + 1] == LS.AMPERSAND)
                 {
                     splitterToken = "&&";
@@ -403,17 +388,16 @@ public final class BasicLexer : LexerInterface
         }
 
         while (true) {
-            // if (currentChar == LS.DOT) {
-            //     if (isForward() && (isSplitter(sourceCode[position + 1]) || isDigit(sourceCode[position + 1]))) {
-            //         throw new LexerException(this, "Invalid character in identifier build up.");
-            //     } else {
-            //         if (!buildAdvance()) {
-            //             throw new LexerException(this, "Invalid character in identifier build up.");
-            //             //return false;
-            //         }
-            //     }
-            // } else
-            if (isSplitter(currentChar)) {
+            if (currentChar == LS.DOT) {
+                if (isForward() && (isSplitter(sourceCode[position + 1]) || isDigit(sourceCode[position + 1]))) {
+                    throw new LexerException(this, "Invalid character in identifier build up.");
+                } else {
+                    if (!buildAdvance()) {
+                        throw new LexerException(this, "Invalid character in identifier build up.");
+                        //return false;
+                    }
+                }
+            } else if (isSplitter(currentChar)) {
                 flush();
                 return true;
             } else if (!(isAlpha(currentChar) || isDigit(currentChar) || currentChar == LS.UNDERSCORE)) {
@@ -1224,11 +1208,7 @@ unittest
             new Token("(", 0, 0),
             new Token(")", 0, 0),
             new Token(".", 0, 0),
-            new Token("l", 0, 0),
-            new Token(".", 0, 0),
-            new Token("p", 0, 0),
-            new Token(".", 0, 0),
-            new Token("p", 0, 0),
+            new Token("l.p.p", 0, 0),
             new Token(";", 0, 0)
         ]);
 }
