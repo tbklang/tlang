@@ -138,7 +138,7 @@ public final class FetchValueVar : Value
 }
 
 /* Used for integers */
-public final class LiteralValue : Value
+public final class LiteralValue : Value, IRenderable
 {
     /* Data */
     private string data;
@@ -159,6 +159,11 @@ public final class LiteralValue : Value
     public override string toString()
     {
         return produceToStrEnclose("Data: "~to!(string)(data)~", Type: "~to!(string)(type));
+    }
+
+    public string render()
+    {
+        return data;
     }
 }
 
