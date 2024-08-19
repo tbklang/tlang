@@ -49,3 +49,21 @@ public string tryRender(Instruction instr)
         return r_i.render();    
     }
 }
+
+version(unittest)
+{
+    import tlang.compiler.codegen.instruction : LiteralValue;
+    import tlang.compiler.codegen.instruction : BinOpInstr;
+    import tlang.compiler.symbols.typing.core : Type;
+    import tlang.compiler.symbols.check : SymbolType;
+}
+
+unittest
+{
+    LiteralValue lhs = new LiteralValue("1", new Type("int"));
+    LiteralValue rhs = new LiteralValue("2", new Type("int"));
+    Instruction binOp = new BinOpInstr(lhs, rhs, SymbolType.ADD);
+
+    string s_out = tryRender(binOp);
+    // FIXME: Finish this
+}
