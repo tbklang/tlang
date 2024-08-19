@@ -1739,16 +1739,30 @@ public final class TypeChecker
      */
     private struct InstrCtx
     {
-        // The container with which
-        // the instruction being validated
-        // is a member of
+        /** 
+         * The container with which
+         * the instruction being validated
+         * is a member of
+         */
         private Container memberOf;
 
+        /** 
+         * Sets the container part of the context
+         *
+         * Params:
+         *   membersContainer = the container to
+         * set
+         */
         public void setContainer(Container membersContainer)
         {
             this.memberOf = membersContainer;
         }
 
+        /** 
+         * Returns an optional of the container
+         *
+         * Returns: An `Optional`
+         */
         public Optional!(Container) getContainer()
         {
             return memberOf is null ? Optional!(Container)() : Optional!(Container)(memberOf);
