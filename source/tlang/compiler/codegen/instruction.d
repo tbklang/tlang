@@ -36,11 +36,6 @@ public class Instruction
     }
 }
 
-public class FetchInst :  Instruction
-{
-
-}
-
 public class Value : Instruction
 {
     /* The type of the Value this instruction produces */
