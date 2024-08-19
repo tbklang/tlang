@@ -2,7 +2,7 @@ module tlang.compiler.codegen.instruction;
 
 import std.conv : to;
 import tlang.compiler.typecheck.dependency.core : Context;
-import std.string : cmp;
+import std.string : cmp, format;
 import tlang.compiler.symbols.data : SymbolType;
 import tlang.compiler.symbols.check : getCharacter;
 import gogga;
@@ -115,7 +115,7 @@ public final class VariableDeclaration : StorageDeclaration
 
 }
 
-public final class FetchValueVar : Value
+public final class FetchValueVar : Value, IRenderable
 {
     /* Name of variable to fetch from */
     public string varName;
@@ -129,6 +129,11 @@ public final class FetchValueVar : Value
         this.length = len;
 
         addInfo = "fetchVarValName: "~varName~", VarLen: "~to!(string)(length);
+    }
+
+    public string render()
+    {
+        return varName;
     }
 }
 
@@ -162,7 +167,7 @@ public final class LiteralValue : Value, IRenderable
     }
 }
 
-public final class LiteralValueFloat : Value
+public final class LiteralValueFloat : Value, IRenderable
 {
     /* Data */
     private string data;
@@ -184,6 +189,11 @@ public final class LiteralValueFloat : Value
     {
         return produceToStrEnclose("Data: "~to!(string)(data)~", Type: "~to!(string)(type));
     }
+
+    public string render()
+    {
+        return data;
+    }
 }
 
 /* FIXME: Implement this */
@@ -193,7 +203,7 @@ public final class LiteralValueFloat : Value
 * 1. The string literal
 * 2. It should assign it to an interning pool and get the ID (associate one with the string literal if equal/in-the-pool)
 */
-public final class StringLiteral : Value
+public final class StringLiteral : Value, IRenderable
 {
     /* String interning pool */
     private static int[string] internmentCamp;
@@ -233,6 +243,11 @@ public final class StringLiteral : Value
     {
         return stringLiteral;
     }
+
+    public string render()
+    {
+        return format("\"%s\"", stringLiteral);
+    }
 }
 
 /**
@@ -257,8 +272,6 @@ public class BinOpInstr : Value, IRenderable
 
     public string render()
     {
-        import std.string : format;
-
         // TODO: Remove casts from const
         return format
         (
@@ -275,7 +288,7 @@ public class BinOpInstr : Value, IRenderable
 *
 * Any sort of Unary Operator
 */
-public class UnaryOpInstr : Value
+public class UnaryOpInstr : Value, IRenderable
 {
     private Value exp;
     private SymbolType operator;
@@ -296,6 +309,11 @@ public class UnaryOpInstr : Value
     public Value getOperand()
     {
         return exp;
+    }
+
+    public string render()
+    {
+        return format("%s%s", getCharacter(operator), tryRender(exp));
     }
 }
 
@@ -372,10 +390,23 @@ public class FuncCallInstr : CallInstr
     {
         statementLevel = true;
     }
+
+    public string render()
+    {
+        string arg_s;
+        foreach(Value arg; evaluationInstructions)
+        {
+            arg_s ~= format("%s, ", tryRender(arg));
+        }
+        import std.string : strip;
+        arg_s = strip(arg_s, ", ");
+
+        return format("%s%s", functionName, arg_s);
+    }
 }
 
 
-public final class ReturnInstruction : Instruction
+public final class ReturnInstruction : Instruction, IRenderable
 {
     private Value returnExprInstr;
 
@@ -397,6 +428,11 @@ public final class ReturnInstruction : Instruction
     public bool hasReturnExpInstr()
     {
         return returnExprInstr !is null;
+    }
+
+    public string render()
+    {
+        return format("return %s", tryRender(returnExprInstr));
     }
 }
 
