@@ -56,6 +56,8 @@ version(unittest)
     import tlang.compiler.codegen.instruction : BinOpInstr;
     import tlang.compiler.symbols.typing.core : Type;
     import tlang.compiler.symbols.check : SymbolType;
+
+    import tlang.misc.logging;
 }
 
 unittest
@@ -65,5 +67,6 @@ unittest
     Instruction binOp = new BinOpInstr(lhs, rhs, SymbolType.ADD);
 
     string s_out = tryRender(binOp);
-    // FIXME: Finish this
+    DEBUG("s_out: ", s_out);
+    assert(s_out == "1 + 2");
 }
