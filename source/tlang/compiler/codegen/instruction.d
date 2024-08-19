@@ -7,6 +7,7 @@ import tlang.compiler.symbols.data : SymbolType;
 import tlang.compiler.symbols.check : getCharacter;
 import gogga;
 import tlang.compiler.symbols.typing.core : Type;
+import tlang.compiler.codegen.render;
 
 public class Instruction
 {
@@ -239,7 +240,7 @@ public final class StringLiteral : Value
 *
 * Any sort of Binary Operator
 */
-public class BinOpInstr : Value
+public class BinOpInstr : Value, IRenderable
 {
     public const Value lhs;
     public const Value rhs;
@@ -252,6 +253,20 @@ public class BinOpInstr : Value
         this.operator = operator;
 
         addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
+    }
+
+    public string render()
+    {
+        import std.string : format;
+
+        // TODO: Remove casts from const
+        return format
+        (
+            "%s %s %s",
+            tryRender(cast(Instruction)this.lhs),
+            getCharacter(this.operator),
+            tryRender(cast(Instruction)this.rhs)
+        );
     }
 }
 
