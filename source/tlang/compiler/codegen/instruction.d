@@ -710,7 +710,7 @@ public final class ArrayIndexInstruction : Value, IRenderable
 }
 
 //TODO: ArrayIndexAssignmentInstruction
-public final class ArrayIndexAssignmentInstruction : Instruction
+public final class ArrayIndexAssignmentInstruction : Instruction, IRenderable
 {
     // TODO: We then need the left hand side array evaluation instruction (a pointer value basically)
     // private Value arrayPtrEval;
@@ -741,10 +741,15 @@ public final class ArrayIndexAssignmentInstruction : Instruction
     {
         return assignment;
     }
+
+    public string render()
+    {
+        return format("%s = %s", tryRender(getArrayPtrEval()), tryRender(getAssignmentInstr()));
+    }
 }
 
 // TODO: StackArrayIndexInstruction
-public final class StackArrayIndexInstruction : Value
+public final class StackArrayIndexInstruction : Value, IRenderable
 {
     /* Index-to instruction */
     private Value indexTo;
@@ -772,10 +777,15 @@ public final class StackArrayIndexInstruction : Value
     {
         return "StackArrayIndexInstr [IndexTo: "~indexTo.toString()~", Index: "~index.toString()~"]";
     }
+
+    public string render()
+    {
+        return format("%s[%s]", tryRender(getIndexedToInstr()), tryRender(getIndexInstr()));
+    }
 }
 
 // TODO: StackArrayIndexAssignmentInstruction
-public final class StackArrayIndexAssignmentInstruction : Instruction
+public final class StackArrayIndexAssignmentInstruction : Instruction, IRenderable
 {
     // TODO: We need a `string` field here which is looked up with the 
     // ... associated context of this instruction and refers to the
@@ -814,5 +824,10 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
     public override string toString()
     {
         return "StackArrayASSIGN [name: "~arrayName~", index: "~index.toString()~", Assignment: "~assignment.toString()~"]";
+    }
+
+    public string render()
+    {
+        return format("%s[%s] = %s", getArrayName(), tryRender(getIndexInstr()), tryRender(getAssignedValue()));
     }
 }
