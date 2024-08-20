@@ -70,3 +70,56 @@ unittest
     DEBUG("s_out: ", s_out);
     assert(s_out == "1 + 2");
 }
+
+version(unittest)
+{
+    import tlang.compiler.codegen.instruction : Value;
+    import tlang.compiler.codegen.instruction : BranchInstruction;
+    import tlang.compiler.codegen.instruction : IfStatementInstruction;
+}
+
+unittest
+{
+    LiteralValue lhs_1 = new LiteralValue("1", new Type("int"));
+    LiteralValue rhs_1 = new LiteralValue("2", new Type("int"));
+    Value cond_1 = new BinOpInstr(lhs_1, rhs_1, SymbolType.EQUALS);
+
+    BranchInstruction b_1 = new BranchInstruction(cond_1, []);
+
+    LiteralValue lhs_2 = new LiteralValue("2", new Type("int"));
+    LiteralValue rhs_2 = new LiteralValue("2", new Type("int"));
+    Value cond_2 = new BinOpInstr(lhs_2, rhs_2, SymbolType.EQUALS);
+
+    BranchInstruction b_2 = new BranchInstruction(cond_2, []);
+
+    BranchInstruction b_3 = new BranchInstruction(null, []);
+
+    IfStatementInstruction if_1 = new IfStatementInstruction([b_1, b_2, b_3]);
+
+    string s_out = tryRender(if_1);
+    DEBUG("s_out: ", s_out);
+}
+
+version(unittest)
+{
+    import tlang.compiler.codegen.instruction : PointerDereferenceAssignmentInstruction;
+    import tlang.compiler.codegen.instruction : FuncCallInstr;
+}
+
+unittest
+{
+    Type intType = new Type("int");
+    FuncCallInstr fcall = new FuncCallInstr("getPtrDouble", 2);
+    fcall.setEvalInstr(0, new LiteralValue("65", intType));
+    fcall.setEvalInstr(1, new LiteralValue("66", intType));
+    PointerDereferenceAssignmentInstruction ptrDeref = new PointerDereferenceAssignmentInstruction
+    (
+        fcall,
+        new LiteralValue("1", intType),
+        2
+    );
+
+    string s_out = tryRender(ptrDeref);
+    DEBUG("s_out: ", s_out);
+    assert(s_out == "**getPtrDouble(65, 66) = 1");
+}
