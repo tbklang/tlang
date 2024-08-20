@@ -328,7 +328,7 @@ public class CallInstr : Value
 
 }
 
-public class FuncCallInstr : CallInstr
+public class FuncCallInstr : CallInstr, IRenderable
 {
     /** 
      * This is described in the corresponding AST node
@@ -401,7 +401,7 @@ public class FuncCallInstr : CallInstr
         import std.string : strip;
         arg_s = strip(arg_s, ", ");
 
-        return format("%s%s", functionName, arg_s);
+        return format("%s(%s)", functionName, arg_s);
     }
 }
 
@@ -436,7 +436,7 @@ public final class ReturnInstruction : Instruction, IRenderable
     }
 }
 
-public final class IfStatementInstruction : Instruction
+public final class IfStatementInstruction : Instruction, IRenderable
 {
     private BranchInstruction[] branchInstructions;
 
@@ -450,6 +450,33 @@ public final class IfStatementInstruction : Instruction
     public BranchInstruction[] getBranchInstructions()
     {
         return branchInstructions;
+    }
+
+    public string render()
+    {
+        bool fst = true;
+        string s;
+        foreach(BranchInstruction b; branchInstructions)
+        {
+            if(b.hasConditionInstr()) // `if` or `else if`
+            {
+                if(fst) // `if`
+                {
+                    s ~= format("if(%s) {}\n", tryRender(b.getConditionInstr()));
+                    fst = false;
+                }
+                else // `else if`
+                {
+                    s ~= format("else if(%s) {}\n", tryRender(b.getConditionInstr()));
+                }
+            }
+            else // `else`
+            {
+                s ~= "else {}";
+            }
+        }
+
+        return s;
     }
 }
 
@@ -536,8 +563,7 @@ public final class BranchInstruction : Instruction
     }
 }
 
-
-public final class PointerDereferenceAssignmentInstruction : Instruction
+public final class PointerDereferenceAssignmentInstruction : Instruction, IRenderable
 {
     private Value pointerEvalInstr;
     private Value assigmnetExprInstr;
@@ -564,9 +590,22 @@ public final class PointerDereferenceAssignmentInstruction : Instruction
     {
         return derefCount;
     }
+
+    public string render()
+    {
+        import niknaks.text : genX;
+
+        return format
+        (
+            "%s%s = %s",
+            genX(getDerefCount(), "*"),
+            tryRender(getPointerEvalInstr()),
+            tryRender(getAssExprInstr())
+        );
+    }
 }
 
-public final class DiscardInstruction : Instruction
+public final class DiscardInstruction : Instruction, IRenderable
 {
     private Value exprInstr;
 
@@ -579,9 +618,14 @@ public final class DiscardInstruction : Instruction
     {
         return exprInstr;
     }
+
+    public string render()
+    {
+        return format("discard %s", tryRender(exprInstr));
+    }
 }
 
-public final class CastedValueInstruction : Value
+public final class CastedValueInstruction : Value, IRenderable
 {
     /* The uncasted original instruction that must be executed-then-trimmed (casted) */
     private Value uncastedValue;
@@ -622,6 +666,11 @@ public final class CastedValueInstruction : Value
     public void setRelax(bool relax)
     {
         this.relax = relax;
+    }
+
+    public string render()
+    {
+        return format("cast(%s)%s", getCastToType(), tryRender(getEmbeddedInstruction()));
     }
 }
 
