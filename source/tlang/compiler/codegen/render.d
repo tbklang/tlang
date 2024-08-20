@@ -104,6 +104,8 @@ version(unittest)
 {
     import tlang.compiler.codegen.instruction : PointerDereferenceAssignmentInstruction;
     import tlang.compiler.codegen.instruction : FuncCallInstr;
+    import tlang.compiler.codegen.instruction : ArrayIndexInstruction;
+    import tlang.compiler.codegen.instruction : FetchValueVar;
 }
 
 unittest
@@ -111,7 +113,7 @@ unittest
     Type intType = new Type("int");
     FuncCallInstr fcall = new FuncCallInstr("getPtrDouble", 2);
     fcall.setEvalInstr(0, new LiteralValue("65", intType));
-    fcall.setEvalInstr(1, new LiteralValue("66", intType));
+    fcall.setEvalInstr(1, new ArrayIndexInstruction(new FetchValueVar("arr", 8), new LiteralValue("66", intType)));
     PointerDereferenceAssignmentInstruction ptrDeref = new PointerDereferenceAssignmentInstruction
     (
         fcall,
@@ -121,5 +123,5 @@ unittest
 
     string s_out = tryRender(ptrDeref);
     DEBUG("s_out: ", s_out);
-    assert(s_out == "**getPtrDouble(65, 66) = 1");
+    assert(s_out == "**getPtrDouble(65, arr[66]) = 1");
 }

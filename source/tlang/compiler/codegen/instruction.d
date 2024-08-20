@@ -674,7 +674,7 @@ public final class CastedValueInstruction : Value, IRenderable
     }
 }
 
-public final class ArrayIndexInstruction : Value
+public final class ArrayIndexInstruction : Value, IRenderable
 {
     /* Index-to instruction */
     private Value indexTo;
@@ -701,6 +701,11 @@ public final class ArrayIndexInstruction : Value
     public override string toString()
     {
         return "ArrayIndexInstr [IndexTo: "~indexTo.toString()~", Index: "~index.toString()~"]";
+    }
+
+    public string render()
+    {
+        return format("%s[%s]", tryRender(getIndexedToInstr()), tryRender(getIndexInstr()));
     }
 }
 
