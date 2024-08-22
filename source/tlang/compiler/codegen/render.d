@@ -1,5 +1,9 @@
+/** 
+ * Instruction rendering
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.codegen.render;
-
 import tlang.compiler.codegen.instruction : Instruction;
 
 /** 
