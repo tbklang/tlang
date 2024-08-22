@@ -480,7 +480,7 @@ public final class IfStatementInstruction : Instruction, IRenderable
     }
 }
 
-public final class WhileLoopInstruction : Instruction
+public final class WhileLoopInstruction : Instruction, IRenderable
 {
     private BranchInstruction branchInstruction;
 
@@ -494,6 +494,11 @@ public final class WhileLoopInstruction : Instruction
     public BranchInstruction getBranchInstruction()
     {
         return branchInstruction;
+    }
+
+    public string render()
+    {
+        return format("while(%) {}", tryRender(branchInstruction.getConditionInstr()));
     }
 }
 
