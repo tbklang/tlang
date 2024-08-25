@@ -169,5 +169,5 @@ unittest
 
     string s_out = tryRender(wl);
     DEBUG("s_out: ", s_out);
-    // assert(s_out == "while(1 == 2) {}");
+    assert(s_out == "for(ubyte i; 1 == 2; i = 60) {}");
 }
