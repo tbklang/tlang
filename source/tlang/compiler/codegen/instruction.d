@@ -66,7 +66,7 @@ public class ClassStaticInitAllocate : Instruction
     }
 }
 
-public class VariableAssignmentInstr : Instruction
+public class VariableAssignmentInstr : Instruction, IRenderable
 {
     /* Name of variable being declared */
     public string varName; /*TODO: Might not be needed */
@@ -80,9 +80,14 @@ public class VariableAssignmentInstr : Instruction
 
         addInfo = "assignTo: "~varName~", valInstr: "~data.toString();
     }
+
+    public string render()
+    {
+        return format("%s = %s", varName, tryRender(data));
+    }
 }
 
-public final class VariableDeclaration : StorageDeclaration
+public final class VariableDeclaration : StorageDeclaration, IRenderable
 {
     /* Name of variable being declared */
     public const string varName;
@@ -91,7 +96,7 @@ public final class VariableDeclaration : StorageDeclaration
     public const byte length;
 
     /* Type of the variable being declared */
-    public const Type varType;
+    public Type varType;
 
     /* Value-instruction to be assigned */
     private Value varAssInstr;
@@ -113,6 +118,16 @@ public final class VariableDeclaration : StorageDeclaration
         return varAssInstr;
     }
 
+    public bool hasAssignmentInstr()
+    {
+        return varAssInstr !is null;
+    }
+
+    public string render()
+    {
+        string varAssInstr_s = hasAssignmentInstr() ? format(" = %s", tryRender(getAssignmentInstr())) : "";
+        return format("%s %s%s", varType.getName(), varName, varAssInstr_s);
+    }
 }
 
 public final class FetchValueVar : Value, IRenderable
