@@ -129,3 +129,45 @@ unittest
     DEBUG("s_out: ", s_out);
     assert(s_out == "**getPtrDouble(65, arr[66]) = 1");
 }
+
+version(unittest)
+{
+    import tlang.compiler.codegen.instruction : WhileLoopInstruction;
+}
+
+unittest
+{
+    LiteralValue lhs_1 = new LiteralValue("1", new Type("int"));
+    LiteralValue rhs_1 = new LiteralValue("2", new Type("int"));
+    Value cond_1 = new BinOpInstr(lhs_1, rhs_1, SymbolType.EQUALS);
+
+    BranchInstruction b_1 = new BranchInstruction(cond_1, []);
+    WhileLoopInstruction wl = new WhileLoopInstruction(b_1);
+
+    string s_out = tryRender(wl);
+    DEBUG("s_out: ", s_out);
+    assert(s_out == "while(1 == 2) {}");
+}
+
+version(unittest)
+{
+    import tlang.compiler.codegen.instruction : ForLoopInstruction;
+    import tlang.compiler.codegen.instruction : VariableDeclaration, VariableAssignmentInstr;
+}
+
+unittest
+{
+    LiteralValue lhs_1 = new LiteralValue("1", new Type("int"));
+    LiteralValue rhs_1 = new LiteralValue("2", new Type("int"));
+    Value cond_1 = new BinOpInstr(lhs_1, rhs_1, SymbolType.EQUALS);
+
+    Instruction pre = new VariableDeclaration("i", 1, new Type("ubyte"), null);
+    Instruction post = new VariableAssignmentInstr("i", new LiteralValue("60", new Type("ubyte")));
+
+    BranchInstruction b_1 = new BranchInstruction(cond_1, [post]);
+    ForLoopInstruction wl = new ForLoopInstruction(b_1, pre, true);
+
+    string s_out = tryRender(wl);
+    DEBUG("s_out: ", s_out);
+    // assert(s_out == "while(1 == 2) {}");
+}

@@ -498,11 +498,11 @@ public final class WhileLoopInstruction : Instruction, IRenderable
 
     public string render()
     {
-        return format("while(%) {}", tryRender(branchInstruction.getConditionInstr()));
+        return format("while(%s) {}", tryRender(branchInstruction.getConditionInstr()));
     }
 }
 
-public final class ForLoopInstruction : Instruction
+public final class ForLoopInstruction : Instruction, IRenderable
 {
     private Instruction preRunInstruction;
     private BranchInstruction branchInstruction;
@@ -536,6 +536,14 @@ public final class ForLoopInstruction : Instruction
     public BranchInstruction getBranchInstruction()
     {
         return branchInstruction;
+    }
+
+    public string render()
+    {
+        string postIterate_s = hasPostIterationInstruction() ? tryRender(branchInstruction.getBodyInstructions()[$-1]) : "";
+        string preRun_s = hasPreRunInstruction() ? tryRender(getPreRunInstruction()) : "";
+        string iterInstr_s = tryRender(getBranchInstruction().getConditionInstr());
+        return format("for(%s; %s; %s) {}", preRun_s, iterInstr_s, postIterate_s);
     }
 }
 
