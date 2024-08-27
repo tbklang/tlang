@@ -880,6 +880,6 @@ public final class StackArrayIndexAssignmentInstruction : Instruction, IRenderab
 
     public string render()
     {
-        return format("%s[%s] = %s", getArrayName(), tryRender(getIndexInstr()), tryRender(getAssignedValue()));
+        return format("%s = %s", tryRender(arrAndIndex), tryRender(getAssignedValue()));
     }
 }
