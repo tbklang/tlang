@@ -16,7 +16,7 @@ import tlang.compiler.typecheck.dependency.exceptions : DependencyException, Dep
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
-
+import tlang.misc.utils : panic;
 
 /**
 * Passed around
@@ -616,22 +616,8 @@ public class DNodeGenerator
             FunctionCall funcCall = cast(FunctionCall)exp;
             DEBUG("FuncCall: "~funcCall.getName());
 
-            /* TODO: We need to fetch the cached function definition here and call it */
-            Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
-            assert(funcEntity);
-            
-            // FIXME: The below is failing (we probably need a forward look ahead?)
-            // OR use the addFuncDef list?
-            //WAIT! We don't need a funcDefNode actually. No, we lierally do not.
-            //Remmeber, they are done in a seperate pass, what we need is just our FUncCall DNode
-            // WHICH we have below as `dnode`!!!!
-            // DNode funcDefDNode = retrieveFunctionDefinitionNode(tc.getResolver().generateName(tc.getModule(), funcEntity));
-            // gprintln("FuncCall (FuncDefNode): "~to!(string)(funcDefDNode));
-            // dnode.needs(funcDefDNode); /* NOTE: New code as of 4th October 2022 */
-
             //NOTE: Check if we need to set a context here to that of the context we occuring in
             funcCall.context = context;
-
 
             /**
             * Go through each argument generating a fresh DNode for each expression
@@ -756,46 +742,9 @@ public class DNodeGenerator
                         expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
                     }
                 }
-                /** 
-                 * If `namedEntity` is a `Function`
-                 *
-                 * Think of a function handle
-                 */
-                else if(cast(Function)namedEntity)
-                {
-                    /**
-                    * FIXME: Yes it isn't a funcall not, and it is not a variable and is probably
-                    * being returned as the lookup, so a FUnction node i guess 
-                    */
-                    Function funcHandle = cast(Function)namedEntity;
-                    
-                    /**
-                    * FIXME: Find the best place for this. Functions will always
-                    * be declared (atleast for basic examples as like now) in
-                    * the module level
-                    */
-                    Context cont = new Context(tc.getResolver().findContainerOfType(Module.classinfo, funcHandle), InitScope.STATIC);
-                    // cont.container = tc.getModule();
-                    // cont.
-                    funcHandle.setContext(cont);
-
-                    // funcHandle
-                    
-
-                    /**
-                    * FIXME: Do we have to visit the function, I am not sure, like maybe declaration
-                    * or surely it is already declared??!?!?
-                    *
-                    * Does pooling it make sense? Do we force a visitation?
-                    */
-                    FuncDecNode funcDecNode = poolT!(FuncDecNode, Function)(funcHandle);
-                    dnode.needs(funcDecNode);
-
-                    WARN("Muh function handle: "~namedEntity.toString());
-                }
                 else
                 {
-                    /* TODO: Add check ? */
+                    dnode.needs(pool(varExp));
                 }   
             }
             /* If the entity could not be found */
@@ -812,111 +761,22 @@ public class DNodeGenerator
             /* Get the binary operator expression */
             BinaryOperatorExpression binOp = cast(BinaryOperatorExpression)exp;
 
-            
+            /* Apply context */
+            binOp.setContext(context);
 
-            /**
-            * If the operator is a dot operator
-            *
-            * We then treat that as an accessor
-            *
-            * Example: func().p1
-            * Example: new A().p1
-            */
-            if(binOp.getOperator() == SymbolType.DOT)
-            {
-                /**
-                * Get the left-node (the thing being accessed)
-                *
-                * Either a `new A()`, `A()`
-                */
-                Expression leftExp = binOp.getLeftExpression();
-                
+            // DEBUG(format("Depgen binop: %s", binOp));
 
-                /**
-                * Process the right-hand side expression
-                * but we should give it the Context that
-                * it is accessing some sort of class for example
-                * such that resolution can work properly
-                * (hence the need for `Context` in this function)
-                *
-                * 1. The Container is the type of the object and
-                * we then call expresssionPass on it which
-                * will eensure static init of class type etc
-                */
+            /* Process left and right */
+            DNode leftNode = expressionPass(binOp.getLeftExpression(), context);
+            DNode rightNode = expressionPass(binOp.getRightExpression(), context);
 
-                /* The NewExpression */
-                NewExpression newExpression = cast(NewExpression)leftExp;
+            /* Require the evaluation of these */
+            dnode.needs(leftNode);
+            dnode.needs(rightNode);
 
-                /* Get the FunctionCall */
-                FunctionCall constructorCall = newExpression.getFuncCall();
-
-                /* Get the name of the class the function call referes to */
-                string className = constructorCall.getName();
-                Type type = tc.getType(context.container, className);
-
-                Clazz clazzType = cast(Clazz)type;
-                Container clazzContainer = cast(Container)clazzType;
-
-
-
-                
-                Context objectContext = new Context(clazzContainer, InitScope.VIRTUAL);
-                /* Also, only resolve within */
-                objectContext.noAllowUp();
-
-
-                /**
-                * Pass the newExpression and static init the class
-                * using current context
-                *
-                * We now know the class is static inited, and also
-                * the object
-                */
-                DNode lhsNode = expressionPass(leftExp, context);
-
-                /**
-                * Now using this pass the right-hand side with context
-                * being that the object access has virtual (static and
-                * non-static access as it is, well, an object `new A()`)
-                *
-                * Context being eithin the object and its class
-                */
-                DNode rhsNode = expressionPass(binOp.getRightExpression(), objectContext);
-                
-
-                // if(cast(NewExpression)leftExp)
-
-                /**
-                * TODO
-                *
-                * 1. Split up and recurse down the path (rhsExpression)
-                * 2. Above is done already in varExp (well needs to be implemented)
-                * 3. Make the rhsNode finanly depend on lhsNode
-                * 4. dnode (whole expression, dot operator expresiosn) relies on rhsNode
-                *
-                */
-                dnode.needs(lhsNode);
-                lhsNode.needs(rhsNode);
-                
-
-                
-            }
-            /**
-            * Anything else are mutually exlsuive (i.e. not chained)
-            *
-            * FIXME: For now
-            */
-            else
-            {
-                /* Process left and right */
-                DNode leftNode = expressionPass(binOp.getLeftExpression(), context);
-                DNode rightNode = expressionPass(binOp.getRightExpression(), context);
-
-                /* Require the evaluation of these */
-                /* TODO: Add specific DNode type dependent on the type of operator */
-                dnode.needs(leftNode);
-                dnode.needs(rightNode);
-            }
+            // DEBUG(format("leftDNode: %s", leftNode));
+            // DEBUG(format("rightDNode: %s", rightNode));
+            // panic("here");
         }
         /**
         * Unary operator
@@ -969,6 +829,13 @@ public class DNodeGenerator
             Expression indexedExp = arrayIndex.getIndexed();
             DNode indexedExpDNode = expressionPass(indexedExp, context);
             dnode.needs(indexedExpDNode);
+
+            // DEBUG("ArrIdx: ", arrayIndex);
+            // panic("ArrayIndex generated");
+        }
+        else if(cast(IdentExpression)exp)
+        {
+            panic("Fok");
         }
         else
         {
@@ -1076,14 +943,21 @@ public class DNodeGenerator
             {
                 // TODO: For array support not all too sure what I shoudl put here, perhap nothing?
                 StackArray arrayType = cast(StackArray)variableType;
+                DEBUG(format("StackArray (type): %s", arrayType));
 
                 // TODO: We might need to do pointer magic
 
                 // (TODO) Check component type
                 Type componentType = arrayType.getComponentType();
+                DEBUG(format("componentType: %s", componentType.classinfo));
 
                 // If the component type is a primitive type
                 if(cast(Primitive)componentType)
+                {
+                    /* Do nothing (I presume?) */
+                }
+                // If the component type is a stack array
+                else if(cast(StackArray)componentType)
                 {
                     /* Do nothing (I presume?) */
                 }
@@ -1132,90 +1006,49 @@ public class DNodeGenerator
             // node.needs(variableDNode);
             return variableDNode;
         }
-        /**
-        * Variable asignments
-        */
-        else if(cast(VariableAssignmentStdAlone)entity)
+        /** 
+         * Handles assignments
+         */
+        else if(cast(Assignment_V2)entity)
         {
-            VariableAssignmentStdAlone vAsStdAl = cast(VariableAssignmentStdAlone)entity;
-            vAsStdAl.setContext(context);
-
-            /* TODO: CHeck avriable name even */
-            DEBUG("YEAST ENJOYER");
-
-
-            // FIXME: The below assert fails for function definitions trying to refer to global values
-            // as a reoslveBest (up) is needed. We should firstly check if within fails, if so,
-            // resolveBest, if that fails, then it is an error (see #46)
-            assert(tc.getResolver().resolveBest(c, vAsStdAl.getVariableName()));
-            DEBUG("YEAST ENJOYER");
-            Variable variable = cast(Variable)tc.getResolver().resolveBest(c, vAsStdAl.getVariableName());
-            assert(variable);
-
-            /* Assinging to a variable is usage, therefore increment the reference count */
-            tc.touch(variable);
-
-
-            /* Pool the variable */
-            DNode varDecDNode = pool(variable);
-
-            /* TODO: Make sure a DNode exists (implying it's been declared already) */
-            if(varDecDNode.isVisisted())
-            {
-                /* Pool varass stdalone */
-                DNode vStdAlDNode = pool(vAsStdAl);
-
-                /* Pool the expression and make the vAStdAlDNode depend on it */
-                DNode expression = expressionPass(vAsStdAl.getExpression(), context);
-                vStdAlDNode.needs(expression);
-
-                return vStdAlDNode;
-            }
-            else
-            {
-                expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
-                return null;
-            }            
-        }
-        /**
-        * Array assignments
-        */
-        else if(cast(ArrayAssignment)entity)
-        {
-            ArrayAssignment arrayAssignment = cast(ArrayAssignment)entity;
-            arrayAssignment.setContext(context);
-            DNode arrayAssDerefDNode = pool(arrayAssignment);
-
-            /* Pass the expression to be assigned */
-            Expression assignedExpression = arrayAssignment.getAssignmentExpression();
-            DNode assignmentExpressionDNode = expressionPass(assignedExpression, context);
-            arrayAssDerefDNode.needs(assignmentExpressionDNode);
-
-            /**
-            * Extract the ArrayIndex expression
-            *
-            * This consists of two parts (e.g. `myArray[i]`):
-            *
-            * 1. The indexTo `myArray`
-            * 2. The index `i`
-            */
-            ArrayIndex arrayIndexExpression = arrayAssignment.getArrayLeft();
-            Expression indexTo = arrayIndexExpression.getIndexed();
-            Expression index = arrayIndexExpression.getIndex();
-
-            DNode indexToExpression = expressionPass(indexTo, context);
-            arrayAssDerefDNode.needs(indexToExpression);
-
-            DNode indexExpression = expressionPass(index, context);
-            arrayAssDerefDNode.needs(indexExpression);
+            Assignment_V2 varAss = cast(Assignment_V2)entity;
+            varAss.setContext(context);
+            DNode varAssDNode = pool(varAss);
             
+            /* Extract the expression being assigned to */
+            Expression toExpr = varAss.getName();
 
+            /* Extract the expression being assigned of */
+            Expression ofExpr = varAss.getAssignedValue();
 
+            /* Pool `toExpr` and make an `AssignmentTo` dep-node depend on it */
+            DNode assToDNode = new AssignmentTo();
+            DNode toExprDNode = expressionPass(toExpr, context);
 
-            ERROR("Please implement array assignment dependency generation");
-            // assert(false);
+            DEBUG("");
+            DEBUG("");
+            DEBUG("");
+            DEBUG("toExprDNode dependencies: ", toExprDNode.dependencies);
+            import niknaks.debugging : dumpArray;
+            DNode[] dbg_deps = toExprDNode.dependencies;
+            DEBUG(dumpArray!(dbg_deps));
+            
+            // panic("Alex fokken mouton");
+            
+            assert(toExprDNode);
+            assToDNode.needs(toExprDNode);
 
-            return arrayAssDerefDNode;
+            /* Pool `ofExpr` and make an `AssignmentOf` dep-node depend on it */
+            DNode assOfDNode = new AssignmentOf();
+            DNode ofExprDNode = expressionPass(ofExpr, context);
+            assert(ofExprDNode);
+            assOfDNode.needs(ofExprDNode);
+
+            /* Make the `varAssDNode` depend on the assTo and assOf dep-nodes */
+            varAssDNode.needs(assToDNode);
+            varAssDNode.needs(assOfDNode);
+            
+            return varAssDNode;
         }
         /**
         * Function definitions
@@ -1484,7 +1317,29 @@ public class DNodeGenerator
 
             return funcCallDNode;
         }
+        else if(cast(ExpressionStatement)entity)
+        {
+            ExpressionStatement exprStmt = cast(ExpressionStatement)entity;
+            // call.setContext(context);
 
+            ERROR("Still working on implementing support for PathExpession");
+
+            /** 
+             * Create a dependency node
+             * for the expression statement
+             * and then attach a dependency of
+             * its `path`
+             */
+            DNode exprStmtDNode = pool(exprStmt);
+            Expression expr = exprStmt.getExpr();
+            DEBUG("Before expPass");
+            exprStmtDNode.needs(expressionPass(expr, context));
+            DEBUG("After expPass");
+
+            return exprStmtDNode;
+        }
+
+        // panic("fok");
         return null;
     }
 
