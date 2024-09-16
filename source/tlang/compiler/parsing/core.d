@@ -9,11 +9,18 @@ import tlang.compiler.lexer.core;
 import core.stdc.stdlib;
 import tlang.misc.exceptions : TError;
 import tlang.compiler.parsing.exceptions;
+import tlang.compiler.reporting : LineInfo;
 import tlang.compiler.core : Compiler;
 import std.string : format;
 import tlang.compiler.modman;
 
-// TODO: Technically we could make a core parser etc
+/** 
+ * Provided with a lexer this
+ * can parse the tokens into
+ * an in-memory AST structure
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 public final class Parser
 {
     /** 
@@ -21,10 +28,26 @@ public final class Parser
      */
     private LexerInterface lexer;
 
-    /** 
+    /**
      * The associated compiler
      */
     private Compiler compiler;
+
+    /** 
+     * Returns the `LineInfo` of
+     * the lexer's current token.
+     *
+     * This is useful when you want
+     * to associate a line with
+     * an AST node right before
+     * returning.
+     *
+     * Returns: the `LineInfo`
+     */    
+    private LineInfo getCurrentLineInfo()
+    {
+        return this.lexer.getCurrentToken().getLineInfo();
+    }
 
     /**
     * Crashes the program if the given token is not a symbol
@@ -40,8 +63,6 @@ public final class Parser
         if (!isFine)
         {
             throw new SyntaxError(this, symbol, token);
-            // expect("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
-                    // string)(actualType) ~ " with " ~ token.toString());
         }
     }
 
@@ -289,6 +310,9 @@ public final class Parser
 
         /* Parent the branch to the WhileLoop */
         parentToContainer(whileLoop, [branch]);
+
+        /* Store line information at this point into AST node */
+        whileLoop.setLineInfo(getCurrentLineInfo());
 
         WARN("parseWhile(): Leave");
 

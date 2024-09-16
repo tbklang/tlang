@@ -1,14 +1,18 @@
 /** 
- * Token definition
+ * Token and related types definitions
  */
 module tlang.compiler.lexer.core.tokens;
 
-import std.string : cmp;
+import std.string : cmp, format;
 import std.conv : to;
+import tlang.compiler.reporting : Coords;
+import tlang.compiler.reporting : LineInfo;
 
 /** 
  * Defines a `Token` that a lexer
  * would be able to produce
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
  */
 public final class Token
 {
@@ -21,6 +25,12 @@ public final class Token
      * Line number information
      */
     private ulong line, column;
+
+    /** 
+     * The line this token was
+     * lex'd from
+     */
+    private string origin;
 
     /** 
      * Constructs a new `Token` with the given
@@ -36,6 +46,30 @@ public final class Token
         this.token = token;
         this.line = line;
         this.column = column;
+    }
+
+    /** 
+     * Sets the origin string.
+     * This is the line in which
+     * this token was derived from.
+     * 
+     * Params:
+     *   line = the line
+     */
+    public void setOrigin(string line)
+    {
+        this.origin = line;
+    }
+
+    /** 
+     * Returns the origin string (if any)
+     * from which this token was derived
+     *
+     * Returns: the line
+     */
+    private string getOrigin()
+    {
+        return this.origin;
     }
 
     /** 
@@ -72,5 +106,27 @@ public final class Token
     public string getToken()
     {
         return token;
+    }
+
+    /** 
+     * Returns the coordinates of
+     * this token
+     *
+     * Returns: the `Coords`
+     */
+    public Coords getCoords()
+    {
+        return Coords(this.line, this.column);
+    }
+
+    /** 
+     * Returns the line information
+     * of this particular token
+     *
+     * Returns: the `LineInfo`
+     */
+    public LineInfo getLineInfo()
+    {
+        return LineInfo(getOrigin(), getCoords());
     }
 }
