@@ -3,7 +3,7 @@ module tlang.compiler.typecheck.dependency.core;
 import tlang.compiler.symbols.check;
 import tlang.compiler.symbols.data;
 import std.conv : to;
-import std.string;
+import std.string : cmp;
 import std.stdio;
 import tlang.misc.logging;
 import tlang.compiler.parsing.core;
@@ -12,7 +12,7 @@ import tlang.compiler.typecheck.exceptions;
 import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
-import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
+import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError, AccessViolation;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
@@ -451,6 +451,89 @@ public class DNodeGenerator
         throw new DependencyException(DependencyError.GENERAL_ERROR, message);
     }
 
+    /** 
+     * Performs an access check to the given
+     * entity but from the accessing-environment
+     * of the provided statement
+     *
+     * Params:
+     *   stmtCtx = the `Statement` to derive the
+     * access environment from
+     *   referent = the `Entity` being referred
+     * to
+     *   ignoreAccessModifiers = is we should
+     * ignore this check entirely (default: `false`)
+     * Returns: `true` if allowed, `false`
+     * otherwise
+     */
+    private bool accessCheck
+    (
+        Statement stmtCtx, Entity referent,
+        bool ignoreAccessModifiers = false
+    )
+    {
+        // If ignoring mode then always allow accesses
+        if(ignoreAccessModifiers)
+        {
+            return true;
+        }
+
+        // Container of the accessing-environment
+        Container accCntnr = stmtCtx.parentOf();
+
+        // Container of the referent
+        Container refCntnr = referent.parentOf();
+
+        // If they are in the same container (exactly)
+        // then access should be allowed, irrespective
+        // of access modifiers
+        if(refCntnr == accCntnr)
+        {
+            return true;
+        }
+        // If the accessing-environment is in
+        // a container that is descendant
+        // of that of the referent's,
+        // in such a case access modifiers
+        // TOO can be ignored
+        else if(resolver.isDescendant(refCntnr, cast(Entity)accCntnr))
+        {
+            return true;
+        }
+        // If not, then base the check on access modifiers
+        else
+        {
+            // Obtain the access modifier of the referent
+            AccessorType accMod = referent.getAccessorType();
+
+            return referent.getAccessorType() == AccessorType.PUBLIC;
+        }
+    }
+
+    /** 
+     * Throws an exception if there
+     * would be an access violation
+     * performing the given access
+     *
+     * See_Also: `accessCheck`
+     */
+    private void accessCheckAuto
+    (
+        Statement stmtCtx, Entity referent,
+        bool ignoreAccessModifiers = false
+    )
+    {
+        if(accessCheck(stmtCtx, referent, ignoreAccessModifiers))
+        {
+            DEBUG("Access check passed for accEnv: ", stmtCtx, " with referentEnt: ", referent);
+        }
+        else
+        {
+            DEBUG("Access check FAILED for accEnv: ", stmtCtx, " with referentEnt: ", referent);
+            throw new AccessViolation(stmtCtx, referent);
+        }
+    }
+
     public DNode root;
 
 
@@ -619,6 +702,9 @@ public class DNodeGenerator
             /* TODO: We need to fetch the cached function definition here and call it */
             Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
             assert(funcEntity);
+
+            // Access check
+            accessCheckAuto(exp, funcEntity);
             
             // FIXME: The below is failing (we probably need a forward look ahead?)
             // OR use the addFuncDef list?
@@ -723,6 +809,9 @@ public class DNodeGenerator
             if(namedEntity)
             {
                 /* FIXME: Below assumes basic variable declarations at module level, fix later */
+
+                // Access check
+                accessCheckAuto(exp, namedEntity);
 
                 /** 
                  * If `namedEntity` is a `Variable`

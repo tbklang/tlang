@@ -240,12 +240,12 @@ public class Statement
 
 public enum AccessorType
 {
-    PUBLIC, PRIVATE, PROTECTED, UNKNOWN
+    UNKNOWN, PUBLIC, PRIVATE, PROTECTED
 }
 
 public enum InitScope
 {
-    VIRTUAL, STATIC, UNKNOWN
+    UNKNOWN, VIRTUAL, STATIC
 }
 
 public class Assignment : Statement
@@ -268,7 +268,7 @@ public class Assignment : Statement
 public class Entity : Statement
 {
     /* Accessor type */
-    private AccessorType accessorType = AccessorType.PUBLIC;
+    private AccessorType accessorType;
 
     /* Function/Modifier type */
     private InitScope initScope;

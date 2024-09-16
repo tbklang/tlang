@@ -2,7 +2,7 @@ module b;
 
 import a;
 
-int doThing()
+public int doThing()
 {
     int local = 0;
 

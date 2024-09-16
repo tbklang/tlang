@@ -2,7 +2,7 @@ module c;
 
 import a;
 
-void k()
+public void k()
 {
     a.j = a.j + 2;
 }
