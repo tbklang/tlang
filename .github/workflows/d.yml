@@ -79,7 +79,7 @@ jobs:
           sudo apt install libcurl4-openssl-dev
         
       - name: DUB unit tests with coverage
-        run: dub test --coverage
+        run: dub test --coverage -Dwi
 
       - name: Coverage upload
         run: |
