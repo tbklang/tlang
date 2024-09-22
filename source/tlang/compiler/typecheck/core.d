@@ -3086,6 +3086,15 @@ public final class TypeChecker
                     assert(ent);
                     Type variableDeclarationType = getType(toCtx.getContainer(), ent.getType());
 
+                    /**
+                     * Validate the "to" instruction (the instruction representing
+                     * the left-hand side of the assignment).
+                     *
+                     * We do this incase it was nto yet already validated, helps
+                     * with things like touch()-counting
+                     */
+                    validate(InstrCtx(toCtx.getContainer()), toEntityInstrVV);
+
 
                     // Validate the instruction being assigned (the expression)
                     validate(InstrCtx(toCtx.getContainer()), assignmentInstr);
@@ -4200,9 +4209,16 @@ public final class TypeChecker
         Variable[] unused;
         foreach(Variable variable; this.varRefCounts.keys())
         {
+            // 1 means it was declared
             if(!(this.varRefCounts[variable] > 1))
             {
                 unused ~= variable;
+            }
+            // Anything more (refCount > 1) means a reference
+            else
+            {
+                // FIXME: Only enable this when in debug builds
+                DEBUG("Variable '", variable, "' is used ", this.varRefCounts[variable]-1, " many times");
             }
         }
 
