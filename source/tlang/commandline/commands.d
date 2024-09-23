@@ -133,10 +133,17 @@ mixin template TypeCheckerBase()
     @(ArgConfig.optional)
     bool warnUnusedVariables = true;
 
+    @ArgNamed("unusedFuncs|ufuncs", "Warn about any unused functions")
+    @(ArgConfig.optional)
+    bool warnUnusedFunctions = true;
+
     void TypeCheckerInit(Compiler compiler)
     {
         // Set whether to warn about unused variables
         compiler.getConfig().addConfig(ConfigEntry("typecheck:warnUnusedVars", warnUnusedVariables));
+
+        // Set whether to warn about unused functions
+        compiler.getConfig().addConfig(ConfigEntry("typecheck:warnUnusedFuncs", warnUnusedFunctions));
     }
 }
 
