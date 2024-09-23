@@ -840,9 +840,6 @@ public class DNodeGenerator
             writeln("Hello");
             writeln("VarType: "~to!(string)(variableType));
 
-            /* Add an entry to the reference counting map */
-            tc.touch(variable);
-
             /* Basic type */
             if(cast(Primitive)variableType)
             {
@@ -991,9 +988,6 @@ public class DNodeGenerator
             DEBUG("Hello"); // TODO: Check `root`, just use findContainerOfType
             // Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func));
             this.funcDefStore.addFunctionDef(cast(Module)root.entity, func);
-
-            /* Add an entry to the reference counting map */
-            tc.touch(func);
 
             return null;
         }

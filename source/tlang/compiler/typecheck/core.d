@@ -199,6 +199,9 @@ public final class TypeChecker
             {
                 assert(codeQueue.empty() == true);
 
+                /* Add an entry to the reference counting map */
+                touch(curFD.func);
+
                 /* Generate the dependency tree */
                 DNode funcNode = curFD.generate();
                 
@@ -2999,6 +3002,9 @@ public final class TypeChecker
             Context ctx = variablePNode.getContext();
             assert(ctx);
             DEBUG("HELLO FELLA");
+
+            /* Add an entry to the reference counting map */
+            touch(variablePNode);
 
             // Mark as declared
             declare(variablePNode);
