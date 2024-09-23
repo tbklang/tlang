@@ -4808,3 +4808,37 @@ unittest
     Function[] unusedFuncs = tc.getUnusedFunctions();
     assert(unusedFuncs.length == 0);
 }
+
+/** 
+ * Tests the use-before-declare detection for
+ * variable usage and cvariable declarations
+ *
+ * Case: Positive (use-before-declare is present)
+ * Source file: source/tlang/testing/typecheck/use_before_declare.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/typecheck/use_before_declare.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    
+    Exception eFound;
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException e)
+    {
+        eFound = e;
+    }
+
+    assert(cast(TypeCheckerException)eFound !is null);
+}
