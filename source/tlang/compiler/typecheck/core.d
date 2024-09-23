@@ -260,16 +260,33 @@ public final class TypeChecker
         /** 
          * Find the variables which were declared but never used
          */
-        if(this.config.hasConfig("typecheck:warnUnusedVars") & this.config.getConfig("typecheck:warnUnusedVars").getBoolean())
+        if(this.config.hasConfig("typecheck:warnUnusedVars") && this.config.getConfig("typecheck:warnUnusedVars").getBoolean())
         {
             Variable[] unusedVariables = getUnusedVariables();
-            WARN("There are "~to!(string)(unusedVariables.length)~" unused variables");
             if(unusedVariables.length)
             {
+                WARN("There are "~to!(string)(unusedVariables.length)~" unused variables");
                 foreach(Variable unusedVariable; unusedVariables)
                 {
                     // TODO: Get a nicer name, full path-based
-                    INFO("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never used");
+                    WARN("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never used");
+                }
+            }
+        }
+
+        /** 
+         * Find the functions which were declared but never used
+         */
+        if(this.config.hasConfig("typecheck:warnUnusedFuncs") && this.config.getConfig("typecheck:warnUnusedFuncs").getBoolean())
+        {
+            Function[] unusedFuncs = getUnusedFunctions();
+            if(unusedFuncs.length)
+            {
+                WARN("There are "~to!(string)(unusedFuncs.length)~" unused functions");
+                foreach(Function unusedFunc; unusedFuncs)
+                {
+                    // TODO: Get a nicer name, full path-based
+                    WARN("Function '"~to!(string)(unusedFunc.getName())~"' is declared but never used");
                 }
             }
         }
@@ -1912,6 +1929,9 @@ public final class TypeChecker
                         )
                     );
                 }
+
+                // Increase its "touch" count
+                touch(func);
 
                 DEBUG("fcInstr: ", fcInstr);
                 DEBUG("fcInstr (target): ", fcInstr.getTarget());
@@ -4173,29 +4193,29 @@ public final class TypeChecker
     }
 
     /** 
-     * Maps a given `Variable` to its reference
+     * Maps a given `Entity` to its reference
      * count. This includes the declaration
      * thereof.
      */
-    private uint[Variable] varRefCounts;
+    private uint[Entity] entRefCounts;
 
     /** 
-     * Increments the given variable's reference
+     * Increments the given entity's reference
      * count
      *
      * Params:
-     *   variable = the variable
+     *   entity = the entity
      */
-    void touch(Variable variable)
+    void touch(Entity entity)
     {
         // Create entry if not existing yet
-        if(variable !in this.varRefCounts)
+        if(entity !in this.entRefCounts)
         {
-            this.varRefCounts[variable] = 0;    
+            this.entRefCounts[entity] = 0;
         }
 
         // Increment count
-        this.varRefCounts[variable]++;
+        this.entRefCounts[entity]++;
     }
 
     /** 
@@ -4207,18 +4227,61 @@ public final class TypeChecker
     public Variable[] getUnusedVariables()
     {
         Variable[] unused;
-        foreach(Variable variable; this.varRefCounts.keys())
+        foreach(Entity entity; getUnusedEntities())
+        {
+            Variable potVar = cast(Variable)entity;
+            if(potVar)
+            {
+                unused ~= potVar;
+            }
+        }
+
+        return unused;
+    }
+
+    /** 
+     * Returns all functions which were declared
+     * but not used
+     *
+     * Returns: the array of functions
+     */
+    public Function[] getUnusedFunctions()
+    {
+        Function[] unused;
+        foreach(Entity entity; getUnusedEntities())
+        {
+            Function potFunc = cast(Function)entity;
+            if(potFunc)
+            {
+                unused ~= potFunc;
+            }
+        }
+
+        return unused;
+    }
+
+    /** 
+     * Returns all entities which were declared
+     * but not used
+     *
+     * Returns: the array of entities
+     */
+    public Entity[] getUnusedEntities()
+    {
+        Entity[] unused;
+        foreach(Entity entity; this.entRefCounts.keys())
         {
             // 1 means it was declared
-            if(!(this.varRefCounts[variable] > 1))
+            if(!(this.entRefCounts[entity] > 1))
             {
-                unused ~= variable;
+                unused ~= entity;
             }
             // Anything more (refCount > 1) means a reference
             else
             {
+                // TODO: change text based on entity typ[e]
                 // FIXME: Only enable this when in debug builds
-                DEBUG("Variable '", variable, "' is used ", this.varRefCounts[variable]-1, " many times");
+                DEBUG("Entity '", entity, "' is used ", this.entRefCounts[entity]-1, " many times");
             }
         }
 
@@ -4650,4 +4713,92 @@ unittest
      */
     Variable[] unusedVars = tc.getUnusedVariables();
     assert(unusedVars.length == 0);
+}
+
+/** 
+ * Tests the unused functions detection mechanism
+ *
+ * Case: Positive (unused variables exist)
+ * Source file: source/tlang/testing/unused_funcs.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_funcs.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 1 unused function and then
+     * it should be named `thing`
+     */
+    Function[] unusedFuncs = tc.getUnusedFunctions();
+    assert(unusedFuncs.length == 1);
+    Function unusedFuncActual = unusedFuncs[0];
+    Function unusedFuncExpected = cast(Function)tc.getResolver().resolveBest(compiler.getProgram().getModules()[0], "thing");
+    assert(unusedFuncActual is unusedFuncExpected);
+}
+
+/** 
+ * Tests the unused variable detection mechanism
+ *
+ * Case: Negative (unused variables do NOT exist)
+ * Source file: source/tlang/testing/unused_funcs_none_1.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_funcs_none_1.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 0 unused functions
+     */
+    Function[] unusedFuncs = tc.getUnusedFunctions();
+    assert(unusedFuncs.length == 0);
+}
+
+/** 
+ * Tests the unused variable detection mechanism
+ *
+ * Case: Negative (unused variables do NOT exist)
+ * Source file: source/tlang/testing/unused_funcs_none_2.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_funcs_none_2.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 0 unused functions
+     */
+    Function[] unusedFuncs = tc.getUnusedFunctions();
+    assert(unusedFuncs.length == 0);
 }

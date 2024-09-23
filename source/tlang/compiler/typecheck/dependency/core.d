@@ -992,6 +992,9 @@ public class DNodeGenerator
             // Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func));
             this.funcDefStore.addFunctionDef(cast(Module)root.entity, func);
 
+            /* Add an entry to the reference counting map */
+            tc.touch(func);
+
             return null;
         }
         /**
