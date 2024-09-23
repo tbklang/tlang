@@ -250,6 +250,9 @@ public final class CompilerConfiguration
         /* Always warn about unused variables */
         config.addConfig(ConfigEntry("typecheck:warnUnusedVars", true));
 
+        /* Always warn about unused functions */
+        config.addConfig(ConfigEntry("typecheck:warnUnusedFuncs", true));
+
         return config;
     }
 }
