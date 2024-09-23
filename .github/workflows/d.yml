@@ -414,6 +414,13 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/unused_vars_none_1.t --unusedVars true
       - name: Unused variables check (negative case)
         run: ./tlang typecheck source/tlang/testing/unused_vars_none_2.t --unusedVars true
+
+      - name: Unused functions check (positive case)
+        run: ./tlang typecheck source/tlang/testing/unused_funcs.t --unusedFuncs true
+      - name: Unused functions check (negative case)
+        run: ./tlang typecheck source/tlang/testing/unused_funcs_none_1.t --unusedFuncs true
+      - name: Unused functions check (negative case)
+        run: ./tlang typecheck source/tlang/testing/unused_funcs_none_2.t --unusedFuncs true
         
   emit:
     needs: [build, unittests]
