@@ -1581,6 +1581,20 @@ public final class TypeChecker
         }
     }
 
+    public struct ReportData
+    {
+        private Instruction i;
+        this(Instruction i)
+        {
+            this.i = i;
+        }
+
+        public Instruction originInstruction()
+        {
+            return this.i;
+        }
+    }
+
     /** 
      * Represents out-of-band
      * assignment data
@@ -1691,10 +1705,17 @@ public final class TypeChecker
         return current_assData.ofInstr;
     }
 
+    // FIXME: Do we _really_ need this?
+    // a simple boolean entry map would
+    // have worked. We don't need this
+    // complexity
     private struct EntityVisitNode
     {
         private TypedEntity te;
         private bool declared;
+
+        private ReportData rd;
+        private bool hasReportData;
 
         @disable
         this();
@@ -1703,6 +1724,12 @@ public final class TypeChecker
         {
             this.te = te;
             this.declared = false;
+        }
+
+        this(TypedEntity te, ReportData rd)
+        {
+            this(te);
+            this.rd = rd;
         }
 
         public void markDeclared()
@@ -1714,6 +1741,18 @@ public final class TypeChecker
         {
             return this.declared;
         }
+
+        public Optional!(ReportData) report()
+        {
+            Optional!(ReportData) rd_opt;
+
+            if(this.hasReportData)
+            {
+                rd_opt = Optional!(ReportData)(this.rd);
+            }
+
+            return rd_opt;
+        }
     }
 
     private EntityVisitNode[TypedEntity] decl_fstMap;
@@ -1724,31 +1763,101 @@ public final class TypeChecker
         DEBUG("Cleared out decl_fstMap");
     }
 
-    private void declare(TypedEntity te)
+    /** 
+     * Marks the given entity as declared
+     * and stores with it some auxillary
+     * data for later reporting
+     *
+     * Params:
+     *   te = the entity
+     *   rd = the auxillary report data
+     */
+    private void declare(TypedEntity te, ReportData rd)
     {
-        // This also initializes for us, never inline!
-        bool check = !isDeclared(te);
-        assert(check);
+        // Sanity check: You should never be calling
+        // ... this for the same entity more than once
+        assert((te in this.decl_fstMap) is null);
 
-        // Get node and mark as declared
-        EntityVisitNode* evn_ptr = te in this.decl_fstMap;
-        evn_ptr.markDeclared();
+        // Insert node and mark as declared
+        this.decl_fstMap[te] = EntityVisitNode(te, rd);
+        this.decl_fstMap[te].markDeclared();
     }
 
+    /** 
+     * Checks if the given entity
+     * has been marked as declared
+     *
+     * Params:
+     *   te = the `TypedEntity` to
+     * check
+     * Returns: `true` if declared,
+     * `false` otherwise
+     */
     private bool isDeclared(TypedEntity te)
     {
         EntityVisitNode* evn_ptr = te in this.decl_fstMap;
 
-        // If not yet present then
-        // add a false entry and
-        // return that
+        // If no entry is present then
+        // it must be false. Also create
+        // a new entry for later checks.
         if(evn_ptr is null)
         {
             this.decl_fstMap[te] = EntityVisitNode(te);
-            return isDeclared(te);
+            return false;
         }
 
         return evn_ptr.isDeclared();
+    }
+
+    /** 
+     * Given a typed entity this checks if
+     * it has been marked as declared yet.
+     * In the case whereby it has not, then
+     * an exception will be thrown, else it
+     * will no-op.
+     *
+     * It takes in auxillary report data
+     * representing the calling context
+     * such a check was requested from.
+     *
+     * Params:
+     *   te = the `TypedEntity` to check
+     *   rdCtx = the `ReportData` context
+     */
+    private void bail_IfNotDeclared
+    (
+        TypedEntity te,
+        ReportData rdCtx
+    )
+    {
+        if(!isDeclared(te))
+        {
+            string entityName = te.getName();
+            DEBUG("te not declared: ", te);
+
+            EntityVisitNode* ent_ptr = te in this.decl_fstMap;
+
+            Instruction usageFromInstr = rdCtx.originInstruction();
+            import tlang.compiler.codegen.render;
+            string org_s = tryRender(usageFromInstr);
+            DEBUG("Original instruction line: ", org_s);
+
+            throw new TypeCheckerException
+            (
+                this,
+                TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                format
+                (
+                    "Usage of entity '%s' prior to declaration at %s ...",
+                    entityName,
+                    org_s
+                )
+            );
+        }
+        else
+        {
+            DEBUG("te declared: ", te);
+        }
     }
 
     /** 
@@ -2078,20 +2187,8 @@ public final class TypeChecker
                     TypedEntity typedEntity = cast(TypedEntity)gVar;
                     instrType = getType(cntnr, typedEntity.getType());
 
-                    // If not yet declared, that is then an error
-                    if(!isDeclared(typedEntity))
-                    {
-                        throw new TypeCheckerException
-                        (
-                            this,
-                            TypeCheckerException.TypecheckError.GENERAL_ERROR,
-                            format
-                            (
-                                "Usage of entity '%s' prior to declaration",
-                                variableName
-                            )
-                        );
-                    }
+                    // Bail out if it was not yet declared
+                    bail_IfNotDeclared(typedEntity, ReportData(fVV));
 
                     // If it is a variable increase its "touch" count
                     if(cast(Variable)typedEntity)
@@ -3006,9 +3103,6 @@ public final class TypeChecker
             /* Add an entry to the reference counting map */
             touch(variablePNode);
 
-            // Mark as declared
-            declare(variablePNode);
-
             string variableName = resolver.generateName(this.program, variablePNode);
             DEBUG("HELLO FELLA (name): "~variableName);
 
@@ -3046,6 +3140,9 @@ public final class TypeChecker
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variableDeclarationType, assignmentInstr);
             varDecInstr.setContext(variablePNode.context);
             addInstrB(varDecInstr);
+
+            /* Mark as declared (and pass in auxillary information for reporting) */
+            declare(variablePNode, ReportData(varDecInstr));
         }
         /* TODO: Add class init, see #8 */
         else if(cast(tlang.compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
