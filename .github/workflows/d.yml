@@ -421,6 +421,28 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/unused_funcs_none_1.t --unusedFuncs true
       - name: Unused functions check (negative case)
         run: ./tlang typecheck source/tlang/testing/unused_funcs_none_2.t --unusedFuncs true
+
+      - name: Variable reference to entity which doesn't exist (bad)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/use_but_not_found_var.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+      - name: Function call to function which doesn't exist (bad)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/use_but_not_found_func.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
         
   emit:
     needs: [build, unittests]
