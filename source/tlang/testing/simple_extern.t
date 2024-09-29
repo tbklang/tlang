@@ -8,5 +8,5 @@ void test()
     ctr = ctr + 1;
 
     ubyte* buff;
-    discard doWrite(cast(uint)0, buff, cast(uint)1001);
+    doWrite(cast(uint)0, buff, cast(uint)1001);
 }
