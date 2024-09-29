@@ -16,7 +16,9 @@ public class TypeCheckerException : TError
     // ... in sub-classes of this
     public enum TypecheckError
     {
-        GENERAL_ERROR
+        GENERAL_ERROR,
+        ENTITY_NOT_FOUND,
+        ENTITY_NOT_DECLARED
     }
 
     private TypecheckError errType;
