@@ -1845,7 +1845,7 @@ public final class TypeChecker
             throw new TypeCheckerException
             (
                 this,
-                TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                TypeCheckerException.TypecheckError.ENTITY_NOT_DECLARED,
                 format
                 (
                     "Usage of entity '%s' prior to declaration at %s ...",
@@ -1858,6 +1858,73 @@ public final class TypeChecker
         {
             DEBUG("te declared: ", te);
         }
+    }
+
+    /** 
+     * A proxy method which calls the
+     * underlying `Resolver` method
+     * `resolveBest` with the first
+     * two provided arguments. If the
+     * resolution succeeds then the
+     * found entity is returned, else
+     * an exception is thrown with
+     * the erroneous name and also 
+     * the auxillary calling context
+     * from where the resolution was
+     * requested.
+     *
+     * Params:
+     *   targetName = the name to
+     * resolve
+     *   ctx = the `Container` context
+     *   rd = the auxillary calling
+     * context for reporting in the
+     * case of an error
+     */
+    private Entity bail_resolveBest
+    (
+        string targetName,
+        Container ctx,
+        ReportData rd
+    )
+    {
+        Entity ent = this.resolver.resolveBest(ctx, targetName);
+
+        if(ent is null)
+        {
+            Instruction usageFromInstr = rd.originInstruction();
+            import tlang.compiler.codegen.render;
+            string org_s = tryRender(usageFromInstr);
+
+            string errMsg;
+            // If FetchValueVar
+            if(cast(FetchValueVar)usageFromInstr)
+            {
+                errMsg = "Cannot reference entity named '%s' in %s as it does not exist";
+            }
+            // If FuncCallInstr
+            else if(cast(FuncCallInstr)usageFromInstr)
+            {
+                errMsg = "Cannot call function named '%s' in %s as no such function exists";
+            }
+
+            // Sanity check: We should only be calling this for the above two use cases
+            assert(errMsg.length != 0);
+
+            throw new TypeCheckerException
+            (
+                this,
+                TypeCheckerException.TypecheckError.ENTITY_NOT_FOUND,
+                format
+                (
+                    errMsg,
+                    targetName,
+                    org_s
+                )
+            );
+        }
+
+        return ent;
     }
 
     /** 
@@ -2006,25 +2073,8 @@ public final class TypeChecker
             {
                 FuncCallInstr fcInstr = cast(FuncCallInstr)inputInstr;
 
-                // Resolve the Function and extract its formal paremeters
-                Entity funcEnt = resolver.resolveBest(cntnr, fcInstr.getTarget());
-                
-
-                // Did lookup succeed?
-                if(funcEnt is null)
-                {
-                    throw new TypeCheckerException
-                    (
-                        this,
-                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
-                        format
-                        (
-                            "Could not reference function named '%s' as no such entity exists",
-                            fcInstr.getTarget()
-                        )
-                    );
-                }
-
+                // Resolve the Function and bail out if it does not exist
+                Entity funcEnt = bail_resolveBest(fcInstr.getTarget(), cntnr, ReportData(fcInstr));
                 Function func = cast(Function)funcEnt;
 
                 // Is the target a function? If not, then error
@@ -2154,23 +2204,8 @@ public final class TypeChecker
                 DEBUG("cntnr: ", cntnr);
                 assert(cntnr);
 
-                Entity gVar = resolver.resolveBest(cntnr, targetName);
-
-                // Did lookup succeed?
-                if(gVar is null)
-                {
-                    throw new TypeCheckerException
-                    (
-                        this,
-                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
-                        format
-                        (
-                            "Could not reference variable named '%s' as no such entity exists",
-                            targetName
-                        )
-                    );
-                }
-
+                // Lookup entity but bail if not found
+                Entity gVar = bail_resolveBest(targetName, cntnr, ReportData(fVV));
                 string variableName = resolver.generateName(this.program, gVar);
 
                 /* Type determined for instruction */
@@ -4908,7 +4943,7 @@ unittest
 
 /** 
  * Tests the use-before-declare detection for
- * variable usage and cvariable declarations
+ * variable usage and variable declarations
  *
  * Case: Positive (use-before-declare is present)
  * Source file: source/tlang/testing/typecheck/use_before_declare.t
@@ -4935,6 +4970,82 @@ unittest
     catch(TypeCheckerException e)
     {
         eFound = e;
+        assert(e.getError() == TypeCheckerException.TypecheckError.ENTITY_NOT_DECLARED);
+    }
+
+    assert(cast(TypeCheckerException)eFound !is null);
+}
+
+/** 
+ * Tests the referencing of entities with
+ * given names but which don't exist. This
+ * case tests the case whereby an entity
+ * is referenecd (an identity reference)
+ * but which does not exist.
+ *
+ * Case: Positive (entity referenced does not exist)
+ * Source file: source/tlang/testing/typecheck/use_but_not_found_var.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/typecheck/use_but_not_found_var.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    
+    Exception eFound;
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException e)
+    {
+        eFound = e;
+        assert(e.getError() == TypeCheckerException.TypecheckError.ENTITY_NOT_FOUND);
+    }
+
+    assert(cast(TypeCheckerException)eFound !is null);
+}
+
+/** 
+ * Tests the referencing of entities with
+ * given names but which don't exist. This
+ * case tests the case of a function call
+ * to a function which doesn't exist
+ *
+ * Case: Positive (entity referenced does not exist)
+ * Source file: source/tlang/testing/typecheck/use_but_not_found_func.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/typecheck/use_but_not_found_func.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    
+    Exception eFound;
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException e)
+    {
+        eFound = e;
+        assert(e.getError() == TypeCheckerException.TypecheckError.ENTITY_NOT_FOUND);
     }
 
     assert(cast(TypeCheckerException)eFound !is null);
