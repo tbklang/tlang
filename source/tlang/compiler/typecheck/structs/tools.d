@@ -7,8 +7,152 @@ import tlang.compiler.typecheck.exceptions : TypeCheckerException;
 import tlang.compiler.typecheck.resolution : Resolver;
 
 import tlang.misc.logging;
+import tlang.misc.utils : panic;
 
 import std.string : format;
+
+
+private Struct[] getAllStructTypedChildren(TypeChecker tc, Struct st)
+{
+    Resolver resolver = tc.getResolver();
+    Struct[] ss;
+
+    // Obtain all members of this struct
+    // which have struct types
+    Entity[] structTyped_m;
+    bool allStructTypedMembers(Entity e_in)
+    {
+        TypedEntity te = cast(TypedEntity)e_in;
+        return te ? tc.isStructType(tc.getType(te.parentOf(), te.getType())) : false;
+    }
+    resolver.resolveWithin(st, &allStructTypedMembers, structTyped_m);
+
+    // Make this svn depend on all
+    // those struct types
+    
+    foreach(TypedEntity st_m; cast(TypedEntity[])structTyped_m)
+    {
+        Struct st_type = cast(Struct)tc.getType(st_m.parentOf(), st_m.getType());
+        ss ~= st_type;    
+    }
+
+    return ss;
+}
+
+import niknaks.containers : VisitationTree;
+
+private class NumberedTree(T) : VisitationTree!(T)
+{
+    private size_t n;
+
+    this(T v)
+    {
+        super(v);
+    }
+
+    @property
+    public void number(size_t n)
+    {
+        this.n = n;
+    }
+
+    @property
+    public size_t number()
+    {
+        return this.n;
+    }
+
+    public override string toString()
+    {
+        return format("%s (%d)", super.toString(), this.n);
+    }
+}
+
+private Struct[] getAllStructTypesDeclared(TypeChecker tc, Module mod)
+{
+    Resolver resolver = tc.getResolver();
+
+    bool allStructTypes(Entity e_in)
+    {
+        return cast(Struct)e_in !is null;
+    }
+
+    Entity[] foundStructs;
+    resolver.resolveWithin(mod, &allStructTypes, foundStructs);
+
+    return cast(Struct[])foundStructs;
+}
+
+// TODO: Move this INTO DGen
+public Struct[] getStructsInUsageOrder(TypeChecker tc, Module mod)
+{
+    import niknaks.containers : VisitationTree, Graph, Pool;
+    import niknaks.functional : Optional;
+
+    alias TreeType = NumberedTree!(Struct);
+
+    // Pool of tree nodes
+    Pool!(TreeType, Struct) p;
+
+    // Dependency tree with visitation marking
+    TreeType vtree = new TreeType(null);
+    
+
+    TreeType kek(Struct s)
+    {
+        auto s_node = p.pool(s);
+        if(s_node.isVisited())
+        {
+            return s_node;
+        }
+        s_node.mark(); // Mark as visited
+
+        foreach(Struct m_s; getAllStructTypedChildren(tc, s))
+        {
+            auto m_s_node = p.pool(m_s); // Pool
+
+            // If not yet visited, then process
+            // and append
+            if(!m_s_node.isVisited())
+            {
+                kek(m_s);
+                s_node.appendNode(m_s_node);
+            }
+        }
+
+        return s_node;
+    }
+
+    size_t getRating(Struct s)
+    {
+        return getAllStructTypedChildren(tc, s).length;
+    }
+
+    foreach(Struct s; getAllStructTypesDeclared(tc, mod))
+    {
+        DEBUG("s:", s);
+        auto s_node = p.pool(s); // pool
+        DEBUG("s_node:", s_node);
+
+        // If not visited then process and
+        // append
+        if(!s_node.isVisited())
+        {
+            kek(s);
+            vtree.appendNode(s_node);
+        }
+
+        s_node.number = getRating(s); // attach rating
+    }
+
+    // Apply linearization
+    Struct[] ordered = vtree.dfs();
+    DEBUG("ordered:", ordered);
+    assert(ordered[$-1] is null);
+    ordered = ordered[0..$-1];
+
+    return ordered;
+}
 
 // TODO: I have a niknaks datatype for this which I could use
 // for this. I hate having to reoeat myself
@@ -78,32 +222,19 @@ private class StructVisitNode
  */
 public void checkStructTypeCycles(TypeChecker tc, Module mod)
 {
-    Resolver resolver = tc.getResolver();
+    // checkStructTypeCycles_new(tc, mod);
 
-    bool allStructTypes(Entity e_in)
-    {
-        return cast(Struct)e_in !is null;
-    }
+    Struct[] foundStructs = getAllStructTypesDeclared(tc, mod);
 
-    Entity[] foundStructs;
-    resolver.resolveWithin(mod, &allStructTypes, foundStructs);
-
-    StructVisitNode[Struct] _p;
-    StructVisitNode pool(Struct st)
-    {
-        if(st !in _p)
-        {
-            _p[st] = new StructVisitNode(st);
-        }
-        return _p[st];
-    }
+    import niknaks.containers : Pool;
+    Pool!(StructVisitNode, Struct) _p;
 
     int[Struct] visitation;
 
 
     StructVisitNode proc(Struct st)
     {        
-        StructVisitNode svn = pool(st);
+        StructVisitNode svn = _p.pool(st);
         DEBUG("Proc pooled SVN: ", svn);
         
         if(svn.isVisited())
@@ -111,23 +242,11 @@ public void checkStructTypeCycles(TypeChecker tc, Module mod)
             return svn;
         }
         svn.markVisited();
-
-        // Obtain all members of this struct
-        // which have struct types
-        Entity[] structTyped_m;
-        bool allStructTypedMembers(Entity e_in)
-        {
-            TypedEntity te = cast(TypedEntity)e_in;
-            return te ? tc.isStructType(tc.getType(te.parentOf(), te.getType())) : false;
-        }
-        resolver.resolveWithin(st, &allStructTypedMembers, structTyped_m);
-        DEBUG("structTyped_m: ", structTyped_m);
         
         // Make this svn depend on all
         // those struct types
-        foreach(TypedEntity st_m; cast(TypedEntity[])structTyped_m)
+        foreach(Struct st_type; getAllStructTypedChildren(tc, st))
         {
-            Struct st_type = cast(Struct)tc.getType(st_m.parentOf(), st_m.getType());
             DEBUG("mashall");
             svn.needs(proc(st_type));
         }
@@ -177,3 +296,49 @@ public void checkStructTypeCycles(TypeChecker tc, Module mod)
         }
     }
 }
+
+// public void checkStructTypeCycles_new(TypeChecker tc, Module mod)
+// {
+//     import niknaks.containers : CycleDetectionTree, Pool;
+
+//     alias TreeType = CycleDetectionTree!(Struct);
+
+//     // Pool of tree nodes
+//     Pool!(TreeType, Struct) p;
+
+//     // Dependency tree with count-marking
+//     TreeType vtree = new TreeType(null);
+
+//     TreeType proc(Struct s)
+//     {
+//         auto s_node = p.pool(s);
+//         if(s_node.isVisited())
+//         {
+//             return s_node;
+//         }
+//         else if(s_node.wasCycled())
+//         {
+//             panic("fokit, cycle deteced");
+//         }
+//         s_node.mark();
+
+//         foreach(Struct s_em; getAllStructTypedChildren(tc, s))
+//         {
+//             auto s_em_node = pool(s_em);
+//             if(s_em.is)
+//         }
+
+
+//         return null;
+//     }
+
+//     foreach(Struct s; getAllStructTypesDeclared(tc, mod))
+//     {
+//         auto s_node = p.pool(s);
+        
+//         if(!s_node.isVisited())
+//         {
+
+//         }
+//     }
+// }
