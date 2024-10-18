@@ -18,7 +18,10 @@ public class TypeCheckerException : TError
     {
         GENERAL_ERROR,
         ENTITY_NOT_FOUND,
-        ENTITY_NOT_DECLARED
+        ENTITY_NOT_DECLARED,
+
+        NOT_MEMBER_OF_TYPE,
+        CYCLE_DETECTED
     }
 
     private TypecheckError errType;
