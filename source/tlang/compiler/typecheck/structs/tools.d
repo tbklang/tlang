@@ -39,35 +39,6 @@ private Struct[] getAllStructTypedChildren(TypeChecker tc, Struct st)
     return ss;
 }
 
-import niknaks.containers : VisitationTree;
-
-private class NumberedTree(T) : VisitationTree!(T)
-{
-    private size_t n;
-
-    this(T v)
-    {
-        super(v);
-    }
-
-    @property
-    public void number(size_t n)
-    {
-        this.n = n;
-    }
-
-    @property
-    public size_t number()
-    {
-        return this.n;
-    }
-
-    public override string toString()
-    {
-        return format("%s (%d)", super.toString(), this.n);
-    }
-}
-
 private Struct[] getAllStructTypesDeclared(TypeChecker tc, Module mod)
 {
     Resolver resolver = tc.getResolver();
@@ -83,13 +54,13 @@ private Struct[] getAllStructTypesDeclared(TypeChecker tc, Module mod)
     return cast(Struct[])foundStructs;
 }
 
+import niknaks.containers : VisitationTree, Pool;
+import niknaks.functional : Optional;
+
 // TODO: Move this INTO DGen
 public Struct[] getStructsInUsageOrder(TypeChecker tc, Module mod)
 {
-    import niknaks.containers : VisitationTree, Graph, Pool;
-    import niknaks.functional : Optional;
-
-    alias TreeType = NumberedTree!(Struct);
+    alias TreeType = VisitationTree!(Struct);
 
     // Pool of tree nodes
     Pool!(TreeType, Struct) p;
@@ -123,11 +94,6 @@ public Struct[] getStructsInUsageOrder(TypeChecker tc, Module mod)
         return s_node;
     }
 
-    size_t getRating(Struct s)
-    {
-        return getAllStructTypedChildren(tc, s).length;
-    }
-
     foreach(Struct s; getAllStructTypesDeclared(tc, mod))
     {
         DEBUG("s:", s);
@@ -141,8 +107,6 @@ public Struct[] getStructsInUsageOrder(TypeChecker tc, Module mod)
             kek(s);
             vtree.appendNode(s_node);
         }
-
-        s_node.number = getRating(s); // attach rating
     }
 
     // Apply linearization
