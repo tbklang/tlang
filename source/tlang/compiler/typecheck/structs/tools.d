@@ -222,123 +222,57 @@ private class StructVisitNode
  */
 public void checkStructTypeCycles(TypeChecker tc, Module mod)
 {
-    // checkStructTypeCycles_new(tc, mod);
+    checkStructTypeCycles_new(tc, mod);
+}
 
-    Struct[] foundStructs = getAllStructTypesDeclared(tc, mod);
-
-    import niknaks.containers : Pool;
-    Pool!(StructVisitNode, Struct) _p;
-
-    int[Struct] visitation;
-
-
-    StructVisitNode proc(Struct st)
-    {        
-        StructVisitNode svn = _p.pool(st);
-        DEBUG("Proc pooled SVN: ", svn);
-        
-        if(svn.isVisited())
-        {
-            return svn;
-        }
-        svn.markVisited();
-        
-        // Make this svn depend on all
-        // those struct types
-        foreach(Struct st_type; getAllStructTypedChildren(tc, st))
-        {
-            DEBUG("mashall");
-            svn.needs(proc(st_type));
-        }
-
-        return svn;
+private bool hasCycle0(TypeChecker tc, Struct pivot, Struct c, bool initial)
+{
+    // If initial
+    if(initial)
+    {
+        initial = false;
+    }
+    // If current node is the pivot
+    else if(c is pivot)
+    {
+        return true;
     }
 
-    StructVisitNode[] total;
-    foreach(Struct st; cast(Struct[])foundStructs)
+    // Get all children of the 
+    foreach(Struct s; getAllStructTypedChildren(tc, c))
     {
-        total ~= proc(st);
-    }
-
-    bool hasCycle(StructVisitNode start, StructVisitNode c)
-    {
-        foreach(StructVisitNode dep; c.getDeps())
+        if(hasCycle0(tc, pivot, s, false))
         {
-            if(dep is start)
-            {
-                return true;
-            }
-            else
-            {
-                return hasCycle(start, dep);
-            }
+            return true;
         }
-        return false;
     }
 
-    foreach(StructVisitNode svn; total)
+    return false;
+}
+
+public bool hasCycles(TypeChecker tc, Struct pivot)
+{
+    return hasCycle0(tc, pivot, pivot, true);
+}
+
+public void checkStructTypeCycles_new(TypeChecker tc, Module mod)
+{
+    import niknaks.containers : CycleDetectionTree, Pool;
+
+    foreach(Struct s; getAllStructTypesDeclared(tc, mod))
     {
-        foreach(StructVisitNode dep; svn.getDeps())
+        if(hasCycles(tc, s))
         {
-            if(hasCycle(svn, dep))
-            {
-                throw new TypeCheckerException
+            throw new TypeCheckerException
+            (
+                tc,
+                TypeCheckerException.TypecheckError.CYCLE_DETECTED,
+                format
                 (
-                    tc,
-                    TypeCheckerException.TypecheckError.CYCLE_DETECTED,
-                    format
-                    (
-                        "A cyclic member type has been found in struct %s",
-                        svn.getStruct()
-                    )
-                );
-            }
+                    "A cyclic member type has been found in struct %s",
+                    s
+                )
+            );
         }
     }
 }
-
-// public void checkStructTypeCycles_new(TypeChecker tc, Module mod)
-// {
-//     import niknaks.containers : CycleDetectionTree, Pool;
-
-//     alias TreeType = CycleDetectionTree!(Struct);
-
-//     // Pool of tree nodes
-//     Pool!(TreeType, Struct) p;
-
-//     // Dependency tree with count-marking
-//     TreeType vtree = new TreeType(null);
-
-//     TreeType proc(Struct s)
-//     {
-//         auto s_node = p.pool(s);
-//         if(s_node.isVisited())
-//         {
-//             return s_node;
-//         }
-//         else if(s_node.wasCycled())
-//         {
-//             panic("fokit, cycle deteced");
-//         }
-//         s_node.mark();
-
-//         foreach(Struct s_em; getAllStructTypedChildren(tc, s))
-//         {
-//             auto s_em_node = pool(s_em);
-//             if(s_em.is)
-//         }
-
-
-//         return null;
-//     }
-
-//     foreach(Struct s; getAllStructTypesDeclared(tc, mod))
-//     {
-//         auto s_node = p.pool(s);
-        
-//         if(!s_node.isVisited())
-//         {
-
-//         }
-//     }
-// }
