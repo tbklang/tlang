@@ -222,7 +222,22 @@ private class StructVisitNode
  */
 public void checkStructTypeCycles(TypeChecker tc, Module mod)
 {
-    checkStructTypeCycles_new(tc, mod);
+    foreach(Struct s; getAllStructTypesDeclared(tc, mod))
+    {
+        if(hasCycles(tc, s))
+        {
+            throw new TypeCheckerException
+            (
+                tc,
+                TypeCheckerException.TypecheckError.CYCLE_DETECTED,
+                format
+                (
+                    "A cyclic member type has been found in struct %s",
+                    s
+                )
+            );
+        }
+    }
 }
 
 private bool hasCycle0(TypeChecker tc, Struct pivot, Struct c, bool initial)
@@ -253,26 +268,4 @@ private bool hasCycle0(TypeChecker tc, Struct pivot, Struct c, bool initial)
 public bool hasCycles(TypeChecker tc, Struct pivot)
 {
     return hasCycle0(tc, pivot, pivot, true);
-}
-
-public void checkStructTypeCycles_new(TypeChecker tc, Module mod)
-{
-    import niknaks.containers : CycleDetectionTree, Pool;
-
-    foreach(Struct s; getAllStructTypesDeclared(tc, mod))
-    {
-        if(hasCycles(tc, s))
-        {
-            throw new TypeCheckerException
-            (
-                tc,
-                TypeCheckerException.TypecheckError.CYCLE_DETECTED,
-                format
-                (
-                    "A cyclic member type has been found in struct %s",
-                    s
-                )
-            );
-        }
-    }
 }
