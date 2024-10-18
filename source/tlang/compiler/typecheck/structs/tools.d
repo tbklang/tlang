@@ -193,6 +193,23 @@ public void checkStructTypeCycles(TypeChecker tc, Module mod)
     }
 }
 
+/** 
+ * Detects if there are cycles
+ *
+ * This method is to be called from `hasCycles(TypeChecker, Struct)`
+ * Params:
+ *   tc = the `TypeChecker` instance
+ *   pivot = the pivot to compare against
+ *   c = the current item being compared
+ *   initial = when this is set to `true` it will not check
+ * the `pivot` against itself, `c`, which occurs on the first
+ * call to this. Afterwards it is set to `false` and the nested
+ * calls are done with that `false` value, meaning a proper
+ * pivot check can then occur. It gets rid of false pocitives
+ * that occur on entry.
+ * Returns: `true` if starting at `pivot` somehow lands us
+ * back at `pivot` (i.e. a cycle exists)
+ */
 private bool hasCycle0(TypeChecker tc, Struct pivot, Struct c, bool initial)
 {
     // If initial
@@ -209,7 +226,7 @@ private bool hasCycle0(TypeChecker tc, Struct pivot, Struct c, bool initial)
     // Get all children of the 
     foreach(Struct s; getAllStructTypedChildren(tc, c))
     {
-        if(hasCycle0(tc, pivot, s, false))
+        if(hasCycle0(tc, pivot, s, initial))
         {
             return true;
         }
