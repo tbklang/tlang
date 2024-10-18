@@ -154,53 +154,6 @@ public Struct[] getStructsInUsageOrder(TypeChecker tc, Module mod)
     return ordered;
 }
 
-// TODO: I have a niknaks datatype for this which I could use
-// for this. I hate having to reoeat myself
-private class StructVisitNode
-{
-    private Struct st;
-    private bool visited;
-
-    private StructVisitNode[] deps;
-    this(Struct st)
-    {
-        this.st = st;
-    }
-
-    public void markVisited()
-    {
-        assert(!this.visited);
-        this.visited = true;
-    }
-
-    public bool isVisited()
-    {
-        return this.visited;
-    }
-
-    public void needs(StructVisitNode dep)
-    {
-        this.deps ~= dep;
-    }
-
-    public StructVisitNode[] getDeps()
-    {
-        return this.deps;
-    }
-
-    public override string toString()
-    {
-        // Note: Don't do `this.deps`, if a cycle
-        // exists it will toString forever, and segfault
-        // when the stack is overflowed
-        return format("SVN [s: %s, v: %s, d: %s]", this.st, this.visited, this.deps.length);
-    }
-
-    public Struct getStruct()
-    {
-        return this.st;
-    }
-}
 
 /** 
  * Checks whether or not there are any
