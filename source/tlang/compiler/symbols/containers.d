@@ -6,6 +6,7 @@ import tlang.compiler.symbols.typing.core;
 
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
+import std.string : format;
 
 /**
 * Used so often that we may as well
@@ -75,6 +76,29 @@ public interface Container : MStatementSearchable, MStatementReplaceable
      * Returns: a `Statement[]`
      */
     public Statement[] getStatements();
+
+    /** 
+     * Determines if the given AST node
+     * is present within this container
+     * using `opEquals()` for comparisons.
+     *
+     * Params:
+     *   s = the AST node to check for
+     * Returns: `true` if so, `false`
+     * otherwise
+     */
+    public final bool contains(Statement s)
+    {
+        foreach(Statement c; getStatements())
+        {
+            if(c == s)
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 }
 
 
@@ -361,6 +385,11 @@ public class Struct : Type, Container, MCloneable
         clonedStruct.parentTo(newParent);
 
         return clonedStruct;
+    }
+
+    public override string toString()
+    {
+        return format("StructType (%s)", getName());
     }
 }
 
