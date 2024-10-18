@@ -265,6 +265,18 @@ private bool hasCycle0(TypeChecker tc, Struct pivot, Struct c, bool initial)
     return false;
 }
 
+/** 
+ * Checks if a cycle occurs in the given
+ * struct type pivot. The pivot is defined
+ * as the struct which, if we come across
+ * it again, a loop has been detected
+ *
+ * Params:
+ *   tc = the `TypeChecker` instance
+ *   pivot = the struct to check against
+ * Returns: `true` if a cycle exists,
+ * `false` otherwise
+ */
 public bool hasCycles(TypeChecker tc, Struct pivot)
 {
     return hasCycle0(tc, pivot, pivot, true);
