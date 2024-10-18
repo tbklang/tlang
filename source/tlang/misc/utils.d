@@ -78,6 +78,24 @@ public noreturn panic(string msg = "")
 }
 
 /** 
+ * Crashes the calling process
+ * with the given message
+ * Params:
+ *   elements = the parameters
+ */
+public noreturn panic(Elem...)(Elem elements)
+{
+    import std.conv : to;
+    string[] e_s;
+    static foreach(e; elements)
+    {
+        e_s ~= to!(string)(e);
+    }
+    import std.array : join;
+    panic(join(e_s, " "));
+}
+
+/** 
  * Performs an assertion check and
  * on failure panics, potentially
  * with an optional custom message
