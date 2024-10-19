@@ -1259,7 +1259,7 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitStructTypes(File modOut, Module mod)
     {
-        import tlang.compiler.typecheck.structs.tools : getStructsInUsageOrder;
+        import tlang.compiler.typecheck.tools.structs : getStructsInUsageOrder;
 
         /* Obtain the structs in their dependency order */
         Struct[] structTypes = getStructsInUsageOrder(typeChecker, mod);
