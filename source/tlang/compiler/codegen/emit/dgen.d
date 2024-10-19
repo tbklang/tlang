@@ -269,7 +269,7 @@ public final class DCodeEmitter : CodeEmitter
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
 
-            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.getTarget()); //TODO: Remove `auto`
+            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.getTarget());
 
             /* If it is not external */
             if(!typedEntityVariable.isExternal())
