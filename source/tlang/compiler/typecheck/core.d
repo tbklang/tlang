@@ -24,6 +24,7 @@ import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.misc.utils : panic;
 import tlang.compiler.typecheck.dependency.variables;
 import niknaks.functional : Optional;
+import tlang.compiler.codegen.render : tryRender;
 
 /**
 * The Parser only makes sure syntax
@@ -1545,6 +1546,67 @@ public final class TypeChecker
         return cast(Integer)typeIn && !isPointerType(typeIn);
     }
 
+    /** 
+     * Checks if the given type
+     * is a scalar type
+     *
+     * Params:
+     *   typeIn = the type to test
+     * Returns: `true` if so,
+     * `false` otherwise
+     */
+    public bool isScalarType(Type typeIn)
+    {
+        // TODO: See if this is a fine definition
+        return !isStructType(typeIn) && !isClassType(typeIn);
+    }
+
+    /** 
+     * Checks if the given type
+     * is a struct type
+     *
+     * Params:
+     *   typeIn = the type to test
+     * Returns: `true` if so,
+     * `false` otherwise
+     */
+    public bool isStructType(Type typeIn)
+    {
+        return cast(Struct)typeIn !is null;
+    }
+
+    /** 
+     * Checks if the given type
+     * is a clas type
+     *
+     * Params:
+     *   typeIn = the type to test
+     * Returns: `true` if so,
+     * `false` otherwise
+     */
+    public bool isClassType(Type typeIn)
+    {
+        return cast(Clazz)typeIn !is null;
+    }
+
+    /** 
+     * Checks if the given type
+     * is an array type. This
+     * would be any type which
+     * is a pointer type or
+     * a stack-array type.
+     *
+     * Params:
+     *   typeIn = the type to
+     * test
+     * Returns: `true` if so,
+     * `false` otherwise
+     */
+    public bool isArrayType(Type typeIn)
+    {
+        // FIXME: Check this mehtod
+        return isStackArrayType(typeIn) || isPointerType(typeIn);
+    }
 
     /** 
      * Determines the biggest of the two `Integer`-based types
@@ -2363,6 +2425,8 @@ public final class TypeChecker
             else if(cast(VariableExpression)statement)
             {
                 VariableExpression g  = cast(VariableExpression)statement;
+                Context ctx = g.getContext();
+                assert(ctx);
                 string targetName = g.getName();
 
                 /**
@@ -2372,7 +2436,7 @@ public final class TypeChecker
                 * 2. Set the Context of it to where the VariableExpression occurred
                 */
                 FetchValueVar fVV = new FetchValueVar(targetName);
-                fVV.setContext(g.getContext());
+                fVV.setContext(ctx);
 
                 /* Push instruction to top of stack */
                 addInstr(fVV);
@@ -2423,32 +2487,32 @@ public final class TypeChecker
                         Entity leftEntity = resolver.resolveBest(binOpCtx.getContainer(), targetName);
                         assert(leftEntity); // Should always be true because dependency generator catches bad names (non-existent)
 
-                        Container containerLeft = cast(Container)leftEntity;
-
-                        // TODO: Handle error message nicwer
-                        if(!containerLeft)
+                        if(cast(TypedEntity)leftEntity)
                         {
-                            throw new TypeCheckerException
-                            (
-                                this,
-                                TypeCheckerException.TypecheckError.GENERAL_ERROR,
-                                format
-                                (
-                                    "Left-hand operand of '%s' of (%s %s %s) refers to an entity which is not a container",
-                                    vLhsInstr,
-                                    vLhsInstr,
-                                    binOperator,
-                                    vRhsInstr
-                                )
-                            );
+                            TypedEntity te = cast(TypedEntity)leftEntity;
+                            Type te_t = getType(binOpCtx.getContainer(), te.getType());
+
+                            // Structs, we update vLhsInstr -> StructDataRef(vLhsInstr)
+                            if(isStructType(te_t))
+                            {
+                                // TODO: This
+                                StructDataRef s_ref = new StructDataRef(vLhsInstr);
+                                s_ref.setContext(vLhsInstr.getContext());
+                                s_ref.setInstrType(te_t);
+                                vLhsInstr = s_ref;
+                                DEBUG("Updated vLhsInstr to: ", vLhsInstr);
+                            }
+                            else
+                            {
+                                // TODO: Anything?
+                            }
                         }
+
+
+
+                        Container containerLeft = cast(Container)leftEntity;
                         
-
-
                         // lhs=<name of Container>
-
-                        // 
-
                         /** 
                          * rhs=FetchValueVar
                          *
@@ -2463,9 +2527,52 @@ public final class TypeChecker
                         if(cast(FetchValueVar)vRhsInstr)
                         {
                             FetchValueVar fetchValVarRight = cast(FetchValueVar)vRhsInstr;
-
                             string member = fetchValVarRight.getTarget();
                             DEBUG("memba name", member);
+
+                            // Are we doing <structInstance>.<vRhsInstr>?
+                            if(cast(StructDataRef)vLhsInstr)
+                            {
+                                StructDataRef s_ref = cast(StructDataRef)vLhsInstr;
+                                TypedEntity s_ent = cast(TypedEntity)leftEntity;
+                                assert(s_ent);
+                                Struct s_type = cast(Struct)getType(binOpCtx.getContainer(), s_ent.getType());
+                                assert(s_type);
+
+                                // Ensure that the `member` is part of the struct type
+                                Entity m_pot = resolver.resolveWithin(s_type, member);
+                                if(m_pot is null)
+                                {
+                                    throw new TypeCheckerException
+                                    (
+                                        this,
+                                        TypeCheckerException.TypecheckError.NOT_MEMBER_OF_TYPE,
+                                        format
+                                        (
+                                            "There is no member '%s' in struct type '%s'",
+                                            member,
+                                            s_type
+                                        )
+                                    );
+                                }
+
+                                // Extract the m_pot's type
+                                TypedEntity m_pot_te = cast(TypedEntity)m_pot;
+                                assert(m_pot_te);
+                                Type m_type = getType(binOpCtx.getContainer(), m_pot_te.getType());
+                                assert(m_type);
+                                
+                                StructMemberRefInstr sm_ref = new StructMemberRefInstr(s_ref, vRhsInstr);
+                                DEBUG("sm_ref: ", sm_ref.render());
+                                DEBUG("vRhsInstr type: ", vRhsInstr.getInstrType());
+                                sm_ref.setInstrType(m_type);
+                                sm_ref.setContext(binOpCtx);
+                                addInstr(sm_ref);
+                                // panic("Distress");
+                                return;
+                            }
+
+                           
 
                             // Ensure that there is an Entity named `member` within `containerLeft`
                             Entity memberEnt = resolver.resolveWithin(containerLeft, member);
@@ -2504,7 +2611,6 @@ public final class TypeChecker
 
                                 return;
                             }
-
                             // If member is a variable
                             else if(cast(Variable)memberEnt)
                             {
@@ -2532,7 +2638,6 @@ public final class TypeChecker
                             panic("Implement");
                             // panic("yebo");
                         }
-                        // rhs=FuncCallInstr
                         /**
                          * rhs=FuncCallInstr
                          *
@@ -2543,6 +2648,10 @@ public final class TypeChecker
                         else if(cast(FuncCallInstr)vRhsInstr)
                         {
                             FuncCallInstr funcCallRight = cast(FuncCallInstr)vRhsInstr;
+
+                            // Update target name to full name <leftContainer>.<ourName>
+                            string newName = targetName~"."~funcCallRight.getTarget();
+                            funcCallRight.setTarget(newName);
                             
                             // Validate the `FuncCallInstr` with the container to our left
                             validate(InstrCtx(containerLeft), funcCallRight);
@@ -2553,10 +2662,6 @@ public final class TypeChecker
                             DEBUG("left: ", containerLeft);
                             DEBUG("right: ", funcCallRight, ", type: ", funcCallRight.getInstrType());
 
-                            // Update target name to full name <leftContainer>.<ourName>
-                            string newName = targetName~"."~funcCallRight.getTarget();
-                            funcCallRight.setTarget(newName);
-
                             return;
                         }
                         else
@@ -2564,13 +2669,94 @@ public final class TypeChecker
                             panic("fok");
                         }
                     }
+                    // lhs=StructMemberRefInstr rhs=unknown
+                    else if(cast(StructMemberRefInstr)vLhsInstr)
+                    {
+                        StructMemberRefInstr sm_ref = cast(StructMemberRefInstr)vLhsInstr;
+                        Type sm_type = sm_ref.getInstrType();
+                        DEBUG("sm_type: ", sm_type);
+
+                        // Depending on the sm_ref's instruction type will determine
+                        // what we can do
+                        if(isStructType(sm_type))
+                        {
+                            Struct s_type = cast(Struct)sm_type;
+
+                            // if <structInstance>.<memberVar>
+                            if(cast(FetchValueVar)vRhsInstr)
+                            {
+                                FetchValueVar fvv = cast(FetchValueVar)vRhsInstr;
+                                string m_name = fvv.getTarget();
+                                DEBUG("Struct member target: ", m_name);
+
+                                // Ensure that the `member` is part of the struct type
+                                Entity m_pot = resolver.resolveWithin(s_type, m_name);
+                                if(m_pot is null)
+                                {
+                                    throw new TypeCheckerException
+                                    (
+                                        this,
+                                        TypeCheckerException.TypecheckError.NOT_MEMBER_OF_TYPE,
+                                        format
+                                        (
+                                            "There is no member '%s' in struct type '%s'",
+                                            m_name,
+                                            s_type
+                                        )
+                                    );
+                                }
+
+                                // Extract the m_pot's type
+                                TypedEntity m_pot_te = cast(TypedEntity)m_pot;
+                                assert(m_pot_te);
+                                Type m_type = getType(binOpCtx.getContainer(), m_pot_te.getType());
+                                assert(m_type);
+
+                                // TODO: Produce a StructMemberRefInstr here
+                                StructMemberRefInstr r_sm_ref = new StructMemberRefInstr(sm_ref, fvv);
+                                r_sm_ref.setInstrType(m_type);
+                                r_sm_ref.setContext(binOpCtx);
+                                addInstr(r_sm_ref);
+
+                                // panic(tryRender(r_sm_ref));
+                                WARN("Now returning with r_sm_ref: ", r_sm_ref);
+                                return;
+                            }
+                            // if <structInstance>.<memberFuncall>
+                            else if(cast(FuncCallInstr)vRhsInstr)
+                            {
+
+                            }
+
+
+                            
+
+
+                            panic("Great scott!");
+                        }
+                        else
+                        {
+                            // TODO: Add unittest for this
+                            panic("TODO: Handle this as an error, cannot do dot on a none struct type left-hand instr");
+                        }
+
+                        DEBUG("left: ", vLhsInstr, "right: ", vRhsInstr);
+
+                        // If <structMemberRefInstr> rhs=FetchValueVar
+                        // If <structMemberRefInstr> rhs=FetchValueVar
+
+
+                        panic("Todo: Implement me");
+                    }
                     // lhs=Function rhs=Variable
                     else
                     {
+                        import tlang.compiler.codegen.render : tryRender;
+                        DEBUG(format("No handling for '%s . %s' yet", vLhsInstr.tryRender(), vRhsInstr.tryRender()));
                         panic(format("No handling for %s . %s yet", vLhsInstr, vRhsInstr));
                     }
                 }
-                
+
                 /**
                  * Perform validation on both the left-hand side
                  * and right-hand side operands
@@ -3145,10 +3331,53 @@ public final class TypeChecker
             Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
 
 
+            // TODO: Implement a is-simple-type
+            bool allowsAssignment;
+
+            // If declaring a scalar type
+            if(isScalarType(variableDeclarationType))
+            {
+                allowsAssignment = true;
+                DEBUG("Variable '", variableName, "' is being declared with a simple type");
+            }
+            // If declaring a variable with a struct type
+            else if(isStructType(variableDeclarationType))
+            {
+                allowsAssignment = false;
+                DEBUG("Variable '", variableName, "' is being declared with a struct type");
+            }
+            // If declaring a variable with a class type
+            else if(isClassType(variableDeclarationType))
+            {
+                allowsAssignment = true;
+                DEBUG("Variable '", variableName, "' is being declared with a class type");
+                panic("DEVBUG: Implement declaring object-ref variables");
+            }
+            else
+            {
+                panic("DEVBUG: Cannot handle such a vardec type: ", variableDeclarationType);
+            }
+
             // Check if this variable declaration has an assignment attached
             Value assignmentInstr;
             if(variablePNode.getAssignment())
             {
+                // Are assignments allowed for this type?
+                if(!allowsAssignment)
+                {
+                    throw new TypeCheckerException
+                    (
+                        this,
+                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                        format
+                        (
+                            "Assignments cannot be done when declaring a variable of type '%s'",
+                            variableDeclarationType
+                        )
+                    );
+                }
+
+
                 Instruction poppedInstr = popInstr();
                 assert(poppedInstr);
 
@@ -3335,6 +3564,28 @@ public final class TypeChecker
 
                     /* Add the instruction */
                     addInstrB(arrDerefAssInstr);
+                }
+                // Assigning to a struct member
+                else if (cast(StructMemberRefInstr)toEntityInstr)
+                {
+                    StructMemberRefInstr sm_refInstr = cast(StructMemberRefInstr)toEntityInstr;
+                    Context sm_refInstrCtx = sm_refInstr.getContext();
+                    assert(sm_refInstrCtx);
+
+                    StructMemberAssignmentInstr sm_ass = new StructMemberAssignmentInstr
+                    (
+                        sm_refInstr,
+                        assignmentInstr
+                    );
+
+
+                    /* Add the instruction */
+                    addInstrB(sm_ass);
+                }
+                else
+                {
+                    ERROR("Never have had to handle this toInstr type yet for var assignments: ", toEntityInstr);
+                    assert(false);
                 }
             }
             /**
@@ -3846,6 +4097,14 @@ public final class TypeChecker
             processPseudoEntities(cast(Module)curModule);
         }
 
+        /* Ensure no cyclic struct type references */
+        foreach(Module mod; this.program.getModules())
+        {
+            DEBUG("Checking for struct type cycles in module '", mod, "'...");
+            import tlang.compiler.typecheck.tools.structs : checkStructTypeCycles;
+            this.checkStructTypeCycles(mod);
+        }
+
         // TODO: Ensure this is CORRECT! (MODMAN)
         /**
         * Make sure there are no name collisions anywhere
@@ -3861,6 +4120,79 @@ public final class TypeChecker
         /* TODO: Now that everything is defined, no collision */
         /* TODO: Do actual type checking and declarations */
         dependencyCheck();
+    }
+
+    /** 
+     * Tests the cycle detection mechanism
+     * used for struct type definitions
+     *
+     * Case: Positive (a cycle exists)
+     * Source file: source/tlang/testing/structs/simple_cycle.t
+     */
+    unittest
+    {
+        // Dummy field out
+        File fileOutDummy;
+        import tlang.compiler.core;
+
+        string sourceFile = "source/tlang/testing/structs/simple_cycle.t";
+
+
+        Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+        compiler.doLex();
+        compiler.doParse();
+        
+        Exception eFound;
+        try
+        {
+            compiler.doTypeCheck();
+            assert(false);
+        }
+        catch(TypeCheckerException e)
+        {
+            eFound = e;
+            assert(e.getError() == TypeCheckerException.TypecheckError.CYCLE_DETECTED);
+        }
+
+        assert(cast(TypeCheckerException)eFound !is null);
+    }
+
+    /** 
+     * Tests the cycle detection mechanism
+     * used for struct type definitions.
+     *
+     * This is a multi-moduletest whereby
+     * cycles are checked across modules.
+     *
+     * Case: Positive (a cycle exists)
+     * Source file: source/tlang/testing/structs/multi_module_cycle_1.t
+     */
+    unittest
+    {
+        // Dummy field out
+        File fileOutDummy;
+        import tlang.compiler.core;
+
+        string sourceFile = "source/tlang/testing/structs/multi_module_cycle_1.t";
+
+
+        Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+        compiler.doLex();
+        compiler.doParse();
+        
+        Exception eFound;
+        try
+        {
+            compiler.doTypeCheck();
+            assert(false);
+        }
+        catch(TypeCheckerException e)
+        {
+            eFound = e;
+            assert(e.getError() == TypeCheckerException.TypecheckError.CYCLE_DETECTED);
+        }
+
+        assert(cast(TypeCheckerException)eFound !is null);
     }
 
     private void processPseudoEntities(Container c)
@@ -5046,6 +5378,42 @@ unittest
     {
         eFound = e;
         assert(e.getError() == TypeCheckerException.TypecheckError.ENTITY_NOT_FOUND);
+    }
+
+    assert(cast(TypeCheckerException)eFound !is null);
+}
+
+/** 
+ * Tests the referencing of a struct
+ * member which is in fact not a member
+ * of the type
+ *
+ * Case: Positive (entity referenced does not exist)
+ * Source file: source/tlang/testing/structs/simple_illmember.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/structs/simple_illmember.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    
+    Exception eFound;
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException e)
+    {
+        eFound = e;
+        assert(e.getError() == TypeCheckerException.TypecheckError.NOT_MEMBER_OF_TYPE);
     }
 
     assert(cast(TypeCheckerException)eFound !is null);
