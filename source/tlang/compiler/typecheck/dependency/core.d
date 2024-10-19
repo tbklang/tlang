@@ -1226,7 +1226,7 @@ public class DNodeGenerator
             if(forLoop.hasPreRunStatement())
             {
                 Statement preRunStatement = forLoop.getPreRunStatement();
-                DNode preRunStatementDNode = generalStatement(c, context, preRunStatement);
+                DNode preRunStatementDNode = generalStatement(c, new Context(forLoop, InitScope.STATIC), preRunStatement);
                 forLoopDNode.needs(preRunStatementDNode);
             }
 
