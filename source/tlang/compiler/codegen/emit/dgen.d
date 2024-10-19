@@ -268,8 +268,9 @@ public final class DCodeEmitter : CodeEmitter
 
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
+            string targetName = fetchValueVarInstr.getTarget();
 
-            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.getTarget());
+            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
 
             /* If it is not external */
             if(!typedEntityVariable.isExternal())
@@ -285,7 +286,7 @@ public final class DCodeEmitter : CodeEmitter
             /* If it is external */
             else
             {
-                emmmmit = typedEntityVariable.getName();
+                emmmmit = targetName;
             }
         }
         /* BinOpInstr */
