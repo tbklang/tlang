@@ -1,4 +1,4 @@
-module tlang.compiler.typecheck.structs.tools;
+module tlang.compiler.typecheck.tools.structs;
 
 import tlang.compiler.symbols.data : Struct, TypedEntity, Entity;
 import tlang.compiler.symbols.containers : Module;
