@@ -118,7 +118,6 @@ public Struct[] getStructsInUsageOrder(TypeChecker tc, Module mod)
     return ordered;
 }
 
-
 /** 
  * Checks whether or not there are any
  * cyclic struct definitions. This is
@@ -211,7 +210,7 @@ private bool hasCycle0(TypeChecker tc, Struct pivot, Struct c, bool initial)
  * Returns: `true` if a cycle exists,
  * `false` otherwise
  */
-public bool hasCycles(TypeChecker tc, Struct pivot)
+private bool hasCycles(TypeChecker tc, Struct pivot)
 {
     return hasCycle0(tc, pivot, pivot, true);
 }
