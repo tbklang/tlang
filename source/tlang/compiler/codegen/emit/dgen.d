@@ -14,7 +14,7 @@ import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
 import tlang.compiler.codegen.mapper.core;
-import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
+import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter, Struct;
 import tlang.compiler.symbols.check : getCharacter;
 import tlang.misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
@@ -23,6 +23,7 @@ import tlang.compiler.symbols.containers : Module;
 import std.format : format;
 import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.datetime.stopwatch : Duration, dur;
+import tlang.misc.utils;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -132,6 +133,17 @@ public final class DCodeEmitter : CodeEmitter
             return typeTransform(stackArray.getComponentType());
             // return "KAK TODO";
         }
+        /* Struct type */
+        else if(cast(Struct)typeIn)
+        {
+            // `struct <name>`
+            string typeString = "struct";
+
+            Struct structType = cast(Struct)typeIn;
+            typeString ~= " "~structType.getName();
+
+            return typeString;
+        }
 
         ERROR("Type transform unimplemented for type '"~to!(string)(typeIn)~"'");
         assert(false);
@@ -198,6 +210,9 @@ public final class DCodeEmitter : CodeEmitter
 
             Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
 
+            /* Type of the declaration */
+            Type varDec_type = cast(Type)varDecInstr.varType;
+
             /* Don't emit parameters */
             if(cast(VariableParameter)typedEntityVariable)
             {
@@ -225,11 +240,14 @@ public final class DCodeEmitter : CodeEmitter
 
                     // Check if the type is a stack-based array
                     // ... if so then take make symbolName := `<symbolName>[<stackArraySize>]`
-                    if(cast(StackArray)varDecInstr.varType)
+                    if(cast(StackArray)varDec_type)
                     {
-                        StackArray stackArray = cast(StackArray)varDecInstr.varType;
+                        StackArray stackArray = cast(StackArray)varDec_type;
                         renamedSymbol~="["~to!(string)(stackArray.getAllocatedSize())~"]";
                     }
+
+                    // The type string
+                    string type_s = typeTransform(varDec_type);
 
                     // Check to see if this declaration has an assignment attached
                     if(typedEntityVariable.getAssignment())
@@ -238,16 +256,17 @@ public final class DCodeEmitter : CodeEmitter
                         DEBUG("VarDec(with assignment): My assignment type is: "~varAssInstr.getInstrType().getName());
 
                         // Generate the code to emit
-                        emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
+                        emmmmit = type_s~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
                     }
                     else
                     {
-                        emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~";";
+                        emmmmit = type_s~" "~renamedSymbol~";";
                     }
                 }
                 /* If the variable is external */
                 else
                 {
+                    // FIXME: Handle struct types here?
                     emmmmit = "extern "~typeTransform(cast(Type)varDecInstr.varType)~" "~typedEntityVariable.getName()~";";
                 }
             }
@@ -268,9 +287,12 @@ public final class DCodeEmitter : CodeEmitter
 
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
+            string targetName = fetchValueVarInstr.getTarget();
 
-            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), fetchValueVarInstr.getTarget()); //TODO: Remove `auto`
+            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
+            DEBUG("ctx: ", context);
 
+            // FIXME: The below should be done with a special EXTERN map rather
             /* If it is not external */
             if(!typedEntityVariable.isExternal())
             {
@@ -285,7 +307,7 @@ public final class DCodeEmitter : CodeEmitter
             /* If it is external */
             else
             {
-                emmmmit = typedEntityVariable.getName();
+                emmmmit = targetName;
             }
         }
         /* BinOpInstr */
@@ -826,6 +848,48 @@ public final class DCodeEmitter : CodeEmitter
 
             emmmmit = emit;
         }
+        /**
+         * Struct member assignment
+         */
+        else if(cast(StructMemberAssignmentInstr)instruction)
+        {
+            StructMemberAssignmentInstr sm_ass = cast(StructMemberAssignmentInstr)instruction;
+            StructMemberRefInstr sm_ref = sm_ass.getStructMemberRef();
+            Value assValInstr = sm_ass.getAssignmentInstr();
+
+            emmmmit = transform(sm_ref)~" = "~transform(assValInstr)~";";
+        }
+        /**
+         * Struct member reference
+         */
+        else if(cast(StructMemberRefInstr)instruction)
+        {
+            StructMemberRefInstr sm_ref = cast(StructMemberRefInstr)instruction;
+            Value s_ref = sm_ref.getStructInstance();
+            Value m_ref = sm_ref.getMemberTarget();
+
+            // FIXME: We need to relax lookups of things or
+            // do them properly when looking at, for example
+            // in `simple.t`, the `FetchValurVar`, which is
+            // trying to do lookups
+
+            ERROR("Aboutta");
+            emmmmit = format("%s.%s", transform(s_ref), transform(m_ref));
+        }
+        /**
+         * Struct data reference
+         *
+         * This is a reference to
+         * an instance of a struct
+         * itself
+         */
+        else if(cast(StructDataRef)instruction)
+        {
+            StructDataRef sd_ref = cast(StructDataRef)instruction;
+            Value viaInstr = sd_ref.getVia();
+            
+            emmmmit = transform(viaInstr);
+        }
         // TODO: MAAAAN we don't even have this yet
         // else if(cast(StringExpression))
         /** 
@@ -873,6 +937,9 @@ public final class DCodeEmitter : CodeEmitter
 
             // Emit static allocation code
             emitStaticAllocations(modOut, curMod);
+
+            // Emit all types
+            emitTypes(modOut, curMod);
 
             // Emit globals
             emitCodeQueue(modOut, curMod);
@@ -926,6 +993,19 @@ public final class DCodeEmitter : CodeEmitter
                 ERROR("Could not find an entry point module and function. Missing a main() maybe?");
             }
         }   
+    }
+
+    /** 
+     * Emits all of the type definitions
+     *
+     * Params:
+     *   modOut = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
+     */
+    private void emitTypes(File modOut, Module mod)
+    {
+        // Emit struct types
+        emitStructTypes(modOut, mod);
     }
 
     /** 
@@ -1149,7 +1229,7 @@ public final class DCodeEmitter : CodeEmitter
      * Emits the static allocations provided
      *
      * Params:
-     *   modFile = the `File` to write the emitted source code to
+     *   modOut = the `File` to write the emitted source code to
      *   mod = the current `Module` being processed
      */
     private void emitStaticAllocations(File modOut, Module mod)
@@ -1160,6 +1240,71 @@ public final class DCodeEmitter : CodeEmitter
         DEBUG("Static allocations needed: "~to!(string)(getQueueLength()));
 
         modOut.writeln();
+    }
+
+    /** 
+     * Given a module this discovers all of the struct
+     * types declared therein and then emits the struct
+     * definitions for each of them.
+     *
+     * They are emitted in the order of dependency. This
+     * means that if `struct A` has a member of type `struct B`
+     * but `struct A` appears first in the AST, then they
+     * will be swapped and `struct B` will be emitted first
+     * and then `struct A`.
+     *
+     * Params:
+     *   modOut = the `File` to write the emitted source code to
+     *   mod = the current `Module` being processed
+     */
+    private void emitStructTypes(File modOut, Module mod)
+    {
+        import tlang.compiler.typecheck.structs.tools : getStructsInUsageOrder;
+
+        /* Obtain the structs in their dependency order */
+        Struct[] structTypes = getStructsInUsageOrder(typeChecker, mod);
+        foreach(Struct s_t; structTypes)
+        {
+            DEBUG("Emitting struct definition for '", s_t, "'...");
+            emitStructType(modOut, s_t);
+            modOut.writeln();
+        }
+    }
+
+    /** 
+     * Emits a struct type definition
+     *
+     * Params:
+     *   modFile = the `File` to write the emitted source code to
+     *   s_t = the struct type
+     */
+    private void emitStructType(File modFile, Struct s_t)
+    {
+        DEBUG("Emit struct: ", s_t);
+        modFile.writeln(format("struct %s", s_t.getName()));
+        modFile.writeln("{");
+
+        import tlang.compiler.symbols.data : Statement;
+        foreach(Statement m; s_t.getStatements())
+        {
+            
+            if(cast(Variable)m)
+            {
+                DEBUG("m: ", m);
+                Variable m_var = cast(Variable)m;
+                modFile.writeln
+                (
+                    format
+                    (
+                        "%s%s;",
+                        genTabs(1),
+                        generateSignature_Variable(m_var)
+                    )
+                );
+            }
+        }
+
+        modFile.writeln("};");
     }
 
     /** 
@@ -1283,6 +1428,9 @@ public final class DCodeEmitter : CodeEmitter
                 // Extract the variable's type
                 Type parameterType = typeChecker.getType(currentParameter.context.container, currentParameter.getType());
 
+                // The type string
+                string type_s = typeTransform(parameterType);
+
                 // Generate the symbol-mapped names for the parameters
                 Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(func, currentParameter.getName()); //TODO: Remove `auto`
                 // FIXME: Set proper scope type
@@ -1290,7 +1438,7 @@ public final class DCodeEmitter : CodeEmitter
 
 
                 // Generate <type> <parameter-name (symbol mapped)>
-                parameterString~=typeTransform(parameterType)~" "~renamedSymbol;
+                parameterString~=type_s~" "~renamedSymbol;
 
                 if(parIdx != (parameters.length-1))
                 {
