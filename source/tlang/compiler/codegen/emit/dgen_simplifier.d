@@ -1,15 +1,19 @@
-module tlang.compiler.typecheck.names.simplifier;
+module tlang.compiler.codegen.emit.dgen_simplifier;
 
 import tlang.compiler.typecheck.core : TypeChecker;
 import tlang.compiler.typecheck.resolution;
 import tlang.compiler.symbols.containers : Container, Module;
+
 import std.string : strip, split;
+import std.array : join;
 
 import tlang.misc.logging;
 
 // TODO: Move into DGen as this is only really specific to
 // the C-based emitter
-public bool simplify(TypeChecker tc, Container c, string s_in, ref string s_out)
+// This should onyl simplify the module use case
+// that is IT!
+public string simplify(TypeChecker tc, Container c, string s_in)
 {
     Resolver r = tc.getResolver();
     DEBUG("s_in:", s_in);
@@ -18,7 +22,7 @@ public bool simplify(TypeChecker tc, Container c, string s_in, ref string s_out)
     // empty strings not valid (TODO: Woudl this ever be used as such? As in it would never be parsed anyways)
     if(!s_in.length)
     {
-        return false; 
+        return s_in; 
     }
     
     string[] segments = s_in.split(".");
@@ -28,7 +32,7 @@ public bool simplify(TypeChecker tc, Container c, string s_in, ref string s_out)
     if(segments.length == 1)
     {
         // leave untouched
-        return true;
+        return s_in;
     }
     else
     {
@@ -62,16 +66,14 @@ public bool simplify(TypeChecker tc, Container c, string s_in, ref string s_out)
                     modRef,
                     "'"
                 );
-                return false;
+                // FIXME: Throw an exception rather
+                // return false;
             }
 
             segments = segments[1..$];
             DEBUG("Chipped off path to:", segments);
         }
+
+        return join(segments, ".");
     }
-
-    s_out = "foook";
-
-
-    return true;
 }
