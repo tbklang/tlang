@@ -162,7 +162,8 @@ public final class DCodeEmitter : CodeEmitter
 
             VariableAssignmentInstr varAs = cast(VariableAssignmentInstr)instruction;
             Context context = varAs.getContext();
-            string targetName = simplify(typeChecker, context.getContainer(), varAs.getTarget());
+            assert(context);
+            string targetName = varAs.getTarget();
             Value assValInstr = varAs.getAssignmentValue();
 
             DEBUG("Is ContextNull?: "~to!(string)(context is null));
@@ -176,17 +177,18 @@ public final class DCodeEmitter : CodeEmitter
             string typeName = (cast(Type)assValInstr.getInstrType()).getName();
             DEBUG("VariableAssignmentInstr: The data to assign's type is: "~typeName);
 
+            string emitName = simplify(typeChecker, context.getContainer(), targetName);
 
             /* If it is not external */
             // FIXME: We can remove this if statement
             if(!typedEntityVariable.isExternal())
             {
-                emmmmit = targetName~" = "~transform(assValInstr)~";";
+                emmmmit = emitName~" = "~transform(assValInstr)~";";
             }
             /* If it is external */
             else
             {
-                emmmmit = targetName~" = "~transform(assValInstr)~";";
+                emmmmit = emitName~" = "~transform(assValInstr)~";";
             }
         }
         /* VariableDeclaration */
@@ -196,10 +198,12 @@ public final class DCodeEmitter : CodeEmitter
 
             VariableDeclaration varDecInstr = cast(VariableDeclaration)instruction;
             Context context = varDecInstr.getContext();
-            string targetName = simplify(typeChecker, context.getContainer(), varDecInstr.getTarget());
+            string targetName = varDecInstr.getTarget();
             Type varType = varDecInstr.getType();
 
             Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
+
+            string emitName = simplify(typeChecker, context.getContainer(), targetName);
 
             /* Don't emit parameters */
             if(cast(VariableParameter)typedEntityVariable)
@@ -220,7 +224,7 @@ public final class DCodeEmitter : CodeEmitter
                     if(cast(StackArray)varType)
                     {
                         StackArray stackArray = cast(StackArray)varType;
-                        targetName~="["~to!(string)(stackArray.getAllocatedSize())~"]";
+                        emitName~="["~to!(string)(stackArray.getAllocatedSize())~"]";
                     }
 
                     // Check to see if this declaration has an assignment attached
@@ -230,11 +234,11 @@ public final class DCodeEmitter : CodeEmitter
                         DEBUG("VarDec(with assignment): My assignment type is: "~varAssInstr.getInstrType().getName());
 
                         // Generate the code to emit
-                        emmmmit = typeTransform(varType)~" "~targetName~" = "~transform(varAssInstr)~";";
+                        emmmmit = typeTransform(varType)~" "~emitName~" = "~transform(varAssInstr)~";";
                     }
                     else
                     {
-                        emmmmit = typeTransform(varType)~" "~targetName~";";
+                        emmmmit = typeTransform(varType)~" "~emitName~";";
                     }
                 }
                 /* If the variable is external */
@@ -260,20 +264,22 @@ public final class DCodeEmitter : CodeEmitter
 
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
-            string targetName = simplify(typeChecker, context.getContainer(), fetchValueVarInstr.getTarget());
+            string targetName = fetchValueVarInstr.getTarget();
 
             Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
+
+            string emitName = simplify(typeChecker, context.getContainer(), targetName);
 
             /* If it is not external */
             // FIXME: Remove this if statement
             if(!typedEntityVariable.isExternal())
             {
-                emmmmit = targetName;
+                emmmmit = emitName;
             }
             /* If it is external */
             else
             {
-                emmmmit = targetName;
+                emmmmit = emitName;
             }
         }
         /* BinOpInstr */
@@ -341,13 +347,14 @@ public final class DCodeEmitter : CodeEmitter
             FuncCallInstr funcCallInstr = cast(FuncCallInstr)instruction;
             Context context = funcCallInstr.getContext();
             assert(context);
-            string targetName = simplify(typeChecker, context.getContainer(), funcCallInstr.getTarget());
-
-            DEBUG("FuncCallInstr targetName: ", funcCallInstr.getTarget());
+            string targetName = funcCallInstr.getTarget();
+            DEBUG("FuncCallInstr targetName: ", targetName);
             DEBUG("FuncCallInstr container-ctx: ", context.getContainer());
-            Function functionToCall = cast(Function)typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
 
-            string emit = targetName~"(";
+            Function functionToCall = cast(Function)typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
+            string emitName = simplify(typeChecker, context.getContainer(), targetName);            
+
+            string emit = emitName~"(";
 
             //TODO: Insert argument passimng code here
             //NOTE: Typechecker must have checked for passing arguments to a function that doesn't take any, for example
@@ -1212,11 +1219,11 @@ public final class DCodeEmitter : CodeEmitter
         // Decide on the symbol's name
         string symbolName;
 
+        // FIXME: Remove this if-statement
         // If it is NOT extern then map it
         if(!var.isExternal())
         {
-            // FIXME: Set proper scope type
-            symbolName = mapper.map(var, ScopeType.GLOBAL);
+            symbolName = var.getName();
         }
         // If it is extern, then leave it as such
         else
