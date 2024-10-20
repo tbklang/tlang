@@ -2487,7 +2487,26 @@ public final class TypeChecker
                         Entity leftEntity = resolver.resolveBest(binOpCtx.getContainer(), targetName);
                         assert(leftEntity); // Should always be true because dependency generator catches bad names (non-existent)
 
-                        if(cast(TypedEntity)leftEntity)
+
+                        // Can't do `<functionName>.<member>`
+                        if(cast(Function)leftEntity)
+                        {
+                            import tlang.compiler.codegen.render : tryRender;
+                            throw new TypeCheckerException
+                            (
+                                this,
+                                TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                                format
+                                (
+                                    "Cannot apply the dot operator with left-hand operand '%s' which is a function's name in '%s.%s'",
+                                    tryRender(vLhsInstr),
+                                    tryRender(vLhsInstr),
+                                    tryRender(vRhsInstr)
+                                )
+                            );
+                        }
+                        // Any other typed entity
+                        else if(cast(TypedEntity)leftEntity)
                         {
                             TypedEntity te = cast(TypedEntity)leftEntity;
                             Type te_t = getType(binOpCtx.getContainer(), te.getType());
@@ -2511,6 +2530,7 @@ public final class TypeChecker
 
 
                         Container containerLeft = cast(Container)leftEntity;
+                        
                         
                         // lhs=<name of Container>
                         /** 
@@ -3324,11 +3344,9 @@ public final class TypeChecker
             /* Add an entry to the reference counting map */
             touch(variablePNode);
 
-            string variableName = resolver.generateName(this.program, variablePNode);
-            DEBUG("HELLO FELLA (name): "~variableName);
-
-
-            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
+            /* Extract name and lookup type */
+            string variableName = variablePNode.getName();
+            Type variableDeclarationType = getType(ctx.getContainer(), variablePNode.getType());
 
 
             // TODO: Implement a is-simple-type
@@ -5383,7 +5401,7 @@ unittest
     assert(cast(TypeCheckerException)eFound !is null);
 }
 
-/** 
+/**
  * Tests the referencing of a struct
  * member which is in fact not a member
  * of the type
@@ -5398,7 +5416,6 @@ unittest
     import tlang.compiler.core;
 
     string sourceFile = "source/tlang/testing/structs/simple_illmember.t";
-
 
     Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
     compiler.doLex();
@@ -5418,3 +5435,42 @@ unittest
 
     assert(cast(TypeCheckerException)eFound !is null);
 }
+
+/** 
+ * Tests applying the dot operator
+ * where the left-hand side is the
+ * name of a function, which is
+ * not allowed.
+ *
+ * Case: Positive (it is the case)
+ * Source file: source/tlang/testing/dotting/bad_dot.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/dotting/bad_dot.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    
+    Exception eFound;
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException e)
+    {
+        eFound = e;
+        assert(e.getError() == TypeCheckerException.TypecheckError.GENERAL_ERROR);
+    }
+
+    assert(cast(TypeCheckerException)eFound !is null);
+}
+
+

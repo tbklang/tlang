@@ -70,9 +70,10 @@ public class ClassStaticInitAllocate : Instruction
 public class VariableAssignmentInstr : Instruction, IRenderable
 {
     /* Name of variable being declared */
-    public string varName; /*TODO: Might not be needed */
+    private string varName;
 
-    public Value data;
+    /* Assigmment data */
+    private Value data;
 
     this(string varName, Value data)
     {
@@ -80,6 +81,16 @@ public class VariableAssignmentInstr : Instruction, IRenderable
         this.data = data;
 
         addInfo = "assignTo: "~varName~", valInstr: "~data.toString();
+    }
+
+    public string getTarget()
+    {
+        return this.varName;
+    }
+
+    public Value getAssignmentValue()
+    {
+        return this.data;
     }
 
     public string render()
@@ -91,13 +102,13 @@ public class VariableAssignmentInstr : Instruction, IRenderable
 public final class VariableDeclaration : StorageDeclaration, IRenderable
 {
     /* Name of variable being declared */
-    public const string varName;
+    private string varName;
 
     /* Length */
     public const byte length;
 
     /* Type of the variable being declared */
-    public Type varType;
+    private Type varType;
 
     /* Value-instruction to be assigned */
     private Value varAssInstr;
@@ -122,6 +133,16 @@ public final class VariableDeclaration : StorageDeclaration, IRenderable
     public bool hasAssignmentInstr()
     {
         return varAssInstr !is null;
+    }
+
+    public string getTarget()
+    {
+        return this.varName;
+    }
+
+    public Type getType()
+    {
+        return this.varType;
     }
 
     public string render()
