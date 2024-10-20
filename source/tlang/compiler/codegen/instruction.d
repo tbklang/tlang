@@ -108,7 +108,7 @@ public final class VariableDeclaration : StorageDeclaration, IRenderable
     public const byte length;
 
     /* Type of the variable being declared */
-    public Type varType;
+    private Type varType;
 
     /* Value-instruction to be assigned */
     private Value varAssInstr;
@@ -138,6 +138,11 @@ public final class VariableDeclaration : StorageDeclaration, IRenderable
     public string getTarget()
     {
         return this.varName;
+    }
+
+    public Type getType()
+    {
+        return this.varType;
     }
 
     public string render()
