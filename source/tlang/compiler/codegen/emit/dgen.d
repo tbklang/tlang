@@ -23,6 +23,7 @@ import tlang.compiler.symbols.containers : Module;
 import std.format : format;
 import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.datetime.stopwatch : Duration, dur;
+import tlang.compiler.codegen.emit.dgen_simplifier;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -161,31 +162,31 @@ public final class DCodeEmitter : CodeEmitter
 
             VariableAssignmentInstr varAs = cast(VariableAssignmentInstr)instruction;
             Context context = varAs.getContext();
+            string targetName = simplify(typeChecker, context.getContainer(), varAs.getTarget());
+            Value assValInstr = varAs.getAssignmentValue();
 
             DEBUG("Is ContextNull?: "~to!(string)(context is null));
             DEBUG("Wazza contect: "~to!(string)(context.container));
-            auto typedEntityVariable = typeChecker.getResolver().resolveBest(context.getContainer(), varAs.varName); //TODO: Remove `auto`
+            Entity typedEntityVariable = typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
             DEBUG("Hi"~to!(string)(varAs));
-            DEBUG("Hi"~to!(string)(varAs.data));
-            DEBUG("Hi"~to!(string)(varAs.data.getInstrType()));
+            DEBUG("Hi"~to!(string)(assValInstr));
+            DEBUG("Hi"~to!(string)(assValInstr.getInstrType()));
 
             // NOTE: For tetsing issue #94 coercion (remove when done)
-            string typeName = (cast(Type)varAs.data.getInstrType()).getName();
+            string typeName = (cast(Type)assValInstr.getInstrType()).getName();
             DEBUG("VariableAssignmentInstr: The data to assign's type is: "~typeName);
 
 
             /* If it is not external */
+            // FIXME: We can remove this if statement
             if(!typedEntityVariable.isExternal())
             {
-                // FIXME: Set proper scope type
-                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
-
-                emmmmit = renamedSymbol~" = "~transform(varAs.data)~";";
+                emmmmit = targetName~" = "~transform(assValInstr)~";";
             }
             /* If it is external */
             else
             {
-                emmmmit = typedEntityVariable.getName()~" = "~transform(varAs.data)~";";
+                emmmmit = targetName~" = "~transform(assValInstr)~";";
             }
         }
         /* VariableDeclaration */
@@ -195,8 +196,10 @@ public final class DCodeEmitter : CodeEmitter
 
             VariableDeclaration varDecInstr = cast(VariableDeclaration)instruction;
             Context context = varDecInstr.getContext();
+            string targetName = simplify(typeChecker, context.getContainer(), varDecInstr.getTarget());
+            Type varType = varDecInstr.getType();
 
-            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), varDecInstr.varName); //TODO: Remove `auto`
+            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
 
             /* Don't emit parameters */
             if(cast(VariableParameter)typedEntityVariable)
@@ -212,23 +215,12 @@ public final class DCodeEmitter : CodeEmitter
                 /* If the variable is not external */
                 if(!typedEntityVariable.isExternal())
                 {
-                    //NOTE: We should remove all dots from generated symbol names as it won't be valid C (I don't want to say C because
-                    // a custom CodeEmitter should be allowed, so let's call it a general rule)
-                    //
-                    //simple_variables.x -> simple_variables_x
-                    //NOTE: We may need to create a symbol table actually and add to that and use that as these names
-                    //could get out of hand (too long)
-                    // NOTE: Best would be identity-mapping Entity's to a name
-                    // FIXME: Set proper scope type
-                    string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
-
-
                     // Check if the type is a stack-based array
                     // ... if so then take make symbolName := `<symbolName>[<stackArraySize>]`
-                    if(cast(StackArray)varDecInstr.varType)
+                    if(cast(StackArray)varType)
                     {
-                        StackArray stackArray = cast(StackArray)varDecInstr.varType;
-                        renamedSymbol~="["~to!(string)(stackArray.getAllocatedSize())~"]";
+                        StackArray stackArray = cast(StackArray)varType;
+                        targetName~="["~to!(string)(stackArray.getAllocatedSize())~"]";
                     }
 
                     // Check to see if this declaration has an assignment attached
@@ -238,17 +230,17 @@ public final class DCodeEmitter : CodeEmitter
                         DEBUG("VarDec(with assignment): My assignment type is: "~varAssInstr.getInstrType().getName());
 
                         // Generate the code to emit
-                        emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~" = "~transform(varAssInstr)~";";
+                        emmmmit = typeTransform(varType)~" "~targetName~" = "~transform(varAssInstr)~";";
                     }
                     else
                     {
-                        emmmmit = typeTransform(cast(Type)varDecInstr.varType)~" "~renamedSymbol~";";
+                        emmmmit = typeTransform(varType)~" "~targetName~";";
                     }
                 }
                 /* If the variable is external */
                 else
                 {
-                    emmmmit = "extern "~typeTransform(cast(Type)varDecInstr.varType)~" "~typedEntityVariable.getName()~";";
+                    emmmmit = "extern "~typeTransform(varType)~" "~targetName~";";
                 }
             }
         }
@@ -268,20 +260,15 @@ public final class DCodeEmitter : CodeEmitter
 
             FetchValueVar fetchValueVarInstr = cast(FetchValueVar)instruction;
             Context context = fetchValueVarInstr.getContext();
-            string targetName = fetchValueVarInstr.getTarget();
+            string targetName = simplify(typeChecker, context.getContainer(), fetchValueVarInstr.getTarget());
 
             Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
 
             /* If it is not external */
+            // FIXME: Remove this if statement
             if(!typedEntityVariable.isExternal())
             {
-                //TODO: THis is giving me kak (see issue #54), it's generating name but trying to do it for the given container, relative to it
-                //TODO: We might need a version of generateName that is like generatenamebest (currently it acts like generatename, within)
-
-                // FIXME: Set proper scope type
-                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
-
-                emmmmit = renamedSymbol;
+                emmmmit = targetName;
             }
             /* If it is external */
             else
@@ -354,14 +341,13 @@ public final class DCodeEmitter : CodeEmitter
             FuncCallInstr funcCallInstr = cast(FuncCallInstr)instruction;
             Context context = funcCallInstr.getContext();
             assert(context);
+            string targetName = simplify(typeChecker, context.getContainer(), funcCallInstr.getTarget());
 
             DEBUG("FuncCallInstr targetName: ", funcCallInstr.getTarget());
             DEBUG("FuncCallInstr container-ctx: ", context.getContainer());
-            Function functionToCall = cast(Function)typeChecker.getResolver().resolveBest(context.getContainer(), funcCallInstr.getTarget()); //TODO: Remove `auto`
+            Function functionToCall = cast(Function)typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
 
-            // TODO: SymbolLookup?
-
-            string emit = functionToCall.getName()~"(";
+            string emit = targetName~"(";
 
             //TODO: Insert argument passimng code here
             //NOTE: Typechecker must have checked for passing arguments to a function that doesn't take any, for example
@@ -742,11 +728,7 @@ public final class DCodeEmitter : CodeEmitter
             // TODO: Investigate, nroamlly we do a `FetchValueVar` as like the instr which is fine actually
             FetchValueVar array = cast(FetchValueVar)stackArrInstr.getIndexedToInstr();
             assert(array);
-            Variable arrayVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), array.getTarget());
-
-            /* Perform symbol mapping */
-            // FIXME: Set proper scope type
-            string arrayName = mapper.map(arrayVariable, ScopeType.GLOBAL);
+            string arrayName = simplify(typeChecker, context.getContainer(), array.getTarget());
 
             /* Obtain the index expression */
             Value indexInstr = stackArrInstr.getIndexInstr();
@@ -759,13 +741,6 @@ public final class DCodeEmitter : CodeEmitter
             emit ~= transform(indexInstr);
             emit ~= "]";
 
-
-            ERROR("TODO: Implement Stack-array index emit");
-
-            
-            
-
-            // return "(TODO: Stack-array index emit)";
             emmmmit = emit;
         }
         /** 
@@ -1281,17 +1256,14 @@ public final class DCodeEmitter : CodeEmitter
             {
                 Variable currentParameter = parameters[parIdx];
 
+                // Extract the parameter's name
+                string paramName = currentParameter.getName();
+
                 // Extract the variable's type
                 Type parameterType = typeChecker.getType(currentParameter.context.container, currentParameter.getType());
-
-                // Generate the symbol-mapped names for the parameters
-                Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(func, currentParameter.getName()); //TODO: Remove `auto`
-                // FIXME: Set proper scope type
-                string renamedSymbol = mapper.map(typedEntityVariable, ScopeType.GLOBAL);
-
-
+                
                 // Generate <type> <parameter-name (symbol mapped)>
-                parameterString~=typeTransform(parameterType)~" "~renamedSymbol;
+                parameterString~=typeTransform(parameterType)~" "~paramName;
 
                 if(parIdx != (parameters.length-1))
                 {
@@ -1460,12 +1432,12 @@ public final class DCodeEmitter : CodeEmitter
 #include<assert.h>
 int main()
 {
-    assert(t_7b6d477c5859059f16bc9da72fc8cc3b == 22);
-    printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
+    assert(k == 22);
+    printf("k: %u\n", k);
     
     banana(1);
-    assert(t_7b6d477c5859059f16bc9da72fc8cc3b == 72);
-    printf("k: %u\n", t_7b6d477c5859059f16bc9da72fc8cc3b);
+    assert(k == 72);
+    printf("k: %u\n", k);
 
     return 0;
 }`);
@@ -1494,13 +1466,13 @@ int main()
 int main()
 {
     // Before it should be 0
-    assert(t_de44aff5a74865c97c4f8701d329f28d == 0);
+    assert(myVar == 0);
 
     // Call the function
     function();
 
     // After it it should be 69
-    assert(t_de44aff5a74865c97c4f8701d329f28d == 69);
+    assert(myVar == 69);
     
     return 0;
 }`);
@@ -1541,7 +1513,7 @@ int main()
 int main()
 {
     int retValue = thing();
-    assert(t_87bc875d0b65f741b69fb100a0edebc7 == 4);
+    assert(j == 4);
     assert(retValue == 6);
 
     return 0;
@@ -1555,7 +1527,7 @@ int main()
 int main()
 {
     int retValue = thing();
-    assert(t_9d01d71b858651e520c9b503122a1b7a == 4);
+    assert(j == 4);
     assert(retValue == 6);
 
     return 0;
@@ -1569,7 +1541,7 @@ int main()
 int main()
 {
     int retValue = thing();
-    assert(t_e159019f766be1a175186a13f16bcfb7 == 256+4);
+    assert(j == 256+4);
     assert(retValue == 256+4+2);
 
     return 0;
@@ -1627,8 +1599,10 @@ int main()
     int result = function();
     assert(result == 69+420);
 
-    printf("val1: %d\n", t_596f49b2a2784a3c1b073ccfe174caa0);
-    printf("val2: %d\n", t_4233b83329676d70ab4afaa00b504564);
+    printf("val1: %d\n", val1);
+    printf("val2: %d\n", val2);
+    assert(val1 == 69);
+    assert(val2 == 420);
     printf("stackArr sum: %d\n", result);
 
     return 0;
