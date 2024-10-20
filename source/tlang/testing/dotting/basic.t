@@ -40,17 +40,17 @@ int main()
 	int[] d;
 
 	
-	*basic.main.arr = 50;
+	*arr = 50;
 
-	*basic.main.arr = 51;
+	*arr = 51;
 
-	*basic.main.arr = basic.y()+1;
+	*arr = basic.y()+1;
 
-	*(basic.main.d+1) = 2;
+	*(d+1) = 2;
 
-	basic.main.d[69] = 7;
+	d[69] = 7;
 	
-	basic.main.stack[basic.y()] = basic.y();
+	stack[basic.y()] = basic.y();
 
 	stack[y()] = y();
 
