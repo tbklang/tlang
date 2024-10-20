@@ -3138,11 +3138,9 @@ public final class TypeChecker
             /* Add an entry to the reference counting map */
             touch(variablePNode);
 
-            string variableName = resolver.generateName(this.program, variablePNode);
-            DEBUG("HELLO FELLA (name): "~variableName);
-
-
-            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
+            /* Extract name and lookup type */
+            string variableName = variablePNode.getName();
+            Type variableDeclarationType = getType(ctx.getContainer(), variablePNode.getType());
 
 
             // Check if this variable declaration has an assignment attached
