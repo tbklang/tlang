@@ -13,7 +13,6 @@ import std.range : walkLength;
 import std.string : wrap;
 import std.process : spawnProcess, Pid, ProcessException, wait;
 import tlang.compiler.typecheck.dependency.core : Context, FunctionData, DNode;
-import tlang.compiler.codegen.mapper.core;
 import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariableParameter;
 import tlang.compiler.symbols.check : getCharacter;
 import tlang.misc.utils : Stack;
@@ -27,35 +26,9 @@ import tlang.compiler.codegen.emit.dgen_simplifier;
 
 public final class DCodeEmitter : CodeEmitter
 {
-    /** 
-     * Whether or not symbol mappi g should
-     * apply to identifiers
-     */
-    private bool symbolMapping;
-
-    // NOTE: In future store the mapper in the config please
-    this(TypeChecker typeChecker, File file, CompilerConfiguration config, SymbolMapper mapper)
+    this(TypeChecker typeChecker, File file, CompilerConfiguration config)
     {
-        super(typeChecker, file, config, mapper);
-
-        // By default symbols will be mapped
-        enableSymbolMapping();
-    }
-
-    /** 
-     * Enables symbol mapping
-     */
-    private void enableSymbolMapping()
-    {
-     	this.symbolMapping = true;
-    }
-
-    /** 
-     * Disables symbol mapping
-     */
-    private void disableSymbolMapping()
-    {
-     	this.symbolMapping = false;
+        super(typeChecker, file, config);
     }
 
     private ulong transformDepth = 0;
