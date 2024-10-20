@@ -2442,6 +2442,23 @@ public final class TypeChecker
                                 )
                             );
                         }
+                        // Can't do `<functionName>.<member>`
+                        else if(cast(Function)leftEntity)
+                        {
+                            import tlang.compiler.codegen.render : tryRender;
+                            throw new TypeCheckerException
+                            (
+                                this,
+                                TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                                format
+                                (
+                                    "Cannot apply the dot operator with left-hand operand '%s' which is a function's name in '%s.%s'",
+                                    tryRender(vLhsInstr),
+                                    tryRender(vLhsInstr),
+                                    tryRender(vRhsInstr)
+                                )
+                            );
+                        }
                         
 
 
@@ -3138,11 +3155,9 @@ public final class TypeChecker
             /* Add an entry to the reference counting map */
             touch(variablePNode);
 
-            string variableName = resolver.generateName(this.program, variablePNode);
-            DEBUG("HELLO FELLA (name): "~variableName);
-
-
-            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
+            /* Extract name and lookup type */
+            string variableName = variablePNode.getName();
+            Type variableDeclarationType = getType(ctx.getContainer(), variablePNode.getType());
 
 
             // Check if this variable declaration has an assignment attached
@@ -5050,3 +5065,42 @@ unittest
 
     assert(cast(TypeCheckerException)eFound !is null);
 }
+
+/** 
+ * Tests applying the dot operator
+ * where the left-hand side is the
+ * name of a function, which is
+ * not allowed.
+ *
+ * Case: Positive (it is the case)
+ * Source file: source/tlang/testing/dotting/bad_dot.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/dotting/bad_dot.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    
+    Exception eFound;
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException e)
+    {
+        eFound = e;
+        assert(e.getError() == TypeCheckerException.TypecheckError.GENERAL_ERROR);
+    }
+
+    assert(cast(TypeCheckerException)eFound !is null);
+}
+
+

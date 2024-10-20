@@ -8,7 +8,7 @@ int doThing()
 
     for(int i = 0; i < 10; i=i+1)
     {
-        b.doThing.local = local + a.ident(i);
+        local = local + a.ident(i);
     }
 
     return local;
