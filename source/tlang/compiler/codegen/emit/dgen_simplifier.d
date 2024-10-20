@@ -1,10 +1,11 @@
 module tlang.compiler.codegen.emit.dgen_simplifier;
 
 import tlang.compiler.typecheck.core : TypeChecker;
+import tlang.compiler.typecheck.exceptions;
 import tlang.compiler.typecheck.resolution;
 import tlang.compiler.symbols.containers : Container, Module;
 
-import std.string : strip, split;
+import std.string : strip, split, format    ;
 import std.array : join;
 
 import tlang.misc.logging;
@@ -56,6 +57,8 @@ public string simplify(TypeChecker tc, Container c, string s_in)
         {
             // if `segments[1]` not contained in `f_seg`,
             // then error
+            // FIXME: This should never be triggerd,
+            // the typechecker would have done so
             if(!r.resolveWithin(modRef, segments[1]))
             {
                 ERROR
@@ -65,6 +68,19 @@ public string simplify(TypeChecker tc, Container c, string s_in)
                     "' does not exist in module '",
                     modRef,
                     "'"
+                );
+
+                assert(false);
+                throw new TypeCheckerException
+                (
+                    tc,
+                    TypeCheckerException.TypecheckError.ENTITY_NOT_FOUND,
+                    format
+                    (
+                        "Could not find entity %s in module %s",
+                        segments[1],
+                        modRef.getName()
+                    )
                 );
                 // FIXME: Throw an exception rather
                 // return false;
