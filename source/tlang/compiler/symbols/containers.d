@@ -75,6 +75,29 @@ public interface Container : MStatementSearchable, MStatementReplaceable
      * Returns: a `Statement[]`
      */
     public Statement[] getStatements();
+
+    /** 
+     * Determines if the given AST node
+     * is present within this container
+     * using `opEquals()` for comparisons.
+     *
+     * Params:
+     *   s = the AST node to check for
+     * Returns: `true` if so, `false`
+     * otherwise
+     */
+    public final bool contains(Statement s)
+    {
+        foreach(Statement c; getStatements())
+        {
+            if(c == s)
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 }
 
 

@@ -290,7 +290,28 @@ jobs:
           else
               exit 1
           fi
-        
+
+      - name: "Use-before-declare: use_before_declare.t"
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/use_before_declare.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+      - name: "Use-before-declare: use_before_declare_arr.t"
+        run: |
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/use_before_declare_arr.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
       - name: Else if without if
         run: |
           set +e
@@ -390,7 +411,38 @@ jobs:
       - name: Unused variables check (positive case)
         run: ./tlang typecheck source/tlang/testing/unused_vars.t --unusedVars true
       - name: Unused variables check (negative case)
-        run: ./tlang typecheck source/tlang/testing/unused_vars_none.t --unusedVars true
+        run: ./tlang typecheck source/tlang/testing/unused_vars_none_1.t --unusedVars true
+      - name: Unused variables check (negative case)
+        run: ./tlang typecheck source/tlang/testing/unused_vars_none_2.t --unusedVars true
+
+      - name: Unused functions check (positive case)
+        run: ./tlang typecheck source/tlang/testing/unused_funcs.t --unusedFuncs true
+      - name: Unused functions check (negative case)
+        run: ./tlang typecheck source/tlang/testing/unused_funcs_none_1.t --unusedFuncs true
+      - name: Unused functions check (negative case)
+        run: ./tlang typecheck source/tlang/testing/unused_funcs_none_2.t --unusedFuncs true
+
+      - name: Variable reference to entity which doesn't exist (bad)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/use_but_not_found_var.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+      - name: Function call to function which doesn't exist (bad)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/typecheck/use_but_not_found_func.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
         
   emit:
     needs: [build, unittests]
@@ -544,7 +596,71 @@ jobs:
               exit 1
           fi
 
+      - name: "Dotting: basic.t"
+        run: ./tlang compile source/tlang/testing/dotting/basic.t
 
+      - name: "Dotting: basic3.t"
+        run: ./tlang compile source/tlang/testing/dotting/basic3.t
+
+      - name: "Dotting: ptr_call.t"
+        run: ./tlang compile source/tlang/testing/dotting/ptr_call.t
+
+      - name: "Dotting: simple_func_2.t"
+        run: ./tlang compile source/tlang/testing/dotting/simple_func_2.t
+
+      - name: "Dotting: simple_func_1.t"
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/dotting/simple_func_1.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 9 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
+
+      - name: "Dotting: basic2.t"
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/dotting/basic2.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 2 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
+      
+      - name: "Dotting: simple_func_arg_cast.t"
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/dotting/simple_func_arg_cast.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 254 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
 
 ##################################
 ####### Deployment section #######

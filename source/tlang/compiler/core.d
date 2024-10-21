@@ -14,8 +14,6 @@ import core.stdc.stdlib;
 import tlang.compiler.codegen.emit.core;
 import tlang.compiler.codegen.emit.dgen;
 import tlang.misc.exceptions;
-import tlang.compiler.codegen.mapper.core : SymbolMapper;
-import tlang.compiler.codegen.mapper.impls : HashMapper, LebanonMapper;
 import std.string : cmp;
 import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
 import tlang.compiler.modman;
@@ -273,28 +271,7 @@ public class Compiler
             throw new CompilerException(CompilerError.TYPECHECK_NOT_YET_PERFORMED);
         }
 
-        if(!config.hasConfig("dgen:mapper"))
-        {
-            throw new CompilerException(CompilerError.CONFIG_ERROR, "Missing a symbol mapper");
-        }
-        
-        SymbolMapper mapper;
-        string mapperType = config.getConfig("dgen:mapper").getText();
-
-        if(cmp(mapperType, "hashmapper") == 0)
-        {
-            mapper = new HashMapper(typeChecker);
-        }
-        else if(cmp(mapperType, "lebanese") == 0)
-        {
-            mapper = new LebanonMapper(typeChecker);
-        }
-        else
-        {
-            throw new CompilerException(CompilerError.CONFIG_ERROR, "Invalid mapper type '"~mapperType~"'");
-        }
-
-        this.emitter = new DCodeEmitter(typeChecker, emitOutFile, config, mapper);
+        this.emitter = new DCodeEmitter(typeChecker, emitOutFile, config);
         emitter.emit(); // Emit the code
         emitOutFile.close(); // Flush (perform the write() syscall)
         emitter.finalize(); // Call CC on the file containing generated C code
@@ -419,7 +396,14 @@ unittest
 
                         "source/tlang/testing/simple_pointer_array_syntax.t",
 
-                        "source/tlang/testing/simple_func_statement.t"
+                        "source/tlang/testing/simple_func_statement.t",
+
+                        "source/tlang/testing/dotting/basic.t",
+                        "source/tlang/testing/dotting/basic2.t",
+                        "source/tlang/testing/dotting/basic3.t",
+                        "source/tlang/testing/dotting/ptr_call.t",
+                        "source/tlang/testing/dotting/simple_func_1.t",
+                        "source/tlang/testing/dotting/simple_func_2.t"
                         ];
     foreach(string testFile; testFiles)
     {

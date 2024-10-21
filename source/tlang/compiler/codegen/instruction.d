@@ -7,9 +7,10 @@ import tlang.compiler.symbols.data : SymbolType;
 import tlang.compiler.symbols.check : getCharacter;
 import gogga;
 import tlang.compiler.symbols.typing.core : Type;
+import tlang.misc.logging;
 import tlang.compiler.codegen.render;
 
-public class Instruction
+public abstract class Instruction
 {
     /* Context for the Instruction (used in emitter for name resolution) */
     private Context context; //TODO: Make this private and add a setCOntext
@@ -69,9 +70,10 @@ public class ClassStaticInitAllocate : Instruction
 public class VariableAssignmentInstr : Instruction, IRenderable
 {
     /* Name of variable being declared */
-    public string varName; /*TODO: Might not be needed */
+    private string varName;
 
-    public Value data;
+    /* Assigmment data */
+    private Value data;
 
     this(string varName, Value data)
     {
@@ -79,6 +81,16 @@ public class VariableAssignmentInstr : Instruction, IRenderable
         this.data = data;
 
         addInfo = "assignTo: "~varName~", valInstr: "~data.toString();
+    }
+
+    public string getTarget()
+    {
+        return this.varName;
+    }
+
+    public Value getAssignmentValue()
+    {
+        return this.data;
     }
 
     public string render()
@@ -90,13 +102,13 @@ public class VariableAssignmentInstr : Instruction, IRenderable
 public final class VariableDeclaration : StorageDeclaration, IRenderable
 {
     /* Name of variable being declared */
-    public const string varName;
+    private string varName;
 
     /* Length */
     public const byte length;
 
     /* Type of the variable being declared */
-    public Type varType;
+    private Type varType;
 
     /* Value-instruction to be assigned */
     private Value varAssInstr;
@@ -123,6 +135,16 @@ public final class VariableDeclaration : StorageDeclaration, IRenderable
         return varAssInstr !is null;
     }
 
+    public string getTarget()
+    {
+        return this.varName;
+    }
+
+    public Type getType()
+    {
+        return this.varType;
+    }
+
     public string render()
     {
         string varAssInstr_s = hasAssignmentInstr() ? format(" = %s", tryRender(getAssignmentInstr())) : "";
@@ -133,22 +155,23 @@ public final class VariableDeclaration : StorageDeclaration, IRenderable
 public final class FetchValueVar : Value, IRenderable
 {
     /* Name of variable to fetch from */
-    public string varName;
+    private string varName;
 
-    /* Length */
-    public byte length;
-
-    this(string varName, byte len)
+    this(string varName)
     {
         this.varName = varName;
-        this.length = len;
-
-        addInfo = "fetchVarValName: "~varName~", VarLen: "~to!(string)(length);
+        
+        addInfo = "fetchVarValName: "~varName;
     }
 
     public string getTarget()
     {
         return this.varName;
+    }
+
+    public void setTarget(string target)
+    {
+        this.varName = target;
     }
     
     public string render()
@@ -362,7 +385,7 @@ public class FuncCallInstr : CallInstr, IRenderable
     /* Per-argument instrructions */
     private Value[] evaluationInstructions;
 
-    public const string functionName;
+    private string functionName;
 
     this(string functionName, ulong argEvalInstrsSize)
     {
@@ -391,6 +414,11 @@ public class FuncCallInstr : CallInstr, IRenderable
         return evaluationInstructions;
     }
 
+    public size_t getArgCount()
+    {
+        return evaluationInstructions.length;
+    }
+
     /** 
      * Determines whether this function call instruction
      * is within an expression or a statement itself
@@ -411,6 +439,16 @@ public class FuncCallInstr : CallInstr, IRenderable
         statementLevel = true;
     }
 
+    public string getTarget()
+    {
+        return this.functionName;
+    }
+
+    public void setTarget(string targetName)
+    {
+        this.functionName = targetName;
+    }
+    
     public string render()
     {
         string arg_s;
