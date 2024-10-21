@@ -16,7 +16,13 @@ public enum LexerError
      * If all the characters were
      * exhausted
      */
-    EXHAUSTED_CHARACTERS,
+    EXHAUSTED_CHARACTERS, // FIXME: This seems Basiclexer specific, and should be removed (OTHER should then be used)
+
+    /**
+     * If the token cursor
+     * is out of bounds
+     */
+    EXHAUSTED_TOKENS,
 
     /** 
      * Generic error

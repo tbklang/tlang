@@ -259,11 +259,15 @@ public final class BasicLexer : LexerInterface
 
                 if (currentChar == LS.DOT)
                 {
-                    if (isBackward() && isWhite(sourceCode[position - 1]))
+                    // TODO Check out
+                    if (isForward() && isDigit(sourceCode[position + 1]) && (isBackward() && (!isCharacterAlpha(sourceCode[position - 1]) && !isCharacterNumber(sourceCode[position - 1]))))
+                    {
+                        currentToken ~= "0";
+                        doFloat();
+                    } else if (isBackward() && isWhite(sourceCode[position - 1]))
                     {
                         throw new LexerException(this, "Character '.' is not allowed to follow a whitespace.");
-                    }
-                    if (isForward() && isWhite(sourceCode[position + 1]))
+                    } else if (isForward() && isWhite(sourceCode[position + 1]))
                     {
                         throw new LexerException(this, "Character '.' is not allowed to precede a whitespace.");
                     }
@@ -386,23 +390,48 @@ public final class BasicLexer : LexerInterface
             flush();
             return false;
         }
-
+        bool whitePrefix = false;
         while (true) {
             if (currentChar == LS.DOT) {
-                if (isForward() && (isSplitter(sourceCode[position + 1]) || isDigit(sourceCode[position + 1]))) {
+                whitePrefix = false;
+                flush();
+                currentToken ~= currentChar;
+                flush();
+                if (!improvedAdvance()) {
+                    throw new LexerException(this, "Expected Identifier, got EOF");
+                }
+
+                if (isSplitterNoWhite(currentChar) || isDigit(currentChar)) {
                     throw new LexerException(this, "Invalid character in identifier build up.");
                 } else {
-                    if (!buildAdvance()) {
-                        throw new LexerException(this, "Invalid character in identifier build up.");
-                        //return false;
+                    if (!isWhite(currentChar)) {
+                        currentToken ~= currentChar;
+                    }
+                    
+                    if (!improvedAdvance()) {
+                        return false;
                     }
                 }
-            } else if (isSplitter(currentChar)) {
+            } else if (isWhite(currentChar)) {
+                improvedAdvance();
+                whitePrefix = true;
+            } else if (isSplitterNoWhite(currentChar)) {
+                if (currentToken.length > 0) {
+                flush();
+                }
+                return true;
+            } else if (!(isAlpha(currentChar) || isDigit(currentChar) || currentChar == LS.UNDERSCORE || isWhite(currentChar))) {
+                if (currentToken.length > 0) {
                 flush();
                 return true;
-            } else if (!(isAlpha(currentChar) || isDigit(currentChar) || currentChar == LS.UNDERSCORE)) {
-                throw new LexerException(this, "Invalid character in identifier build up.");
+                } else {
+                    throw new LexerException(this, "Invalid character in identifier build up.");
+                }
             } else {
+                if (whitePrefix) {
+                    flush();
+                    return true;
+                }
                 if (!buildAdvance()) {
                     return false;
                 }
@@ -612,8 +641,18 @@ public final class BasicLexer : LexerInterface
      */
     private bool doFloat() {
         if (!buildAdvance()) {
-            throw new LexerException(this, "Floating point expected digit, got EOF.");
-            //return false;
+            // Early detection of error/exit
+            //throw new LexerException(this, "Floating point expected digit, got EOF.");
+            currentToken ~= "0";
+            currentToken = currentToken.replace("_", "");
+            flush();
+            return false;
+        }
+        if (!isDigit(currentChar)) {
+            currentToken ~= "0";
+            currentToken = currentToken.replace("_", "");
+            flush();
+            return improvedAdvance();
         }
         size_t count = 0;
         bool valid = false;
@@ -804,6 +843,40 @@ unittest
     assert(currentLexer.getTokens() == [
             new Token("hello", 0, 0), new Token("\"world\"", 0, 0),
             new Token("||", 0, 0)
+        ]);
+}
+
+/**
+ * Test input: `_he_llo.c`
+ */
+unittest
+{
+    shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "_he_llo.c";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("_he_llo", 0, 0), new Token(".", 0, 0), new Token("c", 0, 0)
+        ]);
+}
+
+/**
+ * Test input: `_hello `
+ */
+unittest
+{
+    shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "_hello";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
+    assert(currentLexer.getTokens() == [
+            new Token("_hello", 0, 0)
         ]);
 }
 
@@ -1208,7 +1281,11 @@ unittest
             new Token("(", 0, 0),
             new Token(")", 0, 0),
             new Token(".", 0, 0),
-            new Token("l.p.p", 0, 0),
+            new Token("l", 0, 0),
+            new Token(".", 0, 0),
+            new Token("p", 0, 0),
+            new Token(".", 0, 0),
+            new Token("p", 0, 0),
             new Token(";", 0, 0)
         ]);
 }
@@ -1235,46 +1312,42 @@ unittest
 
     /**
     * Test tab dropping before '.' of float.
-    * Catch fail for verification.
-    * Test calssification: Invalid
+    * Pass for verification.
+    * Test classification: Valid
     * Test input: `1\t.5`
     */
     import std.algorithm.comparison;
+    DEBUG("Tab Unit Test 1");
 
     bool didFail = false;
     sourceCode = "1\t.5";
     currentLexer = new BasicLexer(sourceCode);
-    try
-    {
-        currentLexer.performLex();
-    }
-    catch (LexerException e)
-    {
-        didFail = true;
-    }
-    assert(didFail);
+
+    currentLexer.performLex();
+    DEBUG("COLLECTED: ", currentLexer.getTokens());
+    assert(currentLexer.getTokens() == [new Token("1", 0, 0), new Token("0.5", 0, 0)]);
 
     /**
     * Testing Float EOF after '.'.
-    * Test calssification: Invalid
+    * Test calssification: Valid
     * Test input: `1.`
     */
+        DEBUG("Tab Unit Test 2");
+
     sourceCode = "1.";
     currentLexer = new BasicLexer(sourceCode);
-    try
-    {
-        currentLexer.performLex();
-        assert(false);
-    }
-    catch (LexerException e)
-    {
-    }
-    
+    currentLexer.performLex();
+        DEBUG("COLLECTED: ", currentLexer.getTokens());
+
+    assert(currentLexer.getTokens() == [new Token("1.0", 0, 0)]);
+
     /**
     * Testing illegal backslash.
     * Test calssification: Invalid
     * Test input: `1.`
     */
+        DEBUG("Tab Unit Test 3");
+
     sourceCode = "hello \\ ";
     currentLexer = new BasicLexer(sourceCode);
     try
@@ -1293,26 +1366,22 @@ unittest
     * Test input: `1.\t5`
     */
     import std.algorithm.comparison;
+    DEBUG("Tab Unit Test 4");
 
     didFail = false;
     sourceCode = "1.\t5";
     currentLexer = new BasicLexer(sourceCode);
-    try
-    {
-        currentLexer.performLex();
-    }
-    catch (LexerException e)
-    {
-        didFail = true;
-    }
-    assert(didFail);
+    currentLexer.performLex();
+        DEBUG("COLLECTED: ", currentLexer.getTokens());
+
+    assert(currentLexer.getTokens() == [new Token("1.0", 0, 0), new Token("5", 0, 0)]);
 
     /**
     * Test tab dropping for an empty token array.
     * Test calssification: Valid
     * Test input: `\t\t\t\t\t`
     */
-    DEBUG("Tab Unit Test");
+    DEBUG("Tab Unit Test 5");
     import std.algorithm.comparison;
 
     sourceCode = "\t\t\t\t\t";
@@ -1392,6 +1461,8 @@ unittest
     try
     {
         currentLexer.performLex();
+            DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
+
     }
     catch (LexerException e)
     {
@@ -1407,15 +1478,13 @@ unittest
     didFail = false;
     sourceCode = "1. a";
     currentLexer = new BasicLexer(sourceCode);
-    try
-    {
+
         currentLexer.performLex();
-    }
-    catch (LexerException e)
-    {
-        didFail = true;
-    }
-    assert(didFail);
+    assert(currentLexer.getTokens() == [
+            new Token("1.0", 0, 0),
+            new Token("a", 0, 0),
+
+        ]);
 
     /**
     * Test for correct lex space following paren
@@ -1442,6 +1511,8 @@ unittest
     try
     {
         currentLexer.performLex();
+            DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
+
     }
     catch (LexerException e)
     {
@@ -1643,7 +1714,7 @@ unittest
 }
 
 /**
- * Test for invalid ident
+ * Test for valid ident
  * Input: `hello. `
  */
 unittest
@@ -1653,15 +1724,14 @@ unittest
     bool didFail = false;
     string sourceCode = "hello. ";
     BasicLexer currentLexer = new BasicLexer(sourceCode);
-    try
-    {
-        currentLexer.performLex();
-    }
-    catch (LexerException e)
-    {
-        didFail = true;
-    }
-    assert(didFail);
+
+    currentLexer.performLex();
+    DEBUG("Collected " ~ to!(string)(currentLexer.getTokens()));
+
+    assert(currentLexer.getTokens() == [
+        new Token("hello", 0, 0),
+        new Token(".", 0, 0),
+    ]);
 }
 
 /**

@@ -99,3 +99,25 @@ public class VariableAssignmentNode : DNode
         name = to!(string)(associatedVariable)~" (assignment)";
     }
 }
+
+public class AssignmentOf : DNode
+{
+    // FIXME: Update DNode super-type
+    // ... to not require this super-call
+    this()
+    {
+        super(null);
+        forceName("AssignmentOf");
+    }
+}
+
+public class AssignmentTo : DNode
+{
+    // FIXME: Update DNode super-type
+    // ... to not require this super-call
+    this()
+    {
+        super(null);
+        forceName("AssignmentTo");
+    }
+}

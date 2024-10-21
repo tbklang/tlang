@@ -11,12 +11,109 @@ import tlang.misc.logging;
 import tlang.compiler.typecheck.core;
 import std.conv : to;
 import tlang.compiler.symbols.data : Container;
+import std.string : format, split, join;
+
+/** 
+ * Tries to resolve the type string
+ * as a primitive type
+ *
+ * Params:
+ *   typeString = the type string
+ * to attempt resolution of
+ *   primTypeOut = the found primitive
+ * type (if any)
+ * Returns: `true` if the type string
+ * referred solely to a primitive
+ * type, `false` otherwise
+ */
+private bool getPrimitiveType(string typeString, ref Type primTypeOut)
+{
+    /* `int`, signed (2-complement) */
+    if(cmp(typeString, "int") == 0)
+    {
+        primTypeOut = new Integer("int", 4, true);
+        return true;
+    }
+    /* `uint` unsigned */
+    else if(cmp(typeString, "uint") == 0)
+    {
+        primTypeOut = new Integer("uint", 4, false);
+        return true;
+    }
+    /* `long`, signed (2-complement) */
+    else if(cmp(typeString, "long") == 0)
+    {
+        primTypeOut = new Integer("long", 8, true);
+        return true;
+    }
+    /* `ulong` unsigned */
+    else if(cmp(typeString, "ulong") == 0)
+    {
+        primTypeOut = new Integer("ulong", 8, false);
+        return true;
+    }
+    /* `short`, signed (2-complement) */
+    else if(cmp(typeString, "short") == 0)
+    {
+        primTypeOut = new Integer("short", 2, true);
+        return true;
+    }
+    /* `ushort` unsigned */
+    else if(cmp(typeString, "ushort") == 0)
+    {
+        primTypeOut = new Integer("ushort", 2, false);
+        return true;
+    }
+    /* `byte`, signed (2-complement) */
+    else if(cmp(typeString, "byte") == 0)
+    {
+        primTypeOut = new Integer("byte", 1, true);
+        return true;
+    }
+    /* `ubyte` unsigned */
+    else if(cmp(typeString, "ubyte") == 0)
+    {
+        primTypeOut = new Integer("ubyte", 1, false);
+        return true;
+    }
+    /* `void` */
+    else if (cmp(typeString, "void") == 0)
+    {
+        primTypeOut = new Void();
+        return true;
+    }
+    /* TODO: Decide on these (floats and doubles need to be specced out) */
+    /* `float` */
+    else if(cmp(typeString, "float") == 0)
+    {
+        primTypeOut = new Float("float", 4);
+        return true;
+    }
+    /* `double` */
+    else if(cmp(typeString, "double") == 0)
+    {
+        primTypeOut = new Float("double", 8);
+        return true;
+    }
+    /* TODO: What do we want? Char enforcement is kind of cringe I guess */
+    else if(cmp(typeString, "char") == 0)
+    {
+        primTypeOut = new Integer("ubyte", 1, false);
+        return true;
+    }
+    else
+    {
+        WARN(format("No, '%s' is not a primitive type", typeString));
+        return false;
+    }
+}
 
 /**
 * TODO: We should write spec here like I want int and stuff of proper size so imma hard code em
 * no machine is good if int is not 4, as in imagine short being max addressable unit
 * like no, fuck that (and then short=int=long, no , that is shit AND is NOT WHAT TLANG aims for)
 */
+// TODO: Rename this because it isn't just buuiltin types
 /** 
  * Creates a new instance of the type that is detected via
  * the given string. Only for built-in types.
@@ -34,68 +131,28 @@ public Type getBuiltInType(TypeChecker tc, Container container, string typeStrin
 {
     DEBUG("getBuiltInType("~typeString~")");
 
-    /* `int`, signed (2-complement) */
-    if(cmp(typeString, "int") == 0)
+    Type typeOut;
+
+    /* Primitive data types */
+    if(getPrimitiveType(typeString, typeOut))
     {
-        return new Integer("int", 4, true);
+        return typeOut;
     }
-    /* `uint` unsigned */
-    else if(cmp(typeString, "uint") == 0)
+    /* Primitive data types (long form) */
+    else if(getLongFormPrimitiveType(tc, container, typeString, typeOut))
     {
-        return new Integer("uint", 4, false);
+        DEBUG(format("Got long form primitive of '%s' from '%s'", typeOut, typeString));
+        return typeOut;
     }
-    /* `long`, signed (2-complement) */
-    else if(cmp(typeString, "long") == 0)
+    /* A module */
+    else if(cmp(typeString, "module") == 0)
     {
-        return new Integer("long", 8, true);
+        return new ModuleType();
     }
-    /* `ulong` unsigned */
-    else if(cmp(typeString, "ulong") == 0)
+    /* A container */
+    else if(cmp(typeString, "container") == 0)
     {
-        return new Integer("ulong", 8, false);
-    }
-    /* `short`, signed (2-complement) */
-    else if(cmp(typeString, "short") == 0)
-    {
-        return new Integer("short", 2, true);
-    }
-    /* `ushort` unsigned */
-    else if(cmp(typeString, "ushort") == 0)
-    {
-        return new Integer("ushort", 2, false);
-    }
-    /* `byte`, signed (2-complement) */
-    else if(cmp(typeString, "byte") == 0)
-    {
-        return new Integer("byte", 1, true);
-    }
-    /* `ubyte` unsigned */
-    else if(cmp(typeString, "ubyte") == 0)
-    {
-        return new Integer("ubyte", 1, false);
-    }
-    /* `void` */
-    else if (cmp(typeString, "void") == 0)
-    {
-        return new Void();
-    }
-    /* TODO: Decide on these (floats and doubles need to be specced out) */
-    /* `float` */
-    else if(cmp(typeString, "float") == 0)
-    {
-        return new Float("float", 4);
-    }
-    /* `double` */
-    else if(cmp(typeString, "double") == 0)
-    {
-        return new Float("double", 8);
-    }
-    
-    
-    /* TODO: What do we want? Char enforcement is kind of cringe I guess */
-    else if(cmp(typeString, "char") == 0)
-    {
-        return new Integer("ubyte", 1, false);
+        return new ContainerType();
     }
     /* Stack-based array handling `<componentType>[<number>]` */
     else if(isStackArray(typeString))
@@ -164,6 +221,74 @@ public Type getBuiltInType(TypeChecker tc, Container container, string typeStrin
         ERROR("getBuiltInType("~typeString~"): Failed to map to a built-in type");
 
         return null;
+    }
+}
+
+/** 
+ * Checks if the provided type string
+ * contains at least one dot and that
+ * it ends with a segment (in its path)
+ * of which is a primtive type.
+
+ * The ending segment (primtiive type)
+ * is only returned, however, if the
+ * preceding path was valid (in the
+ * AST).
+ *
+ * Params:
+ *   tc = the type checker
+ *   container = the container
+ *   typeString = the input type string
+ * to test
+ *   typeOut = the found primitive type
+ * Returns: `true` if valid, `false`
+ * otherwise
+ */
+private bool getLongFormPrimitiveType
+(
+    TypeChecker tc,
+    Container container,
+    string typeString,
+    ref Type typeOut
+)
+{
+    string[] segments = split(typeString, ".");
+
+    /* Type names such as x.y.<builtInType>` */
+
+    Type primitiveTypeFound;
+
+    /** 
+     * If there is at least one dot
+     * and the last element is a
+     * primtive type
+     */
+    if(segments.length >= 2 && getPrimitiveType(segments[$-1], primitiveTypeFound))
+    {
+        import tlang.compiler.typecheck.resolution : Resolver;
+        Resolver resolver = tc.getResolver();
+
+        // Construct path prior to the primitive type ending segment
+        string priorTypeString = join(segments[0..$-1], ".");
+
+        // Check that it is valid
+        if(resolver.resolveBest(container, priorTypeString))
+        {
+            typeOut = primitiveTypeFound;
+            return true;
+        }
+        // If prior type string does not reference
+        // anything valid then the entire type is
+        // invalid
+        else
+        {
+            return false;
+        }
+    }
+    /* Single type names like `int` are ignored */
+    else
+    {
+        return false;
     }
 }
 

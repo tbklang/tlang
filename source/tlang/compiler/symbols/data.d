@@ -248,15 +248,130 @@ public enum InitScope
     VIRTUAL, STATIC, UNKNOWN
 }
 
-public class Assignment : Statement
+/** 
+ * Represents an assignment to
+ * _some_ name of which we are
+ * assigning to such an entity
+ * _some_ expression
+ */
+public final class Assignment_V2 : Statement, MStatementSearchable, MStatementReplaceable
 {
-    private string identifier;
-    private Expression assignmentExpression;
+    private Expression named;
+    private Expression assValue;
 
-    this(string identifier, Expression assignmentExpression)
+    /** 
+     * Constructs a new assignment
+     * 
+     * Params:
+     *   name = the entity being
+     * assigned to
+     *   value = the value to
+     * assign
+     */
+    this(Expression name, Expression value)
     {
-        this.identifier = identifier;
-        this.assignmentExpression = assignmentExpression;
+        this.named = name;
+        this.assValue = value;
+
+        /* Weighted as 2 */
+        weight = 2;
+    }
+
+    public Expression getName()
+    {
+        return this.named;
+    }
+
+    public Expression getAssignedValue()
+    {
+        return this.assValue;
+    }
+
+    public override string toString()
+    {
+        import std.string : format;
+        return format("AssignmentV2 [name: %s, value: %s]", this.named, this.assValue);
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /** 
+         * Recurse on the entity
+         * being assigned to
+         */
+        MStatementSearchable toExpr = cast(MStatementSearchable)named;
+        if(toExpr)
+        {
+            matches ~= toExpr.search(clazzType); 
+        }
+
+        /** 
+         * Recurse on the expression
+         * being assigned
+         */
+        MStatementSearchable ofExpr = cast(MStatementSearchable)assValue;
+        if(ofExpr)
+        {
+            matches ~= ofExpr.search(clazzType); 
+        }        
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* If we, the `Assignment_V2`, are the `thiz` then we cannot perform replacement */
+        if(this == thiz)
+        {
+            return false;
+        }
+        /* Check if we should replace the entity being assigned to? */
+        else if(thiz == named)
+        {
+            named = cast(Expression)that;
+            return true;
+        }
+        /* Check if we should replace the `Expression` being assigned? */
+        else if(thiz == assValue)
+        {
+            assValue = cast(Expression)that;
+            return true;
+        }
+        else
+        {
+            bool res = false;
+
+            /** 
+             * Recurse on the entity
+             * being assigned to
+             */
+            MStatementReplaceable toExpr = cast(MStatementReplaceable)named;
+            if(toExpr)
+            {
+                res |= toExpr.replace(thiz, that);
+            }
+
+            /** 
+             * Recurse on the expression
+             * being assigned
+             */
+            MStatementReplaceable ofExpr = cast(MStatementReplaceable)assValue;
+            if(ofExpr)
+            {
+                res |= ofExpr.replace(thiz, that);
+            }
+
+            return res;
+        }
     }
 }
 
@@ -789,131 +904,6 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
     }
 }
 
-/**
-* TODO: Rename to ``
-*/
-public class VariableAssignmentStdAlone : Statement, MStatementSearchable, MStatementReplaceable
-{
-    private Expression expression;
-    private string varName;
-
-    this(string varName, Expression expression)
-    {
-        this.varName = varName;
-        this.expression = expression;
-
-        /* Weighted as 2 */
-        weight = 2;
-    }
-
-    public Expression getExpression()
-    {
-        return expression;
-    }
-
-    public string getVariableName()
-    {
-        return varName;
-    }
-
-    public override string toString()
-    {
-        return "[varAssignStdAlone: To: "~varName~"]";
-    }
-
-    public override Statement[] search(TypeInfo_Class clazzType)
-    {
-        /* List of returned matches */
-        Statement[] matches;
-
-        /* Are we (ourselves) of this type? */
-        if(clazzType.isBaseOf(this.classinfo))
-        {
-            matches ~= [this];
-        }
-
-        /**
-         * Recurse on the assigned `Expression`
-         */
-        MStatementSearchable assignedStmtCasted = cast(MStatementSearchable)expression;
-        if(assignedStmtCasted)
-        {
-            matches ~= assignedStmtCasted.search(clazzType); 
-        }
-
-        return matches;
-    }
-
-    public override bool replace(Statement thiz, Statement that)
-    {
-        /* If we, the `VariableAssignmentStdAlone`, are the `thiz` then we cannot perform replacement */
-        if(this == thiz)
-        {
-            return false;
-        }
-        /* Check if we should replace the `Expression` being assigned? */
-        else if(thiz == expression)
-        {
-            expression = cast(Expression)that;
-            return true;
-        }
-        /* Recurse on the assigned `Expression` (if possible) */
-        else if(cast(MStatementReplaceable)expression)
-        {
-            MStatementReplaceable expressionCasted = cast(MStatementReplaceable)expression;
-            return expressionCasted.replace(thiz, that);
-        }
-        /* None */
-        else
-        {
-            return false;
-        }
-    }
-}
-
-// TODO: Add an ArrayAssignment thing here, would be similiar to PointerDeference
-// mmmh, we would also need to ensure during typechecking/codegen/emit that we don't
-// do pointer arithmetic. Makes sense we would have a ArrayAssign and expression for indexers
-// but during codegen we check WHO was being assigned to and their type and based on that
-// generate the correct INSTRUCTION
-public final class ArrayAssignment : Statement
-{
-    private Expression assignmentExpression;
-
-    /** 
-     * The left hand side of:
-     *      e.g. myArray[i][1] = 2;
-     *
-     * Therefore the `myArray[i][1]` part
-     */
-    private ArrayIndex leftHandExpression;
-
-    this(ArrayIndex leftHandExpression, Expression assignmentExpression)
-    {
-        this.leftHandExpression = leftHandExpression;
-        this.assignmentExpression = assignmentExpression;
-
-        /* Weighted as 2 */
-        weight = 2;
-    }
-
-    public ArrayIndex getArrayLeft()
-    {
-        return leftHandExpression;
-    }
-
-    public Expression getAssignmentExpression()
-    {
-        return assignmentExpression;
-    }
-
-    public override string toString()
-    {
-        return "ArrayAssignment [leftHand: "~leftHandExpression.toString()~", assignmentExpr: "~assignmentExpression.toString()~"]";
-    }
-}
-
-
 public class PointerDereferenceAssignment : Statement
 {
     private Expression assignmentExpression;
@@ -1014,6 +1004,53 @@ public class Call : IdentExpression
         super(ident);
     }
 }
+
+
+public final class ExpressionStatement : Statement, MStatementSearchable
+{
+    private Expression path;
+
+    this(Expression path)
+    {
+        this.path = path;
+
+        /* Weighted as 2 */
+        weight = 2;
+    }
+
+    public Expression getExpr()
+    {
+        return this.path;
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /**
+         * Recurse on the path `Expression` (if possible)
+         */
+
+        MStatementSearchable innerStmt = cast(MStatementSearchable)this.path;
+        if(innerStmt)
+        {
+            matches ~= innerStmt.search(clazzType); 
+        }
+
+        return matches;
+    }
+}
+
+
+// TODO: A call should probably be its own thing
+// and not an ident expression, as it isn't really
 
 // FIXME: Finish adding proper `MStatementSearchable` and `MStatementReplaceable` to `FunctionCall`
 public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable

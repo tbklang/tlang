@@ -17,6 +17,8 @@ public interface LexerInterface
      * Returns the token at the current cursor
      * position
      *
+     * Throws: LexerException if the cursor
+     * is out-of-bounds
      * Returns: the `Token`
      */
     public Token getCurrentToken();
@@ -164,6 +166,23 @@ public bool isSplitter(char c)
            c == LS.PERCENT || c == LS.L_BRACE || c == LS.R_BRACE ||
            c == LS.EQUALS || c == LS.DOT || c == LS.COLON ||
            isOperator(c) || isWhite(c);
+}
+
+/** 
+ * Checks if the provided character is a splitter excluding whitespace
+ *
+ * Params:
+ *   c = the character to check
+ * Returns: `true` if it is a splitter, `false`
+ * otherwise
+ */
+public bool isSplitterNoWhite(char c)
+{
+    return c == LS.SEMI_COLON || c == LS.COMMA || c == LS.L_PAREN ||
+           c == LS.R_PAREN || c == LS.L_BRACK || c == LS.R_BRACK ||
+           c == LS.PERCENT || c == LS.L_BRACE || c == LS.R_BRACE ||
+           c == LS.EQUALS || c == LS.DOT || c == LS.COLON ||
+           isOperator(c);
 }
 
 /** 
