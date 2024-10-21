@@ -1103,6 +1103,6 @@ public final class StructAssignmentInstr : Instruction
 
     public Value getOf()
     {
-        return this.to;
+        return this.of;
     }
 }
