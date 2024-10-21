@@ -51,3 +51,23 @@ void usage(Person p)
 	o = makeIQ();
 	o = simple.makeIQ();
 }
+
+int main()
+{
+	IQ i;
+	IQ p;
+
+	i.math = 1;
+	i.english = 2;
+
+	p = i;
+
+	uint _s1 = p.math == i.math;
+	uint _s2 = p.english == i.english;
+	ubyte status = cast(ubyte)(_s1 == _s2);
+
+	IQ* iPtr = &i;
+	*iPtr.i = 1;
+
+	return status;
+}
