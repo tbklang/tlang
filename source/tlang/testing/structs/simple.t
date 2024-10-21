@@ -47,6 +47,7 @@ void usage(Person p)
 
 	usage2(p);
 	p = p;
-	p = makeIQ();
-	p = simple.makeIQ();
+	IQ o;
+	o = makeIQ();
+	o = simple.makeIQ();
 }
