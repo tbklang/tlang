@@ -28,6 +28,11 @@ IQ makeIQ()
 	return d;
 }
 
+void usage2(Person p)
+{
+
+}
+
 void usage(Person p)
 {
 	p.iq.math = 1+p.gender;
@@ -39,4 +44,9 @@ void usage(Person p)
 	kPtr = &k;
 
 	int i = makeIQ().math;
+
+	usage2(p);
+	p = p;
+	p = makeIQ();
+	p = simple.makeIQ();
 }
