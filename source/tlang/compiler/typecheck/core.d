@@ -910,6 +910,11 @@ public final class TypeChecker
                 same = false;
             }
         }
+        /* Handling for struct types */
+        else if(isStructType(type1) && isStructType(type2))
+        {
+            return type1 is type2;
+        }
         /* Handling for all other cases */
         else if(typeid(type1) == typeid(type2))
         {
