@@ -54,6 +54,29 @@ public class Value : Instruction
     }
 }
 
+/** 
+ * This represents any instruction
+ * which has a string-based target
+ * that may be manipulated
+ */
+public interface Targetable
+{
+    /** 
+     * Retrieve's the target
+     *
+     * Returns: the target
+     */
+    public string getTarget();
+
+    /** 
+     * Sets the target
+     *
+     * Params:
+     *   target = the target
+     */
+    public void setTarget(string target);
+}
+
 public class StorageDeclaration : Instruction
 {
 
@@ -152,7 +175,7 @@ public final class VariableDeclaration : StorageDeclaration, IRenderable
     }
 }
 
-public final class FetchValueVar : Value, IRenderable
+public final class FetchValueVar : Value, IRenderable, Targetable
 {
     /* Name of variable to fetch from */
     private string varName;
@@ -477,7 +500,7 @@ public class CallInstr : Value
 
 }
 
-public class FuncCallInstr : CallInstr, IRenderable
+public class FuncCallInstr : CallInstr, IRenderable, Targetable
 {
     /** 
      * This is described in the corresponding AST node
