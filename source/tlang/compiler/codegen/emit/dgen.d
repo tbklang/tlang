@@ -256,23 +256,9 @@ public final class DCodeEmitter : CodeEmitter
             Context context = fetchValueVarInstr.getContext();
             string targetName = fetchValueVarInstr.getTarget();
 
-            Variable typedEntityVariable = cast(Variable)typeChecker.getResolver().resolveBest(context.getContainer(), targetName);
-            DEBUG("ctx: ", context);
-
             string emitName = simplify(typeChecker, context.getContainer(), targetName);
 
-            // FIXME: The below should be done with a special EXTERN map rather
-            /* If it is not external */
-            // FIXME: Remove this if statement
-            if(!typedEntityVariable.isExternal())
-            {
-                emmmmit = emitName;
-            }
-            /* If it is external */
-            else
-            {
-                emmmmit = emitName;
-            }
+            emmmmit = emitName;
         }
         /* BinOpInstr */
         else if(cast(BinOpInstr)instruction)
