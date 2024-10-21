@@ -1082,3 +1082,27 @@ public final class StructMemberAssignmentInstr : Instruction
         return this.assVal;
     }
 }
+
+/** 
+ * An assignment of a struct to a struct
+ */
+public final class StructAssignmentInstr : Instruction
+{
+    private Value to, of;
+
+    this(Value toStruct, Value ofStruct)
+    {
+        this.to = toStruct;
+        this.of = ofStruct;
+    }
+
+    public Value getTo()
+    {
+        return this.to;
+    }
+
+    public Value getOf()
+    {
+        return this.to;
+    }
+}
