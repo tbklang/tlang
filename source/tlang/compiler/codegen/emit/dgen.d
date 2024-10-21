@@ -614,7 +614,7 @@ public final class DCodeEmitter : CodeEmitter
                     emit ~= "("~typeTransform(castingTo)~")";
 
                     /* The expression being casted */
-                    emit ~= transform(uncastedInstruction);
+                    emit ~= "("~transform(uncastedInstruction)~")";
                 }
                 else
                 {
