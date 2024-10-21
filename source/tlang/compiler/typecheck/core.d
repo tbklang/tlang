@@ -2096,6 +2096,206 @@ public final class TypeChecker
     }
 
     /** 
+     * This will modify the input instruction
+     * with updated instruction type information
+     * by resolving the `Targetable`'s target
+     * against the given container in order
+     * to make such a query
+     *
+     * Params:
+     *   cntnr = the container pivot
+     *   t = the `Targetable` instruction
+     */
+    private void targetCheck(Container cntnr, Targetable t)
+    {
+        auto inputInstr = t;
+        // FuncCallInstr
+        if(cast(FuncCallInstr)inputInstr)
+        {
+            FuncCallInstr fcInstr = cast(FuncCallInstr)inputInstr;
+
+            // Resolve the Function and bail out if it does not exist
+            Entity funcEnt = bail_resolveBest(fcInstr.getTarget(), cntnr, ReportData(fcInstr));
+            Function func = cast(Function)funcEnt;
+
+            // Is the target a function? If not, then error
+            if(func is null)
+            {
+                throw new TypeCheckerException
+                (
+                    this,
+                    TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                    format
+                    (
+                        "Cannot call entity named '%s' as it is not a function",
+                        fcInstr.getTarget()
+                    )
+                );
+            }
+
+            // Increase its "touch" count
+            touch(func);
+
+            DEBUG("fcInstr: ", fcInstr);
+            DEBUG("fcInstr (target): ", fcInstr.getTarget());
+            DEBUG("cntnr: ", cntnr);
+
+            assert(func);
+            VariableParameter[] paremeters = func.getParams();
+            size_t arity = func.getArity();
+
+            // Argument count
+            size_t argCnt = fcInstr.getArgCount();
+            Value[] arguments = fcInstr.getEvaluationInstructions();
+
+            // Arity mismatch check
+            if(arity != argCnt)
+            {
+                throw new TypeCheckerException
+                (
+                    this,
+                    TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                    format
+                    (
+                        "Function '%s' expects %d arguments but %d were provided",
+                        func.getName(),
+                        arity,
+                        argCnt
+                    )
+                );
+            }
+
+            DEBUG(format("Function parameters: %s", paremeters));
+            DEBUG(format("Function arguments: %s", arguments));
+            
+            // Type-check every argument against its
+            // formal parameter counterpart and perform
+            // type coercion whilst doing so
+            for(size_t i = 0; i < arity; i++)
+            {
+                // Current parameter
+                VariableParameter param = paremeters[i];
+                Type parmType = getType(cntnr, param.getType());
+
+                // Current argument
+                Value arg = arguments[i];
+
+                // Validate the current argument by using
+                // the context at the callsite (at the `FuncCallInstr`)
+                Context fCS_Ctx = fcInstr.getContext();
+                assert(fCS_Ctx);
+                DEBUG("About to validate argument ", arg, " with ctx: ", fCS_Ctx);
+                validate(InstrCtx(fCS_Ctx.getContainer()), arg);
+
+                // Now get the current argument's type
+                Type argType = arg.getInstrType();
+                assert(argType);
+
+                
+
+                
+
+
+                /* Scratch type used only for stack-array coercion */
+                Type coercionScratchType;
+
+                /**
+                    * We need to enforce the `valueInstr`'s' (the `Value`-based
+                    * instruction being passed as an argument) type to be that
+                    * of the `parmType` (the function's parameter type)
+                    */
+                typeEnforce(parmType, arg, arg, true);
+
+
+                /**
+                    * Refresh the `argType` as `valueInstr` may have been
+                    * updated and we need the new type
+                    */
+                argType = arg.getInstrType();
+                
+
+                // Sanity check
+                assert(isSameType(argType, parmType));
+
+
+                /** 
+                    * The argument value instruction stored
+                    * in `arg` MAY have changed. Therefore
+                    * we must place it back into the function
+                    * call instruction.
+                    */
+                fcInstr.setEvalInstr(i, arg);
+            }
+
+            /* Set the instruction's type to that of the function's return type */
+            Type funcCallInstrType = getType(cntnr, func.getType());
+            fcInstr.setInstrType(funcCallInstrType);
+
+            /* Mark as validated */
+            markAsValidated(fcInstr);
+        }
+        // FetchValueVar
+        else if(cast(FetchValueVar)inputInstr)
+        {
+            FetchValueVar fVV = cast(FetchValueVar)inputInstr;
+
+            /* Resolve the target against the provided container context */
+            string targetName = fVV.getTarget();
+            DEBUG("FVV: targetName: ", targetName);
+            DEBUG("cntnr: ", cntnr);
+            assert(cntnr);
+
+            // Lookup entity but bail if not found
+            Entity gVar = bail_resolveBest(targetName, cntnr, ReportData(fVV));
+            string variableName = resolver.generateName(this.program, gVar);
+
+            /* Type determined for instruction */
+            Type instrType;
+
+            // If a module is being referred to
+            if(cast(Module)gVar)
+            {
+                instrType = getType(cntnr, "module");
+            }
+            // If it is some kind-of typed entity
+            else if(cast(TypedEntity)gVar)
+            {
+                TypedEntity typedEntity = cast(TypedEntity)gVar;
+                instrType = getType(cntnr, typedEntity.getType());
+
+                // Bail out if it was not yet declared
+                bail_IfNotDeclared(typedEntity, ReportData(fVV));
+
+                // If it is a variable increase its "touch" count
+                if(cast(Variable)typedEntity)
+                {
+                    touch(cast(Variable)typedEntity);
+                }
+            }
+            //
+            else
+            {
+                panic(format("Please add support for VariableExpression typecheck/codegen for handling: %s", gVar.classinfo));
+            }
+
+            /* Set the type accordingly */
+            fVV.setInstrType(instrType);
+
+            /* Mark as validated */
+            markAsValidated(fVV);
+        }
+        // Sanity check
+        else
+        {
+            ERROR
+            (
+                "Developer bug: If you are getting here then you have not implemented target checking for a given targetable type"
+            );
+            assert(false);
+        }
+    }
+
+    /** 
      * Performs the partial filling of certain aspects
      * of the given instruction via the provided
      * context.
@@ -2143,181 +2343,17 @@ public final class TypeChecker
         {
             Container cntnr = cOpt.get();
             DEBUG("validate() cntnr: ", cntnr);
+
+            // FIXME: We should rename this method,
+            // it basically is just apply relativeiy
+            // for Targetables
+            // assert(cast(Targetable)inputInstr);
             
-            // FuncCallInstr
-            if(cast(FuncCallInstr)inputInstr)
+            // Only targetable's ever need this
+            Targetable t = cast(Targetable)inputInstr;
+            if(t)
             {
-                FuncCallInstr fcInstr = cast(FuncCallInstr)inputInstr;
-
-                // Resolve the Function and bail out if it does not exist
-                Entity funcEnt = bail_resolveBest(fcInstr.getTarget(), cntnr, ReportData(fcInstr));
-                Function func = cast(Function)funcEnt;
-
-                // Is the target a function? If not, then error
-                if(func is null)
-                {
-                    throw new TypeCheckerException
-                    (
-                        this,
-                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
-                        format
-                        (
-                            "Cannot call entity named '%s' as it is not a function",
-                            fcInstr.getTarget()
-                        )
-                    );
-                }
-
-                // Increase its "touch" count
-                touch(func);
-
-                DEBUG("fcInstr: ", fcInstr);
-                DEBUG("fcInstr (target): ", fcInstr.getTarget());
-                DEBUG("cntnr: ", cntnr);
-
-                assert(func);
-                VariableParameter[] paremeters = func.getParams();
-                size_t arity = func.getArity();
-
-                // Argument count
-                size_t argCnt = fcInstr.getArgCount();
-                Value[] arguments = fcInstr.getEvaluationInstructions();
-
-                // Arity mismatch check
-                if(arity != argCnt)
-                {
-                    throw new TypeCheckerException
-                    (
-                        this,
-                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
-                        format
-                        (
-                            "Function '%s' expects %d arguments but %d were provided",
-                            func.getName(),
-                            arity,
-                            argCnt
-                        )
-                    );
-                }
-
-                DEBUG(format("Function parameters: %s", paremeters));
-                DEBUG(format("Function arguments: %s", arguments));
-                
-                // Type-check every argument against its
-                // formal parameter counterpart and perform
-                // type coercion whilst doing so
-                for(size_t i = 0; i < arity; i++)
-                {
-                    // Current parameter
-                    VariableParameter param = paremeters[i];
-                    Type parmType = getType(cntnr, param.getType());
-
-                    // Current argument
-                    Value arg = arguments[i];
-
-                    // Validate the current argument by using
-                    // the context at the callsite (at the `FuncCallInstr`)
-                    Context fCS_Ctx = fcInstr.getContext();
-                    assert(fCS_Ctx);
-                    DEBUG("About to validate argument ", arg, " with ctx: ", ctx);
-                    validate(InstrCtx(fCS_Ctx.getContainer()), arg);
-
-                    // Now get the current argument's type
-                    Type argType = arg.getInstrType();
-                    assert(argType);
-
-                    
-
-                    
-
-
-                    /* Scratch type used only for stack-array coercion */
-                    Type coercionScratchType;
-
-                    /**
-                     * We need to enforce the `valueInstr`'s' (the `Value`-based
-                     * instruction being passed as an argument) type to be that
-                     * of the `parmType` (the function's parameter type)
-                     */
-                    typeEnforce(parmType, arg, arg, true);
-
-
-                    /**
-                     * Refresh the `argType` as `valueInstr` may have been
-                     * updated and we need the new type
-                     */
-                    argType = arg.getInstrType();
-                    
-
-                    // Sanity check
-                    assert(isSameType(argType, parmType));
-
-
-                    /** 
-                     * The argument value instruction stored
-                     * in `arg` MAY have changed. Therefore
-                     * we must place it back into the function
-                     * call instruction.
-                     */
-                    fcInstr.setEvalInstr(i, arg);
-                }
-
-                /* Set the instruction's type to that of the function's return type */
-                Type funcCallInstrType = getType(cntnr, func.getType());
-                fcInstr.setInstrType(funcCallInstrType);
-
-                /* Mark as validated */
-                markAsValidated(fcInstr);
-            }
-            // FetchValueVar
-            else if(cast(FetchValueVar)inputInstr)
-            {
-                FetchValueVar fVV = cast(FetchValueVar)inputInstr;
-
-                /* Resolve the target against the provided container context */
-                string targetName = fVV.getTarget();
-                DEBUG("FVV: targetName: ", targetName);
-                DEBUG("cntnr: ", cntnr);
-                assert(cntnr);
-
-                // Lookup entity but bail if not found
-                Entity gVar = bail_resolveBest(targetName, cntnr, ReportData(fVV));
-                string variableName = resolver.generateName(this.program, gVar);
-
-                /* Type determined for instruction */
-                Type instrType;
-
-                // If a module is being referred to
-                if(cast(Module)gVar)
-                {
-                    instrType = getType(cntnr, "module");
-                }
-                // If it is some kind-of typed entity
-                else if(cast(TypedEntity)gVar)
-                {
-                    TypedEntity typedEntity = cast(TypedEntity)gVar;
-                    instrType = getType(cntnr, typedEntity.getType());
-
-                    // Bail out if it was not yet declared
-                    bail_IfNotDeclared(typedEntity, ReportData(fVV));
-
-                    // If it is a variable increase its "touch" count
-                    if(cast(Variable)typedEntity)
-                    {
-                        touch(cast(Variable)typedEntity);
-                    }
-                }
-                //
-                else
-                {
-                    panic(format("Please add support for VariableExpression typecheck/codegen for handling: %s", gVar.classinfo));
-                }
-
-                /* Set the type accordingly */
-                fVV.setInstrType(instrType);
-
-                /* Mark as validated */
-                markAsValidated(fVV);
+                targetCheck(cntnr, t);
             }
             else
             {
@@ -3653,6 +3689,10 @@ public final class TypeChecker
                 Value assignmentInstr = getAssignment_of();
                 reset_assData();
 
+                /* Type of the entity being assigned to */
+                // Type toType = toEntityInstr.getInstrType();
+                // assert(toType);
+
                 // TODO: Handle `toEntityInstr` which is `FetchValueInstr`
                 // ... and those which are other sorts like `ArrayIndexInstr`
 
@@ -3776,6 +3816,34 @@ public final class TypeChecker
 
                     /* Add the instruction */
                     addInstrB(sm_ass);
+                }
+                // Assigning an entire struct
+                else if(cast(StructDataRef)toEntityInstr)
+                {
+                    Context toCtx = toEntityInstr.getContext();
+                    assert(toCtx);
+
+                    Type toType = toEntityInstr.getInstrType();
+                    
+
+                    // Validate the instruction being assigned (the expression)
+                    validate(InstrCtx(toCtx.getContainer()), assignmentInstr);
+
+                    // FIXME: Type check WHAT can be assigned
+                    Type assType = assignmentInstr.getInstrType();
+                    assert(assType);
+                    
+                    Value _trash;
+                    typeEnforce(toType, assignmentInstr, _trash, false);
+
+                    StructAssignmentInstr sa_instr = new StructAssignmentInstr
+                    (
+                        toEntityInstr,
+                        assignmentInstr
+                    );
+                    
+                    /* Add the instruction */
+                    addInstrB(sa_instr);
                 }
                 else
                 {
