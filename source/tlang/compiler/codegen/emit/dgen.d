@@ -807,12 +807,6 @@ public final class DCodeEmitter : CodeEmitter
             Value s_ref = sm_ref.getStructInstance();
             Value m_ref = sm_ref.getMemberTarget();
 
-            // FIXME: We need to relax lookups of things or
-            // do them properly when looking at, for example
-            // in `simple.t`, the `FetchValurVar`, which is
-            // trying to do lookups
-
-            ERROR("Aboutta");
             emmmmit = format("%s.%s", transform(s_ref), transform(m_ref));
         }
         /**
@@ -828,6 +822,17 @@ public final class DCodeEmitter : CodeEmitter
             Value viaInstr = sd_ref.getVia();
             
             emmmmit = transform(viaInstr);
+        }
+        /** 
+         * Struct to struct assignment
+         */
+        else if(cast(StructAssignmentInstr)instruction)
+        {
+            auto sa_instr = cast(StructAssignmentInstr)instruction;
+            Value toInstr = sa_instr.getTo();
+            Value ofInstr = sa_instr.getOf();
+
+            emmmmit = format("%s = %s;", transform(toInstr), transform(ofInstr));
         }
         // TODO: MAAAAN we don't even have this yet
         // else if(cast(StringExpression))
