@@ -205,7 +205,7 @@ public Type getBuiltInType(TypeChecker tc, Container container, string typeStrin
         long ptrTypePos = rightmostTypePos;
         string ptrType = typeString[0..(ptrTypePos)];
         DEBUG("TypeStr: "~typeString);
-        ERROR("Pointer to '"~ptrType~"'");
+        DEBUG("Pointer to '"~ptrType~"'");
 
         return new Pointer(tc.getType(container, ptrType));
     }
