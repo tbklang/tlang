@@ -410,6 +410,8 @@ unittest
                         ];
     foreach(string testFile; testFiles)
     {
+        import std.stdio : stderr;
+        stderr.writeln("About to do '", testFile, "'");
         beginCompilation([testFile]);
     }
 }
@@ -489,6 +491,9 @@ unittest
 
     foreach(string testFileGood; testFilesGood)
     {
+        import std.stdio : stderr;
+        stderr.writeln("About to do '", testFileGood, "'");
+
         string sourceText = gibFileData(testFileGood);
 
         try
