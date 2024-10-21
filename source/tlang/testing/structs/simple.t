@@ -19,7 +19,24 @@ struct IQ
 	Race r;
 }
 
+IQ k;
+IQ* kPtr;
+
+IQ makeIQ()
+{
+	IQ d;
+	return d;
+}
+
 void usage(Person p)
 {
+	p.iq.math = 1+p.gender;
+	p.iq.math = p.age+1;
 
+	p.iq = simple.k;
+	p.iq = k;
+
+	kPtr = &k;
+
+	int i = makeIQ().math;
 }
