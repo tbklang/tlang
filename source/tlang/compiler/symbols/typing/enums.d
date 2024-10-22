@@ -9,6 +9,8 @@ import tlang.compiler.symbols.data : Expression;
 import tlang.compiler.symbols.typing.core : Type;
 import niknaks.functional : Optional;
 
+import tlang.misc.utils : panic;
+
 public struct EnumConstant
 {
     private string _n;
@@ -74,15 +76,57 @@ public final class Enum : Type
     {
         return this._t != null ? Optional!(string)(this._t) : Optional!(string).empty();
     }
+
+    public override string toString()
+    {
+        import std.string : format;
+        return format("Enum (%s)", getName());
+    }
 }
 
 import tlang.compiler.typecheck.core : TypeChecker;
 import tlang.misc.logging;
 
-public EnumConstant[] extractConstants(TypeChecker tc, Enum e)
+private bool isValidExpression(Expression e)
 {
+    // TODO: Use templatung could be nice for long lists
+    import std.meta : aliasSeqOf;
+    
+    
+    import tlang.compiler.symbols.expressions : StringExpression, NumberLiteral, FloatingLiteral;
+
+    return cast(StringExpression)e !is null || cast(NumberLiteral)e !is null;
+}
+
+import tlang.compiler.symbols.expressions : StringExpression, IntegerLiteral, FloatingLiteral;
+
+private Type determineType(TypeChecker tc, Expression e)
+{
+    
+
+    import tlang.compiler.symbols.typing.builtins : getBuiltInType;
+
+    if(cast(StringExpression)e)
+    {
+        return getBuiltInType(null, null, "ubyte*");
+    }
+    else if(cast(IntegerLiteral)e)
+    {
+        IntegerLiteral il = cast(IntegerLiteral)e;
+        return tc.determineLiteralEncodingType(il.getEncoding());
+    }
+
+    return null;
+}
+
+public void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
+{
+    import tlang.compiler.symbols.data : Container;
+    Container e_cntnr = e.parentOf();
     Optional!(string) ct_string = e.getConstraint();
-    // Type constraint = 
+    Type constraint = ct_string.isPresent() ? tc.getType(e_cntnr, ct_string.get()) : null;
+
+    DEBUG("Beginning constraint (type):", constraint);
 
     foreach(c; e.members())
     {
@@ -96,11 +140,50 @@ public EnumConstant[] extractConstants(TypeChecker tc, Enum e)
         }
         else
         {
-            // TODO: Determine this here
+            // TODO: If no expression then base it 
+        }
+
+        Type m_type = determineType(tc, v_chosen);
+        DEBUG("m_type:", m_type);
+
+        if(constraint is null && m_type !is null)
+        {
+            constraint = m_type;
+            DEBUG("constaint discovered via literal:", constraint);
+        }
+        else if(constraint !is null && m_type !is null)
+        {
+
+        }
+        // If the `m_type` is null then it is because there is an unsupported
+        // type (or null was given) but if `v_chosen` is NOT null then that
+        // means an unsupported expression is being used
+        else if(m_type is null && v_chosen !is null)
+        {
+            ERROR("We do not support enum constants to have expressions like '", v_chosen, "'");
+            panic();
         }
     }
 
-    return null;
+    // If constraint was never explicitly specified
+    // or automatically discovered, then assume that
+    // it is an integral type
+    if(constraint is null)
+    {
+        import tlang.compiler.typecheck.literals.ranges : typeFromUnsignedRange;
+
+        // Determine the type based on the number of
+        // of members
+        //
+        // TODO: Document this fact as it is important
+        // for the ABI
+        Type type = typeFromUnsignedRange(e.members().length);
+        assert(type);
+        constraint = type;
+    }
+
+    DEBUG("constraint (type) decidedly:", constraint);
+    constraintOut = constraint;
 }
 
 unittest
