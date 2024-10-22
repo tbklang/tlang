@@ -28,19 +28,19 @@ public Integer typeFromUnsignedRange(ulong lv)
 {
     Integer t;
 
-    if(lv >= 0 && lv <= 255)
+    if(lv >= 0 && lv <= UBYTE_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "ubyte");
     }
-    else if(lv >= 0 && lv <= 65_535)
+    else if(lv >= 0 && lv <= USHORT_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "ushort");
     }
-    else if(lv >= 0 && lv <= 4_294_967_295)
+    else if(lv >= 0 && lv <= UINT_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "uint");
     }
-    else if(lv >= 0 && lv <= 18_446_744_073_709_551_615)
+    else if(lv >= 0 && lv <= ULONG_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "ulong");
     }
@@ -64,19 +64,19 @@ public Integer typeFromSignedRangePositive(ulong lv)
 {
     Integer t;
 
-    if(lv >= 0 && lv <= 127)
+    if(lv >= 0 && lv <= BYTE_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "byte");
     }
-    else if(lv >= 0 && lv <= 32_767)
+    else if(lv >= 0 && lv <= SHORT_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "short");
     }
-    else if(lv >= 0 && lv <= 2_147_483_647)
+    else if(lv >= 0 && lv <= INT_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "int");
     }
-    else if(lv >= 0 && lv <= 9_223_372_036_854_775_807)
+    else if(lv >= 0 && lv <= LONG_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "long");
     }
@@ -102,19 +102,19 @@ public Integer typeFromSignedRangeNegative(long lv)
 {
     Integer t;
 
-    if(lv >= -128 && lv <= 127)
+    if(lv >= BYTE_LOWER && lv <= BYTE_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "byte");
     }
-    else if(lv >= -32_768 && lv <= 32_767)
+    else if(lv >= SHORT_LOWER && lv <= SHORT_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "short");
     }
-    else if(lv >= -2_147_483_648 && lv <= 2_147_483_647)
+    else if(lv >= INT_LOWER && lv <= INT_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "int");
     }
-    else if(lv >= -9_223_372_036_854_775_808 && lv <= 9_223_372_036_854_775_807)
+    else if(lv >= LONG_LOWER && lv <= LONG_UPPER)
     {
         t = cast(Integer)getBuiltInType(null, null, "long");
     }
@@ -124,3 +124,19 @@ public Integer typeFromSignedRangeNegative(long lv)
 
     return t;
 }
+
+// Lower and uppers
+public:
+    enum UBYTE_UPPER = 255;
+    enum USHORT_UPPER = 65_535;
+    enum UINT_UPPER = 4_294_967_295;
+    enum ULONG_UPPER = 18_446_744_073_709_551_615;
+
+    enum BYTE_LOWER = -128;
+    enum BYTE_UPPER = 127;
+    enum SHORT_LOWER = -32_768;
+    enum SHORT_UPPER = 32_767;
+    enum INT_LOWER = -2_147_483_648;
+    enum INT_UPPER = 2_147_483_647;
+    enum LONG_LOWER = -9_223_372_036_854_775_808;
+    enum LONG_UPPER = 9_223_372_036_854_775_807;
