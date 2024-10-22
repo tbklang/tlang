@@ -937,6 +937,8 @@ public final class TypeChecker
      */
     private bool isCoercibleRange(Type toType, Value literalInstr)
     {
+        import tlang.compiler.typecheck.literals.ranges;
+
         // You should only be calling this on either a `LiteralValue`
         // ... or a `LiteralValueFloat` instruction
         // TODO: Add support for UnaryOpInstr (where the inner type is then)
@@ -954,111 +956,39 @@ public final class TypeChecker
 
             if(isSameType(toType, getType(null, "ubyte")))
             {
-                if(literalValue >= 0 && literalValue <= 255)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= UBYTE_UPPER;
             }
             else if(isSameType(toType, getType(null, "ushort")))
             {
-                if(literalValue >= 0 && literalValue <= 65_535)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= USHORT_UPPER;
             }
             else if(isSameType(toType, getType(null, "uint")))
             {
-                if(literalValue >= 0 && literalValue <= 4_294_967_295)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= UINT_UPPER;
             }
             else if(isSameType(toType, getType(null, "ulong")))
             {
-                if(literalValue >= 0 && literalValue <= 18_446_744_073_709_551_615)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= ULONG_UPPER;
             }
             // Handling for signed bytes [0, 127]
             else if(isSameType(toType, getType(null, "byte")))
             {
-                if(literalValue >= 0 && literalValue <= 127)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= BYTE_UPPER;
             }
             // Handling for signed shorts [0, 32_767]
             else if(isSameType(toType, getType(null, "short")))
             {
-                if(literalValue >= 0 && literalValue <= 32_767)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= SHORT_UPPER;
             }
             // Handling for signed integers [0, 2_147_483_647]
             else if(isSameType(toType, getType(null, "int")))
             {
-                if(literalValue >= 0 && literalValue <= 2_147_483_647)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= INT_UPPER;
             }
             // Handling for signed longs [0, 9_223_372_036_854_775_807]
             else if(isSameType(toType, getType(null, "long")))
             {
-                if(literalValue >= 0 && literalValue <= 9_223_372_036_854_775_807)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= LONG_UPPER;
             }
         }
         // LiteralValue (integer literal instructions)
@@ -1088,55 +1018,19 @@ public final class TypeChecker
 
                 if(isSameType(toType, getType(null, "byte")))
                 {
-                    if(literalValue >= -128 && literalValue <= 127)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
+                    return literalValue >= BYTE_LOWER && literalValue <= BYTE_UPPER;
                 }
                 else if(isSameType(toType, getType(null, "short")))
                 {
-                    if(literalValue >= -32_768 && literalValue <= 32_767)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
+                    return literalValue >= SHORT_LOWER && literalValue <= SHORT_UPPER;
                 }
                 else if(isSameType(toType, getType(null, "int")))
                 {
-                    if(literalValue >= -2_147_483_648 && literalValue <= 2_147_483_647)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
+                    return literalValue >= INT_LOWER && literalValue <= INT_UPPER;
                 }
                 else if(isSameType(toType, getType(null, "long")))
                 {
-                    if(literalValue >= -9_223_372_036_854_775_808 && literalValue <= 9_223_372_036_854_775_807)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
+                    return literalValue >= LONG_LOWER && literalValue <= LONG_UPPER;
                 }
             }
             // LiteralValue (integer literal instructions) with subtraction infront
