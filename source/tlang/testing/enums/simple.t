@@ -24,3 +24,10 @@ enum Numberless
 	ONE,
 	TWO
 }
+
+// TODO: ghet type chekcing working
+
+int retEnum(Gender g)
+{
+	return 0;
+}
