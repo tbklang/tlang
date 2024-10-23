@@ -11,6 +11,32 @@ import niknaks.functional : Optional;
 
 import tlang.misc.utils : panic;
 
+public enum EnumErrorType
+{
+    UNSUPPORTED_VALUE_TYPE
+}
+
+public final class EnumError : Exception
+{
+    private EnumErrorType _t;
+
+    private this(EnumErrorType e, string msg)
+    {
+        super(msg);
+        this._t = e;
+    }
+
+    public static EnumError badValueType(string msg)
+    {
+        return new EnumError(EnumErrorType.UNSUPPORTED_VALUE_TYPE, msg);
+    }
+
+    public EnumErrorType getError()
+    {
+        return this._t;
+    }
+}
+
 public struct EnumConstant
 {
     private string _n;
