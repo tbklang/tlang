@@ -1145,8 +1145,6 @@ public final class Parser
 
                     import tlang.compiler.typecheck.literals.ranges;
                     
-                    import tlang.compiler.typecheck.literals.ranges;
-                    
                     // Signed integer range [0, 2_147_483_647]
                     if(literalValue >= 0 && literalValue <= INT_UPPER)
                     {
