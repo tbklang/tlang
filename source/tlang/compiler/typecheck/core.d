@@ -1052,6 +1052,20 @@ public final class TypeChecker
     }
 
     /** 
+     * Checks if the provided type is
+     * an enumeration type
+     *
+     * Params:
+     *   typeIn = the `Type` to test
+     * Returns: `true` if so, `false`
+     * otherwise
+     */
+    public static bool isEnumType(Type typeIn)
+    {
+        return cast(Enum)typeIn !is null;
+    }
+
+    /** 
      * Attempts to perform coercion of the provided Value-instruction
      * with respect to the provided to-type.
      * 
@@ -3818,6 +3832,20 @@ public final class TypeChecker
     private void processEnum(Enum e)
     {
         DEBUG("Analyzing enumeration '", e, "'...");
+
+        // Enum cannot have NO members
+        if(e.members().length == 0)
+        {
+            throw new TypeCheckerException
+            (
+                TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                format
+                (
+                    "Enumeration type %s cannot have no members",
+                    e.getName()
+                )
+            );
+        }
 
         import tlang.compiler.symbols.typing.enums : enumCheck;
         Type e_mem_t; // TODO: Store this for lookup somewhere with a `Type[Enum]` map
