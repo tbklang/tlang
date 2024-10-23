@@ -1133,6 +1133,8 @@ public final class DCodeEmitter : CodeEmitter
         }
     }
 
+    import tlang.compiler.codegen.emit.dgen_exceptions;
+
     private void emitEnumType(File modOut, Enum e)
     {
         // FIXME: Keep track of enum names relating to their
@@ -1158,6 +1160,14 @@ public final class DCodeEmitter : CodeEmitter
         // FIXME: How to do constraints here in C?
         // we might need to control flags or put
         // _some_ macro somewhere
+
+        EnumConstant[] m_s = e.members();
+
+        // Empty enumeration types are unsupported by then C emitter(as C doesn't support them)
+        if(!m_s.length)
+        {
+            throw noEnumMembers(e);
+        }
         
         Type enum_t = getEnumType(typeChecker, e);
         DEBUG("enum type:", enum_t);
@@ -1165,7 +1175,6 @@ public final class DCodeEmitter : CodeEmitter
         modOut.writeln(format("enum %s", e.getName()));
 
         modOut.writeln("{");
-        EnumConstant[] m_s = e.members();
         for(size_t i = 0; i < m_s.length; i++)
         {
             auto c = m_s[i];
