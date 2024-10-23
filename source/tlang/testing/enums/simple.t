@@ -27,7 +27,11 @@ enum Numberless
 
 // TODO: ghet type chekcing working
 
-int retEnum(Gender g)
+// TODO: Make test case where reNum returns an int and coercion
+
+// fails
+
+long retEnum(Gender g)
 {
-	return 0;
+	return g.Male;
 }
