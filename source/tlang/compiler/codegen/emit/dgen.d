@@ -17,18 +17,24 @@ import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariablePar
 import tlang.compiler.symbols.check : getCharacter;
 import tlang.misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
+import tlang.compiler.symbols.typing.enums;
 import tlang.compiler.configuration : CompilerConfiguration;
 import tlang.compiler.symbols.containers : Module;
 import std.format : format;
 import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.datetime.stopwatch : Duration, dur;
 import tlang.compiler.codegen.emit.dgen_simplifier;
+import tlang.compiler.codegen.emit.dgen_enums;
 
 public final class DCodeEmitter : CodeEmitter
-{
+{    
+    /* Enumeration member-name mapper */
+    private EnumMapper e_mapper;
+
     this(TypeChecker typeChecker, File file, CompilerConfiguration config)
     {
         super(typeChecker, file, config);
+        this.e_mapper = new EnumMapper();
     }
 
     private ulong transformDepth = 0;
@@ -105,6 +111,12 @@ public final class DCodeEmitter : CodeEmitter
             
             return typeTransform(stackArray.getComponentType());
             // return "KAK TODO";
+        }
+        /* Enumeration type */
+        else if(typeChecker.isEnumType(typeIn))
+        {
+            Enum enum_t = cast(Enum)typeIn;
+            return "enum "~enum_t.getName();
         }
 
         ERROR("Type transform unimplemented for type '"~to!(string)(typeIn)~"'");
@@ -830,6 +842,9 @@ public final class DCodeEmitter : CodeEmitter
             // Emit static allocation code
             emitStaticAllocations(modOut, curMod);
 
+            // Emit enum types (TODO: When structs is merged and we have `emitTypes()` here then place THIS call in `emitTypes()`)
+            emitEnumTypes(modOut, curMod);
+
             // Emit globals
             emitCodeQueue(modOut, curMod);
 
@@ -1099,6 +1114,107 @@ public final class DCodeEmitter : CodeEmitter
                 modOut.writeln(externEmit);
             }
         }
+    }
+
+    private void emitEnumTypes(File modOut, Module mod)
+    {
+        bool allEnums(Entity e_in)
+        {
+            Type t = cast(Type)e_in;
+            return t !is null ? typeChecker.isEnumType(t) : false;
+        }
+
+        Entity[] matches;
+        typeChecker.getResolver().resolveWithin(mod, &allEnums, matches);
+        foreach(Enum e; cast(Enum[])matches)
+        {
+            DEBUG("Emitting enumeration type declaration for '", e, "'...");
+            emitEnumType(modOut, e);
+            modOut.writeln();
+        }
+    }
+
+    import tlang.compiler.codegen.emit.dgen_exceptions;
+
+    private void emitEnumType(File modOut, Enum e)
+    {
+        // FIXME: Keep track of enum names relating to their
+        // original `Enum` as we need to rename them actually!
+        //
+        // This is due to C not allowing enum constants to hav the same name
+        import tlang.compiler.symbols.expressions : Expression, IntegerLiteral;
+        string basicEpressionTransform(Expression e)
+        {
+            // TODO: Add stringexpression
+            if(cast(IntegerLiteral)e)
+            {
+                IntegerLiteral il = cast(IntegerLiteral)e;
+                return il.getNumber();
+            }
+            else
+            {
+                ERROR("Developer bug: Impossible for an expression like this '", e, "' to be an enum constant value");
+                assert(false);
+            }
+        }
+
+        // FIXME: How to do constraints here in C?
+        // we might need to control flags or put
+        // _some_ macro somewhere
+
+        EnumConstant[] m_s = e.members();
+
+        // Empty enumeration types are unsupported by then C emitter(as C doesn't support them)
+        if(!m_s.length)
+        {
+            throw noEnumMembers(e);
+        }
+        
+        Type enum_t = getEnumType(typeChecker, e);
+        DEBUG("enum type:", enum_t);
+
+        modOut.writeln(format("enum %s", e.getName()));
+
+        modOut.writeln("{");
+        for(size_t i = 0; i < m_s.length; i++)
+        {
+            auto c = m_s[i];
+            string m_out;
+            import niknaks.functional : Optional;
+
+            // get unique name
+            string c_name = this.e_mapper.getName(e, c.name());
+            
+            auto opt_v = c.value();
+            if(opt_v.isPresent())
+            {
+                m_out = format
+                (
+                    "%s%s = %s",
+                    genTabs(1),
+                    c_name,
+                    basicEpressionTransform(opt_v.get())
+                );
+            }
+            else
+            {
+                m_out = format
+                (
+                    "%s%s",
+                    genTabs(1),
+                    c_name
+                );
+            }
+
+            if(i != m_s.length-1)
+            {
+                import std.string : strip;
+                m_out = m_out~",";
+            }
+
+            modOut.writeln(m_out);
+        }
+        modOut.writeln("};");
     }
 
     /** 

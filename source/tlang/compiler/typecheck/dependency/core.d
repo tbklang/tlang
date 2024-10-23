@@ -895,6 +895,11 @@ public class DNodeGenerator
                 ERROR("Arrays (and these are stack arrays) are not yet supported");
                 // assert(false);
             }
+            /* Enumeration type */
+            else if(tc.isEnumType(variableType))
+            {
+                
+            }
             /* Anything else */
             else
             {
