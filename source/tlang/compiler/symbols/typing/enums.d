@@ -158,6 +158,13 @@ private Type determineType(TypeChecker tc, Expression e)
     return null;
 }
 
+public Type getEnumType(TypeChecker tc, Enum e)
+{
+    Type type_o;
+    enumCheck(tc, e, type_o);
+    return type_o;
+}
+
 public void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
 {
     import tlang.compiler.symbols.data : Container;
