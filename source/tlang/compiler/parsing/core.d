@@ -2708,6 +2708,12 @@ public final class Parser
             {
                 lexer.nextToken();
                 m_exp = parseExpression(); // TODO: Consume expression here? but like only literals
+                
+                if(getSymbolType(lexer.getCurrentToken()) == SymbolType.COMMA)
+                {
+                    lexer.nextToken();
+                    continue;
+                }
             }
             else if(getSymbolType(c) == SymbolType.CCURLY)
             {
