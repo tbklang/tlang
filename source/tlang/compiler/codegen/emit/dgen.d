@@ -17,6 +17,7 @@ import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariablePar
 import tlang.compiler.symbols.check : getCharacter;
 import tlang.misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
+import tlang.compiler.symbols.typing.enums;
 import tlang.compiler.configuration : CompilerConfiguration;
 import tlang.compiler.symbols.containers : Module;
 import std.format : format;
@@ -105,6 +106,12 @@ public final class DCodeEmitter : CodeEmitter
             
             return typeTransform(stackArray.getComponentType());
             // return "KAK TODO";
+        }
+        /* Enumeration type */
+        else if(typeChecker.isEnumType(typeIn))
+        {
+            Enum enum_t = cast(Enum)typeIn;
+            return "enum "~enum_t.getName();
         }
 
         ERROR("Type transform unimplemented for type '"~to!(string)(typeIn)~"'");
@@ -830,6 +837,9 @@ public final class DCodeEmitter : CodeEmitter
             // Emit static allocation code
             emitStaticAllocations(modOut, curMod);
 
+            // Emit enum types (TODO: When structs is merged and we have `emitTypes()` here then place THIS call in `emitTypes()`)
+            emitEnumTypes(modOut, curMod);
+
             // Emit globals
             emitCodeQueue(modOut, curMod);
 
@@ -1099,6 +1109,140 @@ public final class DCodeEmitter : CodeEmitter
                 modOut.writeln(externEmit);
             }
         }
+    }
+
+    private void emitEnumTypes(File modOut, Module mod)
+    {
+        bool allEnums(Entity e_in)
+        {
+            Type t = cast(Type)e_in;
+            return t !is null ? typeChecker.isEnumType(t) : false;
+        }
+
+        Entity[] matches;
+        typeChecker.getResolver().resolveWithin(mod, &allEnums, matches);
+        foreach(Enum e; cast(Enum[])matches)
+        {
+            DEBUG("Emitting enumeration type declaration for '", e, "'...");
+            emitEnumType(modOut, e);
+        }
+    }
+
+    private EnumMapper e_mapper = new EnumMapper(); // TODO: Move to ctor
+
+    // TODO: Move to seperate module
+    private static class EnumMapper
+    {
+        private size_t _roll;
+        private EnumNameStore[Enum] _s;
+
+        this()
+        {
+            
+        }
+
+        private EnumNameStore* enter(Enum e)
+        {
+            EnumNameStore* _es = e in _s;
+            if(_es is null)
+            {
+                this._s[e] = EnumNameStore();
+                return enter(e);
+            }
+            return _es;
+        }
+
+        public string getName(Enum e, string m)
+        {
+            scope(exit)
+            {
+                this._roll++;
+            }
+
+            EnumNameStore* _es = enter(e);
+            return _es.mapName(m, this._roll);
+        }
+    }
+
+    // TODO: Move to seperate module
+    private struct EnumNameStore
+    {
+        // Original name -> mapped name
+        private string[string] sl;
+
+        public string mapName(string n_i, size_t n_num)
+        {
+            string* n_o = n_i in this.sl;
+            if(n_o is null)
+            {
+                this.sl[n_i] = format("%s_%d", n_i, n_num);
+                return mapName(n_i, n_num);
+            }
+            return *n_o;
+        }
+    }
+
+    private void emitEnumType(File modOut, Enum e)
+    {
+        // FIXME: Keep track of enum names relating to their
+        // original `Enum` as we need to rename them actually!
+        //
+        // This is due to C not allowing enum constants to hav the same name
+        import tlang.compiler.symbols.expressions : Expression, IntegerLiteral;
+        string basicEpressionTransform(Expression e)
+        {
+            // TODO: Add stringexpression
+            if(cast(IntegerLiteral)e)
+            {
+                IntegerLiteral il = cast(IntegerLiteral)e;
+                return il.getNumber();
+            }
+            else
+            {
+                ERROR("Developer bug: Impossible for an expression like this '", e, "' to be an enum constant value");
+                assert(false);
+            }
+        }
+
+        // FIXME: How to do constraints here in C?
+        // we might need to control flags or put
+        // _some_ macro somewhere
+        
+        Type enum_t = getEnumType(typeChecker, e);
+        DEBUG("enum type:", enum_t);
+
+        modOut.writeln(format("enum %s", e.getName()));
+
+        modOut.writeln("{");
+        EnumConstant[] m_s = e.members();
+        for(size_t i = 0; i < m_s.length; i++)
+        {
+            auto c = m_s[i];
+            string m_out;
+            import niknaks.functional : Optional;
+
+            // get unique name
+            string c_name = this.e_mapper.getName(e, c.name());
+            
+            auto opt_v = c.value();
+            if(opt_v.isPresent())
+            {
+                m_out = format("%s = %s", c_name, basicEpressionTransform(opt_v.get()));
+            }
+            else
+            {
+                m_out = format("%s", c_name);
+            }
+
+            if(i != m_s.length-1)
+            {
+                import std.string : strip;
+                m_out = m_out~",";
+            }
+
+            modOut.writeln(m_out);
+        }
+        modOut.writeln("};");
     }
 
     /** 
