@@ -1142,15 +1142,17 @@ public final class Parser
                 {
                     // TODO (X-platform): Use `size_t` here
                     literalValue = to!(ulong)(numberLiteralStr);
+
+                    import tlang.compiler.typecheck.literals.ranges;
                     
 
                     // Signed integer range [0, 2_147_483_647]
-                    if(literalValue >= 0 && literalValue <= 2_147_483_647)
+                    if(literalValue >= 0 && literalValue <= INT_UPPER)
                     {
                         chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
                     }
                     // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
-                    else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
+                    else if(literalValue >= (INT_UPPER+1UL) && literalValue <= LONG_UPPER)
                     {
                         chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
                     }
