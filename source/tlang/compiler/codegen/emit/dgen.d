@@ -1130,6 +1130,7 @@ public final class DCodeEmitter : CodeEmitter
         {
             DEBUG("Emitting enumeration type declaration for '", e, "'...");
             emitEnumType(modOut, e);
+            modOut.writeln();
         }
     }
 
