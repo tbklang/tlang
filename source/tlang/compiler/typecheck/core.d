@@ -925,6 +925,48 @@ public final class TypeChecker
         return same;
     }
 
+    /** 
+     * Checks if the provided type is
+     * a number type
+     *
+     * Params:
+     *   typeIn = the `Type` to test
+     * Returns: `true` if so, `false`
+     * otherwise
+     */
+    public static bool isNumberType(Type typeIn)
+    {
+        return cast(Number)typeIn !is null;
+    }
+
+    /** 
+     * Checks if the provided type is
+     * an integral type
+     *
+     * Params:
+     *   typeIn = the `Type` to test
+     * Returns: `true` if so, `false`
+     * otherwise
+     */
+    public static bool isIntegralType(Type typeIn)
+    {
+        return cast(Integer)typeIn !is null;
+    }
+
+    /** 
+     * Checks if the two types are STRICTLY
+     * of the same object type
+     *
+     * Params:
+     *   t1 = the first type
+     *   t2 = the second type
+     * Returns: `true` if both types have
+     * the same RTTI typeid, `false` otherwise
+     */
+    public static bool isStrictlySameType(Type t1, Type t2)
+    {
+        return typeid(t1) == typeid(t2);
+    }
 
     /** 
      * Given a type to try coerce towards and a literal value
