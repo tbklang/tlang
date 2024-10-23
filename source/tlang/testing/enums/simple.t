@@ -1,15 +1,15 @@
 module simple;
 
+// Assigned value
+
 enum Sex : uint
 {
-	Male,
-	Female = 69
+    Male,
+	Female = 60,
+	Unknown
 }
 
-
-//Dont get any bloody ideas
-
-//about this you "liberal"
+// Assigned value
 
 enum Gender
 {
@@ -17,9 +17,10 @@ enum Gender
 	Female = 1
 }
 
+// No assigned values
+
 enum Numberless
 {
 	ONE,
 	TWO
 }
-
