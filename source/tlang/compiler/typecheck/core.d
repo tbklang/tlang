@@ -23,6 +23,7 @@ import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.misc.utils : panic;
 import tlang.compiler.typecheck.dependency.variables;
+import niknaks.functional : Optional;
 
 /**
 * The Parser only makes sure syntax
@@ -198,6 +199,9 @@ public final class TypeChecker
             {
                 assert(codeQueue.empty() == true);
 
+                /* Add an entry to the reference counting map */
+                touch(curFD.func);
+
                 /* Generate the dependency tree */
                 DNode funcNode = curFD.generate();
                 
@@ -259,16 +263,33 @@ public final class TypeChecker
         /** 
          * Find the variables which were declared but never used
          */
-        if(this.config.hasConfig("typecheck:warnUnusedVars") & this.config.getConfig("typecheck:warnUnusedVars").getBoolean())
+        if(this.config.hasConfig("typecheck:warnUnusedVars") && this.config.getConfig("typecheck:warnUnusedVars").getBoolean())
         {
             Variable[] unusedVariables = getUnusedVariables();
-            WARN("There are "~to!(string)(unusedVariables.length)~" unused variables");
             if(unusedVariables.length)
             {
+                WARN("There are "~to!(string)(unusedVariables.length)~" unused variables");
                 foreach(Variable unusedVariable; unusedVariables)
                 {
                     // TODO: Get a nicer name, full path-based
-                    INFO("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never used");
+                    WARN("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never used");
+                }
+            }
+        }
+
+        /** 
+         * Find the functions which were declared but never used
+         */
+        if(this.config.hasConfig("typecheck:warnUnusedFuncs") && this.config.getConfig("typecheck:warnUnusedFuncs").getBoolean())
+        {
+            Function[] unusedFuncs = getUnusedFunctions();
+            if(unusedFuncs.length)
+            {
+                WARN("There are "~to!(string)(unusedFuncs.length)~" unused functions");
+                foreach(Function unusedFunc; unusedFuncs)
+                {
+                    // TODO: Get a nicer name, full path-based
+                    WARN("Function '"~to!(string)(unusedFunc.getName())~"' is declared but never used");
                 }
             }
         }
@@ -898,6 +919,48 @@ public final class TypeChecker
         return same;
     }
 
+    /** 
+     * Checks if the provided type is
+     * a number type
+     *
+     * Params:
+     *   typeIn = the `Type` to test
+     * Returns: `true` if so, `false`
+     * otherwise
+     */
+    public static bool isNumberType(Type typeIn)
+    {
+        return cast(Number)typeIn !is null;
+    }
+
+    /** 
+     * Checks if the provided type is
+     * an integral type
+     *
+     * Params:
+     *   typeIn = the `Type` to test
+     * Returns: `true` if so, `false`
+     * otherwise
+     */
+    public static bool isIntegralType(Type typeIn)
+    {
+        return cast(Integer)typeIn !is null;
+    }
+
+    /** 
+     * Checks if the two types are STRICTLY
+     * of the same object type
+     *
+     * Params:
+     *   t1 = the first type
+     *   t2 = the second type
+     * Returns: `true` if both types have
+     * the same RTTI typeid, `false` otherwise
+     */
+    public static bool isStrictlySameType(Type t1, Type t2)
+    {
+        return typeid(t1) == typeid(t2);
+    }
 
     /** 
      * Given a type to try coerce towards and a literal value
@@ -910,6 +973,8 @@ public final class TypeChecker
      */
     private bool isCoercibleRange(Type toType, Value literalInstr)
     {
+        import tlang.compiler.typecheck.literals.ranges;
+
         // You should only be calling this on either a `LiteralValue`
         // ... or a `LiteralValueFloat` instruction
         // TODO: Add support for UnaryOpInstr (where the inner type is then)
@@ -927,111 +992,39 @@ public final class TypeChecker
 
             if(isSameType(toType, getType(null, "ubyte")))
             {
-                if(literalValue >= 0 && literalValue <= 255)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= UBYTE_UPPER;
             }
             else if(isSameType(toType, getType(null, "ushort")))
             {
-                if(literalValue >= 0 && literalValue <= 65_535)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= USHORT_UPPER;
             }
             else if(isSameType(toType, getType(null, "uint")))
             {
-                if(literalValue >= 0 && literalValue <= 4_294_967_295)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= UINT_UPPER;
             }
             else if(isSameType(toType, getType(null, "ulong")))
             {
-                if(literalValue >= 0 && literalValue <= 18_446_744_073_709_551_615)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= ULONG_UPPER;
             }
             // Handling for signed bytes [0, 127]
             else if(isSameType(toType, getType(null, "byte")))
             {
-                if(literalValue >= 0 && literalValue <= 127)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= BYTE_UPPER;
             }
             // Handling for signed shorts [0, 32_767]
             else if(isSameType(toType, getType(null, "short")))
             {
-                if(literalValue >= 0 && literalValue <= 32_767)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= SHORT_UPPER;
             }
             // Handling for signed integers [0, 2_147_483_647]
             else if(isSameType(toType, getType(null, "int")))
             {
-                if(literalValue >= 0 && literalValue <= 2_147_483_647)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= INT_UPPER;
             }
             // Handling for signed longs [0, 9_223_372_036_854_775_807]
             else if(isSameType(toType, getType(null, "long")))
             {
-                if(literalValue >= 0 && literalValue <= 9_223_372_036_854_775_807)
-                {
-                    // Valid coercion
-                    return true;
-                }
-                else
-                {
-                    // Invalid coercion
-                    return false;
-                }
+                return literalValue >= 0 && literalValue <= LONG_UPPER;
             }
         }
         // LiteralValue (integer literal instructions)
@@ -1061,55 +1054,19 @@ public final class TypeChecker
 
                 if(isSameType(toType, getType(null, "byte")))
                 {
-                    if(literalValue >= -128 && literalValue <= 127)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
+                    return literalValue >= BYTE_LOWER && literalValue <= BYTE_UPPER;
                 }
                 else if(isSameType(toType, getType(null, "short")))
                 {
-                    if(literalValue >= -32_768 && literalValue <= 32_767)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
+                    return literalValue >= SHORT_LOWER && literalValue <= SHORT_UPPER;
                 }
                 else if(isSameType(toType, getType(null, "int")))
                 {
-                    if(literalValue >= -2_147_483_648 && literalValue <= 2_147_483_647)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
+                    return literalValue >= INT_LOWER && literalValue <= INT_UPPER;
                 }
                 else if(isSameType(toType, getType(null, "long")))
                 {
-                    if(literalValue >= -9_223_372_036_854_775_808 && literalValue <= 9_223_372_036_854_775_807)
-                    {
-                        // Valid coercion
-                        return true;
-                    }
-                    else
-                    {
-                        // Invalid coercion
-                        return false;
-                    }
+                    return literalValue >= LONG_LOWER && literalValue <= LONG_UPPER;
                 }
             }
             // LiteralValue (integer literal instructions) with subtraction infront
@@ -1385,7 +1342,7 @@ public final class TypeChecker
                 * and obtain it's declared type
                 */
             Context potFVVCtx = potFVV.getContext();
-            Variable potStackArrVar = cast(Variable)resolver.resolveBest(potFVVCtx.getContainer(), potFVV.varName);
+            Variable potStackArrVar = cast(Variable)resolver.resolveBest(potFVVCtx.getContainer(), potFVV.getTarget());
             Type variableDeclaredType = getType(potFVVCtx.getContainer(), potStackArrVar.getType());
 
             /**
@@ -1560,6 +1517,20 @@ public final class TypeChecker
         }
     }
 
+    public struct ReportData
+    {
+        private Instruction i;
+        this(Instruction i)
+        {
+            this.i = i;
+        }
+
+        public Instruction originInstruction()
+        {
+            return this.i;
+        }
+    }
+
     /** 
      * Represents out-of-band
      * assignment data
@@ -1670,7 +1641,228 @@ public final class TypeChecker
         return current_assData.ofInstr;
     }
 
-    import niknaks.functional;
+    // FIXME: Do we _really_ need this?
+    // a simple boolean entry map would
+    // have worked. We don't need this
+    // complexity
+    private struct EntityVisitNode
+    {
+        private TypedEntity te;
+        private bool declared;
+
+        private ReportData rd;
+        private bool hasReportData;
+
+        @disable
+        this();
+
+        this(TypedEntity te)
+        {
+            this.te = te;
+            this.declared = false;
+        }
+
+        this(TypedEntity te, ReportData rd)
+        {
+            this(te);
+            this.rd = rd;
+        }
+
+        public void markDeclared()
+        {
+            this.declared = true;
+        }
+
+        public bool isDeclared()
+        {
+            return this.declared;
+        }
+
+        public Optional!(ReportData) report()
+        {
+            Optional!(ReportData) rd_opt;
+
+            if(this.hasReportData)
+            {
+                rd_opt = Optional!(ReportData)(this.rd);
+            }
+
+            return rd_opt;
+        }
+    }
+
+    private EntityVisitNode[TypedEntity] decl_fstMap;
+
+    private void clear_declMap()
+    {
+        this.decl_fstMap.empty();
+        DEBUG("Cleared out decl_fstMap");
+    }
+
+    /** 
+     * Marks the given entity as declared
+     * and stores with it some auxillary
+     * data for later reporting
+     *
+     * Params:
+     *   te = the entity
+     *   rd = the auxillary report data
+     */
+    private void declare(TypedEntity te, ReportData rd)
+    {
+        // Sanity check: You should never be calling
+        // ... this for the same entity more than once
+        assert((te in this.decl_fstMap) is null);
+
+        // Insert node and mark as declared
+        this.decl_fstMap[te] = EntityVisitNode(te, rd);
+        this.decl_fstMap[te].markDeclared();
+    }
+
+    /** 
+     * Checks if the given entity
+     * has been marked as declared
+     *
+     * Params:
+     *   te = the `TypedEntity` to
+     * check
+     * Returns: `true` if declared,
+     * `false` otherwise
+     */
+    private bool isDeclared(TypedEntity te)
+    {
+        EntityVisitNode* evn_ptr = te in this.decl_fstMap;
+
+        // If no entry is present then
+        // it must be false. Also create
+        // a new entry for later checks.
+        if(evn_ptr is null)
+        {
+            this.decl_fstMap[te] = EntityVisitNode(te);
+            return false;
+        }
+
+        return evn_ptr.isDeclared();
+    }
+
+    /** 
+     * Given a typed entity this checks if
+     * it has been marked as declared yet.
+     * In the case whereby it has not, then
+     * an exception will be thrown, else it
+     * will no-op.
+     *
+     * It takes in auxillary report data
+     * representing the calling context
+     * such a check was requested from.
+     *
+     * Params:
+     *   te = the `TypedEntity` to check
+     *   rdCtx = the `ReportData` context
+     */
+    private void bail_IfNotDeclared
+    (
+        TypedEntity te,
+        ReportData rdCtx
+    )
+    {
+        if(!isDeclared(te))
+        {
+            string entityName = te.getName();
+            DEBUG("te not declared: ", te);
+
+            EntityVisitNode* ent_ptr = te in this.decl_fstMap;
+
+            Instruction usageFromInstr = rdCtx.originInstruction();
+            import tlang.compiler.codegen.render;
+            string org_s = tryRender(usageFromInstr);
+            DEBUG("Original instruction line: ", org_s);
+
+            throw new TypeCheckerException
+            (
+                this,
+                TypeCheckerException.TypecheckError.ENTITY_NOT_DECLARED,
+                format
+                (
+                    "Usage of entity '%s' prior to declaration at %s ...",
+                    entityName,
+                    org_s
+                )
+            );
+        }
+        else
+        {
+            DEBUG("te declared: ", te);
+        }
+    }
+
+    /** 
+     * A proxy method which calls the
+     * underlying `Resolver` method
+     * `resolveBest` with the first
+     * two provided arguments. If the
+     * resolution succeeds then the
+     * found entity is returned, else
+     * an exception is thrown with
+     * the erroneous name and also 
+     * the auxillary calling context
+     * from where the resolution was
+     * requested.
+     *
+     * Params:
+     *   targetName = the name to
+     * resolve
+     *   ctx = the `Container` context
+     *   rd = the auxillary calling
+     * context for reporting in the
+     * case of an error
+     */
+    private Entity bail_resolveBest
+    (
+        string targetName,
+        Container ctx,
+        ReportData rd
+    )
+    {
+        Entity ent = this.resolver.resolveBest(ctx, targetName);
+
+        if(ent is null)
+        {
+            Instruction usageFromInstr = rd.originInstruction();
+            import tlang.compiler.codegen.render;
+            string org_s = tryRender(usageFromInstr);
+
+            string errMsg;
+            // If FetchValueVar
+            if(cast(FetchValueVar)usageFromInstr)
+            {
+                errMsg = "Cannot reference entity named '%s' in %s as it does not exist";
+            }
+            // If FuncCallInstr
+            else if(cast(FuncCallInstr)usageFromInstr)
+            {
+                errMsg = "Cannot call function named '%s' in %s as no such function exists";
+            }
+
+            // Sanity check: We should only be calling this for the above two use cases
+            assert(errMsg.length != 0);
+
+            throw new TypeCheckerException
+            (
+                this,
+                TypeCheckerException.TypecheckError.ENTITY_NOT_FOUND,
+                format
+                (
+                    errMsg,
+                    targetName,
+                    org_s
+                )
+            );
+        }
+
+        return ent;
+    }
+
     /** 
      * Instruction context
      *
@@ -1679,26 +1871,326 @@ public final class TypeChecker
      */
     private struct InstrCtx
     {
-        // The container with which
-        // the instruction being validated
-        // is a member of
+        /** 
+         * The container with which
+         * the instruction being validated
+         * is a member of
+         */
         private Container memberOf;
 
+        /** 
+         * Sets the container part of the context
+         *
+         * Params:
+         *   membersContainer = the container to
+         * set
+         */
         public void setContainer(Container membersContainer)
         {
             this.memberOf = membersContainer;
         }
 
+        /** 
+         * Returns an optional of the container
+         *
+         * Returns: An `Optional`
+         */
         public Optional!(Container) getContainer()
         {
             return memberOf is null ? Optional!(Container)() : Optional!(Container)(memberOf);
         }
     }
 
+    /** 
+     * Used to know whether or not
+     * an instruction was already
+     * validated or not
+     *
+     * TODO: We could clear this
+     * after each dep-gen code/gen
+     * run
+     */
+    private bool[Instruction] validationMap;
 
-    private Instruction completePartial(InstrCtx ctx, Instruction inputInstr)
+    /** 
+     * Checks if the given instruction
+     * has been validated yet
+     *
+     * Params:
+     *   instr = the `Instruction` to
+     * check
+     * Returns: `true` if it has been
+     * validated, `false` otherwise
+     */
+    private bool isValidated(Instruction instr)
     {
-        return null;
+        bool* flag = instr in this.validationMap;
+
+        // If not present, add a `false` entry
+        if(flag is null)
+        {
+            this.validationMap[instr] = false;
+            return isValidated(instr);
+        }
+
+        return *flag;
+    }
+
+    /** 
+     * Marks the given instruction
+     * as validated
+     *
+     * Params:
+     *   instr = the `Instruction`
+     * to mark as validated
+     */
+    private void markAsValidated(Instruction instr)
+    {
+        if(isValidated(instr))
+        {
+            ERROR("Attempt to double validate instruction ", instr);
+            assert(false);
+        }
+
+        this.validationMap[instr] = true;
+    }
+
+    /** 
+     * Performs the partial filling of certain aspects
+     * of the given instruction via the provided
+     * context.
+     *
+     * This can vary from setting the correct type for
+     * the instruction to performing further type
+     * checking on the instruction.
+     *
+     * The reason this exists is that certain instructions
+     * can only have such information determined (and thereafter
+     * set) once certain context is provided - which normally
+     * is only available in later instructions used
+     * in tandum with the one provided here.
+     *
+     * Params:
+     *   ctx = the `InstrCtx`
+     *   inputInstr = the `Instruction` to validate
+     */
+    private void validate(InstrCtx ctx, Instruction inputInstr)
+    {
+        scope(exit)
+        {
+            DEBUG
+            (
+                format
+                (
+                    "Validation exiting (InstrCtx: %s, Instruction: %s)",
+                    ctx,
+                    inputInstr
+                )
+            );
+        }
+
+        // Skip instructions which are already validated
+        if(isValidated(inputInstr))
+        {
+            WARN("Not validating '", inputInstr, "' as it is already validated");
+            return;
+        }
+
+        Optional!(Container) cOpt = ctx.getContainer();
+        DEBUG("getContainer()? present: ", cOpt.isPresent());
+
+        if(cOpt.isPresent())
+        {
+            Container cntnr = cOpt.get();
+            DEBUG("validate() cntnr: ", cntnr);
+            
+            // FuncCallInstr
+            if(cast(FuncCallInstr)inputInstr)
+            {
+                FuncCallInstr fcInstr = cast(FuncCallInstr)inputInstr;
+
+                // Resolve the Function and bail out if it does not exist
+                Entity funcEnt = bail_resolveBest(fcInstr.getTarget(), cntnr, ReportData(fcInstr));
+                Function func = cast(Function)funcEnt;
+
+                // Is the target a function? If not, then error
+                if(func is null)
+                {
+                    throw new TypeCheckerException
+                    (
+                        this,
+                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                        format
+                        (
+                            "Cannot call entity named '%s' as it is not a function",
+                            fcInstr.getTarget()
+                        )
+                    );
+                }
+
+                // Increase its "touch" count
+                touch(func);
+
+                DEBUG("fcInstr: ", fcInstr);
+                DEBUG("fcInstr (target): ", fcInstr.getTarget());
+                DEBUG("cntnr: ", cntnr);
+
+                assert(func);
+                VariableParameter[] paremeters = func.getParams();
+                size_t arity = func.getArity();
+
+                // Argument count
+                size_t argCnt = fcInstr.getArgCount();
+                Value[] arguments = fcInstr.getEvaluationInstructions();
+
+                // Arity mismatch check
+                if(arity != argCnt)
+                {
+                    throw new TypeCheckerException
+                    (
+                        this,
+                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                        format
+                        (
+                            "Function '%s' expects %d arguments but %d were provided",
+                            func.getName(),
+                            arity,
+                            argCnt
+                        )
+                    );
+                }
+
+                DEBUG(format("Function parameters: %s", paremeters));
+                DEBUG(format("Function arguments: %s", arguments));
+                
+                // Type-check every argument against its
+                // formal parameter counterpart and perform
+                // type coercion whilst doing so
+                for(size_t i = 0; i < arity; i++)
+                {
+                    // Current parameter
+                    VariableParameter param = paremeters[i];
+                    Type parmType = getType(cntnr, param.getType());
+
+                    // Current argument
+                    Value arg = arguments[i];
+
+                    // Validate the current argument by using
+                    // the context at the callsite (at the `FuncCallInstr`)
+                    Context fCS_Ctx = fcInstr.getContext();
+                    assert(fCS_Ctx);
+                    DEBUG("About to validate argument ", arg, " with ctx: ", ctx);
+                    validate(InstrCtx(fCS_Ctx.getContainer()), arg);
+
+                    // Now get the current argument's type
+                    Type argType = arg.getInstrType();
+                    assert(argType);
+
+                    
+
+                    
+
+
+                    /* Scratch type used only for stack-array coercion */
+                    Type coercionScratchType;
+
+                    /**
+                     * We need to enforce the `valueInstr`'s' (the `Value`-based
+                     * instruction being passed as an argument) type to be that
+                     * of the `parmType` (the function's parameter type)
+                     */
+                    typeEnforce(parmType, arg, arg, true);
+
+
+                    /**
+                     * Refresh the `argType` as `valueInstr` may have been
+                     * updated and we need the new type
+                     */
+                    argType = arg.getInstrType();
+                    
+
+                    // Sanity check
+                    assert(isSameType(argType, parmType));
+
+
+                    /** 
+                     * The argument value instruction stored
+                     * in `arg` MAY have changed. Therefore
+                     * we must place it back into the function
+                     * call instruction.
+                     */
+                    fcInstr.setEvalInstr(i, arg);
+                }
+
+                /* Set the instruction's type to that of the function's return type */
+                Type funcCallInstrType = getType(cntnr, func.getType());
+                fcInstr.setInstrType(funcCallInstrType);
+
+                /* Mark as validated */
+                markAsValidated(fcInstr);
+            }
+            // FetchValueVar
+            else if(cast(FetchValueVar)inputInstr)
+            {
+                FetchValueVar fVV = cast(FetchValueVar)inputInstr;
+
+                /* Resolve the target against the provided container context */
+                string targetName = fVV.getTarget();
+                DEBUG("FVV: targetName: ", targetName);
+                DEBUG("cntnr: ", cntnr);
+                assert(cntnr);
+
+                // Lookup entity but bail if not found
+                Entity gVar = bail_resolveBest(targetName, cntnr, ReportData(fVV));
+                string variableName = resolver.generateName(this.program, gVar);
+
+                /* Type determined for instruction */
+                Type instrType;
+
+                // If a module is being referred to
+                if(cast(Module)gVar)
+                {
+                    instrType = getType(cntnr, "module");
+                }
+                // If it is some kind-of typed entity
+                else if(cast(TypedEntity)gVar)
+                {
+                    TypedEntity typedEntity = cast(TypedEntity)gVar;
+                    instrType = getType(cntnr, typedEntity.getType());
+
+                    // Bail out if it was not yet declared
+                    bail_IfNotDeclared(typedEntity, ReportData(fVV));
+
+                    // If it is a variable increase its "touch" count
+                    if(cast(Variable)typedEntity)
+                    {
+                        touch(cast(Variable)typedEntity);
+                    }
+                }
+                //
+                else
+                {
+                    panic(format("Please add support for VariableExpression typecheck/codegen for handling: %s", gVar.classinfo));
+                }
+
+                /* Set the type accordingly */
+                fVV.setInstrType(instrType);
+
+                /* Mark as validated */
+                markAsValidated(fVV);
+            }
+            else
+            {
+                WARN
+                (
+                    format
+                    (
+                        "Container-based validation for '%s' ignored as no case handles it",
+                        inputInstr
+                    )
+                );
+            }
+        }
     }
 
     public void typeCheckThing(DNode dnode)
@@ -1807,63 +2299,19 @@ public final class TypeChecker
             else if(cast(VariableExpression)statement)
             {
                 VariableExpression g  = cast(VariableExpression)statement;
-                assert(g);
-
-                /* FIXME: It would seem that g.getContext() is returning null, so within function body's context is not being set */
-                DEBUG("VarExp: "~g.getName());
-                DEBUG(g.getContext());
-                Entity gVar = cast(Entity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
-                DEBUG("gVar nullity?: "~to!(string)(gVar is null));
-
-
-                // TODO: Throw exception if name is not found
-
-                /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
-                string variableName = resolver.generateName(this.program, gVar);
-                variableName = g.getName();
-
-                /* Type determined for instruction */
-                Type instrType;
-
-                // If a module is being referred to
-                if(cast(Module)gVar)
-                {
-                    instrType = getType(this.program, "module");
-                }
-                // If it is some kind-of typed entity
-                else if(cast(TypedEntity)gVar)
-                {
-                    TypedEntity typedEntity = cast(TypedEntity)gVar;
-                    instrType = getType(gVar.getContext().getContainer(), typedEntity.getType());
-                }
-                //
-                else
-                {
-                    panic(format("Please add support for VariableExpression typecheck/codegen for handling: %s", gVar.classinfo));
-                }
-
-
-                
-
-                DEBUG("Yaa, it's rewind time");
-
+                string targetName = g.getName();
 
                 /**
                 * Codegen
                 *
-                * FIXME: Add type info, length
-                *
                 * 1. Generate the instruction
                 * 2. Set the Context of it to where the VariableExpression occurred
                 */
-                FetchValueVar fVV = new FetchValueVar(variableName, 4);
+                FetchValueVar fVV = new FetchValueVar(targetName);
                 fVV.setContext(g.getContext());
 
-
+                /* Push instruction to top of stack */
                 addInstr(fVV);
-
-                /* The type of a FetchValueInstruction is the type of the variable being fetched */
-                fVV.setInstrType(instrType);
             }
             // else if(cast()) !!!! Continue here 
             else if(cast(BinaryOperatorExpression)statement)
@@ -1892,16 +2340,13 @@ public final class TypeChecker
                 DEBUG("vLhsInstr: ", vLhsInstr);
                 DEBUG("vRhsInstr: ", vRhsInstr);
 
-                Type vRhsType = vRhsInstr.getInstrType();
-                Type vLhsType = vLhsInstr.getInstrType();
-                DEBUG("vLhsType: ", vLhsType);
-                DEBUG("vRhsType: ", vRhsType);
-
                 DEBUG("Sir shitsalot");
 
                 if(binOperator == SymbolType.DOT)
                 {
                     // panic("Implement dot operator typecheck/codegen");
+
+                    DEBUG("Humburger");
 
                     // lhs=FetchValueVar rhs=<undetermined>
                     
@@ -1930,6 +2375,23 @@ public final class TypeChecker
                                     vLhsInstr,
                                     binOperator,
                                     vRhsInstr
+                                )
+                            );
+                        }
+                        // Can't do `<functionName>.<member>`
+                        else if(cast(Function)leftEntity)
+                        {
+                            import tlang.compiler.codegen.render : tryRender;
+                            throw new TypeCheckerException
+                            (
+                                this,
+                                TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                                format
+                                (
+                                    "Cannot apply the dot operator with left-hand operand '%s' which is a function's name in '%s.%s'",
+                                    tryRender(vLhsInstr),
+                                    tryRender(vLhsInstr),
+                                    tryRender(vRhsInstr)
                                 )
                             );
                         }
@@ -1985,9 +2447,13 @@ public final class TypeChecker
                                 // which takes `<leftName>.<rightName>`
                                 // and makes that the new name?
                                 string newName = targetName~"."~member;
-                                FetchValueVar newfetchInstr = new FetchValueVar(newName, 8);
-                                newfetchInstr.setInstrType(getType(this.program, "container"));
-                                addInstr(newfetchInstr);
+                                fetchValVarRight.setTarget(newName);
+
+                                // Instruction type is a container type
+                                fetchValVarRight.setInstrType(getType(this.program, "container"));
+
+                                // Push back to top of stack
+                                addInstr(fetchValVarRight);
 
                                 return;
                             }
@@ -1996,11 +2462,23 @@ public final class TypeChecker
                             else if(cast(Variable)memberEnt)
                             {
                                 DEBUG("memberEnt is a variable");
-                                
+
+                                // Update the `FetchValueVar`'s name
+                                // to be the full path `<targetName>.<member>`
+                                string newName = targetName~"."~member;
+                                fetchValVarRight.setTarget(newName);
+
+                                // FIXME: Validation should set correct VarLen, actually
+                                // the instr type dictates this, deprecate the VarLen in `FetchValueVar`
+
                                 // Push the right hand side then
                                 // BACK to the top of stack
-                                FetchValueVar rightFetch = cast(FetchValueVar)vRhsInstr;
-                                addInstr(rightFetch);
+                                addInstr(fetchValVarRight);
+
+                                // Validate it with the container-left as context
+                                validate(InstrCtx(containerLeft), fetchValVarRight);
+                                assert(fetchValVarRight.getInstrType());
+
                                 return;
                             }
 
@@ -2018,7 +2496,19 @@ public final class TypeChecker
                         else if(cast(FuncCallInstr)vRhsInstr)
                         {
                             FuncCallInstr funcCallRight = cast(FuncCallInstr)vRhsInstr;
+                            
+                            // Validate the `FuncCallInstr` with the container to our left
+                            validate(InstrCtx(containerLeft), funcCallRight);
+
+                            // Push the function call instruction to the stack
                             addInstr(funcCallRight);
+
+                            DEBUG("left: ", containerLeft);
+                            DEBUG("right: ", funcCallRight, ", type: ", funcCallRight.getInstrType());
+
+                            // Update target name to full name <leftContainer>.<ourName>
+                            string newName = targetName~"."~funcCallRight.getTarget();
+                            funcCallRight.setTarget(newName);
 
                             return;
                         }
@@ -2034,6 +2524,18 @@ public final class TypeChecker
                     }
                 }
                 
+                /**
+                 * Perform validation on both the left-hand side
+                 * and right-hand side operands
+                 */
+                validate(InstrCtx(binOpCtx.getContainer()), vLhsInstr);
+                validate(InstrCtx(binOpCtx.getContainer()), vRhsInstr);
+
+
+                Type vRhsType = vRhsInstr.getInstrType();
+                Type vLhsType = vLhsInstr.getInstrType();
+                DEBUG("vLhsType: ", vLhsType);
+                DEBUG("vRhsType: ", vRhsType);
 
                 /** 
                  * ==== Pointer coercion ====
@@ -2169,6 +2671,8 @@ public final class TypeChecker
             else if(cast(UnaryOperatorExpression)statement)
             {
                 UnaryOperatorExpression unaryOpExp = cast(UnaryOperatorExpression)statement;
+                Context uOpCtx = unaryOpExp.getContext();
+                assert(uOpCtx);
                 SymbolType unaryOperator = unaryOpExp.getOperator();
                 
                 /* The type of the eventual UnaryOpInstr */
@@ -2179,6 +2683,10 @@ public final class TypeChecker
                 * Typechecking (TODO)
                 */
                 Value expInstr = cast(Value)popInstr();
+
+                // Validate the expression
+                validate(InstrCtx(uOpCtx.getContainer()), expInstr);
+
                 Type expType = expInstr.getInstrType();
 
                 /* TODO: Ad type check for operator */
@@ -2293,95 +2801,24 @@ public final class TypeChecker
                 assert(funcCall.getContext().getContainer());
                 DEBUG("FuncCall ctx (container): ", funcCall.getContext().getContainer());
 
-                // Find the top-level container of the function being called
-                // and then use this as the container to resolve our function
-                // being-called to (as a starting point)
-                Module belongsTo = cast(Module)resolver.findContainerOfType(Module.classinfo, funcCall);
-                assert(belongsTo);
-
-                /* TODO: Look up func def to know when popping stops (types-based delimiting) */
                 ERROR("Name of func call: "~funcCall.getName());
-                Function func = cast(Function)resolver.resolveBest(belongsTo, funcCall.getName());
-                assert(func);
-                VariableParameter[] paremeters = func.getParams();
+
+                // Parameter count (to know how many to pop)
+                size_t argCount = funcCall.getArgCount();
 
                 // Create new call instruction
-                FuncCallInstr funcCallInstr = new FuncCallInstr(funcCall.getName(), paremeters.length);
-                
-                /* If there are paremeters for this function (as per definition) */
-                if(!paremeters.length)
+                FuncCallInstr funcCallInstr = new FuncCallInstr(funcCall.getName(), argCount);
+
+                // Pop off the arguments back to front and add them
+                while(argCount)
                 {
-                    ERROR(format("No parameters for function: %s", func.getName()));
-                }
-                /* Pop all args per type */
-                else
-                {
-                    ulong parmCount = paremeters.length-1;
-                    ERROR("Kachow: "~to!(string)(parmCount));
+                    Instruction curInstr = popInstr();
+                    assert(curInstr);
+                    Value curInstr_V = cast(Value)curInstr;
+                    assert(curInstr_V);
 
-                    while(!isInstrEmpty())
-                    {
-                        Instruction instr = popInstr();
-                        
-                        Value valueInstr = cast(Value)instr;
-                        
-
-                        /* Must be a value instruction */
-                        if(valueInstr && parmCount!=-1)
-                        {
-                            /* TODO: Determine type and match up */
-                            DEBUG("Yeah");
-                            DEBUG(valueInstr);
-                            Type argType = valueInstr.getInstrType();
-                            // gprintln(argType);
-
-                            Variable parameter = paremeters[parmCount];
-                            // gprintln(parameter);
-                            
-
-                            Type parmType = getType(func.parentOf(), parameter.getType());
-                            // gprintln("FuncCall(Actual): "~argType.getName());
-                            // gprintln("FuncCall(Formal): "~parmType.getName());
-                            // gprintln("FuncCall(Actual): "~valueInstr.toString());
-
-                            /* Scratch type used only for stack-array coercion */
-                            Type coercionScratchType;
-
-
-
-                            /**
-                             * We need to enforce the `valueInstr`'s' (the `Value`-based
-                             * instruction being passed as an argument) type to be that
-                             * of the `parmType` (the function's parameter type)
-                             */
-                            typeEnforce(parmType, valueInstr, valueInstr, true);
-
-                            /**
-                             * Refresh the `argType` as `valueInstr` may have been
-                             * updated and we need the new type
-                             */
-                            argType = valueInstr.getInstrType();
-                            
-
-                            // Sanity check
-                            assert(isSameType(argType, parmType));
-
-                            
-                            /* Add the instruction into the FunctionCallInstr */
-                            funcCallInstr.setEvalInstr(parmCount, valueInstr);
-                            DEBUG(funcCallInstr.getEvaluationInstructions());
-                            
-                            /* Decrement the parameter index (right-to-left, so move to left) */
-                            parmCount--;
-                        }
-                        else
-                        {
-                            // TODO: This should enver happen, see book and remove soon (see Cleanup: Remove any pushbacks #101)
-                            /* Push it back */
-                            addInstr(instr);
-                            break;
-                        }
-                    }
+                    funcCallInstr.setEvalInstr(argCount-1, curInstr_V);
+                    argCount--;
                 }
 
                 /**
@@ -2398,15 +2835,13 @@ public final class TypeChecker
 
                 /* Add instruction to top of stack */
                 addInstr(funcCallInstr);
-
-                /* Set the Value instruction's type */
-                Type funcCallInstrType = getType(func.parentOf(), func.getType());
-                funcCallInstr.setInstrType(funcCallInstrType);
             }
             /* Type cast operator */
             else if(cast(CastedExpression)statement)
             {
                 CastedExpression castedExpression = cast(CastedExpression)statement;
+                Context ctx = castedExpression.getContext();
+                assert(ctx);
                 DEBUG("Context: "~to!(string)(castedExpression.context));
                 DEBUG("ParentOf: "~to!(string)(castedExpression.parentOf()));
                 
@@ -2424,6 +2859,9 @@ public final class TypeChecker
                 */
                 Value uncastedInstruction = cast(Value)popInstr();
                 assert(uncastedInstruction);
+
+                // Validate the uncasted expression instruction
+                validate(InstrCtx(ctx.getContainer()), uncastedInstruction);
 
                 /* Extract the type of the expression being casted */
                 Type typeBeingCasted = uncastedInstruction.getInstrType();
@@ -2445,16 +2883,27 @@ public final class TypeChecker
             else if(cast(ArrayIndex)statement)
             {
                 ArrayIndex arrayIndex = cast(ArrayIndex)statement;
+                Context ctx = arrayIndex.getContext();
+
                 Type accessType;
 
                 /* Pop the thing being indexed (the indexTo expression) */
                 Value indexToInstr = cast(Value)popInstr();
+
+                // Validate the thing-being-indexed instruction
+                validate(InstrCtx(ctx.getContainer()), indexToInstr);
+
                 Type indexToType = indexToInstr.getInstrType();
                 assert(indexToType);
                 DEBUG("ArrayIndex: Type of `indexToInstr`: "~indexToType.toString());
 
                 /* Pop the index instruction (the index expression) */
                 Value indexInstr = cast(Value)popInstr();
+
+                // Validate the index instruction
+                validate(InstrCtx(ctx.getContainer()), indexInstr);
+
+                /* Obtain the type of the index instruction */
                 Type indexType = indexInstr.getInstrType();
                 assert(indexType);
 
@@ -2553,7 +3002,12 @@ public final class TypeChecker
                 ERROR("Array index not yet supported");
                 // assert(false);
 
+                /* Push the instruction to the top of the stack */
                 addInstr(generatedInstruction);
+
+                /* Set context to instruction */
+                generatedInstruction.setContext(ctx);
+                assert(generatedInstruction.getContext());
 
                 printCodeQueue();
             }
@@ -2630,13 +3084,16 @@ public final class TypeChecker
             * Emit a variable declaration instruction
             */
             Variable variablePNode = cast(Variable)dnode.getEntity();
+            Context ctx = variablePNode.getContext();
+            assert(ctx);
             DEBUG("HELLO FELLA");
 
-            string variableName = resolver.generateName(this.program, variablePNode);
-            DEBUG("HELLO FELLA (name): "~variableName);
-            
+            /* Add an entry to the reference counting map */
+            touch(variablePNode);
 
-            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
+            /* Extract name and lookup type */
+            string variableName = variablePNode.getName();
+            Type variableDeclarationType = getType(ctx.getContainer(), variablePNode.getType());
 
 
             // Check if this variable declaration has an assignment attached
@@ -2646,13 +3103,15 @@ public final class TypeChecker
                 Instruction poppedInstr = popInstr();
                 assert(poppedInstr);
 
+                // Validate the instruction
+                validate(InstrCtx(ctx.getContainer()), poppedInstr);
+
                 // Obtain the value instruction of the variable assignment
                 // ... along with the assignment's type
                 assignmentInstr = cast(Value)poppedInstr;
                 assert(assignmentInstr);
                 Type assignmentType = assignmentInstr.getInstrType();
-
-
+                assert(assignmentType);
 
                 /** 
                  * Here we can call the `typeEnforce` with the popped
@@ -2667,6 +3126,9 @@ public final class TypeChecker
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variableDeclarationType, assignmentInstr);
             varDecInstr.setContext(variablePNode.context);
             addInstrB(varDecInstr);
+
+            /* Mark as declared (and pass in auxillary information for reporting) */
+            declare(variablePNode, ReportData(varDecInstr));
         }
         /* TODO: Add class init, see #8 */
         else if(cast(tlang.compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
@@ -2727,9 +3189,24 @@ public final class TypeChecker
                     // The entity being assigned to
                     FetchValueVar toEntityInstrVV = cast(FetchValueVar)toEntityInstr;
                     Context toCtx = toEntityInstr.getContext();
+                    assert(toCtx);
+                    DEBUG("target: ", toEntityInstrVV.getTarget());
                     Variable ent = cast(Variable) resolver.resolveBest(toCtx.getContainer(), toEntityInstrVV.getTarget());
                     assert(ent);
                     Type variableDeclarationType = getType(toCtx.getContainer(), ent.getType());
+
+                    /**
+                     * Validate the "to" instruction (the instruction representing
+                     * the left-hand side of the assignment).
+                     *
+                     * We do this incase it was nto yet already validated, helps
+                     * with things like touch()-counting
+                     */
+                    validate(InstrCtx(toCtx.getContainer()), toEntityInstrVV);
+
+
+                    // Validate the instruction being assigned (the expression)
+                    validate(InstrCtx(toCtx.getContainer()), assignmentInstr);
 
                     // Type of expression being assigned
                     Type assignmentType = assignmentInstr.getInstrType();
@@ -2758,6 +3235,10 @@ public final class TypeChecker
                 {
                     StackArrayIndexInstruction arrayRefInstruction = cast(StackArrayIndexInstruction)toEntityInstr;
                     Context arrRefInstrCtx = arrayRefInstruction.getContext();
+                    assert(arrRefInstrCtx);
+
+                    // Validate the instruction being assigned (expression being assigned)
+                    validate(InstrCtx(arrRefInstrCtx.getContainer()), assignmentInstr);
 
                     DEBUG("ArrayRefInstruction: ", arrayRefInstruction);
                     DEBUG("AssigmmentVal instr: ", assignmentInstr);
@@ -2782,11 +3263,14 @@ public final class TypeChecker
                 else if(cast(ArrayIndexInstruction)toEntityInstr)
                 {
                     ArrayIndexInstruction arrayRefInstruction = cast(ArrayIndexInstruction)toEntityInstr;
+                    Context arrRefInstrCtx = arrayRefInstruction.getContext();
+                    assert(arrRefInstrCtx);
 
                     DEBUG("ArrayRefInstruction: ", arrayRefInstruction);
                     DEBUG("AssigmmentVal instr: ", assignmentInstr);
 
-
+                    // Validate the instruction being assigned (expression being assigned)
+                    validate(InstrCtx(arrRefInstrCtx.getContainer()), assignmentInstr);
 
                     /* The type of what is being indexed on */
                     Type indexingOnType = arrayRefInstruction.getInstrType();
@@ -2810,6 +3294,9 @@ public final class TypeChecker
             else if(cast(ReturnStmt)statement)
             {
                 ReturnStmt returnStatement = cast(ReturnStmt)statement;
+                Context ctx = returnStatement.getContext();
+                assert(ctx);
+
                 Function funcContainer = cast(Function)resolver.findContainerOfType(Function.classinfo, returnStatement);
 
                 /* Generated return instruction */
@@ -2864,6 +3351,10 @@ public final class TypeChecker
                     {
                         Value returnExpressionInstr = cast(Value)popInstr();
                         assert(returnExpressionInstr);
+
+                        // Validate the return instruction (expression)
+                        validate(InstrCtx(ctx.getContainer()), returnExpressionInstr);
+
                         Type returnExpressionInstrType = returnExpressionInstr.getInstrType();
 
                         /**
@@ -2917,6 +3408,8 @@ public final class TypeChecker
                 for(ulong branchIdx = branches.length-1; true; branchIdx--)
                 {
                     Branch branch = branches[branchIdx];
+                    Context ctx = branch.getContext();
+                    assert(ctx);
 
                     // Pop off an expression instruction (if it exists)
                     Value branchConditionInstr;
@@ -2927,6 +3420,9 @@ public final class TypeChecker
                         DEBUG("Instr is: "~to!(string)(instr));
                         branchConditionInstr = cast(Value)instr;
                         assert(branchConditionInstr);
+
+                        // Validate the `Value`-based instruction
+                        validate(InstrCtx(ctx.getContainer()), branchConditionInstr);
                     }
 
                     // Get the number of body instructions to pop
@@ -2990,10 +3486,15 @@ public final class TypeChecker
                 }
 
                 Branch branch = whileLoop.getBranch();
+                Context ctx = branch.getContext();
+                assert(ctx);
 
                 /* The condition `Value` instruction should be on the stack */
                 Value valueInstrCondition = cast(Value)popInstr();
                 assert(valueInstrCondition);
+
+                // Validate the `Value`-based instruction
+                validate(InstrCtx(ctx.getContainer()), valueInstrCondition);
 
                 /* Process the body of the while-loop with tail-popping followed by a reverse */
                 Instruction[] bodyInstructions;
@@ -3032,10 +3533,15 @@ public final class TypeChecker
             else if(cast(ForLoop)statement)
             {
                 ForLoop forLoop = cast(ForLoop)statement;
+                Context ctx = forLoop.getContext();
+                assert(ctx);
 
                 /* Pop-off the Value-instruction for the condition */
                 Value valueInstrCondition = cast(Value)popInstr();
                 assert(valueInstrCondition);
+
+                // Validate the condition instruction
+                validate(InstrCtx(ctx.getContainer()), valueInstrCondition);
 
                 /* Calculate the number of instructions representing the body to tailPopInstr() */
                 ulong bodyTailPopNumber = forLoop.getBranch().getStatements().length;
@@ -3085,14 +3591,22 @@ public final class TypeChecker
             else if(cast(PointerDereferenceAssignment)statement)
             {
                 PointerDereferenceAssignment ptrDerefAss = cast(PointerDereferenceAssignment)statement;
+                Context ctx = ptrDerefAss.getContext();
+                assert(ctx);
                 
                 /* Pop off the pointer dereference expression instruction (LHS) */
                 Value lhsPtrExprInstr = cast(Value)popInstr();
                 assert(lhsPtrExprInstr);
 
+                // Validate the pointer dereference instruction (LHS)
+                validate(InstrCtx(ctx.getContainer()), lhsPtrExprInstr);
+
                 /* Pop off the assignment instruction (RHS expression) */
                 Value rhsExprInstr = cast(Value)popInstr();
                 assert(rhsExprInstr);
+
+                // Validate the assignment instruction (RHS)
+                validate(InstrCtx(ctx.getContainer()), rhsExprInstr);
 
                 /**
                 * Code gen
@@ -3129,22 +3643,40 @@ public final class TypeChecker
                 discardInstruction.setContext(discardStatement.context);
                 addInstrB(discardInstruction);
             }
+            /** 
+             * Standalone expression statements
+             */
             else if(cast(ExpressionStatement)statement)
             {
                 ExpressionStatement exprStmt = cast(ExpressionStatement)statement;
+                Context ctx = exprStmt.getContext();
+                assert(ctx);
 
                 /* Pop a single `Value`-based instruction off the stack */
                 Value valInstr = cast(Value)popInstr();
+
+                /* Perform validation on the `Value`-based instruction */
+                validate(InstrCtx(ctx.getContainer()), valInstr);
 
                 /**
                  * If it is anything other than a
                  * direct function call (i.e. a
                  * `FuncCallInstr`) then warn
                  * about unused values
+                 *
+                 * FIXME: Remove this as idk
+                 * what it does
                  */
                 if(!cast(FuncCallInstr)valInstr)
                 {
-                    WARN(format("You may have unused values in this non-function call statement-level expression: %s", valInstr));
+                    WARN
+                    (
+                        format
+                        (
+                            "You may have unused values in this non-function call statement-level expression: %s",
+                            valInstr
+                        )
+                    );
                 }
 
                 /* Create new instruction embedding the `valInstr` */
@@ -3750,29 +4282,29 @@ public final class TypeChecker
     }
 
     /** 
-     * Maps a given `Variable` to its reference
+     * Maps a given `Entity` to its reference
      * count. This includes the declaration
      * thereof.
      */
-    private uint[Variable] varRefCounts;
+    private uint[Entity] entRefCounts;
 
     /** 
-     * Increments the given variable's reference
+     * Increments the given entity's reference
      * count
      *
      * Params:
-     *   variable = the variable
+     *   entity = the entity
      */
-    void touch(Variable variable)
+    void touch(Entity entity)
     {
         // Create entry if not existing yet
-        if(variable !in this.varRefCounts)
+        if(entity !in this.entRefCounts)
         {
-            this.varRefCounts[variable] = 0;    
+            this.entRefCounts[entity] = 0;
         }
 
         // Increment count
-        this.varRefCounts[variable]++;
+        this.entRefCounts[entity]++;
     }
 
     /** 
@@ -3784,11 +4316,61 @@ public final class TypeChecker
     public Variable[] getUnusedVariables()
     {
         Variable[] unused;
-        foreach(Variable variable; this.varRefCounts.keys())
+        foreach(Entity entity; getUnusedEntities())
         {
-            if(!(this.varRefCounts[variable] > 1))
+            Variable potVar = cast(Variable)entity;
+            if(potVar)
             {
-                unused ~= variable;
+                unused ~= potVar;
+            }
+        }
+
+        return unused;
+    }
+
+    /** 
+     * Returns all functions which were declared
+     * but not used
+     *
+     * Returns: the array of functions
+     */
+    public Function[] getUnusedFunctions()
+    {
+        Function[] unused;
+        foreach(Entity entity; getUnusedEntities())
+        {
+            Function potFunc = cast(Function)entity;
+            if(potFunc)
+            {
+                unused ~= potFunc;
+            }
+        }
+
+        return unused;
+    }
+
+    /** 
+     * Returns all entities which were declared
+     * but not used
+     *
+     * Returns: the array of entities
+     */
+    public Entity[] getUnusedEntities()
+    {
+        Entity[] unused;
+        foreach(Entity entity; this.entRefCounts.keys())
+        {
+            // 1 means it was declared
+            if(!(this.entRefCounts[entity] > 1))
+            {
+                unused ~= entity;
+            }
+            // Anything more (refCount > 1) means a reference
+            else
+            {
+                // TODO: change text based on entity typ[e]
+                // FIXME: Only enable this when in debug builds
+                DEBUG("Entity '", entity, "' is used ", this.entRefCounts[entity]-1, " many times");
             }
         }
 
@@ -4170,7 +4752,7 @@ unittest
  * Tests the unused variable detection mechanism
  *
  * Case: Negative (unused variables do NOT exist)
- * Source file: source/tlang/testing/unused_vars_none.t
+ * Source file: source/tlang/testing/unused_vars_none_1.t
  */
 unittest
 {
@@ -4178,7 +4760,7 @@ unittest
     File fileOutDummy;
     import tlang.compiler.core;
 
-    string sourceFile = "source/tlang/testing/unused_vars_none.t";
+    string sourceFile = "source/tlang/testing/unused_vars_none_1.t";
 
 
     Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
@@ -4193,3 +4775,268 @@ unittest
     Variable[] unusedVars = tc.getUnusedVariables();
     assert(unusedVars.length == 0);
 }
+
+/** 
+ * Tests the unused variable detection mechanism
+ *
+ * Case: Negative (unused variables do NOT exist)
+ * Source file: source/tlang/testing/unused_vars_none_2.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_vars_none_2.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 0 unused variables
+     */
+    Variable[] unusedVars = tc.getUnusedVariables();
+    assert(unusedVars.length == 0);
+}
+
+/** 
+ * Tests the unused functions detection mechanism
+ *
+ * Case: Positive (unused variables exist)
+ * Source file: source/tlang/testing/unused_funcs.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_funcs.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 1 unused function and then
+     * it should be named `thing`
+     */
+    Function[] unusedFuncs = tc.getUnusedFunctions();
+    assert(unusedFuncs.length == 1);
+    Function unusedFuncActual = unusedFuncs[0];
+    Function unusedFuncExpected = cast(Function)tc.getResolver().resolveBest(compiler.getProgram().getModules()[0], "thing");
+    assert(unusedFuncActual is unusedFuncExpected);
+}
+
+/** 
+ * Tests the unused variable detection mechanism
+ *
+ * Case: Negative (unused variables do NOT exist)
+ * Source file: source/tlang/testing/unused_funcs_none_1.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_funcs_none_1.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 0 unused functions
+     */
+    Function[] unusedFuncs = tc.getUnusedFunctions();
+    assert(unusedFuncs.length == 0);
+}
+
+/** 
+ * Tests the unused variable detection mechanism
+ *
+ * Case: Negative (unused variables do NOT exist)
+ * Source file: source/tlang/testing/unused_funcs_none_2.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/unused_funcs_none_2.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 0 unused functions
+     */
+    Function[] unusedFuncs = tc.getUnusedFunctions();
+    assert(unusedFuncs.length == 0);
+}
+
+/** 
+ * Tests the use-before-declare detection for
+ * variable usage and variable declarations
+ *
+ * Case: Positive (use-before-declare is present)
+ * Source file: source/tlang/testing/typecheck/use_before_declare.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/typecheck/use_before_declare.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    
+    Exception eFound;
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException e)
+    {
+        eFound = e;
+        assert(e.getError() == TypeCheckerException.TypecheckError.ENTITY_NOT_DECLARED);
+    }
+
+    assert(cast(TypeCheckerException)eFound !is null);
+}
+
+/** 
+ * Tests the referencing of entities with
+ * given names but which don't exist. This
+ * case tests the case whereby an entity
+ * is referenecd (an identity reference)
+ * but which does not exist.
+ *
+ * Case: Positive (entity referenced does not exist)
+ * Source file: source/tlang/testing/typecheck/use_but_not_found_var.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/typecheck/use_but_not_found_var.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    
+    Exception eFound;
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException e)
+    {
+        eFound = e;
+        assert(e.getError() == TypeCheckerException.TypecheckError.ENTITY_NOT_FOUND);
+    }
+
+    assert(cast(TypeCheckerException)eFound !is null);
+}
+
+/** 
+ * Tests the referencing of entities with
+ * given names but which don't exist. This
+ * case tests the case of a function call
+ * to a function which doesn't exist
+ *
+ * Case: Positive (entity referenced does not exist)
+ * Source file: source/tlang/testing/typecheck/use_but_not_found_func.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/typecheck/use_but_not_found_func.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    
+    Exception eFound;
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException e)
+    {
+        eFound = e;
+        assert(e.getError() == TypeCheckerException.TypecheckError.ENTITY_NOT_FOUND);
+    }
+
+    assert(cast(TypeCheckerException)eFound !is null);
+}
+
+/** 
+ * Tests applying the dot operator
+ * where the left-hand side is the
+ * name of a function, which is
+ * not allowed.
+ *
+ * Case: Positive (it is the case)
+ * Source file: source/tlang/testing/dotting/bad_dot.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/dotting/bad_dot.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    
+    Exception eFound;
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException e)
+    {
+        eFound = e;
+        assert(e.getError() == TypeCheckerException.TypecheckError.GENERAL_ERROR);
+    }
+
+    assert(cast(TypeCheckerException)eFound !is null);
+}
+
+

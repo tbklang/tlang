@@ -117,7 +117,7 @@ unittest
     Type intType = new Type("int");
     FuncCallInstr fcall = new FuncCallInstr("getPtrDouble", 2);
     fcall.setEvalInstr(0, new LiteralValue("65", intType));
-    fcall.setEvalInstr(1, new ArrayIndexInstruction(new FetchValueVar("arr", 8), new LiteralValue("66", intType)));
+    fcall.setEvalInstr(1, new ArrayIndexInstruction(new FetchValueVar("arr"), new LiteralValue("66", intType)));
     PointerDereferenceAssignmentInstruction ptrDeref = new PointerDereferenceAssignmentInstruction
     (
         fcall,

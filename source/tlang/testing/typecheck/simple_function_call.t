@@ -1,7 +1,7 @@
-module simple;
+module simple_function_call;
 
 int j = 1+func(3,test()+t2()+t2());
-j = 2+func(j,test());
+int k = 2+func(j,test());
 
 int func(int x1, byte x2)
 {

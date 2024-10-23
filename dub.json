@@ -15,5 +15,6 @@
 	"versions": [
 		"DBG_MODMAN",
 		"DBG_DEBUG_LOGGING"
-	]
+	],
+	"buildRequirements": ["allowWarnings"]
 }

@@ -18,7 +18,6 @@ import tlang.misc.logging;
 import tlang.compiler.core : Compiler, beginCompilation;
 import tlang.compiler.configuration : ConfigEntry;
 import std.conv : to;
-import tlang.compiler.codegen.mapper.core : SymbolMappingTechnique;
 import core.stdc.stdlib : exit;
 
 //TODO: Re-order the definitions below so that they appear with compile first, then lex, parse, ..., help
@@ -72,10 +71,6 @@ mixin template EmitBase()
 {
     @ArgGroup("Emit", "Options pertaining to the code emitter")
     {
-        @ArgNamed("symbol-mapper|sm", "The symbol mapping technique to use for DGen (C emitter)")
-        @(ArgConfig.optional)
-        SymbolMappingTechnique symbolTechnique = SymbolMappingTechnique.HASHMAPPER;
-
         @ArgNamed("prettygen|pg", "Generate pretty-printed code")
         @(ArgConfig.optional)
         bool prettyPrintCodeGen = true;
@@ -104,9 +99,6 @@ mixin template EmitBase()
 
     void EmitBaseInit(Compiler compiler)
     {
-        // Set the symbol mapper technique
-        compiler.getConfig().addConfig(ConfigEntry("dgen:mapper", symbolTechnique));
-
         // Set whether pretty-printed code should be generated
         compiler.getConfig().addConfig(ConfigEntry("dgen:pretty_code", prettyPrintCodeGen));
 
@@ -133,10 +125,17 @@ mixin template TypeCheckerBase()
     @(ArgConfig.optional)
     bool warnUnusedVariables = true;
 
+    @ArgNamed("unusedFuncs|ufuncs", "Warn about any unused functions")
+    @(ArgConfig.optional)
+    bool warnUnusedFunctions = true;
+
     void TypeCheckerInit(Compiler compiler)
     {
         // Set whether to warn about unused variables
         compiler.getConfig().addConfig(ConfigEntry("typecheck:warnUnusedVars", warnUnusedVariables));
+
+        // Set whether to warn about unused functions
+        compiler.getConfig().addConfig(ConfigEntry("typecheck:warnUnusedFuncs", warnUnusedFunctions));
     }
 }
 
