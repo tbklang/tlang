@@ -165,12 +165,24 @@ public Type getEnumType(TypeChecker tc, Enum e)
     return type_o;
 }
 
+import std.string : format;
+
 public void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
 {
     import tlang.compiler.symbols.data : Container;
     Container e_cntnr = e.parentOf();
     Optional!(string) ct_string = e.getConstraint();
     Type constraint = ct_string.isPresent() ? tc.getType(e_cntnr, ct_string.get()) : null;
+
+    // FIXME: Don'rt allowe specyifying types otgher than number and char*
+    if(constraint !is null)
+    {
+        // TODO: Add check for string (char*)
+        if(!(tc.isNumberType(constraint)))
+        {
+            throw EnumError.badValueType(format("An enum can only have a numerical or string explicit type, not a '%s'", constraint));
+        }
+    }
 
     DEBUG("Beginning constraint (type):", constraint);
 
@@ -206,7 +218,6 @@ public void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
         // means an unsupported expression is being used
         else if(m_type is null && v_chosen !is null)
         {
-            import std.string : format;
             throw EnumError.badValueType(format("We do not support enum constants to have expressions like '%s'", v_chosen));
         }
     }
