@@ -1066,6 +1066,49 @@ public final class TypeChecker
     }
 
     /** 
+     * Checks if the provided type is
+     * a number type
+     *
+     * Params:
+     *   typeIn = the `Type` to test
+     * Returns: `true` if so, `false`
+     * otherwise
+     */
+    public static bool isNumberType(Type typeIn)
+    {
+        return cast(Number)typeIn !is null;
+    }
+
+    /** 
+     * Checks if the provided type is
+     * an integral type
+     *
+     * Params:
+     *   typeIn = the `Type` to test
+     * Returns: `true` if so, `false`
+     * otherwise
+     */
+    public static bool isIntegralType(Type typeIn)
+    {
+        return cast(Integer)typeIn !is null;
+    }
+
+    /** 
+     * Checks if the two types are STRICTLY
+     * of the same object type
+     *
+     * Params:
+     *   t1 = the first type
+     *   t2 = the second type
+     * Returns: `true` if both types have
+     * the same RTTI typeid, `false` otherwise
+     */
+    public static bool isStrictlySameType(Type t1, Type t2)
+    {
+        return typeid(t1) == typeid(t2);
+    }
+
+    /** 
      * Attempts to perform coercion of the provided Value-instruction
      * with respect to the provided to-type.
      * 
@@ -1258,27 +1301,63 @@ public final class TypeChecker
                 Number toNumericType = cast(Number)toType;
 
                 /**
-                 * If the provided type is less than or equal
-                 * in size to that of the to-type
+                 * Firstly, both must be strictly the same KIND of number
+                 * type
                  */
-                if(providedNumericType.getSize() <= toNumericType.getSize())
+                if(isStrictlySameType(toNumericType, providedNumericType))
                 {
-                    // providedInstruction.setInstrType(toType);
+                    /**
+                    * If the provided type is less than or equal
+                    * in size to that of the to-type
+                    */
+                    if(providedNumericType.getSize() <= toNumericType.getSize())
+                    {
+                        // providedInstruction.setInstrType(toType);
+                        // Return a cast instruction to the to-type
+                        return new CastedValueInstruction(providedInstruction, toType);
+                    }
+                    /** 
+                    * If the incoming type is bigger than the toType
+                    *
+                    * E.g.
+                    * ```
+                    * long i = 2;
+                    * byte i1 = i;
+                    * ```
+                    */
+                    else
+                    {
+                        throw new CoercionException(this, toType, providedType, "Loss of size would occur");
+                    }
+                }
+                // FIXME: Test this with float fromType and int toType (will need float fixed first)
+                else
+                {
+                    // TODO: Throw a TypeMismatcherror rather?
+                    throw new CoercionException(this, toType, providedType, "Incompatible types");
+                }
+            }
+            // TODO: Still busy with this
+            else if(isEnumType(providedType))
+            {
+                // TODO: Determine the enum type and and ee if it matches the number type
+                Enum enum_t = cast(Enum)providedType;
+                DEBUG("enum_t:", enum_t);
+
+                import tlang.compiler.symbols.typing.enums : getEnumType;
+                Type m_type = getEnumType(this, enum_t);
+                DEBUG("enum member type:", m_type);
+
+                DEBUG("toType:", toType);
+
+                if(isIntegralType(toType) && isIntegralType(m_type) && isIntegralAssignableTo(cast(Integer)toType, cast(Integer)m_type))
+                {
                     // Return a cast instruction to the to-type
                     return new CastedValueInstruction(providedInstruction, toType);
                 }
-                /** 
-                 * If the incoming type is bigger than the toType
-                 *
-                 * E.g.
-                 * ```
-                 * long i = 2;
-                 * byte i1 = i;
-                 * ```
-                 */
                 else
                 {
-                    throw new CoercionException(this, toType, providedType, "Loss of size would occur");
+                    throw new CoercionException(this, toType, providedType);
                 }
             }
             else
@@ -1287,6 +1366,11 @@ public final class TypeChecker
                 throw new CoercionException(this, toType, providedType);
             }
         }
+    }
+
+    public static bool isIntegralAssignableTo(Integer toType, Integer ofType)
+    {
+        return ofType.getSize() <= toType.getSize();
     }
 
     /** 
@@ -3834,6 +3918,7 @@ public final class TypeChecker
         DEBUG("Analyzing enumeration '", e, "'...");
 
         // Enum cannot have NO members
+        // TODO: Make optional
         if(e.members().length == 0)
         {
             throw new TypeCheckerException
@@ -3847,6 +3932,7 @@ public final class TypeChecker
             );
         }
 
+        // FIXME: Remove below, oly needd on-demand
         import tlang.compiler.symbols.typing.enums : enumCheck;
         Type e_mem_t; // TODO: Store this for lookup somewhere with a `Type[Enum]` map
         enumCheck(this, e, e_mem_t);
