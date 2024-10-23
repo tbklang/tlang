@@ -1187,11 +1187,22 @@ public final class DCodeEmitter : CodeEmitter
             auto opt_v = c.value();
             if(opt_v.isPresent())
             {
-                m_out = format("%s = %s", c_name, basicEpressionTransform(opt_v.get()));
+                m_out = format
+                (
+                    "%s%s = %s",
+                    genTabs(1),
+                    c_name,
+                    basicEpressionTransform(opt_v.get())
+                );
             }
             else
             {
-                m_out = format("%s", c_name);
+                m_out = format
+                (
+                    "%s%s",
+                    genTabs(1),
+                    c_name
+                );
             }
 
             if(i != m_s.length-1)
