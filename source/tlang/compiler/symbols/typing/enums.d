@@ -11,6 +11,19 @@ import niknaks.functional : Optional;
 
 import tlang.misc.utils : panic;
 
+version(unittest)
+{
+    import std.file;
+    import std.stdio;
+    import tlang.compiler.lexer.core;
+    import tlang.compiler.lexer.kinds.basic : BasicLexer;
+    import tlang.compiler.parsing.core;
+    import tlang.compiler.core : Compiler;
+    import tlang.compiler.typecheck.exceptions : CollidingNameException;
+    import tlang.misc.exceptions : TError;
+    import tlang.compiler.symbols.data : Module, Program, Entity;
+}
+
 public enum EnumErrorType
 {
     UNSUPPORTED_VALUE_TYPE
@@ -186,8 +199,8 @@ public void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
         // means an unsupported expression is being used
         else if(m_type is null && v_chosen !is null)
         {
-            ERROR("We do not support enum constants to have expressions like '", v_chosen, "'");
-            panic();
+            import std.string : format;
+            throw EnumError.badValueType(format("We do not support enum constants to have expressions like '%s'", v_chosen));
         }
     }
 
@@ -212,17 +225,80 @@ public void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
     constraintOut = constraint;
 }
 
+
+/** 
+ * Test the parsing and then typechecking
+ * facilities within this module that
+ * deal with enumeration types
+ *
+ * In this case there are no errors that
+ * would occur, therefore we will be
+ * analyzing the parse tree
+ */
 unittest
 {
-    string g = "";
-    assert(g == null);
-    assert(g == "");
-    assert(g.ptr);
+    string sourceFile = "source/tlang/testing/enums/simple.t";
 
-    g = null;
-    assert(g == null);
-    assert(g == "");
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile);
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
 
-    // assert(g.ptr);
+    string sourceCode = cast(string) fileBytes;
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
 
+    compiler.doLex();
+    compiler.doParse();
+
+    /* Perform test */
+    compiler.doTypeCheck();
+
+    /* Extract our module */
+    Program program = compiler.getProgram();
+    TypeChecker typeChecker = compiler.getTypeChecker();
+    Module modulle = program.getModules()[0];
+
+    bool allEnum(Entity e_in)
+    {
+        return cast(Enum)e_in !is null;
+    }
+    Entity[] ent_out;
+    typeChecker.getResolver().resolveWithin(modulle, &allEnum, ent_out);
+
+    /* There should be a total of 3 enum types */
+    Enum[] enums = cast(Enum[])ent_out;
+    assert(enums.length == 3);
+
+    /* Scratchpad out variable */
+    Type t_out;
+
+    /* enum Sex */
+    Enum sex_enum = enums[0];
+    EnumConstant[] sex_constants = sex_enum.members();
+    assert(sex_constants.length == 3);
+    enumCheck(typeChecker, sex_enum, t_out);
+    assert(t_out !is null);
+    assert(t_out.getName() == "uint");
+    
+    /* enum Gender */
+    Enum gender_enum = enums[1];
+    EnumConstant[] gender_constants = gender_enum.members();
+    assert(gender_constants.length == 2);
+    enumCheck(typeChecker, gender_enum, t_out);
+    assert(t_out !is null);
+    stderr.writeln(t_out);
+    assert(t_out.getName() == "long");
+
+    /* enum Numberless */
+    Enum numberless_enum = enums[2];
+    EnumConstant[] numberless_constants = numberless_enum.members();
+    assert(numberless_constants.length == 2);
+    enumCheck(typeChecker, numberless_enum, t_out);
+    stderr.writeln(t_out);
+    assert(t_out !is null);
+    assert(t_out.getName() == "ubyte");
 }

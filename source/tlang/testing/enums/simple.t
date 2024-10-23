@@ -14,7 +14,7 @@ enum Sex : uint
 enum Gender
 {
 	Male,
-	Female = 1
+	Female = 2147483648
 }
 
 // No assigned values
