@@ -24,12 +24,17 @@ import std.format : format;
 import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.datetime.stopwatch : Duration, dur;
 import tlang.compiler.codegen.emit.dgen_simplifier;
+import tlang.compiler.codegen.emit.dgen_enums;
 
 public final class DCodeEmitter : CodeEmitter
-{
+{    
+    /* Enumeration member-name mapper */
+    private EnumMapper e_mapper;
+
     this(TypeChecker typeChecker, File file, CompilerConfiguration config)
     {
         super(typeChecker, file, config);
+        this.e_mapper = new EnumMapper();
     }
 
     private ulong transformDepth = 0;
@@ -1125,60 +1130,6 @@ public final class DCodeEmitter : CodeEmitter
         {
             DEBUG("Emitting enumeration type declaration for '", e, "'...");
             emitEnumType(modOut, e);
-        }
-    }
-
-    private EnumMapper e_mapper = new EnumMapper(); // TODO: Move to ctor
-
-    // TODO: Move to seperate module
-    private static class EnumMapper
-    {
-        private size_t _roll;
-        private EnumNameStore[Enum] _s;
-
-        this()
-        {
-            
-        }
-
-        private EnumNameStore* enter(Enum e)
-        {
-            EnumNameStore* _es = e in _s;
-            if(_es is null)
-            {
-                this._s[e] = EnumNameStore();
-                return enter(e);
-            }
-            return _es;
-        }
-
-        public string getName(Enum e, string m)
-        {
-            scope(exit)
-            {
-                this._roll++;
-            }
-
-            EnumNameStore* _es = enter(e);
-            return _es.mapName(m, this._roll);
-        }
-    }
-
-    // TODO: Move to seperate module
-    private struct EnumNameStore
-    {
-        // Original name -> mapped name
-        private string[string] sl;
-
-        public string mapName(string n_i, size_t n_num)
-        {
-            string* n_o = n_i in this.sl;
-            if(n_o is null)
-            {
-                this.sl[n_i] = format("%s_%d", n_i, n_num);
-                return mapName(n_i, n_num);
-            }
-            return *n_o;
         }
     }
 
