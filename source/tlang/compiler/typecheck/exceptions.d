@@ -10,8 +10,6 @@ import tlang.compiler.symbols.typing.core;
 
 public class TypeCheckerException : TError
 {
-    private TypeChecker typeChecker;
-
     // NOTE: See if we use, as we seem to overwrite the `msg` value
     // ... in sub-classes of this
     public enum TypecheckError
@@ -27,15 +25,14 @@ public class TypeCheckerException : TError
     {
         /* We set it after each child class calls this constructor (which sets it to empty) */
         super("TypeCheck Error ("~to!(string)(errType)~")"~(msg.length > 0 ? ": "~msg : ""));
-        this.typeChecker = typeChecker;
         this.errType = errType;
     }
 
-    // TODO: Remove this constructor and make anything that is currently using it 
-    // ... switch to atleast specifying the errType
-    this(TypeChecker typeChecker)
+    
+
+    this(TypecheckError errType, string msg = "")
     {
-        this(typeChecker, TypecheckError.GENERAL_ERROR);
+        this(null, errType, msg);
     }
 
     public TypecheckError getError()
@@ -48,14 +45,21 @@ public final class TypeMismatchException : TypeCheckerException
 {
     private Type originalType, attemptedType;
 
+    private static string genMsg(Type o_type, Type a_type, string msgIn = "")
+    {
+        import std.string : format;
+        return format
+        (
+            "Type mismatch between type %s and %s%s",
+            o_type.getName(),
+            a_type.getName(),
+            msgIn.length > 0 ? ": "~msgIn : ""
+        );
+    }
+
     this(TypeChecker typeChecker, Type originalType, Type attemptedType, string msgIn = "")
     {
-        super(typeChecker);
-
-        msg = "Type mismatch between type "~originalType.getName()~" and "~attemptedType.getName();
-
-        msg ~= msgIn.length > 0 ? ": "~msgIn : "";
-
+        super(TypecheckError.GENERAL_ERROR, genMsg(originalType, attemptedType));
         this.originalType = originalType;
         this.attemptedType = attemptedType;
     }
@@ -75,14 +79,21 @@ public final class CoercionException : TypeCheckerException
 {
     private Type toType, fromType;
 
+    private static string genMsg(Type t_type, Type f_type, string msgIn = "")
+    {
+        import std.string : format;
+        return format
+        (
+            "Cannot coerce from type '%s' to type '%s'%s",
+            f_type.getName(),
+            t_type.getName(),
+            msgIn.length > 0 ? ": "~msgIn : ""
+        );
+    }
+
     this(TypeChecker typeChecker, Type toType, Type fromType, string msgIn = "")
     {
-        super(typeChecker);
-
-        msg = "Cannot coerce from type '"~fromType.getName()~"' to type '"~toType.getName()~"'";
-
-        msg ~= msgIn.length > 0 ? ": "~msgIn : "";
-
+        super(TypecheckError.GENERAL_ERROR, genMsg(toType, fromType, msgIn));
         this.toType = toType;
         this.fromType = fromType;
     }
@@ -115,49 +126,62 @@ public final class CollidingNameException : TypeCheckerException
     */
     private Container c;
 
-    this(TypeChecker typeChecker, Entity defined, Entity attempted, Container c)
+    private static string genMsg
+    (
+        TypeChecker tc,
+        Entity defined,
+        Entity attempted,
+        Container c
+    )
     {
-        super(typeChecker);
-
-        this.defined = defined;
-        this.attempted = attempted;
-        this.c = c;
-
+        import std.string : format;
+        
         /* If colliding with the container */
-        if(isCollidingWithContainer())
+        if(attempted.parentOf() == defined)
         {
-            string containerPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), defined);
-            string entityPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), attempted);
-            msg = "Cannot have entity \""~entityPath~"\" with same name as container \""~containerPath~"\"";
+            string containerPath = tc.getResolver().generateName(tc.getProgram(), defined);
+            string entityPath = tc.getResolver().generateName(tc.getProgram(), attempted);
+            return "Cannot have entity \""~entityPath~"\" with same name as container \""~containerPath~"\"";
+            return format
+            (
+                "Cannot have entity \"%s\" with same name as container \"%s\"",
+                entityPath,
+                containerPath
+            );
         }
         /* If colliding with a one of the program's modules */
-        else if(isCollidingWithAModule())
+        else if(isCollidingWithAModule(tc, attempted))
         {
-            string entityPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), attempted);
-            msg = "Cannot have entity \""~entityPath~"\" with same name as module \""~getCollidedModule().getName()~"\"";
+            string entityPath = tc.getResolver().generateName(tc.getProgram(), attempted);
+            return format
+            (
+                "Cannot have entity \"%s\" with same name as module \"%s\"",
+                entityPath,
+                getCollidedModule(tc, attempted).getName()
+            );
         }
         /* If colliding with a member within the container */
         else
         {
-            string preExistingEntity = typeChecker.getResolver().generateName(typeChecker.getProgram(), typeChecker.findPrecedence(c, attempted.getName()));
-            string entityPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), attempted);
-            msg = "Cannot have entity \""~entityPath~"\" with same name as entity \""~preExistingEntity~"\" within same container";
+            string preExistingEntity = tc.getResolver().generateName(tc.getProgram(), tc.findPrecedence(c, attempted.getName()));
+            string entityPath = tc.getResolver().generateName(tc.getProgram(), attempted);
+            return format
+            (
+                "Cannot have entity \"%s\" with same name as entity \"%s\" within same container",
+                entityPath,
+                preExistingEntity
+            );
         }
     }
 
-    public bool isCollidingWithContainer()
+    private static bool isCollidingWithAModule(TypeChecker tc, Entity attempted)
     {
-        return attempted.parentOf() == defined;
+        return getCollidedModule(tc, attempted) !is null;
     }
 
-    private bool isCollidingWithAModule()
+    private static Module getCollidedModule(TypeChecker tc, Entity attempted)
     {
-        return getCollidedModule() !is null;
-    }
-
-    private Module getCollidedModule()
-    {
-        Program program = this.typeChecker.getProgram();
+        Program program = tc.getProgram();
         foreach(Module curMod; program.getModules())
         {
             if(cmp(attempted.getName(), curMod.getName()) == 0)
@@ -167,5 +191,13 @@ public final class CollidingNameException : TypeCheckerException
         }
 
         return null;
+    }
+
+    this(TypeChecker typeChecker, Entity defined, Entity attempted, Container c)
+    {
+        super(TypecheckError.GENERAL_ERROR, genMsg(typeChecker, defined, attempted, c));
+        this.defined = defined;
+        this.attempted = attempted;
+        this.c = c;        
     }
 }
