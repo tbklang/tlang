@@ -54,6 +54,29 @@ public class Value : Instruction
     }
 }
 
+/** 
+ * This represents any instruction
+ * which has a string-based target
+ * that may be manipulated
+ */
+public interface Targetable
+{
+    /** 
+     * Retrieve's the target
+     *
+     * Returns: the target
+     */
+    public string getTarget();
+
+    /** 
+     * Sets the target
+     *
+     * Params:
+     *   target = the target
+     */
+    public void setTarget(string target);
+}
+
 public class StorageDeclaration : Instruction
 {
 
@@ -152,7 +175,7 @@ public final class VariableDeclaration : StorageDeclaration, IRenderable
     }
 }
 
-public final class FetchValueVar : Value, IRenderable
+public final class FetchValueVar : Value, IRenderable, Targetable
 {
     /* Name of variable to fetch from */
     private string varName;
@@ -177,6 +200,112 @@ public final class FetchValueVar : Value, IRenderable
     public string render()
     {
         return varName;
+    }
+}
+
+/** 
+ * A reference to a data value
+ * of which is a non-scalar type
+ * but also not an array.
+ */
+public abstract class CompositeDataRef : Value, IRenderable
+{
+    private Value via;
+
+    this(Value target)
+    {
+        this.via = target;
+    }
+
+    public final Value getVia()
+    {
+        return this.via;
+    }
+
+    public string render()
+    {
+        import std.stdio;
+        writeln("dd: ", this.via);
+        return tryRender(this.via);
+    }
+}
+
+/** 
+ * This instruction is generated
+ * when a struct instance itself
+ * is referred to
+ */
+public final class StructDataRef : CompositeDataRef
+{
+    this(Value via)
+    {
+        super(via);
+    }
+}
+
+/** 
+ * This instruction is generated
+ * when a class itself is referred
+ * to
+ */
+public final class ClassDataRef : CompositeDataRef
+{
+    this(Value via)
+    {
+        super(via);
+    }
+}
+
+/** 
+ * Any sort of reference to a member
+ * inside of a composite data structure
+ */
+public abstract class MemberRefInstr : Value
+{
+
+}
+
+/** 
+ * A reference to a member of a given
+ * struct. The struct is derived from
+ * a `Value`-based instruction that
+ * would derive it and then the member
+ * likewise is also a `Value`-based
+ * instruction
+ */
+public final class StructMemberRefInstr : MemberRefInstr, IRenderable
+{
+    private Value structInstance;
+    private Value memberTarget;
+
+    this
+    (
+        Value structInstance,
+        Value memberTarget
+    )
+    {
+        this.structInstance = structInstance;
+        this.memberTarget = memberTarget;
+    }
+
+    public Value getStructInstance()
+    {
+        return this.structInstance;
+    }
+
+    public Value getMemberTarget()
+    {
+        return this.memberTarget;
+    }
+
+    public string render()
+    {
+        return format
+        (
+            "(structInstance: %s, member: %s)",
+            tryRender(structInstance),
+            tryRender(memberTarget)
+        );
     }
 }
 
@@ -371,7 +500,7 @@ public class CallInstr : Value
 
 }
 
-public class FuncCallInstr : CallInstr, IRenderable
+public class FuncCallInstr : CallInstr, IRenderable, Targetable
 {
     /** 
      * This is described in the corresponding AST node
@@ -919,5 +1048,61 @@ public final class StackArrayIndexAssignmentInstruction : Instruction, IRenderab
     public string render()
     {
         return format("%s = %s", tryRender(arrAndIndex), tryRender(getAssignedValue()));
+    }
+}
+
+/** 
+ * This represents the assignment of
+ * some `Value`-based value to a 
+ * member of a struct. The latter
+ * is represented by a `StructMemberRefInstr`
+ */
+public final class StructMemberAssignmentInstr : Instruction
+{
+    private StructMemberRefInstr m_ref;
+    private Value assVal;
+
+    this
+    (
+        StructMemberRefInstr structMemberRef,
+        Value assignmentValue
+    )
+    {
+        this.m_ref = structMemberRef;
+        this.assVal = assignmentValue;
+    }
+
+    public StructMemberRefInstr getStructMemberRef()
+    {
+        return this.m_ref;
+    }
+
+    public Value getAssignmentInstr()
+    {
+        return this.assVal;
+    }
+}
+
+/** 
+ * An assignment of a struct to a struct
+ */
+public final class StructAssignmentInstr : Instruction
+{
+    private Value to, of;
+
+    this(Value toStruct, Value ofStruct)
+    {
+        this.to = toStruct;
+        this.of = ofStruct;
+    }
+
+    public Value getTo()
+    {
+        return this.to;
+    }
+
+    public Value getOf()
+    {
+        return this.of;
     }
 }

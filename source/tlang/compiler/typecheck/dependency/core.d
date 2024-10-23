@@ -1317,9 +1317,34 @@ public class DNodeGenerator
         *
         * TODO: Non entities later
         */
-        foreach(Statement entity; entities)
+        gp_lp: foreach(Statement entity; entities)
         {
             DEBUG("generalPass(): Processing entity: "~entity.toString());
+
+            /**
+             * If the entity is a struct type definition
+             * then we need not process it. Rather, all
+             * we need to do is to set the context on
+             * its members.
+             *
+             * FIXME: Is this what we want? This is needed
+             * by the DGen emitter.
+             */
+            if(cast(Struct)entity)
+            {
+                // FIXME: Is this even iets we want to be doing here? It's because DGen
+                // expects context to be set when we generate signature of members of
+                // the struct type
+                DEBUG("FIXME: CLEAN UP ON ILE");
+                Struct s_t = cast(Struct)entity;
+                foreach(Statement m; s_t.getStatements())
+                {
+                    m.setContext(context);
+                }
+
+                continue gp_lp;
+            }
+
 
             Entity ent = cast(Entity)entity;
             // NOTE: COme back to and re-enable when this makes sense (IF it even needs to be here)

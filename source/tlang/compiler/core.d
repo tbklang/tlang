@@ -403,10 +403,15 @@ unittest
                         "source/tlang/testing/dotting/basic3.t",
                         "source/tlang/testing/dotting/ptr_call.t",
                         "source/tlang/testing/dotting/simple_func_1.t",
-                        "source/tlang/testing/dotting/simple_func_2.t"
+                        "source/tlang/testing/dotting/simple_func_2.t",
+
+                        "source/tlang/testing/structs/simple_decl.t",
+                        "source/tlang/testing/structs/simple.t"
                         ];
     foreach(string testFile; testFiles)
     {
+        import std.stdio : stderr;
+        stderr.writeln("About to do '", testFile, "'");
         beginCompilation([testFile]);
     }
 }
@@ -486,6 +491,9 @@ unittest
 
     foreach(string testFileGood; testFilesGood)
     {
+        import std.stdio : stderr;
+        stderr.writeln("About to do '", testFileGood, "'");
+
         string sourceText = gibFileData(testFileGood);
 
         try
@@ -542,7 +550,11 @@ unittest
                         "source/tlang/testing/simple_literals4.t",
                         "source/tlang/testing/universal_coerce/simple_coerce_literal_bad.t",
                         "source/tlang/testing/universal_coerce/simple_coerce_literal_bad_stdalon.t",
-                        "source/tlang/testing/simple_function_return_type_check_bad.t"
+                        "source/tlang/testing/simple_function_return_type_check_bad.t",
+
+                        "source/tlang/testing/structs/simple_cycle.t",
+                        "source/tlang/testing/structs/multi_module_cycle_1.t",
+                        "source/tlang/testing/structs/simple_illmember.t"
     ];
 
     foreach(string testFileFail; testFilesFail)

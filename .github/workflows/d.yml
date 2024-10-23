@@ -91,7 +91,7 @@ jobs:
           path: \*.lst
 
   syntaxcheck:
-    needs: [build, unittests]
+    needs: [build]
     name: Syntax checking
     runs-on: ubuntu-latest
     steps:
@@ -138,7 +138,7 @@ jobs:
         run: ./tlang syntaxcheck source/tlang/testing/return/simple_return_expressionless.t
 
   typecheck:
-    needs: [build, unittests]
+    needs: [build]
     name: Typechecking tests
     runs-on: ubuntu-latest
     steps:
@@ -443,9 +443,36 @@ jobs:
               exit 1
           fi
 
+      - name: Struct usage
+        run:
+          ./tlang typecheck source/tlang/testing/structs/simple.t
+
+      - name: Struct cycle (intra-module)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/structs/simple_cycle.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Struct cycle (inter-module)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/structs/multi_module_cycle_1.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+      
+
         
   emit:
-    needs: [build, unittests]
+    needs: [build]
     name: Emit tests
     runs-on: ubuntu-latest
     steps:
