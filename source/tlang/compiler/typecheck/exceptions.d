@@ -79,21 +79,33 @@ public final class CoercionException : TypeCheckerException
 {
     private Type toType, fromType;
 
-    private static string genMsg(Type t_type, Type f_type, string msgIn = "")
+    private static string genMsg(TypeChecker tc, Type t_type, Type f_type, string msgIn = "")
     {
         import std.string : format;
+        import tlang.compiler.symbols.typing.enums : Enum, getEnumType;
+
+        string t_type_s = t_type.getName(); // to-type
+        string f_type_s = f_type.getName(); // from-type
+
+        /* Lookup enum's component type */
+        if(TypeChecker.isEnumType(f_type))
+        {
+            Type e_type = getEnumType(tc, cast(Enum)f_type);
+            f_type_s = format("%s[%s]", f_type.getName(), e_type.getName());
+        }
+        
         return format
         (
             "Cannot coerce from type '%s' to type '%s'%s",
-            f_type.getName(),
-            t_type.getName(),
+            f_type_s,
+            t_type_s,
             msgIn.length > 0 ? ": "~msgIn : ""
         );
     }
 
-    this(TypeChecker typeChecker, Type toType, Type fromType, string msgIn = "")
+    this(TypeChecker tc, Type toType, Type fromType, string msgIn = "")
     {
-        super(TypecheckError.GENERAL_ERROR, genMsg(toType, fromType, msgIn));
+        super(TypecheckError.GENERAL_ERROR, genMsg(tc, toType, fromType, msgIn));
         this.toType = toType;
         this.fromType = fromType;
     }
