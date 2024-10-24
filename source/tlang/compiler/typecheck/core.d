@@ -3893,6 +3893,14 @@ public final class TypeChecker
 
     // TODO: This will have to be recursive because of where we
     // will allow these top be declared
+
+    /** 
+     * Processes all enumeration types
+     * within the given container
+     *
+     * Params:
+     *   c = the `Container` to check
+     */
     private void processEnums(Container c)
     {
         bool allEnums(Entity entity)
@@ -3907,15 +3915,22 @@ public final class TypeChecker
         {
             processEnum(e);
         }
-
-        // panic("sd");
     }
 
     import tlang.compiler.symbols.typing.enums : Enum;
+
+    /** 
+     * Does basic pre-flight checks on
+     * the provided enumeration type
+     *
+     * Params:
+     *   e = the `Enum` to check
+     */
     private void processEnum(Enum e)
     {
         DEBUG("Analyzing enumeration '", e, "'...");
 
+        // TODO: Chis could be placed in the `checkEnum(TypeChecker, Enum)` function
         // Enum cannot have NO members
         // TODO: Make optional
         if(e.members().length == 0)
@@ -3930,12 +3945,6 @@ public final class TypeChecker
                 )
             );
         }
-
-        // FIXME: Remove below, oly needd on-demand
-        import tlang.compiler.symbols.typing.enums : enumCheck;
-        Type e_mem_t; // TODO: Store this for lookup somewhere with a `Type[Enum]` map
-        enumCheck(this, e, e_mem_t);
-        DEBUG("Member type: ", e_mem_t);
     }
 
     private void processPseudoEntities(Container c)
