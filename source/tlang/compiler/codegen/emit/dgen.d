@@ -1116,6 +1116,16 @@ public final class DCodeEmitter : CodeEmitter
         }
     }
 
+    /** 
+     * Emits all the enumeration type
+     * declarations
+     *
+     * Params:
+     *   modOut = the `File` to write out
+     * to
+     *   mod = the `Module` of which
+     * to emit enumeration types from
+     */
     private void emitEnumTypes(File modOut, Module mod)
     {
         bool allEnums(Entity e_in)
@@ -1134,8 +1144,19 @@ public final class DCodeEmitter : CodeEmitter
         }
     }
 
-    import tlang.compiler.codegen.emit.dgen_exceptions;
-
+    /** 
+     * Emits the given enumeration type
+     * declaration
+     *
+     * Params:
+     *   modOut = the `File` to write out
+     * to
+     *   e = the `Enum` type to emit a
+     * declaration for
+     * Throws: 
+     *   DGenError if there is an impossibility
+     * to emit for some reason
+     */
     private void emitEnumType(File modOut, Enum e)
     {
         // FIXME: Keep track of enum names relating to their
@@ -1167,6 +1188,7 @@ public final class DCodeEmitter : CodeEmitter
         // Empty enumeration types are unsupported by then C emitter(as C doesn't support them)
         if(!m_s.length)
         {
+            import tlang.compiler.codegen.emit.dgen_exceptions : noEnumMembers;
             throw noEnumMembers(e);
         }
         
@@ -1208,7 +1230,6 @@ public final class DCodeEmitter : CodeEmitter
 
             if(i != m_s.length-1)
             {
-                import std.string : strip;
                 m_out = m_out~",";
             }
 
