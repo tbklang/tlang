@@ -167,7 +167,7 @@ public Type getEnumType(TypeChecker tc, Enum e)
 
 import std.string : format;
 
-public void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
+private void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
 {
     import tlang.compiler.symbols.data : Container;
     Container e_cntnr = e.parentOf();
