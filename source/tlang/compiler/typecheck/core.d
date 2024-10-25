@@ -2417,6 +2417,9 @@ public final class TypeChecker
                 {
                     // panic("Implement dot operator typecheck/codegen");
 
+                    // <<<<< TODO: Struct handling BEGIN >>>>>
+                    // <<<<< Struct handling END >>>>>
+
                     DEBUG("Humburger");
 
                     // lhs=FetchValueVar rhs=<undetermined>
