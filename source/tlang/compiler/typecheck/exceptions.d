@@ -93,6 +93,13 @@ public final class CoercionException : TypeCheckerException
             Type e_type = getEnumType(tc, cast(Enum)f_type);
             f_type_s = format("%s[%s]", f_type.getName(), e_type.getName());
         }
+
+        /* Lookup enum's component type */
+        if(TypeChecker.isEnumType(t_type))
+        {
+            Type e_type = getEnumType(tc, cast(Enum)t_type);
+            t_type_s = format("%s[%s]", t_type.getName(), e_type.getName());
+        }
         
         return format
         (
