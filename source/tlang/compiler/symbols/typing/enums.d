@@ -122,6 +122,7 @@ public final class Enum : Type
         return format("Enum (%s)", getName());
     }
 
+    // todo, remove this as it is unused
     public Optional!(EnumConstant) find(string member)
     {
         foreach(e; this._m)
@@ -134,6 +135,7 @@ public final class Enum : Type
         return Optional!(EnumConstant).empty();
     }
 
+    // todo, remove this as it is unused
     public ptrdiff_t getPosition(EnumConstant e)
     {
         for(size_t i = 0; i < this._m.length; i++)
