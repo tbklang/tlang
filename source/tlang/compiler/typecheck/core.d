@@ -927,6 +927,12 @@ public final class TypeChecker
                 same = false;
             }
         }
+        /* Enumeration types */
+        else if(isEnumType(type1) && isEnumType(type2))
+        {
+            // Only equal if they are the same Enum _instance_
+            return type1 is type2;
+        }
         /* Handling for all other cases */
         else if(typeid(type1) == typeid(type2))
         {
@@ -1196,6 +1202,27 @@ public final class TypeChecker
 
             // Return a cast instruction to the to-type
             return new CastedValueInstruction(providedInstruction, toType);
+        }
+        /* If we were provided an instruction that was enum-typed */
+        else if(isEnumType(providedType))
+        {
+            import tlang.compiler.symbols.typing.enums : getEnumType;
+
+            Enum enum_t = cast(Enum)providedType;
+            Type m_type = getEnumType(this, enum_t);
+            DEBUG("enum_t:", enum_t);
+            DEBUG("enum_t (member type):", enum_t);
+            DEBUG("toType:", toType);
+
+            if(isIntegralType(toType) && isIntegralType(m_type) && isIntegralAssignableTo(cast(Integer)toType, cast(Integer)m_type))
+            {
+                // Return a cast instruction to the to-type
+                return new CastedValueInstruction(providedInstruction, toType);
+            }
+            else
+            {
+                throw new CoercionException(this, toType, providedType);
+            }
         }
         // If it is a LiteralValue (integer literal) (support for issue #94)
         else if(cast(LiteralValue)providedInstruction)
@@ -2467,19 +2494,9 @@ public final class TypeChecker
                             }
 
                             EnumConstant r_c = r_c_opt.get();
-                            // TODO: Generate an instruction from the expression
                             import tlang.compiler.typecheck.helpers.enums : enumConstantToInstruction;
                             Value iv = enumConstantToInstruction(this, e_t, r_c);
                             DEBUG("generated iv:", iv);
-
-                            // TODO: Determine the type therefrom
-                            // TODO: Type-check it against
-                            // TODO: Generate the replacement instruction
-
-
-                            
-                            DEBUG("Enum type:", e_t);
-                            // panic("");
                             addInstr(iv);
                             return;
                         }
