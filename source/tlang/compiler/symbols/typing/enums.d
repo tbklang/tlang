@@ -338,7 +338,7 @@ unittest
     /* enum Gender */
     Enum gender_enum = enums[1];
     EnumConstant[] gender_constants = gender_enum.members();
-    assert(gender_constants.length == 2);
+    assert(gender_constants.length == 3);
     enumCheck(typeChecker, gender_enum, t_out);
     assert(t_out !is null);
     stderr.writeln(t_out);
