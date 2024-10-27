@@ -38,13 +38,17 @@ public Value enumConstantToInstruction(TypeChecker tc, Enum e, EnumConstant ec)
 {
     Optional!(Expression) ec_v_opt = ec.value();
 
+    Value v_instr;
     if(ec_v_opt.isPresent())
     {
-        return fromExpression(tc, ec_v_opt.get());
+        v_instr = fromExpression(tc, ec_v_opt.get());
     }
-
-    // TODO: Implement finding the ordinal value
-    return fromExpression(tc, getOrdinal(tc, e, ec));
+    else
+    {
+        v_instr = fromExpression(tc, getOrdinal(tc, e, ec));
+    }
+    v_instr.setInstrType(e);
+    return v_instr;
 }
 
 public Expression getOrdinal(TypeChecker tc, Enum e, EnumConstant ec)
