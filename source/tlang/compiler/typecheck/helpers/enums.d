@@ -49,13 +49,11 @@ public Value enumConstantToInstruction(TypeChecker tc, Enum e, EnumConstant ec)
 
 public Expression getOrdinal(TypeChecker tc, Enum e, EnumConstant ec)
 {
-    ptrdiff_t p = e.getPosition(ec);
+    ptrdiff_t p = e.getPosition(ec);// todo, remove this - we never use this
 
     auto ds = tc.getEnumPool();
     EnumInfo ei = ds.pool(e);
-
-    panic("ending here for now");
-    return null;
+    return ei.getExpressionFor(ec);
 }
 
 import niknaks.containers : Pool;
@@ -68,6 +66,13 @@ public final class EnumInfo
     {
         this._e = e;
         init();
+    }
+
+    public Expression getExpressionFor(EnumConstant ec)
+    {
+        Expression* expr = ec in this._v;
+        assert(expr); // should be calling it with the same EnumConstant(s) that came in
+        return *expr;
     }
 
     private void init()
