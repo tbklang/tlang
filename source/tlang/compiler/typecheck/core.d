@@ -24,6 +24,8 @@ import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.misc.utils : panic;
 import tlang.compiler.typecheck.dependency.variables;
 import niknaks.functional : Optional;
+import niknaks.containers : Pool;
+import tlang.compiler.typecheck.helpers.enums : EnumInfo;
 
 /**
 * The Parser only makes sure syntax
@@ -60,6 +62,11 @@ public final class TypeChecker
     private MetaProcessor meta;
 
     /** 
+     * Enum information data store
+     */
+    private Pool!(EnumInfo, Enum) _ePool;
+
+    /** 
      * Constructs a new `TypeChecker` with the given
      * compiler instance
      *
@@ -73,7 +80,18 @@ public final class TypeChecker
         this.program = compiler.getProgram();
 
         this.resolver = new Resolver(program, this);
-        this.meta = new MetaProcessor(this, true);
+        this.meta = new MetaProcessor(this, true);   
+    }
+
+    /** 
+     * Returns the enumeration
+     * type pooler instance
+     * which is associated
+     * with this type checker
+     */
+    public auto getEnumPool()
+    {
+        return &this._ePool;
     }
 
     /** 
@@ -1336,29 +1354,6 @@ public final class TypeChecker
                     throw new CoercionException(this, toType, providedType, "Incompatible types");
                 }
             }
-            // TODO: Still busy with this
-            else if(isEnumType(providedType))
-            {
-                // TODO: Determine the enum type and and ee if it matches the number type
-                Enum enum_t = cast(Enum)providedType;
-                DEBUG("enum_t:", enum_t);
-
-                import tlang.compiler.symbols.typing.enums : getEnumType;
-                Type m_type = getEnumType(this, enum_t);
-                DEBUG("enum member type:", m_type);
-
-                DEBUG("toType:", toType);
-
-                if(isIntegralType(toType) && isIntegralType(m_type) && isIntegralAssignableTo(cast(Integer)toType, cast(Integer)m_type))
-                {
-                    // Return a cast instruction to the to-type
-                    return new CastedValueInstruction(providedInstruction, toType);
-                }
-                else
-                {
-                    throw new CoercionException(this, toType, providedType);
-                }
-            }
             else
             {
                 ERROR("Mashallah why are we here? BECAUSE we should just use ze-value-based genral case!: "~providedInstruction.classinfo.toString());
@@ -2435,6 +2430,65 @@ public final class TypeChecker
 
                         Container containerLeft = cast(Container)leftEntity;
 
+                        if(cast(TypedEntity)leftEntity)
+                        {
+                            TypedEntity te = cast(TypedEntity)leftEntity;
+                            Type te_t = getType(binOpCtx.getContainer(), te.getType());
+
+                            if(isEnumType(te_t))
+                            {
+                                import tlang.compiler.symbols.typing.enums : EnumConstant, getEnumType;
+                                import niknaks.functional : Optional;
+                                import tlang.compiler.codegen.render : tryRender;
+
+                                Enum e_t = cast(Enum)te_t;
+                                Type e_c_t = getEnumType(this, e_t);
+
+                                // TODO: Right-hand operand can ONLY be a FetchValueVar
+                                FetchValueVar r_name = cast(FetchValueVar)vRhsInstr;
+
+                                if(r_name is null)
+                                {
+                                    panic("Can only refer to names on the right-hand side of an enum instance");
+                                }
+
+                                Optional!(EnumConstant) r_c_opt = e_t.find(r_name.getTarget());
+                                if(r_c_opt.isEmpty())
+                                {
+                                    throw new TypeCheckerException
+                                    (
+                                        this,
+                                        TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                                        format
+                                        (
+                                            "Right-hand operand of '%s' of (%s %s %s) refers to an enum member which does not exist",
+                                            tryRender(vRhsInstr),
+                                            tryRender(vLhsInstr),
+                                            binOperator,
+                                            tryRender(vRhsInstr)
+                                        )
+                                    );
+                                }
+
+                                EnumConstant r_c = r_c_opt.get();
+                                // TODO: Generate an instruction from the expression
+                                import tlang.compiler.typecheck.helpers.enums : enumConstantToInstruction;
+                                Value iv = enumConstantToInstruction(this, e_t, r_c);
+                                DEBUG("generated iv:", iv);
+
+                                // TODO: Determine the type therefrom
+                                // TODO: Type-check it against
+                                // TODO: Generate the replacement instruction
+
+
+                                
+                                DEBUG("Enum type:", te_t);
+                                // panic("");
+                                addInstr(iv);
+                                return;
+                            }
+                        }
+                        
                         // TODO: Handle error message nicwer
                         if(!containerLeft)
                         {
