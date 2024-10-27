@@ -152,7 +152,7 @@ import std.conv : to;
 
 private Expression getInitVal()
 {
-    return new IntegerLiteral("1", IntegerLiteralEncoding.UNSIGNED_INTEGER);
+    return new IntegerLiteral("0", IntegerLiteralEncoding.UNSIGNED_INTEGER);
 }
 
 private IntegerLiteral nextIntegral(IntegerLiteral li_in)
