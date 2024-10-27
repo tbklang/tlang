@@ -121,19 +121,50 @@ public final class Enum : Type
         import std.string : format;
         return format("Enum (%s)", getName());
     }
+
+    public Optional!(EnumConstant) find(string member)
+    {
+        foreach(e; this._m)
+        {
+            if(e.name() == member)
+            {
+                return Optional!(EnumConstant)(e);
+            }
+        }
+        return Optional!(EnumConstant).empty();
+    }
+
+    public ptrdiff_t getPosition(EnumConstant e)
+    {
+        for(size_t i = 0; i < this._m.length; i++)
+        {
+            auto c = this._m[i];
+            if(c.name() == e.name())
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 }
 
 import tlang.compiler.typecheck.core : TypeChecker;
 import tlang.misc.logging;
 
-private bool isValidExpression(Expression e)
+/** 
+ * Checks if the provided expression
+ * is one that is supported as an
+ * enumeration type members' constant
+ * value
+ *
+ * Params:
+ *   e = the expression to check
+ * Returns: `true` if so, `false`
+ * otherwise
+ */
+public bool isValidExpression(Expression e)
 {
-    // TODO: Use templatung could be nice for long lists
-    import std.meta : aliasSeqOf;
-    
-    
     import tlang.compiler.symbols.expressions : StringExpression, NumberLiteral, FloatingLiteral;
-
     return cast(StringExpression)e !is null || cast(NumberLiteral)e !is null;
 }
 
