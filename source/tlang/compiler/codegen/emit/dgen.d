@@ -37,6 +37,8 @@ public final class DCodeEmitter : CodeEmitter
         this.e_mapper = new EnumMapper();
     }
 
+    private alias tc = typeChecker;
+
     private ulong transformDepth = 0;
 
     private string genTabs(ulong count)
@@ -600,8 +602,8 @@ public final class DCodeEmitter : CodeEmitter
             }
             else
             {
-                /* Handling of primitive types */
-                if(cast(Primitive)castingTo)
+                /* Handling of primitive types and enumeration types */
+                if(cast(Primitive)castingTo || tc.isEnumType(castingTo))
                 {
                     /* Add the actual cast */
                     emit ~= "("~typeTransform(castingTo)~")";
