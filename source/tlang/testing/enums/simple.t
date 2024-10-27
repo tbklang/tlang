@@ -34,7 +34,7 @@ enum Numberless
 
 long retEnum(Gender g)
 {
-	Numberless n_l;
+	Numberless n_l = cast(Numberless)Gender.Male;
 	Gender g1 = Gender.Male;
 	Gender g2 = Gender.Unknown;
 	return g1+g2;
