@@ -38,5 +38,11 @@ long retEnum(Gender g)
 	ubyte n_1_b = n_l;
 	Gender g1 = Gender.Male;
 	Gender g2 = Gender.Unknown;
-	return g1+g2;
+	return g1+g1+Gender.Female;
+}
+
+int main()
+{
+	long l = retEnum(Gender.Female);
+	return cast(int)l;
 }
