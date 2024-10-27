@@ -22,6 +22,7 @@ version(unittest)
     import tlang.compiler.typecheck.exceptions : CollidingNameException;
     import tlang.misc.exceptions : TError;
     import tlang.compiler.symbols.data : Module, Program, Entity;
+    import tlang.compiler.typecheck.helpers.enums : EnumInfo;
 }
 
 public enum EnumErrorType
@@ -320,6 +321,8 @@ unittest
     Entity[] ent_out;
     typeChecker.getResolver().resolveWithin(modulle, &allEnum, ent_out);
 
+    auto ep = typeChecker.getEnumPool();
+
     /* There should be a total of 3 enum types */
     Enum[] enums = cast(Enum[])ent_out;
     assert(enums.length == 3);
@@ -334,6 +337,16 @@ unittest
     enumCheck(typeChecker, sex_enum, t_out);
     assert(t_out !is null);
     assert(t_out.getName() == "uint");
+    EnumInfo sex_info = ep.pool(sex_enum);
+    IntegerLiteral ec_expr_1 = cast(IntegerLiteral)sex_info.getExpressionFor(sex_constants[0]);
+    assert(ec_expr_1);
+    assert(ec_expr_1.getNumber() == "0");
+    IntegerLiteral ec_expr_2 = cast(IntegerLiteral)sex_info.getExpressionFor(sex_constants[1]);
+    assert(ec_expr_2);
+    assert(ec_expr_2.getNumber() == "60");
+    IntegerLiteral ec_expr_3 = cast(IntegerLiteral)sex_info.getExpressionFor(sex_constants[2]);
+    assert(ec_expr_3);
+    assert(ec_expr_3.getNumber() == "1");
     
     /* enum Gender */
     Enum gender_enum = enums[1];
@@ -343,6 +356,16 @@ unittest
     assert(t_out !is null);
     stderr.writeln(t_out);
     assert(t_out.getName() == "long");
+    EnumInfo gender_info = ep.pool(gender_enum);
+    ec_expr_1 = cast(IntegerLiteral)gender_info.getExpressionFor(gender_constants[0]);
+    assert(ec_expr_1);
+    assert(ec_expr_1.getNumber() == "0");
+    ec_expr_2 = cast(IntegerLiteral)gender_info.getExpressionFor(gender_constants[1]);
+    assert(ec_expr_2);
+    assert(ec_expr_2.getNumber() == "2147483648");
+    ec_expr_3 = cast(IntegerLiteral)gender_info.getExpressionFor(gender_constants[2]);
+    assert(ec_expr_3);
+    assert(ec_expr_3.getNumber() == "1");
 
     /* enum Numberless */
     Enum numberless_enum = enums[2];
@@ -352,4 +375,11 @@ unittest
     stderr.writeln(t_out);
     assert(t_out !is null);
     assert(t_out.getName() == "ubyte");
+    EnumInfo numberless_info = ep.pool(numberless_enum);
+    ec_expr_1 = cast(IntegerLiteral)numberless_info.getExpressionFor(numberless_constants[0]);
+    assert(ec_expr_1);
+    assert(ec_expr_1.getNumber() == "0");
+    ec_expr_2 = cast(IntegerLiteral)numberless_info.getExpressionFor(numberless_constants[1]);
+    assert(ec_expr_2);
+    assert(ec_expr_2.getNumber() == "1");
 }
