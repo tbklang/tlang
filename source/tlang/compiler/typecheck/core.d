@@ -2258,33 +2258,17 @@ public final class TypeChecker
                 /* Generate a LiteralValue (IntegerLiteral) */
                 if(cast(IntegerLiteral)statement)
                 {
-                    IntegerLiteral integerLitreal = cast(IntegerLiteral)statement;
+                    IntegerLiteral integerLiteral = cast(IntegerLiteral)statement;
 
                     /**
                      * Determine the type of this value instruction by finding
                      * the encoding of the integer literal (part of doing issue #94)
                      */
-                    Type literalEncodingType;
-                    if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_INTEGER)
-                    {
-                        literalEncodingType = getType(this.program, "int");
-                    }
-                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_INTEGER)
-                    {
-                        literalEncodingType = getType(this.program, "uint");
-                    }
-                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_LONG)
-                    {
-                        literalEncodingType = getType(this.program, "long");
-                    }
-                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_LONG)
-                    {
-                        literalEncodingType = getType(this.program, "ulong");
-                    }
+                    Type literalEncodingType = determineLiteralEncodingType(integerLiteral.getEncoding());
                     assert(literalEncodingType);
 
                     // TODO: Insert getEncoding stuff here
-                    LiteralValue litValInstr = new LiteralValue(integerLitreal.getNumber(), literalEncodingType);
+                    LiteralValue litValInstr = new LiteralValue(integerLiteral.getNumber(), literalEncodingType);
 
                     valInstr = litValInstr;
 
