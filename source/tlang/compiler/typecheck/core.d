@@ -2306,42 +2306,6 @@ public final class TypeChecker
         return literalEncodingType;
     }
 
-    /** 
-     * Determines the `Type` that should be used
-     * for the given integeral literal encoding
-     *
-     * Params:
-     *   ile = the encoding
-     * Returns: the `Type`
-     */
-    public static Type determineLiteralEncodingType(IntegerLiteralEncoding ile)
-    {
-        Type literalEncodingType;
-        if(ile == IntegerLiteralEncoding.SIGNED_INTEGER)
-        {
-            literalEncodingType = getBuiltInType(null, null, "int");
-        }
-        else if(ile == IntegerLiteralEncoding.UNSIGNED_INTEGER)
-        {
-            literalEncodingType = getBuiltInType(null, null, "uint");
-        }
-        else if(ile == IntegerLiteralEncoding.SIGNED_LONG)
-        {
-            literalEncodingType = getBuiltInType(null, null, "long");
-        }
-        else if(ile == IntegerLiteralEncoding.UNSIGNED_LONG)
-        {
-            literalEncodingType = getBuiltInType(null, null, "ulong");
-        }
-        else
-        {
-            ERROR("Developer error: Impossible to get here");
-            assert(false);
-        }
-        
-        return literalEncodingType;
-    }
-
     public void typeCheckThing(DNode dnode)
     {
         DEBUG("typeCheckThing(): "~dnode.toString());
