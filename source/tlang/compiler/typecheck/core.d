@@ -877,7 +877,7 @@ public final class TypeChecker
      *
      * Returns: true if the types are equal, false otherwise
      */
-    private bool isSameType(Type type1, Type type2)
+    public bool isSameType(Type type1, Type type2)
     {
         bool same = false;
 
