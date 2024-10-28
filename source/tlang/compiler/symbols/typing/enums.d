@@ -173,11 +173,20 @@ public bool isValidExpression(Expression e)
 
 import tlang.compiler.symbols.expressions : StringExpression, IntegerLiteral, FloatingLiteral;
 
-private Type determineType(TypeChecker tc, Expression e)
+/** 
+ * Given a certain expression this will
+ * determine if it is a supported type
+ * and if so return said type.
+ *
+ * Params:
+ *   e = the `Expression` to check
+ * Returns: a `Type` or `null` if it
+ * is not a supported type
+ */
+private Type determineType(Expression e)
 {
-    
-
     import tlang.compiler.symbols.typing.builtins : getBuiltInType;
+    assert(e);
 
     if(cast(StringExpression)e)
     {
@@ -186,7 +195,7 @@ private Type determineType(TypeChecker tc, Expression e)
     else if(cast(IntegerLiteral)e)
     {
         IntegerLiteral il = cast(IntegerLiteral)e;
-        return tc.determineLiteralEncodingType(il.getEncoding());
+        return TypeChecker.determineLiteralEncodingType(il.getEncoding());
     }
 
     return null;
@@ -196,6 +205,7 @@ public Type getEnumType(TypeChecker tc, Enum e)
 {
     Type type_o;
     enumCheck(tc, e, type_o);
+    assert(type_o);
     return type_o;
 }
 
@@ -224,35 +234,69 @@ private void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
     {
         DEBUG("analyzing m:", c);
         Optional!(Expression) v_opt = c.value();
-        Expression v_chosen;
 
-        if(v_opt.isPresent())
-        {
-            v_chosen = v_opt.get();
-        }
-        else
-        {
-            // TODO: If no expression then base it 
-        }
-
-        Type m_type = determineType(tc, v_chosen);
+        Type m_type = v_opt.isPresent() ? determineType(v_opt.get()) : null;
         DEBUG("m_type:", m_type);
 
+        // if no explicit constraint but we have a supported
+        // expression we can extract a type _from_
         if(constraint is null && m_type !is null)
         {
             constraint = m_type;
             DEBUG("constaint discovered via literal:", constraint);
         }
+        // explicit constraint and we have extracted
+        // a type from an expression that is present
         else if(constraint !is null && m_type !is null)
         {
-
+            // both integral?
+            if(tc.isIntegralType(constraint) && tc.isIntegralType(m_type))
+            {
+                // then check assignability of the `m_type`
+                // to the `constraint` type
+                import tlang.compiler.symbols.typing.core : Integer;
+                if(!tc.isIntegralAssignableTo(cast(Integer)constraint, cast(Integer)m_type))
+                {
+                    throw EnumError.badValueType
+                    (
+                        format
+                        (
+                            "Cannot assign a value of type %s to an enum with explicit constraint type %s",
+                            m_type,
+                            constraint
+                        )
+                    );
+                }
+            }
+            // else they must both be the same
+            else if(!tc.isSameType(constraint, m_type))
+            {
+                throw EnumError.badValueType
+                (
+                    format
+                    (
+                        "Cannot assign a value of type %s to an enum with explicit constraint type %s",
+                        m_type,
+                        constraint
+                    )
+                );
+            }
+            
+            // if we reach here, then we are fine
         }
         // If the `m_type` is null then it is because there is an unsupported
-        // type (or null was given) but if `v_chosen` is NOT null then that
+        // type (or null was given) but if `v_opt` is PRESENT then that
         // means an unsupported expression is being used
-        else if(m_type is null && v_chosen !is null)
+        else if(m_type is null && v_opt.isPresent())
         {
-            throw EnumError.badValueType(format("We do not support enum constants to have expressions like '%s'", v_chosen));
+            throw EnumError.badValueType
+            (
+                format
+                (
+                    "We do not support enum constants to have expressions like '%s'",
+                    v_opt.get()
+                )
+            );
         }
     }
 
@@ -275,6 +319,7 @@ private void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
 
     DEBUG("constraint (type) decidedly:", constraint);
     constraintOut = constraint;
+    assert(constraintOut);
 }
 
 
@@ -321,6 +366,7 @@ unittest
     Entity[] ent_out;
     typeChecker.getResolver().resolveWithin(modulle, &allEnum, ent_out);
 
+    /* Get the enum info pool */
     auto ep = typeChecker.getEnumPool();
 
     /* There should be a total of 3 enum types */
