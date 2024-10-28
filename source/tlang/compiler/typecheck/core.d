@@ -2267,7 +2267,6 @@ public final class TypeChecker
                     Type literalEncodingType = determineLiteralEncodingType(integerLiteral.getEncoding());
                     assert(literalEncodingType);
 
-                    // TODO: Insert getEncoding stuff here
                     LiteralValue litValInstr = new LiteralValue(integerLiteral.getNumber(), literalEncodingType);
 
                     valInstr = litValInstr;
