@@ -895,7 +895,7 @@ public final class TypeChecker
      *
      * Returns: true if the types are equal, false otherwise
      */
-    private bool isSameType(Type type1, Type type2)
+    public bool isSameType(Type type1, Type type2)
     {
         bool same = false;
 
@@ -2278,24 +2278,24 @@ public final class TypeChecker
      *   ile = the encoding
      * Returns: the `Type`
      */
-    public Type determineLiteralEncodingType(IntegerLiteralEncoding ile)
+    public static Type determineLiteralEncodingType(IntegerLiteralEncoding ile)
     {
         Type literalEncodingType;
         if(ile == IntegerLiteralEncoding.SIGNED_INTEGER)
         {
-            literalEncodingType = getType(this.program, "int");
+            literalEncodingType = getBuiltInType(null, null, "int");
         }
         else if(ile == IntegerLiteralEncoding.UNSIGNED_INTEGER)
         {
-            literalEncodingType = getType(this.program, "uint");
+            literalEncodingType = getBuiltInType(null, null, "uint");
         }
         else if(ile == IntegerLiteralEncoding.SIGNED_LONG)
         {
-            literalEncodingType = getType(this.program, "long");
+            literalEncodingType = getBuiltInType(null, null, "long");
         }
         else if(ile == IntegerLiteralEncoding.UNSIGNED_LONG)
         {
-            literalEncodingType = getType(this.program, "ulong");
+            literalEncodingType = getBuiltInType(null, null, "ulong");
         }
         else
         {
