@@ -3,12 +3,28 @@ module tlang.compiler.codegen.emit.dgen_enums;
 import std.string : format;
 import tlang.compiler.symbols.typing.enums : Enum;
 
-// TODO: Move to seperate module
+/** 
+ * Enum member lookup table
+ */
 private struct EnumNameStore
 {
     // Original name -> mapped name
     private string[string] sl;
 
+    /** 
+     * Looks up the mapped name for the
+     * given member at the provided name.
+     *
+     * If no such entry existed to begin
+     * with then one is created by combining
+     * the input name (the one requested)
+     * and the provided integral argument.
+     *
+     * Params:
+     *   n_i = the name to lookup
+     *   n_num = the integral argument
+     * Returns: the mapped name
+     */
     public string mapName(string n_i, size_t n_num)
     {
         string* n_o = n_i in this.sl;
@@ -20,12 +36,6 @@ private struct EnumNameStore
         return *n_o;
     }
 }
-
-
-
-// TODO: Move to seperate module
-// TODO: Is there _anyway_ to integrate
-// ... a `Pool!(E,V)` here?
 
 /** 
  * The enumeration type
@@ -48,19 +58,6 @@ public final class EnumMapper
     import niknaks.containers : Pool;
     private Pool!(EnumNameStore, Enum, false) _p;
     private size_t _roll;
-    // private EnumNameStore[Enum] _s;
-
-    // TODO: Replace this with a Pool?
-    // private EnumNameStore* enter(Enum e)
-    // {
-    //     EnumNameStore* _es = e in _s;
-    //     if(_es is null)
-    //     {
-    //         this._s[e] = EnumNameStore();
-    //         return enter(e);
-    //     }
-    //     return _es;
-    // }
 
     /** 
      * Returns the unique name
@@ -79,7 +76,6 @@ public final class EnumMapper
             this._roll++;
         }
 
-        // EnumNameStore* _es = enter(e);
         EnumNameStore* _es = _p.pool(e);
         return _es.mapName(m, this._roll);
     }
