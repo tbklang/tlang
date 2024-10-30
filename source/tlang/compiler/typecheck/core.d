@@ -2441,11 +2441,6 @@ public final class TypeChecker
 
                 if(binOperator == SymbolType.DOT)
                 {
-                    // panic("Implement dot operator typecheck/codegen");
-
-                    // <<<<< TODO: Struct handling BEGIN >>>>>
-                    // <<<<< Struct handling END >>>>>
-
                     DEBUG("Humburger");
 
                     // lhs=FetchValueVar rhs=<undetermined>
@@ -2471,12 +2466,22 @@ public final class TypeChecker
                             Enum e_t = cast(Enum)leftEntity;
                             Type e_c_t = getEnumType(this, e_t);
 
-                            // TODO: Right-hand operand can ONLY be a FetchValueVar
+                            // Right-hand operand can ONLY be a FetchValueVar
                             FetchValueVar r_name = cast(FetchValueVar)vRhsInstr;
-
                             if(r_name is null)
                             {
-                                panic("Can only refer to names on the right-hand side of an enum instance");
+                                throw new TypeCheckerException
+                                (
+                                    TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                                    format
+                                    (
+                                        "Only references to member names in the %s type are allowed, '%s' in %s.%s is invalid usage",
+                                        e_t.getName(),
+                                        tryRender(vRhsInstr),
+                                        tryRender(vLhsInstr),
+                                        tryRender(vRhsInstr)
+                                    )
+                                );
                             }
 
                             Optional!(EnumConstant) r_c_opt = e_t.find(r_name.getTarget());
