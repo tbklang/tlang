@@ -91,12 +91,11 @@ import niknaks.containers : Pool;
 
 public final class EnumInfo
 {
-    private Enum _e;
     private Expression[EnumConstant] _v;
+
     this(Enum e)
     {
-        this._e = e;
-        init();
+        init(e);
     }
 
     public Expression getExpressionFor(EnumConstant ec)
@@ -106,10 +105,13 @@ public final class EnumInfo
         return *expr;
     }
 
-    private void init()
+    /** 
+     * Performs the determination
+     * of the ordinals within
+     * the given enumeration type
+     */
+    private void init(Enum _e)
     {
-        // TODO: Step 1: Perform the ordinal determination
-
         // first save all constants which have
         // explicit values
         foreach(m; _e.members())
