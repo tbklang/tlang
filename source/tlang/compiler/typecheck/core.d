@@ -65,6 +65,7 @@ public final class TypeChecker
      * Enum information data store
      */
     private Pool!(EnumInfo, Enum) _ePool;
+    private bool tir_flatten_enum_member_refs;
 
     /** 
      * Constructs a new `TypeChecker` with the given
@@ -81,6 +82,8 @@ public final class TypeChecker
 
         this.resolver = new Resolver(program, this);
         this.meta = new MetaProcessor(this, true);   
+
+        this.tir_flatten_enum_member_refs = this.config.getConfig("tir:flatten_enum_refs").getBoolean();
     }
 
     /** 
@@ -2496,7 +2499,7 @@ public final class TypeChecker
 
                             EnumConstant r_c = r_c_opt.get();
                             import tlang.compiler.typecheck.helpers.enums : enumConstantToInstruction;
-                            Value iv = enumConstantToInstruction(this, e_t, r_c);
+                            Value iv = enumConstantToInstruction(this, e_t, r_c, tir_flatten_enum_member_refs);
                             DEBUG("generated iv:", iv);
                             addInstr(iv);
                             return;
