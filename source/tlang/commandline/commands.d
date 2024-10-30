@@ -129,6 +129,10 @@ mixin template TypeCheckerBase()
     @(ArgConfig.optional)
     bool warnUnusedFunctions = true;
 
+    @ArgNamed("flattenEnumRefs|fer", "Whether or not to flatten enumeration type member references during code generation")
+    @(ArgConfig.optional)
+    bool flattenEnumRefs = true;
+
     void TypeCheckerInit(Compiler compiler)
     {
         // Set whether to warn about unused variables
@@ -136,6 +140,9 @@ mixin template TypeCheckerBase()
 
         // Set whether to warn about unused functions
         compiler.getConfig().addConfig(ConfigEntry("typecheck:warnUnusedFuncs", warnUnusedFunctions));
+
+        // Set whether to flatten enum member references
+        compiler.getConfig().addConfig(ConfigEntry("tir:flatten_enum_refs", flattenEnumRefs));
     }
 }
 

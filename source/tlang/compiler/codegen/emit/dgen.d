@@ -244,6 +244,24 @@ public final class DCodeEmitter : CodeEmitter
 
             emmmmit = to!(string)(literalValueInstr.getLiteralValue());
         }
+        /**
+         * Enum constant reference
+         *
+         * See_Also: This would be
+         * emitted when the TIR option
+         * is enabled
+         */
+        else if(cast(EnumConstantRef)instruction)
+        {
+            EnumConstantRef ecr = cast(EnumConstantRef)instruction;
+            Enum e = ecr.getEnum();
+            string enumName = e.getName();
+
+            /* Map target to unique enum name */
+            string enumMember = e_mapper.getName(e, ecr.memberTarget());
+            
+            emmmmit = format("%s", enumMember);
+        }
         /* FetchValueVar */
         else if(cast(FetchValueVar)instruction)
         {

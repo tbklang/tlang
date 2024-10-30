@@ -239,6 +239,43 @@ public final class LiteralValueFloat : Value, IRenderable
     }
 }
 
+/** 
+ * A reference to an enumeration
+ * type's member
+ *
+ * Examples: `Gender.Male` where
+ * `Gender` is the enum type's
+ * identifier and `Male` is
+ * one of its members
+ */
+public final class EnumConstantRef : Value, IRenderable
+{
+    import tlang.compiler.symbols.typing.enums : Enum;
+    private Enum _e;
+    private string _m;
+
+    this(Enum e, string member)
+    {
+        this._e = e;
+        this._m = member;
+    }
+
+    public Enum getEnum()
+    {
+        return this._e;
+    }
+
+    public string memberTarget()
+    {
+        return this._m;
+    }
+
+    public string render()
+    {
+        return format("%s.%s", _e.getName(), _m);
+    }
+}
+
 /* FIXME: Implement this */
 /**
 * TODO: This should take in:
