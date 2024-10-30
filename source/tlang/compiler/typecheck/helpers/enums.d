@@ -34,7 +34,29 @@ public Value fromExpression(TypeChecker tc, Expression e)
     }
 }
 
-public Value enumConstantToInstruction(TypeChecker tc, Enum e, EnumConstant ec)
+/** 
+ * Generates a `Value`-based instruction
+ * corresponding to the enum constant
+ * being referenced
+ *
+ * Params:
+ *   tc = the `TyepChecker` instance
+ *   e = the `Enum`
+ *   ec = the enum's member being
+ * referenced
+ *   flatten = whether or not to generate
+ * a flat instruction. If this is `true`
+ * then an `EnumConstantRef` instruction
+ * will NOT be generated.
+ * Returns: a `Value`-based instruction
+ */
+public Value enumConstantToInstruction
+(
+    TypeChecker tc,
+    Enum e,
+    EnumConstant ec,
+    bool flatten = true
+)
 {
     Optional!(Expression) ec_v_opt = ec.value();
 
@@ -47,6 +69,13 @@ public Value enumConstantToInstruction(TypeChecker tc, Enum e, EnumConstant ec)
     {
         v_instr = fromExpression(tc, getOrdinal(tc, e, ec));
     }
+
+    if(!flatten)
+    {
+        import tlang.compiler.codegen.instruction : EnumConstantRef;
+        v_instr = new EnumConstantRef(e, ec.name());
+    }
+
     v_instr.setInstrType(e);
     return v_instr;
 }
