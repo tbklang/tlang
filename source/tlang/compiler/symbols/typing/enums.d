@@ -123,7 +123,18 @@ public final class Enum : Type
         return format("Enum (%s)", getName());
     }
 
-    // todo, remove this as it is unused
+    /** 
+     * Tries to find the member of
+     * this enumeration type with
+     * the given name
+     *
+     * Params:
+     *   member = the member's 
+     * name
+     * Returns: an `Optional`
+     * potentially containing
+     * the name
+     */
     public Optional!(EnumConstant) find(string member)
     {
         foreach(e; this._m)
@@ -136,7 +147,16 @@ public final class Enum : Type
         return Optional!(EnumConstant).empty();
     }
 
-    // todo, remove this as it is unused
+    /** 
+     * Returns the position that the given
+     * enum constant occurs in
+     *
+     * Params:
+     *   e = the `EnumConstant` to search
+     * for
+     * Returns: the index of the found
+     * constant, otherwise `-`
+     */
     public ptrdiff_t getPosition(EnumConstant e)
     {
         for(size_t i = 0; i < this._m.length; i++)
