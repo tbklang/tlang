@@ -477,6 +477,10 @@ jobs:
         run: |
           chmod +x extern_test.sh
           ./extern_test.sh
+      - name: Simple expressionless return
+        run: |
+          ./tlang compile source/tlang/testing/simple_return_expressionless.t
+          ./tlang.out
 
 
       # Array support
