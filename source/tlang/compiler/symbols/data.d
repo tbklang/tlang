@@ -675,7 +675,6 @@ public import tlang.compiler.symbols.expressions;
 public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable, MCloneable
 {
     private Expression expression;
-    private Variable variable;
 
     this(Expression expression)
     {
@@ -687,21 +686,9 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
         return expression;
     }
 
-    public Variable getVariable()
-    {
-        return variable;
-    }
-
-    // NOTE-to-self: Very interesting method we have here, is this just for debugging?
-    // (15th May 2023, whilst working on Meta)
-    public void setVariable(Variable variable)
-    {
-        this.variable = variable;
-    }
-
     public override string toString()
     {
-        return "[varAssignDec'd: To: "~variable.toString()~"]";
+        return "[varAssignDec: Expr: "~expression.toString()~"]";
     }
 
     public override Statement[] search(TypeInfo_Class clazzType)
