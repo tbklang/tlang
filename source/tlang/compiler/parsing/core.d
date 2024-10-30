@@ -1890,8 +1890,6 @@ public final class Parser
                             Variable variable = new Variable(type, name);
                             variable.addAssignment(varAssign);
 
-                            varAssign.setVariable(variable);
-
                             generated = variable;
 
                             return generated;
