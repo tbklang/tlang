@@ -563,33 +563,6 @@ public class DNodeGenerator
         return node;
     }
 
-
-    /**
-    * Used for maintaining dependencies along a trail of `x.y.z`
-    */
-    private DNode[][string] pathTrailDeps;
-    private void addToPathTrail(string finalEntityName, DNode dep)
-    {
-        bool found = false;
-        foreach(string entityName; pathTrailDeps.keys)
-        {
-            if(cmp(entityName, finalEntityName) == 0)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if(found == false)
-        {
-            pathTrailDeps[finalEntityName] = [];
-        }
-        
-        pathTrailDeps[finalEntityName] ~= dep;
-        
-    }
-
-
     private DNode expressionPass(Expression exp, Context context)
     {
         ExpressionDNode dnode = poolT!(ExpressionDNode, Expression)(exp);
