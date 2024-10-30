@@ -79,27 +79,6 @@ public class StaticVariableDeclaration : VariableNode
     }
 }
 
-public class VariableAssignmentNode : DNode
-{
-    private VariableAssignment variableAssignment;
-
-    this(VariableAssignment variableAssignment)
-    {
-        super(variableAssignment);
-
-        this.variableAssignment = variableAssignment;
-        initName();
-    }
-
-    private void initName()
-    {
-        /* get the associated variable */
-        Variable associatedVariable = variableAssignment.getVariable();
-
-        name = to!(string)(associatedVariable)~" (assignment)";
-    }
-}
-
 public class AssignmentOf : DNode
 {
     // FIXME: Update DNode super-type
