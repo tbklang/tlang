@@ -82,8 +82,6 @@ public Value enumConstantToInstruction
 
 public Expression getOrdinal(TypeChecker tc, Enum e, EnumConstant ec)
 {
-    ptrdiff_t p = e.getPosition(ec);// todo, remove this - we never use this
-
     auto ds = tc.getEnumPool();
     EnumInfo ei = ds.pool(e);
     return ei.getExpressionFor(ec);
