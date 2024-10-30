@@ -878,7 +878,7 @@ public final class TypeChecker
      *
      * Returns: true if the types are equal, false otherwise
      */
-    private bool isSameType(Type type1, Type type2)
+    public bool isSameType(Type type1, Type type2)
     {
         bool same = false;
 
@@ -2310,6 +2310,42 @@ public final class TypeChecker
         }
     }
 
+    /** 
+     * Determines the `Type` that should be used
+     * for the given integeral literal encoding
+     *
+     * Params:
+     *   ile = the encoding
+     * Returns: the `Type`
+     */
+    public static Type determineLiteralEncodingType(IntegerLiteralEncoding ile)
+    {
+        Type literalEncodingType;
+        if(ile == IntegerLiteralEncoding.SIGNED_INTEGER)
+        {
+            literalEncodingType = getBuiltInType(null, null, "int");
+        }
+        else if(ile == IntegerLiteralEncoding.UNSIGNED_INTEGER)
+        {
+            literalEncodingType = getBuiltInType(null, null, "uint");
+        }
+        else if(ile == IntegerLiteralEncoding.SIGNED_LONG)
+        {
+            literalEncodingType = getBuiltInType(null, null, "long");
+        }
+        else if(ile == IntegerLiteralEncoding.UNSIGNED_LONG)
+        {
+            literalEncodingType = getBuiltInType(null, null, "ulong");
+        }
+        else
+        {
+            ERROR("Developer error: Impossible to get here");
+            assert(false);
+        }
+        
+        return literalEncodingType;
+    }
+
     public void typeCheckThing(DNode dnode)
     {
         DEBUG("typeCheckThing(): "~dnode.toString());
@@ -2339,33 +2375,16 @@ public final class TypeChecker
                 /* Generate a LiteralValue (IntegerLiteral) */
                 if(cast(IntegerLiteral)statement)
                 {
-                    IntegerLiteral integerLitreal = cast(IntegerLiteral)statement;
+                    IntegerLiteral integerLiteral = cast(IntegerLiteral)statement;
 
                     /**
                      * Determine the type of this value instruction by finding
                      * the encoding of the integer literal (part of doing issue #94)
                      */
-                    Type literalEncodingType;
-                    if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_INTEGER)
-                    {
-                        literalEncodingType = getType(this.program, "int");
-                    }
-                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_INTEGER)
-                    {
-                        literalEncodingType = getType(this.program, "uint");
-                    }
-                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.SIGNED_LONG)
-                    {
-                        literalEncodingType = getType(this.program, "long");
-                    }
-                    else if(integerLitreal.getEncoding() == IntegerLiteralEncoding.UNSIGNED_LONG)
-                    {
-                        literalEncodingType = getType(this.program, "ulong");
-                    }
+                    Type literalEncodingType = determineLiteralEncodingType(integerLiteral.getEncoding());
                     assert(literalEncodingType);
 
-                    // TODO: Insert getEncoding stuff here
-                    LiteralValue litValInstr = new LiteralValue(integerLitreal.getNumber(), literalEncodingType);
+                    LiteralValue litValInstr = new LiteralValue(integerLiteral.getNumber(), literalEncodingType);
 
                     valInstr = litValInstr;
 
