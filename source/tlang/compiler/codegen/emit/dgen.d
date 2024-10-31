@@ -392,10 +392,18 @@ public final class DCodeEmitter : CodeEmitter
             Context context = returnInstruction.getContext();
             assert(context);
 
-            /* Get the return expression instruction */
-            Value returnExpressionInstr = returnInstruction.getReturnExpInstr();
-
-            emmmmit = "return "~transform(returnExpressionInstr)~";";
+            /* If there is an expression returned */
+            if(returnInstruction.hasReturnExpInstr())
+            {
+                /* Get the return expression instruction */
+                Value returnExpressionInstr = returnInstruction.getReturnExpInstr();
+                emmmmit = "return "~transform(returnExpressionInstr)~";";
+            }
+            /* Expression-less return */
+            else
+            {
+                emmmmit = "return;";
+            }
         }
         /**
         * If statements (IfStatementInstruction)
@@ -614,7 +622,7 @@ public final class DCodeEmitter : CodeEmitter
                     emit ~= "("~typeTransform(castingTo)~")";
 
                     /* The expression being casted */
-                    emit ~= transform(uncastedInstruction);
+                    emit ~= "("~transform(uncastedInstruction)~")";
                 }
                 else
                 {

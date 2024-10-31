@@ -352,42 +352,6 @@ public class DNode
     }
 }
 
-
-/**
-* DNodeGenerator (Next-generation) base
-*
-* This is a base class for a DNode generator,
-* all it requires to construct is:
-*
-* 1. Context (to know what we are in or so)
-* 2. Statements[] (to know what to process)
-* 3. TypeChecker (to know how to resolve names)
-*
-*/
-public class DNodeGeneratorBase
-{
-    /* Type checker (for name lookups) */
-    private TypeChecker tc;
-
-    /* Statements to process */
-    private Statement[] statements;
-
-    /* Information about our current container for said statements (and initscope) */
-    private Context context;
-
-    this(TypeChecker tc, Statement[] statements, Context context)
-    {
-        this.tc = tc;
-        this.statements = statements;
-        this.context = context;
-    }
-}
-
-
-
-
-
-
 public final class DFunctionInnerGenerator : DNodeGenerator
 {
     private Function func;
@@ -450,9 +414,6 @@ public class DNodeGenerator
     {
         throw new DependencyException(DependencyError.GENERAL_ERROR, message);
     }
-
-    public DNode root;
-
 
     public DNode generate()
     {
@@ -562,33 +523,6 @@ public class DNodeGenerator
 
         return node;
     }
-
-
-    /**
-    * Used for maintaining dependencies along a trail of `x.y.z`
-    */
-    private DNode[][string] pathTrailDeps;
-    private void addToPathTrail(string finalEntityName, DNode dep)
-    {
-        bool found = false;
-        foreach(string entityName; pathTrailDeps.keys)
-        {
-            if(cmp(entityName, finalEntityName) == 0)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if(found == false)
-        {
-            pathTrailDeps[finalEntityName] = [];
-        }
-        
-        pathTrailDeps[finalEntityName] ~= dep;
-        
-    }
-
 
     private DNode expressionPass(Expression exp, Context context)
     {
@@ -1229,9 +1163,9 @@ public class DNodeGenerator
             func.context = context;
 
             /* Add funtion definition */
-            DEBUG("Hello"); // TODO: Check `root`, just use findContainerOfType
-            // Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func));
-            this.funcDefStore.addFunctionDef(cast(Module)root.entity, func);
+            DEBUG("Hello");
+            Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func);
+            this.funcDefStore.addFunctionDef(owner, func);
 
             return null;
         }
@@ -1393,7 +1327,7 @@ public class DNodeGenerator
             if(forLoop.hasPreRunStatement())
             {
                 Statement preRunStatement = forLoop.getPreRunStatement();
-                DNode preRunStatementDNode = generalStatement(c, context, preRunStatement);
+                DNode preRunStatementDNode = generalStatement(c, new Context(forLoop, InitScope.STATIC), preRunStatement);
                 forLoopDNode.needs(preRunStatementDNode);
             }
 
@@ -1511,13 +1445,12 @@ public class DNodeGenerator
         /* If this is a Module then it must become the root */
         if(cast(Module)namedContainer)
         {
-            root = node;
+            
         }
         /* NOTE: 1st October: Just for now ignore funciton stuff InitScvope? */
         else if(cast(Function)namedContainer)
         {
             ignoreInitScope=false;
-            root=pool(cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, namedContainer));
         }
 
 
