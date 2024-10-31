@@ -305,13 +305,13 @@ public final class DCodeEmitter : CodeEmitter
              * 
              * See issue #140 (https://deavmi.assigned.network/git/tlang/tlang/issues/140#issuecomment-1892)
              */
-            Type leftHandOpType = (cast(Value)binOpInstr.lhs).getInstrType();
-            Type rightHandOpType = (cast(Value)binOpInstr.rhs).getInstrType();
+            Type leftHandOpType = (cast(Value)binOpInstr.getLHSInstr()).getInstrType();
+            Type rightHandOpType = (cast(Value)binOpInstr.getRHSInstr()).getInstrType();
 
             if(typeChecker.isPointerType(leftHandOpType))
             {
                 // Sanity check the other side should have been coerced to CastedValueInstruction
-                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.rhs;
+                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.getRHSInstr();
                 assert(cvInstr);
 
                 DEBUG("CastedValueInstruction relax setting: Da funk RIGHT ");
@@ -322,7 +322,7 @@ public final class DCodeEmitter : CodeEmitter
             else if(typeChecker.isPointerType(rightHandOpType))
             {
                 // Sanity check the other side should have been coerced to CastedValueInstruction
-                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.lhs;
+                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.getLHSInstr();
                 assert(cvInstr);
 
                 DEBUG("CastedValueInstruction relax setting: Da funk LEFT ");
@@ -331,7 +331,7 @@ public final class DCodeEmitter : CodeEmitter
                 cvInstr.setRelax(true);
             }
 
-            emmmmit = transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
+            emmmmit = transform(binOpInstr.getLHSInstr())~to!(string)(getCharacter(binOpInstr.getOperator()))~transform(binOpInstr.getRHSInstr());
         }
         /* FuncCallInstr */
         else if(cast(FuncCallInstr)instruction)
