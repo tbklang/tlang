@@ -257,7 +257,7 @@ public final class TypeChecker
         /** 
          * Find the variables which were declared but never used
          */
-        if(this.config.hasConfig("typecheck:warnUnusedVars") & this.config.getConfig("typecheck:warnUnusedVars").getBoolean())
+        if(this.config.hasConfig("typecheck:warnUnusedVars") & this.config.getConfig("typecheck:warnUnusedVars").flag())
         {
             Variable[] unusedVariables = getUnusedVariables();
             WARN("There are "~to!(string)(unusedVariables.length)~" unused variables");
