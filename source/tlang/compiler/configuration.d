@@ -10,6 +10,11 @@ public final class CompilerConfiguration
 {
     private Registry reg;
 
+    this()
+    {
+        req.setAllowOverwrite(true);
+    }
+
     public void addConfig(T)(string name, T value)
     {
         this.reg.newEntry(name, value);
