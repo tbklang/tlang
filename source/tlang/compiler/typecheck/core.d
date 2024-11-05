@@ -280,7 +280,7 @@ public final class TypeChecker
         /** 
          * Find the functions which were declared but never used
          */
-        if(this.config.hasConfig("typecheck:warnUnusedFuncs") && this.config.getConfig("typecheck:warnUnusedFuncs").getBoolean())
+        if(this.config.hasConfig("typecheck:warnUnusedFuncs") && this.config.getConfig("typecheck:warnUnusedFuncs").flag())
         {
             Function[] unusedFuncs = getUnusedFunctions();
             if(unusedFuncs.length)
