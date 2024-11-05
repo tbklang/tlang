@@ -15,7 +15,7 @@ import tlang.compiler.codegen.emit.core;
 import tlang.compiler.codegen.emit.dgen;
 import tlang.misc.exceptions;
 import std.string : cmp;
-import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
+import tlang.compiler.configuration;
 import tlang.compiler.modman;
 
 // TODO: Add configentry unittests

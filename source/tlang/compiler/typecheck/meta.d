@@ -341,7 +341,7 @@ public class MetaProcessor
     private string getSystemType(string typeAlias)
     {
         /* Determine machine's width */
-        ulong maxWidth = compilerConfig.getConfig("types:max_width").getNumber();
+        ulong maxWidth = compilerConfig.getConfig("types:max_width").numeric();
 
         string maxType;
 
