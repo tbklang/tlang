@@ -1,3 +1,8 @@
+/** 
+ * Compiler configuration mechanism
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.configuration;
 
 import tlang.compiler.core : CompilerException, CompilerError;
@@ -6,6 +11,10 @@ import std.string : cmp;
 import niknaks.config : Registry;
 public import niknaks.config : ConfigEntry;
 
+/** 
+ * Configuration registry
+ * for a compiler
+ */
 public final class CompilerConfiguration
 {
     private Registry reg;
