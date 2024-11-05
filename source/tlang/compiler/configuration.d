@@ -24,11 +24,32 @@ public final class CompilerConfiguration
         reg.setAllowOverwrite(true);
     }
 
+    /** 
+     * Places the given value at
+     * the provided name, overwiting
+     * any previous entries if
+     * already present
+     *
+     * Params:
+     *   name = the entry's name
+     *   value = the entry's value
+     */
     public void addConfig(T)(string name, T value)
     {
         this.reg.newEntry(name, value);
     }
 
+    /** 
+     * Obtains the entry at the
+     * given name
+     *
+     * Params:
+     *   key = the entry's name
+     * Returns: a `ConfigEntry`
+     * Throws: 
+     *   CompilerException if no
+     * such entry exists
+     */
     public ConfigEntry getConfig(string key)
     {
         ConfigEntry foundEntry;
@@ -42,6 +63,16 @@ public final class CompilerConfiguration
         }
     }
 
+    /** 
+     * Checks if an entry at
+     * the given name exists
+     *
+     * Params:
+     *   key = the name to
+     * check by
+     * Returns: `true` if it
+     * exists, `false` otherwise
+     */
     public bool hasConfig(string key)
     {
         ConfigEntry _discard;
