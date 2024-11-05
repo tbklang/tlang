@@ -83,7 +83,7 @@ public final class TypeChecker
         this.resolver = new Resolver(program, this);
         this.meta = new MetaProcessor(this, true);   
 
-        this.tir_flatten_enum_member_refs = this.config.getConfig("tir:flatten_enum_refs").getBoolean();
+        this.tir_flatten_enum_member_refs = this.config.getConfig("tir:flatten_enum_refs").flag();
     }
 
     /** 
