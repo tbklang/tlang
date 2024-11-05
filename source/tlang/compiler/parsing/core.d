@@ -3004,7 +3004,7 @@ public final class Parser
         if
         (
             compiler.getConfig().hasConfig("modman:strict_headers") &&
-            compiler.getConfig().getConfig("modman:strict_headers").getBoolean() &&
+            compiler.getConfig().getConfig("modman:strict_headers").flag() &&
             cmp(moduleName, replace(pathSplitter(moduleFilePath).back(), ".t", "")) != 0)
         {
             expect(format("The module's name '%s' does not match the file name for it at '%s'", moduleName, moduleFilePath));

@@ -150,7 +150,7 @@ public final class ModuleManager
     this(Compiler compiler)
     {
         // Add search paths discovered from configuration entry
-        string[] cmdLinePaths = compiler.getConfig().getConfig("modman:path").getArray();
+        string[] cmdLinePaths = compiler.getConfig().getConfig("modman:path").array();
         addSearchPaths(cmdLinePaths);
         
         this.compiler = compiler;
