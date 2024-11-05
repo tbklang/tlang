@@ -17,7 +17,7 @@ import tlang.misc.exceptions;
 import tlang.compiler.codegen.mapper.core : SymbolMapper;
 import tlang.compiler.codegen.mapper.impls : HashMapper, LebanonMapper;
 import std.string : cmp;
-import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
+import tlang.compiler.configuration;
 import tlang.compiler.modman;
 
 // TODO: Add configentry unittests
@@ -279,7 +279,7 @@ public class Compiler
         }
         
         SymbolMapper mapper;
-        string mapperType = config.getConfig("dgen:mapper").getText();
+        string mapperType = config.getConfig("dgen:mapper").text();
 
         if(cmp(mapperType, "hashmapper") == 0)
         {
