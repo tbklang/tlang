@@ -137,7 +137,7 @@ public final class CompilerConfiguration
         config.addConfig("typecheck:warnUnusedVars", true);
 
         /* Always warn about unused functions */
-        config.addConfig(ConfigEntry("typecheck:warnUnusedFuncs", true));
+        config.addConfig("typecheck:warnUnusedFuncs", true);
 
         return config;
     }
