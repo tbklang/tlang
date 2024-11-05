@@ -12,7 +12,7 @@ public final class CompilerConfiguration
 
     this()
     {
-        req.setAllowOverwrite(true);
+        reg.setAllowOverwrite(true);
     }
 
     public void addConfig(T)(string name, T value)
