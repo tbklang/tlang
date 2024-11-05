@@ -64,7 +64,7 @@ public final class DCodeEmitter : CodeEmitter
         string tabStr;
 
         /* Only generate tabs if enabled in compiler config */
-        if(config.getConfig("dgen:pretty_code").getBoolean())
+        if(config.getConfig("dgen:pretty_code").flag())
         {
             for(ulong i = 0; i < count; i++)
             {
@@ -888,7 +888,7 @@ public final class DCodeEmitter : CodeEmitter
             //
             // In such test cases we assume that the first module
             // is the one we care about
-            if(config.getConfig("dgen:emit_entrypoint_test").getBoolean())
+            if(config.getConfig("dgen:emit_entrypoint_test").flag())
             {
                 WARN("Generating a testcase entrypoint for this program");
 
@@ -1673,7 +1673,7 @@ int main()
         scope(exit)
         {
             // Clean up all generated C files
-            if(config.hasConfig("dgen:afterexit:clean_c_files") && config.getConfig("dgen:afterexit:clean_c_files").getBoolean())
+            if(config.hasConfig("dgen:afterexit:clean_c_files") && config.getConfig("dgen:afterexit:clean_c_files").flag())
             {
                 foreach(string srcFile; srcFiles)
                 {
@@ -1689,7 +1689,7 @@ int main()
             }
 
             // Clean up all generates object files
-            if(config.hasConfig("dgen:afterexit:clean_obj_files") && config.getConfig("dgen:afterexit:clean_obj_files").getBoolean())
+            if(config.hasConfig("dgen:afterexit:clean_obj_files") && config.getConfig("dgen:afterexit:clean_obj_files").flag())
             {
                 foreach(string objFile; objectFiles)
                 {
@@ -1707,14 +1707,14 @@ int main()
 
         try
         {
-            string systemCompiler = config.getConfig("dgen:compiler").getText();
+            string systemCompiler = config.getConfig("dgen:compiler").text();
             INFO("Using system C compiler '"~systemCompiler~"' for compilation");
 
             // Check for object files to be linked in
             string[] objectFilesLink;
             if(config.hasConfig("linker:link_files"))
             {
-                objectFilesLink = config.getConfig("linker:link_files").getArray();
+                objectFilesLink = config.getConfig("linker:link_files").array();
                 INFO("Object files to be linked in: "~to!(string)(objectFilesLink));
             }
             else
