@@ -102,7 +102,7 @@ public final class CompilerConfiguration
         config.addConfig("dgen:compiler", "clang");
 
         /* By default, flatten all the enum constant references */
-        config.addConfig(ConfigEntry("tir:flatten_enum_refs", true));
+        config.addConfig("tir:flatten_enum_refs", true);
 
         /**
          * Configure, at compile time, the system type aliases
