@@ -1,3 +1,10 @@
+/** 
+ * Helper routines for type-checking
+ * and code-generation relating to
+ * enumeration type support
+ *
+ * Authors: Tristan Brice Velloza Kildaire
+ */
 module tlang.compiler.typecheck.helpers.enums;
 
 import tlang.compiler.typecheck.core : TypeChecker;
@@ -13,6 +20,17 @@ import tlang.misc.logging;
 
 import niknaks.functional : Optional;
 
+/** 
+ * Provided an instance of the `TypeChecker`
+ * and an expression, this will derive the
+ * correct `Value`-based instruction for
+ * that expression
+ *
+ * Params:
+ *   tc = the `TypeChecker`
+ *   e = the `Expression`
+ * Returns: a `Value`-based instruction
+ */
 public Value fromExpression(TypeChecker tc, Expression e)
 {
     assert(isValidExpression(e));
