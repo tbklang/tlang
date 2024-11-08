@@ -8,6 +8,7 @@ module tlang.compiler.symbols.typing.enums;
 import tlang.compiler.symbols.data : Expression;
 import tlang.compiler.symbols.typing.core : Type;
 import niknaks.functional : Optional;
+import tlang.compiler.symbols.mcro : MTypeRewritable;
 
 import tlang.misc.utils : panic;
 
@@ -78,7 +79,7 @@ public struct EnumConstant
     }
 }
 
-public final class Enum : Type
+public final class Enum : Type, MTypeRewritable
 {
     private EnumConstant[] _m;
     private string _t;
@@ -168,6 +169,16 @@ public final class Enum : Type
             }
         }
         return -1;
+    }
+
+    public override string getType()
+    {
+        return this._t;
+    }
+
+    public override void setType(string type)
+    {
+        this._t = type;
     }
 }
 
