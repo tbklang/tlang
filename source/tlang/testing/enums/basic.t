@@ -6,12 +6,12 @@ enum Numberless : size_t
 	TWO
 }
 
-int answer()
+size_t answer()
 {
 	return Numberless.ONE+Numberless.TWO;
 }
 
 int main()
 {
-	return answer();
+	return cast(int)answer();
 }
