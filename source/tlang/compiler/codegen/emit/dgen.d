@@ -64,7 +64,7 @@ public final class DCodeEmitter : CodeEmitter
         string tabStr;
 
         /* Only generate tabs if enabled in compiler config */
-        if(config.getConfig("dgen:pretty_code").getBoolean())
+        if(config.getConfig("dgen:pretty_code").flag())
         {
             for(ulong i = 0; i < count; i++)
             {
@@ -305,13 +305,13 @@ public final class DCodeEmitter : CodeEmitter
              * 
              * See issue #140 (https://deavmi.assigned.network/git/tlang/tlang/issues/140#issuecomment-1892)
              */
-            Type leftHandOpType = (cast(Value)binOpInstr.lhs).getInstrType();
-            Type rightHandOpType = (cast(Value)binOpInstr.rhs).getInstrType();
+            Type leftHandOpType = (cast(Value)binOpInstr.getLHSInstr()).getInstrType();
+            Type rightHandOpType = (cast(Value)binOpInstr.getRHSInstr()).getInstrType();
 
             if(typeChecker.isPointerType(leftHandOpType))
             {
                 // Sanity check the other side should have been coerced to CastedValueInstruction
-                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.rhs;
+                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.getRHSInstr();
                 assert(cvInstr);
 
                 DEBUG("CastedValueInstruction relax setting: Da funk RIGHT ");
@@ -322,7 +322,7 @@ public final class DCodeEmitter : CodeEmitter
             else if(typeChecker.isPointerType(rightHandOpType))
             {
                 // Sanity check the other side should have been coerced to CastedValueInstruction
-                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.lhs;
+                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.getLHSInstr();
                 assert(cvInstr);
 
                 DEBUG("CastedValueInstruction relax setting: Da funk LEFT ");
@@ -331,7 +331,7 @@ public final class DCodeEmitter : CodeEmitter
                 cvInstr.setRelax(true);
             }
 
-            emmmmit = transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
+            emmmmit = transform(binOpInstr.getLHSInstr())~to!(string)(getCharacter(binOpInstr.getOperator()))~transform(binOpInstr.getRHSInstr());
         }
         /* FuncCallInstr */
         else if(cast(FuncCallInstr)instruction)
@@ -392,10 +392,18 @@ public final class DCodeEmitter : CodeEmitter
             Context context = returnInstruction.getContext();
             assert(context);
 
-            /* Get the return expression instruction */
-            Value returnExpressionInstr = returnInstruction.getReturnExpInstr();
-
-            emmmmit = "return "~transform(returnExpressionInstr)~";";
+            /* If there is an expression returned */
+            if(returnInstruction.hasReturnExpInstr())
+            {
+                /* Get the return expression instruction */
+                Value returnExpressionInstr = returnInstruction.getReturnExpInstr();
+                emmmmit = "return "~transform(returnExpressionInstr)~";";
+            }
+            /* Expression-less return */
+            else
+            {
+                emmmmit = "return;";
+            }
         }
         /**
         * If statements (IfStatementInstruction)
@@ -614,7 +622,7 @@ public final class DCodeEmitter : CodeEmitter
                     emit ~= "("~typeTransform(castingTo)~")";
 
                     /* The expression being casted */
-                    emit ~= transform(uncastedInstruction);
+                    emit ~= "("~transform(uncastedInstruction)~")";
                 }
                 else
                 {
@@ -880,7 +888,7 @@ public final class DCodeEmitter : CodeEmitter
             //
             // In such test cases we assume that the first module
             // is the one we care about
-            if(config.getConfig("dgen:emit_entrypoint_test").getBoolean())
+            if(config.getConfig("dgen:emit_entrypoint_test").flag())
             {
                 WARN("Generating a testcase entrypoint for this program");
 
@@ -1665,7 +1673,7 @@ int main()
         scope(exit)
         {
             // Clean up all generated C files
-            if(config.hasConfig("dgen:afterexit:clean_c_files") && config.getConfig("dgen:afterexit:clean_c_files").getBoolean())
+            if(config.hasConfig("dgen:afterexit:clean_c_files") && config.getConfig("dgen:afterexit:clean_c_files").flag())
             {
                 foreach(string srcFile; srcFiles)
                 {
@@ -1681,7 +1689,7 @@ int main()
             }
 
             // Clean up all generates object files
-            if(config.hasConfig("dgen:afterexit:clean_obj_files") && config.getConfig("dgen:afterexit:clean_obj_files").getBoolean())
+            if(config.hasConfig("dgen:afterexit:clean_obj_files") && config.getConfig("dgen:afterexit:clean_obj_files").flag())
             {
                 foreach(string objFile; objectFiles)
                 {
@@ -1699,14 +1707,14 @@ int main()
 
         try
         {
-            string systemCompiler = config.getConfig("dgen:compiler").getText();
+            string systemCompiler = config.getConfig("dgen:compiler").text();
             INFO("Using system C compiler '"~systemCompiler~"' for compilation");
 
             // Check for object files to be linked in
             string[] objectFilesLink;
             if(config.hasConfig("linker:link_files"))
             {
-                objectFilesLink = config.getConfig("linker:link_files").getArray();
+                objectFilesLink = config.getConfig("linker:link_files").array();
                 INFO("Object files to be linked in: "~to!(string)(objectFilesLink));
             }
             else

@@ -17,7 +17,7 @@ import tlang.misc.exceptions;
 import tlang.compiler.codegen.mapper.core : SymbolMapper;
 import tlang.compiler.codegen.mapper.impls : HashMapper, LebanonMapper;
 import std.string : cmp;
-import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
+import tlang.compiler.configuration;
 import tlang.compiler.modman;
 
 // TODO: Add configentry unittests
@@ -279,7 +279,7 @@ public class Compiler
         }
         
         SymbolMapper mapper;
-        string mapperType = config.getConfig("dgen:mapper").getText();
+        string mapperType = config.getConfig("dgen:mapper").text();
 
         if(cmp(mapperType, "hashmapper") == 0)
         {
@@ -418,6 +418,8 @@ unittest
 
 
                         "source/tlang/testing/simple_pointer_array_syntax.t",
+
+                        "source/tlang/testing/simple_func_statement.t"
                         ];
     foreach(string testFile; testFiles)
     {
@@ -494,7 +496,8 @@ unittest
                         "source/tlang/testing/simple_literals6.t",
                         "source/tlang/testing/universal_coerce/simple_coerce_literal_good.t",
                         "source/tlang/testing/universal_coerce/simple_coerce_literal_good_stdalo.t",
-                        "source/tlang/testing/simple_function_return_type_check_good.t"
+                        "source/tlang/testing/simple_function_return_type_check_good.t",
+                        "source/tlang/testing/modules/a.t"
     ];
 
     foreach(string testFileGood; testFilesGood)
