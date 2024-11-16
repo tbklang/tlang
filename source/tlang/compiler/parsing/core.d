@@ -1823,8 +1823,6 @@ public final class Parser
                     Variable variable = new Variable(type, identifier);
                     variable.addAssignment(varAssign);
 
-                    varAssign.setVariable(variable);
-
                     generated = variable;
                 }
                 else
@@ -2120,6 +2118,21 @@ public final class Parser
                         Expression varAssExp = varAss.getExpression();
                         
                         parentToContainer(container, [varAssExp]);
+                    }
+                    /**
+                     * If we have a `PointerDereferenceAssignment`
+                     * then we must parent its left-hand and right-hand
+                     * side expressions (the expression the address
+                     * is derived from) and (the expression being
+                     * assigned)
+                     */
+                    else if(cast(PointerDereferenceAssignment)statement)
+                    {
+                        PointerDereferenceAssignment ptrDerefAss = cast(PointerDereferenceAssignment)statement;
+                        Expression addrExp = ptrDerefAss.getPointerExpression();
+                        Expression assExp = ptrDerefAss.getExpression();
+                        
+                        parentToContainer(container, [addrExp, assExp]);
                     }
                     /** 
                      * If we have a `FunctionCall`
@@ -2654,7 +2667,7 @@ public final class Parser
         if
         (
             compiler.getConfig().hasConfig("modman:strict_headers") &&
-            compiler.getConfig().getConfig("modman:strict_headers").getBoolean() &&
+            compiler.getConfig().getConfig("modman:strict_headers").flag() &&
             cmp(moduleName, replace(pathSplitter(moduleFilePath).back(), ".t", "")) != 0)
         {
             expect(format("The module's name '%s' does not match the file name for it at '%s'", moduleName, moduleFilePath));
