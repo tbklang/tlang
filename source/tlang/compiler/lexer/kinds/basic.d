@@ -292,6 +292,9 @@ public final class BasicLexer : LexerInterface
                 {
                     splitterToken = "!=";
                     improvedAdvance(2, false);
+                } else if (currentChar == LS.EXCLAMATION) {
+                    splitterToken = "!";
+                    improvedAdvance(1, false);
                 }else if (currentChar == LS.SHEFFER_STROKE) {
                     splitterToken = "|";
                     improvedAdvance(1, false);

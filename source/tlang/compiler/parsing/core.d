@@ -1129,6 +1129,122 @@ public final class Parser
     * We will also terminate on `;` or `)` and that means our `else` can be
     * left to error out for unknowns then
     */
+
+    private Expression parseExpressionImp()
+    {
+        private Expression parseBoleanCompareExpression()
+        {
+            Expression lhs = parseBitwiseCompareExpression()
+            if (isBooleandCompare(lexer.getCurrentToken())) {
+                Token comp_token = lexer.getCurrentToken();
+                lexer.nextToken();
+                Expression rhs = parseBitwiseCompareExpression();
+                return new BinaryOperatorExpression(getSymbolType(comp_token), lhs, rhs)
+            }
+            return lhs 
+        }
+        private Expression parseBitwiseCompareExpression()
+        {
+            Expression lhs = parseEqExpression();
+            while (isBitwiseOperator(lexer.getCurrentToken())) {
+                Token op_token = lexer.getCurrentToken();
+                lexer.nextToken();
+                Expression rhs = parseEqExpression();
+                lhs = new BinaryOperatorExpression(getSymbolType(op_token), lhs, rhs)
+            }
+            return lhs
+        }
+        private Expression parseEqComparison()
+        {
+            Expression lhs = parseCompExpression();
+            if (isEqualityOperator(lexer.getCurrentToken())) {
+                Token comp_token = lexer.getCurrentToken();
+                lexer.nextToken();
+                Expression rhs = parseCompExpression();
+                return new BinaryOperatorExpression(getSymbolType(comp_token), lhs, rhs)
+            }
+            return lhs 
+        }
+        private Expression parseCompExprssion()
+        {
+            Expression lhs = parseShiftExpression();
+            if (isMathCompOp(lexer.getCurrentToken())) {
+                Token comp_token = lexer.getCurrentToken();
+                lexer.nextToken();
+                Expression rhs = parseCompExpression();
+                return new BinaryOperatorExpression(getSymbolType(comp_token), lhs, rhs)
+            }
+            return lhs 
+        }
+        private Expression parseShiftExprssion()
+        {
+            Expression lhs = parseAddopEpression();
+            while (isShiftOperation(lexer.getCurrentToken())) {
+                Token comp_token = lexer.getCurrentToken();
+                lexer.nextToken();
+                Expression rhs = parseAddopEpression();
+                lhs = new BinaryOperatorExpression(getSymbolType(comp_token), lhs, rhs)
+            }
+            return lhs 
+        }
+        private Expression parseAddopEpression()
+        {
+            Expression lhs = parseMulopEpression();
+            while (isAddop(lexer.getCurrentToken())) {
+                Token comp_token = lexer.getCurrentToken();
+                lexer.nextToken();
+                Expression rhs = parseMulopEpression();
+                lhs = new BinaryOperatorExpression(getSymbolType(comp_token), lhs, rhs)
+            }
+            return lhs 
+        }
+        private Expression parseMulopEpression()
+        {
+            Expression lhs = parseUnaryExprssion();
+            while (isMulop(lexer.getCurrentToken())) {
+                Token comp_token = lexer.getCurrentToken();
+                lexer.nextToken();
+                Expression rhs = parseUnaryExprssion();
+                lhs = new BinaryOperatorExpression(getSymbolType(comp_token), lhs, rhs)
+            }
+            return lhs
+        }
+        private Expression parseUnaryExprssion()
+        {
+            if (isUnaryOp(lexer.getCurrentToken())) {
+                Token tkn = lexer.getCurrentToken();
+                lexer.nextToken();
+                Expression exprForUnaryOp = parseExpression()
+                Expression expr = new UnaryExpression(getSymbolType(lexer.get), exprForUnaryOp);
+                return expr;
+            } else if (getSymbolType(lexer.getCurrentToken()) == SymbolType.CAST) {
+                parseCast();
+                lexer.nextToken()
+                expect(SymbolType.LPAREN, lexer.getCurrentToken())
+                lexer.nextToken()
+                parseType() //Get Type
+                expect(SymbolType.RPAREN, lexer.getCurrentToken())
+                lexer.nextToken()
+                parseSomething() //Get thing to cast
+                return new CastedExpression
+            }
+            return parseRestExpression();
+        }
+        private Expression parseRestExpression()
+        {
+            Expression child = parseParens();
+        }
+        private Expression parseParens()
+        {
+            retur
+        }
+
+        Expression expr = parseBoleanCompareExpression();
+
+    }
+
+
+
     private Expression parseExpression()
     {
         WARN("parseExpression(): Enter");
@@ -2712,7 +2828,7 @@ public final class Parser
         }
 
         /* TODO: We should add `lexer.hasTokens()` to the `lexer.nextToken()` */
-        /* TODO: And too the `getCurrentTokem()` and throw an error when we have ran out rather */
+        /* TODO: And too the `getCurrentToken()` and throw an error when we have ran out rather */
 
         /* We can have an import or vardef or funcdef */
         while (lexer.hasTokens())
