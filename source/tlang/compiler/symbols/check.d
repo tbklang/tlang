@@ -236,6 +236,21 @@ public enum SymbolType
     EQUALS,
 
     /**
+     * Not Equality operator `!=`
+     */
+    NOT_EQUALS,
+
+    /**
+     * Boolean Or `||`
+     */
+    BOOLEAN_OR,
+
+    /**
+     * Boolean And `&&`
+     */
+    BOOLEAN_AND,
+
+    /**
      * Greater than operator `>`
      */
     GREATER_THAN,
@@ -246,6 +261,11 @@ public enum SymbolType
     SMALLER_THAN,
 
     /**
+     * XOR than operator `^`
+     */
+    XOR,
+
+    /**
      * Greater than or equals to operator `>=`
      */
     GREATER_THAN_OR_EQUALS,
@@ -254,6 +274,26 @@ public enum SymbolType
      * Smaller than or equals to operator `<=`
      */
     SMALLER_THAN_OR_EQUALS,
+
+    /**
+     * Greater than or equals to operator `=>`
+     */
+    EQUALS_OR_GREATER_THAN,
+
+    /**
+     * Smaller than or equals to operator `=<`
+     */
+    EQUALS_OR_SMALLER_THAN,
+
+    /**
+     * Shift left operator '<<'
+     */
+    SHIFT_LEFT,
+
+    /**
+     * Shift right operator '>>'
+     */
+    SHIFT_RIGHT,
 
     /**
      * Opening bracket `[`
@@ -304,6 +344,11 @@ public enum SymbolType
      * Singleiline comment (frwd-slash-slash)
      */
     SINGLE_LINE_COMMENT,
+
+    /**
+     * Not Operation '!'
+     */
+    NOT_OPERATOR,
 
     /** 
      * Unknown symbol
@@ -455,6 +500,130 @@ public bool isAccessor(Token token)
     return getSymbolType(token) == SymbolType.PUBLIC ||
             getSymbolType(token) == SymbolType.PRIVATE ||
             getSymbolType(token) == SymbolType.PROTECTED;
+}
+
+/** 
+ * Checks if the given `Token` is a Bitwise Operation
+ * | ^ &
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isBitwiseOperator(Token token)
+{
+    SymbolType sym_type = getSymbolType(token)
+    return sym_type == SymbolType.SHEFFER_STROKE ||
+    sym_type == SymbolType.AMPERSAND ||
+    sym_type == SymbolType.XOR;
+}
+
+/** 
+ * Checks if the given `Token` is an Math Comp Operation
+ * >= <= > < => =<
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isMathCompOp(Token token)
+{
+    SymbolType sym_type = getSymbolType(token)
+    return sym_type == SymbolType.GREATER_THAN ||
+    sym_type == SymbolType.GREATER_THAN_OR_EQUALS ||
+    sym_type == SymbolType.SMALLER_THAN_OR_EQUALS ||
+    sym_type == SymbolType.SMALLER_THAN ||
+    sym_type == SymbolType.EQUALS_OR_SMALLER_THAN ||
+    sym_type == SymbolType.EQUALS_OR_GREATER_THAN;
+}
+
+/** 
+ * Checks if the given `Token` is an Equality Operation
+ * == !=
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isEqualityOperator(Token token)
+{
+    SymbolType sym_type = getSymbolType(token)
+    return sym_type == SymbolType.EQUALS ||
+    sym_type == SymbolType.NOT_EQUALS;
+}
+
+/** 
+ * Checks if the given `Token` is a boolean compare
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isBooleandCompare(Token token)
+{
+    SymbolType sym_type = getSymbolType(token)
+    return sym_type == SymbolType.BOOLEAN_AND ||
+    sym_type == SymbolType.BOOLEAN_OR;
+}
+
+/** 
+ * Checks if the given `Token` is a Shift operation
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isShiftOperation(Token token)
+{
+    SymbolType sym_type = getSymbolType(token)
+    return sym_type == SymbolType.SHIFT_LEFT ||
+    sym_type == SymbolType.SHIFT_RIGHT;
+}
+
+/** 
+ * Checks if the given `Token` is a Unary operation
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isUnary(Token token)
+{
+    SymbolType sym_type = getSymbolType(token)
+    return isAddop(token) || 
+    sym_type == SymbolType.TILDE ||
+    sym_type == SymbolType.NOT_OPERATOR ||
+    sym_type == SymbolType.STAR ||
+    sym_type == SymbolType.AMPERSAND;
+}
+
+/** 
+ * Checks if the given `Token` is a Multiplicative operation
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isMulop(Token token)
+{
+    SymbolType sym_type = getSymbolType(token)
+    return sym_type == SymbolType.STAR ||
+    sym_type == SymbolType.DIVIDE;
+}
+
+
+/** 
+ * Checks if the given `Token` is a Additive operation
+ *
+ * Params:
+ *   token = the `Token` to check
+ * Returns: `true` if so, `false` otherwise
+ */
+public bool isAddop(Token token)
+{
+    SymbolType sym_type = getSymbolType(token)
+    return sym_type == SymbolType.ADD ||
+    sym_type == SymbolType.SUB;
 }
 
 /** 
