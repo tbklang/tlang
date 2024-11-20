@@ -187,9 +187,38 @@ public final class Program : Container
     }
 }
 
-public class Statement
-{
+import tlang.compiler.reporting : LineInfo;
 
+public abstract class Statement
+{
+    /** 
+     * Line information
+     */
+    private LineInfo linfo;
+
+    /** 
+     * Sets the line information
+     * for this AST node
+     *
+     * Params:
+     *   linfo = the `LineInfo`
+     */
+    public final void setLineInfo(LineInfo linfo)
+    {
+        this.linfo = linfo;
+    }
+
+    /** 
+     * Gets the line information
+     * from where this was retrieved
+     *
+     * Returns: the line info
+     */
+    public final LineInfo getLineInfo()
+    {
+        return this.linfo;
+    }
+    
     public byte weight = 0;
 
     /* !!!! BEGIN TYPE CHECK ROUTINES AND DATA !!!! */
