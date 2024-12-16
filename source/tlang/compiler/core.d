@@ -129,6 +129,34 @@ public Result!(string, Exception) grabData(string filePath)
     }
 }
 
+/** 
+ * Constructs a new compiler instance pointed
+ * to the entry point module's file path
+ *
+ * Params:
+ *   path = the entry point module's file
+ * path
+ * Returns: a `Result` containing an instance
+ * of the `Compiler` if it opened successfully,
+ * and if not then the offending `Exception`
+ * that occurred
+ */
+public Result!(Compiler, Exception) forFile(string path)
+{
+    auto r_res = grabData(path);
+
+    if(r_res.is_error())
+    {
+        return error!(Exception, Compiler)(r_res.error());
+    }
+
+    import std.path : pathSplitter, buildPath;
+    File d = File.tmpfile();
+    Compiler c = new Compiler(r_res.ok(), path, d);
+
+    return ok!(Compiler, Exception)(c);
+}
+
 public class Compiler
 {
     /* The input source code */
