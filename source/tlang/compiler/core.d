@@ -90,6 +90,45 @@ public final class CompilerException : TError
     }
 }
 
+import niknaks.functional : Result, ok, error;
+import std.exception : ErrnoException;
+
+/** 
+ * Opens up the file at the provided path
+ * and reads all the data from it.
+ *
+ * Params:
+ *   filePath = the path to read from
+ * Returns: a `Result` that, in the happy-path
+ * would return a `string` and in the
+ * unhappy-path would return an `Exception`
+ * due to some I/O error that occurred
+ * during reading
+ */
+public Result!(string, Exception) grabData(string filePath)
+{
+    File sourceFileFile;
+    scope(exit)
+    {
+        sourceFileFile.close();
+    }
+
+    try
+    {
+        sourceFileFile.open(filePath);
+        ulong fileSize = sourceFileFile.size();
+        byte[] fileBytes;
+        fileBytes.length = fileSize;
+        fileBytes = sourceFileFile.rawRead(fileBytes);
+
+        return ok!(string, Exception)(cast(string)fileBytes);
+    }
+    catch(ErrnoException e)
+    {
+        return error!(Exception, string)(e);
+    }
+}
+
 public class Compiler
 {
     /* The input source code */
