@@ -1736,6 +1736,11 @@ int main()
             // TODO: Do for-each generation of `.o` files here with `-c`
             foreach(Module curMod; programModules)
             {
+                scope(exit)
+                {
+                    watch.reset();
+                }
+                
                 string modFileSrcPath = format("%s.c", curMod.getName());
                 srcFiles ~= modFileSrcPath;
                 string modFileObjPath = format("%s.o", curMod.getName());
