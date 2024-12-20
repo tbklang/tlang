@@ -1657,7 +1657,7 @@ int main()
      * This requires that the `emit()`
      * step must have already been completed
      */
-    public override void finalize()
+    public override EmitResult finalize()
     {
         import tlang.compiler.symbols.data : Program;
         Program program = this.typeChecker.getProgram();
