@@ -817,7 +817,14 @@ public final class DCodeEmitter : CodeEmitter
          */
         else
         {
-            emmmmit = "<TODO: Base emit: "~to!(string)(instruction)~">";
+            if(instruction is null)
+            {
+                emmmmit = "<TODO: transform() called but instruction was null>";
+            }
+            else
+            {
+                emmmmit = "<TODO: Base emit: "~to!(string)(instruction)~">";
+            }
         }
 
         return emmmmit;
