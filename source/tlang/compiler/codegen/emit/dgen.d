@@ -1,6 +1,6 @@
 module tlang.compiler.codegen.emit.dgen;
 
-import tlang.compiler.codegen.emit.core : CodeEmitter;
+import tlang.compiler.codegen.emit.core;
 import tlang.compiler.typecheck.core;
 import std.container.slist : SList;
 import tlang.compiler.codegen.instruction;
@@ -1723,11 +1723,17 @@ int main()
             }
 
             // Total compilation time
-            Duration total = Duration.zero();
+            StopWatch watch = StopWatch(AutoStart.yes);
+            Duration total_c = Duration.zero();
 
             // TODO: Do for-each generation of `.o` files here with `-c`
             foreach(Module curMod; programModules)
             {
+                scope(exit)
+                {
+                    watch.reset();
+                }
+                
                 string modFileSrcPath = format("%s.c", curMod.getName());
                 srcFiles ~= modFileSrcPath;
                 string modFileObjPath = format("%s.o", curMod.getName());
@@ -1736,7 +1742,6 @@ int main()
 
                 INFO("Compiling now with arguments: "~to!(string)(args));
 
-                StopWatch watch = StopWatch(AutoStart.yes);
                 Pid ccPID = spawnProcess(args);
                 int code = wait(ccPID);
                 if(code)
@@ -1747,7 +1752,7 @@ int main()
 
                 Duration compTime = watch.peek();
                 INFO(format("Compiled %s in %sms", curMod.getName(), compTime.total!("msecs")()));
-                total = dur!("msecs")(total.total!("msecs")()+compTime.total!("msecs")());
+                total_c = dur!("msecs")(total_c.total!("msecs")()+compTime.total!("msecs")());
 
                 // Only add it to the list of files if it was generated
                 // (this guards against the clean up routines spitting out errors
@@ -1755,7 +1760,7 @@ int main()
                 objectFiles ~= modFileObjPath;
             }
 
-            INFO(format("Total compilation time took %s", total));
+            INFO(format("Total compilation time took %s", total_c));
 
             // Now determine the entry point module
             // Module entryModule;
@@ -1778,17 +1783,25 @@ int main()
             args ~= ["-o", "./tlang.out"]; 
 
             
+            // Total linking time
+            Duration total_l = Duration.zero();
+            watch.reset();
 
             // Now link all object files (the `.o`'s) together
             // and perform linking
             Pid ccPID = spawnProcess(args);
             int code = wait(ccPID);
+            total_l = watch.peek();
 
             if(code)
             {
-                //NOTE: Make this a TLang exception
+                //NOTE: Make this a CodeEmitter exception
                 throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
             }
+
+            INFO(format("Total linking time took %s", total_l));
+
+            return EmitResult("./tlang.out", total_c+total_l);
         }
         catch(ProcessException e)
         {
