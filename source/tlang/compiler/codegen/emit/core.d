@@ -19,6 +19,8 @@ import tlang.compiler.codegen.mapper.core : SymbolMapper;
 
 /* TODO: Module linking (general overhaul required) */
 
+public import tlang.compiler.codegen.emit.types : EmitResult;
+
 public abstract class CodeEmitter
 {
     protected TypeChecker typeChecker;
