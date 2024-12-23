@@ -23,6 +23,7 @@ import tlang.compiler.symbols.containers : Module;
 import std.format : format;
 import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.datetime.stopwatch : Duration, dur;
+import tlang.compiler.codegen.emit.dgen_types : DGenException;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -1753,8 +1754,7 @@ int main()
                 int code = wait(ccPID);
                 if(code)
                 {
-                    //NOTE: Make this a TLang exception
-                    throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
+                    throw new DGenException("The CC exited with a non-zero exit code (%d)", code);
                 }
 
                 Duration compTime = watch.peek();
@@ -1802,8 +1802,7 @@ int main()
 
             if(code)
             {
-                //NOTE: Make this a CodeEmitter exception
-                throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
+                throw new DGenException("The CC exited with a non-zero exit code (%d)", code);
             }
 
             INFO(format("Total linking time took %s", total_l));
@@ -1812,7 +1811,7 @@ int main()
         }
         catch(ProcessException e)
         {
-            ERROR("NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?");
+            ERROR("NOTE: Case where it exited and Pid now invalid (if it happens it would throw processexception surely)?");
             assert(false);
         }
     }
