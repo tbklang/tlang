@@ -336,7 +336,7 @@ public class Compiler
     }
 
     /* Perform code emitting */
-    public EmitResult doEmit()
+    public CompileResult doEmit()
     {
         if(typeChecker is null)
         {
@@ -373,6 +373,9 @@ public class Compiler
     /** 
      * Performs the compilation
      *
+     * Returns: A `CompileResult`
+     * containing information about
+     * the produced output
      * Throws: TError on any error
      * that may occur during any
      * of the compiler's stages
