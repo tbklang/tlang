@@ -370,6 +370,13 @@ public class Compiler
         return emitter.finalize(); // Call CC on the file containing generated C code
     }
 
+    /** 
+     * Performs the compilation
+     *
+     * Throws: TError on any error
+     * that may occur during any
+     * of the compiler's stages
+     */
     public CompileResult compile()
     {
         /* Setup the lexer, perform the tokenization and obtain the tokens */

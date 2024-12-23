@@ -21,3 +21,18 @@ public struct EmitResult
         this.elapsedTime = elapsed;
     }
 }
+
+import tlang.misc.exceptions : TError;
+import std.string : format;
+
+/** 
+ * An error that occurs during
+ * the code emitting process
+ */
+public class CodeEmitterException : TError
+{
+    this(string m)
+    {
+        super(format("CodeEmit: %s", m));
+    }
+}
