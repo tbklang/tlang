@@ -1846,7 +1846,7 @@ private Predicate!(Entity) derive_functionAccMod(AccessorType accModType)
         {
             return false;
         }
-        // Onyl care about those with a matching
+        // Only care about those with a matching
         // modifier
         else
         {
@@ -1882,7 +1882,7 @@ private Predicate!(Entity) derive_variableAccMod(AccessorType accModType)
         {
             return false;
         }
-        // Onyl care about those with a matching
+        // Only care about those with a matching
         // modifier
         else
         {
