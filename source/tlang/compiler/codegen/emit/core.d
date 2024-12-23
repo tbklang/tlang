@@ -18,6 +18,8 @@ import tlang.compiler.configuration : CompilerConfiguration;
 
 /* TODO: Module linking (general overhaul required) */
 
+public import tlang.compiler.codegen.emit.types : EmitResult;
+
 public abstract class CodeEmitter
 {
     protected TypeChecker typeChecker;
@@ -145,10 +147,17 @@ public abstract class CodeEmitter
     public abstract void emit();
 
     /** 
-     * Finalizes the emitting process (only
-     * to be called after the `emit()` finishes)
+     * Finalizes the emitting process.
+     
+     * This is only to be called AFTER
+     * one has called `emit()`
+     *
+     * Returns: an `EmitResult`
+     * containing information
+     * about the successful
+     * emit process
      */
-    public abstract void finalize();
+    public abstract EmitResult finalize();
 
     /** 
      * Transforms or emits a single Instruction
