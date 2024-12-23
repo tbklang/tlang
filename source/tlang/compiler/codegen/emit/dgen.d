@@ -1,6 +1,6 @@
 module tlang.compiler.codegen.emit.dgen;
 
-import tlang.compiler.codegen.emit.core : CodeEmitter;
+import tlang.compiler.codegen.emit.core;
 import tlang.compiler.typecheck.core;
 import std.container.slist : SList;
 import tlang.compiler.codegen.instruction;
@@ -25,6 +25,7 @@ import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.datetime.stopwatch : Duration, dur;
 import tlang.compiler.codegen.emit.dgen_simplifier;
 import tlang.compiler.codegen.emit.dgen_enums;
+import tlang.compiler.codegen.emit.dgen_types : DGenException;
 
 public final class DCodeEmitter : CodeEmitter
 {    
@@ -833,7 +834,14 @@ public final class DCodeEmitter : CodeEmitter
          */
         else
         {
-            emmmmit = "<TODO: Base emit: "~to!(string)(instruction)~">";
+            if(instruction is null)
+            {
+                emmmmit = "<TODO: transform() called but instruction was null>";
+            }
+            else
+            {
+                emmmmit = "<TODO: Base emit: "~to!(string)(instruction)~">";
+            }
         }
 
         return emmmmit;
@@ -1797,7 +1805,7 @@ int main()
      * This requires that the `emit()`
      * step must have already been completed
      */
-    public override void finalize()
+    public override EmitResult finalize()
     {
         import tlang.compiler.symbols.data : Program;
         Program program = this.typeChecker.getProgram();
@@ -1863,11 +1871,17 @@ int main()
             }
 
             // Total compilation time
-            Duration total = Duration.zero();
+            StopWatch watch = StopWatch(AutoStart.yes);
+            Duration total_c = Duration.zero();
 
             // TODO: Do for-each generation of `.o` files here with `-c`
             foreach(Module curMod; programModules)
             {
+                scope(exit)
+                {
+                    watch.reset();
+                }
+                
                 string modFileSrcPath = format("%s.c", curMod.getName());
                 srcFiles ~= modFileSrcPath;
                 string modFileObjPath = format("%s.o", curMod.getName());
@@ -1876,18 +1890,16 @@ int main()
 
                 INFO("Compiling now with arguments: "~to!(string)(args));
 
-                StopWatch watch = StopWatch(AutoStart.yes);
                 Pid ccPID = spawnProcess(args);
                 int code = wait(ccPID);
                 if(code)
                 {
-                    //NOTE: Make this a TLang exception
-                    throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
+                    throw new DGenException("The CC exited with a non-zero exit code (%d)", code);
                 }
 
                 Duration compTime = watch.peek();
                 INFO(format("Compiled %s in %sms", curMod.getName(), compTime.total!("msecs")()));
-                total = dur!("msecs")(total.total!("msecs")()+compTime.total!("msecs")());
+                total_c = dur!("msecs")(total_c.total!("msecs")()+compTime.total!("msecs")());
 
                 // Only add it to the list of files if it was generated
                 // (this guards against the clean up routines spitting out errors
@@ -1895,7 +1907,7 @@ int main()
                 objectFiles ~= modFileObjPath;
             }
 
-            INFO(format("Total compilation time took %s", total));
+            INFO(format("Total compilation time took %s", total_c));
 
             // Now determine the entry point module
             // Module entryModule;
@@ -1918,21 +1930,28 @@ int main()
             args ~= ["-o", "./tlang.out"]; 
 
             
+            // Total linking time
+            Duration total_l = Duration.zero();
+            watch.reset();
 
             // Now link all object files (the `.o`'s) together
             // and perform linking
             Pid ccPID = spawnProcess(args);
             int code = wait(ccPID);
+            total_l = watch.peek();
 
             if(code)
             {
-                //NOTE: Make this a TLang exception
-                throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
+                throw new DGenException("The CC exited with a non-zero exit code (%d)", code);
             }
+
+            INFO(format("Total linking time took %s", total_l));
+
+            return EmitResult("./tlang.out", total_c+total_l);
         }
         catch(ProcessException e)
         {
-            ERROR("NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?");
+            ERROR("NOTE: Case where it exited and Pid now invalid (if it happens it would throw processexception surely)?");
             assert(false);
         }
     }
@@ -1966,7 +1985,7 @@ private Predicate!(Entity) derive_functionAccMod(AccessorType accModType)
         {
             return false;
         }
-        // Onyl care about those with a matching
+        // Only care about those with a matching
         // modifier
         else
         {
@@ -2002,7 +2021,7 @@ private Predicate!(Entity) derive_variableAccMod(AccessorType accModType)
         {
             return false;
         }
-        // Onyl care about those with a matching
+        // Only care about those with a matching
         // modifier
         else
         {

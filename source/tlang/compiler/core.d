@@ -17,7 +17,7 @@ import tlang.misc.exceptions;
 import std.string : cmp;
 import tlang.compiler.configuration;
 import tlang.compiler.modman;
-
+import tlang.compiler.codegen.emit.types : EmitResult;
 // TODO: Add configentry unittests
 
 /** 
@@ -87,6 +87,8 @@ public final class CompilerException : TError
         this.errType = errType;
     }
 }
+
+public alias CompileResult = EmitResult;
 
 public class Compiler
 {
@@ -264,7 +266,7 @@ public class Compiler
     }
 
     /* Perform code emitting */
-    public void doEmit()
+    public CompileResult doEmit()
     {
         if(typeChecker is null)
         {
@@ -274,10 +276,20 @@ public class Compiler
         this.emitter = new DCodeEmitter(typeChecker, emitOutFile, config);
         emitter.emit(); // Emit the code
         emitOutFile.close(); // Flush (perform the write() syscall)
-        emitter.finalize(); // Call CC on the file containing generated C code
+        return emitter.finalize(); // Call CC on the file containing generated C code
     }
 
-    public void compile()
+    /** 
+     * Performs the compilation
+     *
+     * Returns: A `CompileResult`
+     * containing information about
+     * the produced output
+     * Throws: TError on any error
+     * that may occur during any
+     * of the compiler's stages
+     */
+    public CompileResult compile()
     {
         /* Setup the lexer, perform the tokenization and obtain the tokens */
         doLex();
@@ -289,7 +301,7 @@ public class Compiler
         doTypeCheck();
 
         /* Perform code emitting */
-        doEmit();
+        return doEmit();
     }
 }
 
