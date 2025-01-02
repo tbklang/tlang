@@ -1786,8 +1786,17 @@ int main()
             // Tack on any objects to link that were specified in Config
             args ~= objectFilesLink;
 
-            // Tack on the output filename (TODO: Fix the output file name)
-            args ~= ["-o", "./tlang.out"]; 
+            // Tack on the output filename
+            string executableOutput;
+            if(config.hasConfig("emit:executable_output"))
+            {
+                executableOutput = config.getConfig("emit:executable_output").text();
+            }
+            else
+            {
+                throw new DGenException("Missing the `emit:executableOutput` option");
+            }
+            args ~= ["-o", executableOutput]; 
 
             
             // Total linking time
@@ -1796,6 +1805,7 @@ int main()
 
             // Now link all object files (the `.o`'s) together
             // and perform linking
+            INFO("Linking args: ", args);
             Pid ccPID = spawnProcess(args);
             int code = wait(ccPID);
             total_l = watch.peek();
