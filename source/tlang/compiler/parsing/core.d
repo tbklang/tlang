@@ -831,7 +831,13 @@ public final class Parser
             }
             else
             {
-                statements ~= parseStatement();
+                Statement stmt = parseStatement();
+
+                // Null is returned in case of comments
+                if(stmt)
+                {
+                    statements ~= stmt;
+                }
             }
         }
 
