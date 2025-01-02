@@ -904,6 +904,13 @@ public class DNodeGenerator
             DNode indexedExpDNode = expressionPass(indexedExp, context);
             dnode.needs(indexedExpDNode);
         }
+        /**
+         * String expression
+         */
+        else if(cast(StringExpression)exp)
+        {
+            exp.setContext(context);
+        }
         else
         {
             // dnode = new DNode(this, exp);
