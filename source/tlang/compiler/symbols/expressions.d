@@ -5,20 +5,26 @@ import std.conv : to;
 
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
+import std.string : format;
 
 /* TODO: Look into arrays later */
-public class StringExpression : Expression
+public final class StringExpression : Expression
 {
     private string ztring;
 
     this(string ztring)
     {
-        this.ztring = ztring;
+        this.ztring = ztring.length ? "" : ztring[1..$-1];
     }
 
     public string getStringLiteral()
     {
         return ztring;
+    }
+
+    public override string toString()
+    {
+        return format("\"%s\"", this.ztring);
     }
 }
 
