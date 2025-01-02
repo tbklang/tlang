@@ -14,7 +14,7 @@ public final class StringExpression : Expression
 
     this(string ztring)
     {
-        this.ztring = ztring.length ? "" : ztring[1..$-1];
+        this.ztring = ztring.length ? ztring[1..$-1] : "";
     }
 
     public string getStringLiteral()
