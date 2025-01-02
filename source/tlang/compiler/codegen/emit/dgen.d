@@ -1796,6 +1796,7 @@ int main()
 
             // Now link all object files (the `.o`'s) together
             // and perform linking
+            INFO("Linking args: ", args);
             Pid ccPID = spawnProcess(args);
             int code = wait(ccPID);
             total_l = watch.peek();
