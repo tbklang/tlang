@@ -21,6 +21,7 @@ import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
 import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
+import tlang.compiler.typecheck.strings;
 
 /**
 * The Parser only makes sure syntax
@@ -55,6 +56,11 @@ public final class TypeChecker
      * The meta-programming processor
      */
     private MetaProcessor meta;
+
+    /** 
+     * String pool
+     */
+    private StringPool s_pool;
 
     /** 
      * Constructs a new `TypeChecker` with the given
@@ -1643,24 +1649,32 @@ public final class TypeChecker
             {
                 DEBUG("Typecheck(): String literal processing...");
 
-                /**
-                * Add the char* type as string literals should be
-                * interned
-                */
-                ERROR("Please implement strings");
-                // assert(false);
-                // addType(getType(modulle, "char*"));
-                
-                // /**
-                // * Add the instruction and pass the literal to it
-                // */
-                // StringExpression strExp = cast(StringExpression)statement;
-                // string strLit = strExp.getStringLiteral();
-                // gprintln("String literal: `"~strLit~"`");
-                // StringLiteral strLitInstr = new StringLiteral(strLit);
-                // addInstr(strLitInstr);
+                StringExpression str_exp = cast(StringExpression)statement;
+                Context str_ctx = str_exp.getContext();
+                assert(str_ctx);
+                DEBUG("String literal: ", str_exp);
+                string strLit = str_exp.getStringLiteral();
 
-                // gprintln("Typecheck(): String literal processing... [done]");
+                // pool a string node here (this will be used for the instruction reference)
+                // FIXME: implement me
+                StringNode* s_node = s_pool.pool(str_exp);
+                DEBUG("string node obtained: ", *s_node, " @", s_node);
+                
+
+                
+                /**
+                 * Add the instruction and pass the literal to it.
+                 * The instruction type for this `Value`-based instruction
+                 * is that of a `ubyte*` as a string literal is
+                 * to be interpreted as a pointer to a `ubyte`
+                 * representing the first byte of the character
+                 * string stored _somewhere_ in memory
+                 */
+                StringLiteral strLitInstr = new StringLiteral(strLit);
+                strLitInstr.setInstrType(getType(str_ctx.getContainer(), "ubyte*"));
+                addInstr(strLitInstr);
+
+                // assert(false);
             }
             else if(cast(VariableExpression)statement)
             {
