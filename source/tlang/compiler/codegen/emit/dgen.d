@@ -807,6 +807,22 @@ public final class DCodeEmitter : CodeEmitter
 
             emmmmit = emit;
         }
+        /**
+         * String literal instructions
+         */
+        else if(cast(StringLiteral)instruction)
+        {
+            // FIXME: Do pool-based emit instead of this direct stuff
+
+            StringLiteral sl_instr = cast(StringLiteral)instruction;
+
+
+            string emit;
+
+            emit ~= `"`~sl_instr.getStringLiteral()~`"`;
+
+            emmmmit = emit;
+        }
         // TODO: MAAAAN we don't even have this yet
         // else if(cast(StringExpression))
         /** 
