@@ -22,6 +22,7 @@ import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.typecheck.strings;
+import tlang.compiler.symbols.strings;
 
 /**
 * The Parser only makes sure syntax
@@ -1653,12 +1654,13 @@ public final class TypeChecker
                 Context str_ctx = str_exp.getContext();
                 assert(str_ctx);
                 DEBUG("String literal: ", str_exp);
-                string strLit = str_exp.getStringLiteral();
+                // string strLit = str_exp.getStringLiteral();
+                StringInfo str_data = str_exp.data();
 
                 // pool a string node here (this will be used for the instruction reference)
                 // FIXME: implement me
-                StringNode* s_node = s_pool.pool(str_exp);
-                DEBUG("string node obtained: ", *s_node, " @", s_node);
+                // StringNode* s_node = s_pool.pool(str_exp);
+                // DEBUG("string node obtained: ", *s_node, " @", s_node);
                 
 
                 
@@ -1670,11 +1672,9 @@ public final class TypeChecker
                  * representing the first byte of the character
                  * string stored _somewhere_ in memory
                  */
-                StringLiteral strLitInstr = new StringLiteral(strLit);
+                StringLiteral strLitInstr = new StringLiteral(str_data);
                 strLitInstr.setInstrType(getType(str_ctx.getContainer(), "ubyte*"));
                 addInstr(strLitInstr);
-
-                // assert(false);
             }
             else if(cast(VariableExpression)statement)
             {
