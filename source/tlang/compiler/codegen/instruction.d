@@ -221,47 +221,46 @@ public final class LiteralValueFloat : Value, IRenderable
 public final class StringLiteral : Value, IRenderable
 {
     /* String interning pool */
-    private static int[string] internmentCamp;
-    private static int rollCount = 0;
-    private string stringLiteral;
-
+    // private static int[string] internmentCamp;
+    // private static int rollCount = 0;
+    // private string stringLiteral;
     
-    this(string stringLiteral)
+    import tlang.compiler.symbols.strings;
+    private StringInfo _s;
+
+    this(StringInfo str)
     {
-        this.stringLiteral = stringLiteral;
-
-        /* Intern the string */
-        intern(stringLiteral);
-
-        addInfo = "StrLit: `"~stringLiteral~"`, InternID: "~to!(string)(intern(stringLiteral));
+        this._s = str;
+        addInfo = "StrLit: "~this._s.toString();
     }
 
-    public static int intern(string strLit)
+    public StringInfo* str()
     {
-        /* Search for the string (if it exists return it's pool ID) */
-        foreach(string curStrLit; internmentCamp.keys())
-        {
-            if(cmp(strLit, curStrLit) == 0)
-            {
-                return internmentCamp[strLit];
-            }
-        }
-
-        /* If not, create a new entry (pool it) and return */
-        internmentCamp[strLit] = rollCount;
-        rollCount++; /* TODO: Overflow check */
-
-        return rollCount-1;
+        return &this._s;
     }
 
-    public string getStringLiteral()
-    {
-        return stringLiteral;
-    }
+    // public static int intern(string strLit)
+    // {
+    //     /* Search for the string (if it exists return it's pool ID) */
+    //     foreach(string curStrLit; internmentCamp.keys())
+    //     {
+    //         if(cmp(strLit, curStrLit) == 0)
+    //         {
+    //             return internmentCamp[strLit];
+    //         }
+    //     }
+
+    //     /* If not, create a new entry (pool it) and return */
+    //     internmentCamp[strLit] = rollCount;
+    //     rollCount++; /* TODO: Overflow check */
+
+    //     return rollCount-1;
+    // }
+
 
     public string render()
     {
-        return format("\"%s\"", stringLiteral);
+        return this._s.toString();
     }
 }
 
