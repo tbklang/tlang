@@ -4,6 +4,8 @@ ubyte* str;
 int main()
 {
 	str = "My string";
+	str = "Bruh";
+	str = "ABBA";
 
-	return 0;
+	return str[0];
 }
