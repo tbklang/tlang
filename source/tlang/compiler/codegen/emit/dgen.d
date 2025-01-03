@@ -814,8 +814,6 @@ public final class DCodeEmitter : CodeEmitter
          */
         else if(cast(StringLiteral)instruction)
         {
-            // TODO: Do pool-based emit instead of this direct stuff
-
             import tlang.compiler.symbols.strings : StringInfo;
             StringLiteral sl_instr = cast(StringLiteral)instruction;
             StringInfo* sl_info = sl_instr.str();
