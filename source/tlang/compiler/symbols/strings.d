@@ -58,15 +58,15 @@ public struct StringInfo
         import std.string : format;
         if(_width == 1)
         {
-            return format("\"%s\"", this._data.utf8);
+            return format("\"%s\" (UTF%d)", this._data.utf8, _width*8);
         }
         else if(_width == 2)
         {
-            return format("\"%s\"", this._data.utf16);
+            return format("\"%s\" (UTF%d)", this._data.utf16, _width*8);
         }
         else if(_width == 4)
         {
-            return format("\"%s\"", this._data.utf32);
+            return format("\"%s\" (UTF%d)", this._data.utf32, _width*8);
         }
 
         return null;
