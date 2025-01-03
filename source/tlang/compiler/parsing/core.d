@@ -1231,6 +1231,8 @@ public final class Parser
     {
         WARN("parseExpression(): Enter");
 
+        import tlang.compiler.symbols.strings : StringExpression;
+
 
         /** 
          * Helper methods
@@ -1465,8 +1467,11 @@ public final class Parser
             /* If it is a string literal */
             else if (symbol == SymbolType.STRING_LITERAL)
             {
+                // TODO: Add different string encoding support
+                
                 /* Add the string to the stack */
-                addRetExp(new StringExpression(getCurrentToken().getToken()));
+                string str_lit = getCurrentToken().getToken();
+                addRetExp(StringExpression.buildUTF8FromLiteral(str_lit));
 
                 /* Get the next token */
                 nextToken();

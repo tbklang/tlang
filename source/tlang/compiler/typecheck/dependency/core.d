@@ -531,6 +531,8 @@ public class DNodeGenerator
         WARN("expressionPass(Exp): Processing "~exp.toString());
         DEBUG("expressionPass(Exp): Context coming in "~to!(string)(context));
 
+        import tlang.compiler.symbols.strings : StringExpression;
+
         /* TODO: Add pooling */
 
         /**
@@ -903,6 +905,13 @@ public class DNodeGenerator
             Expression indexedExp = arrayIndex.getIndexed();
             DNode indexedExpDNode = expressionPass(indexedExp, context);
             dnode.needs(indexedExpDNode);
+        }
+        /**
+         * String expression
+         */
+        else if(cast(StringExpression)exp)
+        {
+            exp.setContext(context);
         }
         else
         {
