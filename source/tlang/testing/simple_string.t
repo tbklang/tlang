@@ -5,7 +5,7 @@ int main()
 {
 	str = "My string";
 	str = "Bruh";
-	str = "ABBA";
+	str = "ABBA 🪩️";
 
 	return str[0];
 }
