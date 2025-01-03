@@ -2,6 +2,7 @@
 tlangout.c
 tlang.out
 *.o
+*.c
 
 # Build files
 #tlang
