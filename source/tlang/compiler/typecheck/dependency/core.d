@@ -531,6 +531,8 @@ public class DNodeGenerator
         WARN("expressionPass(Exp): Processing "~exp.toString());
         DEBUG("expressionPass(Exp): Context coming in "~to!(string)(context));
 
+        import tlang.compiler.symbols.strings : StringExpression;
+
         /* TODO: Add pooling */
 
         /**
