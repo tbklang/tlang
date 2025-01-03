@@ -548,6 +548,24 @@ jobs:
               exit 1
           fi
 
+      - name: String literal test that should return 65
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/simple_string.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 65 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
+
 
 
 ##################################
