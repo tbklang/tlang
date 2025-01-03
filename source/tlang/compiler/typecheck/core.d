@@ -21,7 +21,6 @@ import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
 import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
-import tlang.compiler.typecheck.strings;
 import tlang.compiler.symbols.strings;
 
 /**
@@ -57,11 +56,6 @@ public final class TypeChecker
      * The meta-programming processor
      */
     private MetaProcessor meta;
-
-    /** 
-     * String pool
-     */
-    private StringPool s_pool;
 
     /** 
      * Constructs a new `TypeChecker` with the given
@@ -1651,19 +1645,12 @@ public final class TypeChecker
                 DEBUG("Typecheck(): String literal processing...");
 
                 StringExpression str_exp = cast(StringExpression)statement;
+                DEBUG("String literal: ", str_exp);
                 Context str_ctx = str_exp.getContext();
                 assert(str_ctx);
-                DEBUG("String literal: ", str_exp);
-                // string strLit = str_exp.getStringLiteral();
+                
                 StringInfo str_data = str_exp.data();
 
-                // pool a string node here (this will be used for the instruction reference)
-                // FIXME: implement me
-                // StringNode* s_node = s_pool.pool(str_exp);
-                // DEBUG("string node obtained: ", *s_node, " @", s_node);
-                
-
-                
                 /**
                  * Add the instruction and pass the literal to it.
                  * The instruction type for this `Value`-based instruction
