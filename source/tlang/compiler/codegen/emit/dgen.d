@@ -807,8 +807,24 @@ public final class DCodeEmitter : CodeEmitter
 
             emmmmit = emit;
         }
-        // TODO: MAAAAN we don't even have this yet
-        // else if(cast(StringExpression))
+        /**
+         * String literals
+         *
+         * Instructions containing string literals
+         */
+        else if(cast(StringLiteral)instruction)
+        {
+            import tlang.compiler.symbols.strings : StringInfo;
+            StringLiteral sl_instr = cast(StringLiteral)instruction;
+            StringInfo* sl_info = sl_instr.str();
+            assert(sl_info.width() == 1); // TODO: Add support for other string types
+
+            
+            // C-string literal is `"<my content>"`
+            string emit = `"`~sl_info.utf8()~`"`;
+
+            emmmmit = emit;
+        }
         /** 
          * Unsupported instruction
          *
