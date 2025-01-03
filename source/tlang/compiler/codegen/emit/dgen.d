@@ -808,23 +808,25 @@ public final class DCodeEmitter : CodeEmitter
             emmmmit = emit;
         }
         /**
-         * String literal instructions
+         * String literals
+         *
+         * Instructions containing string literals
          */
         else if(cast(StringLiteral)instruction)
         {
-            // FIXME: Do pool-based emit instead of this direct stuff
+            // TODO: Do pool-based emit instead of this direct stuff
 
+            import tlang.compiler.symbols.strings : StringInfo;
             StringLiteral sl_instr = cast(StringLiteral)instruction;
+            StringInfo* sl_info = sl_instr.str();
+            assert(sl_info.width() == 1); // TODO: Add support for other string types
 
-
-            string emit;
-
-            emit ~= `"`~sl_instr.getStringLiteral()~`"`;
+            
+            // C-string literal is `"<my content>"`
+            string emit = `"`~sl_info.utf8()~`"`;
 
             emmmmit = emit;
         }
-        // TODO: MAAAAN we don't even have this yet
-        // else if(cast(StringExpression))
         /** 
          * Unsupported instruction
          *
