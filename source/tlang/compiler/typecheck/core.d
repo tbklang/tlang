@@ -26,6 +26,7 @@ import tlang.compiler.typecheck.dependency.variables;
 import niknaks.functional : Optional;
 import niknaks.containers : Pool;
 import tlang.compiler.typecheck.helpers.enums : EnumInfo;
+import tlang.compiler.symbols.strings;
 
 /**
 * The Parser only makes sure syntax
@@ -2374,24 +2375,24 @@ public final class TypeChecker
             {
                 DEBUG("Typecheck(): String literal processing...");
 
-                /**
-                * Add the char* type as string literals should be
-                * interned
-                */
-                ERROR("Please implement strings");
-                // assert(false);
-                // addType(getType(modulle, "char*"));
+                StringExpression str_exp = cast(StringExpression)statement;
+                DEBUG("String literal: ", str_exp);
+                Context str_ctx = str_exp.getContext();
+                assert(str_ctx);
                 
-                // /**
-                // * Add the instruction and pass the literal to it
-                // */
-                // StringExpression strExp = cast(StringExpression)statement;
-                // string strLit = strExp.getStringLiteral();
-                // gprintln("String literal: `"~strLit~"`");
-                // StringLiteral strLitInstr = new StringLiteral(strLit);
-                // addInstr(strLitInstr);
+                StringInfo str_data = str_exp.data();
 
-                // gprintln("Typecheck(): String literal processing... [done]");
+                /**
+                 * Add the instruction and pass the literal to it.
+                 * The instruction type for this `Value`-based instruction
+                 * is that of a `ubyte*` as a string literal is
+                 * to be interpreted as a pointer to a `ubyte`
+                 * representing the first byte of the character
+                 * string stored _somewhere_ in memory
+                 */
+                StringLiteral strLitInstr = new StringLiteral(str_data);
+                strLitInstr.setInstrType(getType(str_ctx.getContainer(), "ubyte*"));
+                addInstr(strLitInstr);
             }
             else if(cast(VariableExpression)statement)
             {

@@ -236,6 +236,11 @@ public enum SymbolType
     EQUALS,
 
     /**
+     * Non-equality operator `!=`
+     */
+    NOT_EQUALS,
+
+    /**
      * Greater than operator `>`
      */
     GREATER_THAN,
@@ -740,6 +745,11 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.EQUALS;
     }
+    /* Non-equality `!=` check */
+    else if(cmp(token, "!=") == 0)
+    {
+        return SymbolType.NOT_EQUALS;
+    }
     /* Assign `=` check */
     else if (token[0] == '=')
     {
@@ -892,7 +902,7 @@ public bool isBinaryOp(Token token)
             tokenStr[0] == '^' || tokenStr[0] == '~'       ||
             tokenStr[0] == '<' || tokenStr[0] == '>'       ||
             cmp(">=", tokenStr) == 0 || cmp("<=", tokenStr) == 0 ||
-            cmp("==", tokenStr) == 0;
+            cmp("==", tokenStr) == 0 || cmp("!=", tokenStr) == 0;
 }
 
 /** 
@@ -934,6 +944,10 @@ public string getCharacter(SymbolType symbolIn)
     else if(symbolIn == SymbolType.EQUALS)
     {
         return "==";
+    }
+    else if(symbolIn == SymbolType.NOT_EQUALS)
+    {
+        return "!=";
     }
     else if(symbolIn == SymbolType.SMALLER_THAN)
     {

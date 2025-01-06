@@ -90,10 +90,14 @@ mixin template EmitBase()
         @(ArgConfig.optional)
         bool preinlineArguments = false; // TODO: Change this later to `true` of course
 
-        @ArgNamed("library-link|ll", "Paths to any object files to ,ink in during the linking phase")
+        @ArgNamed("library-link|ll", "Paths to any object files to link in during the linking phase")
         @(ArgConfig.optional)
         @(ArgConfig.aggregate)
-        string[] bruh;
+        string[] linkFiles;
+
+        @ArgNamed("executable_output|eo", "Path to the Filename of generated object file")
+        @(ArgConfig.optional)
+        string executableOutput = "tlang.out";
     }
 
     void EmitBaseInit(Compiler compiler)
@@ -111,7 +115,10 @@ mixin template EmitBase()
         compiler.getConfig().addConfig("dgen:compiler", systemCC);
 
         // Set the paths to the object files to link in
-        compiler.getConfig().addConfig("linker:link_files", bruh);
+        compiler.getConfig().addConfig("linker:link_files", linkFiles);
+
+        // Set the output of the executable
+        compiler.getConfig().addConfig("emit:executable_output", executableOutput);
     }
 }
 
