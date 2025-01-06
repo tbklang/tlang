@@ -11,7 +11,8 @@ import tlang.compiler.typecheck.core : TypeChecker;
 
 import tlang.compiler.symbols.typing.enums : isValidExpression, Enum, EnumConstant;
 import tlang.compiler.symbols.expressions : Expression;
-import tlang.compiler.symbols.expressions : StringExpression, NumberLiteral, FloatingLiteral, IntegerLiteral;
+import tlang.compiler.symbols.expressions : NumberLiteral, FloatingLiteral, IntegerLiteral;
+import tlang.compiler.symbols.strings : StringExpression;
 
 import tlang.compiler.codegen.instruction : Value, LiteralValue;
 

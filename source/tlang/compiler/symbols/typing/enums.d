@@ -198,11 +198,13 @@ import tlang.misc.logging;
  */
 public bool isValidExpression(Expression e)
 {
-    import tlang.compiler.symbols.expressions : StringExpression, NumberLiteral, FloatingLiteral;
+    import tlang.compiler.symbols.expressions : NumberLiteral, FloatingLiteral;
+    import tlang.compiler.symbols.strings : StringExpression;
     return cast(StringExpression)e !is null || cast(NumberLiteral)e !is null;
 }
 
-import tlang.compiler.symbols.expressions : StringExpression, IntegerLiteral, FloatingLiteral;
+import tlang.compiler.symbols.expressions : IntegerLiteral, FloatingLiteral;
+import tlang.compiler.symbols.strings : StringExpression;
 
 /** 
  * Given a certain expression this will
