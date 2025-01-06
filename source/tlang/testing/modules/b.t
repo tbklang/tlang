@@ -2,7 +2,7 @@ module b;
 
 import a;
 
-int doThing()
+public int doThing()
 {
     int local = 0;
 
@@ -12,4 +12,12 @@ int doThing()
     }
 
     return local;
+}
+
+// You should NOT be able to see me
+private int g;
+
+private void nothing()
+{
+
 }

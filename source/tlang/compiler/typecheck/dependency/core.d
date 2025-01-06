@@ -531,6 +531,8 @@ public class DNodeGenerator
         WARN("expressionPass(Exp): Processing "~exp.toString());
         DEBUG("expressionPass(Exp): Context coming in "~to!(string)(context));
 
+        import tlang.compiler.symbols.strings : StringExpression;
+
         /* TODO: Add pooling */
 
         /**
@@ -770,6 +772,13 @@ public class DNodeGenerator
         else if(cast(IdentExpression)exp)
         {
             panic("Fok");
+        }
+        /**
+         * String expression
+         */
+        else if(cast(StringExpression)exp)
+        {
+            exp.setContext(context);
         }
         else
         {
@@ -1230,8 +1239,7 @@ public class DNodeGenerator
         */
         else if(cast(ExternStmt)entity)
         {
-            /* We don't do anything, this is to be handled in typechecker pre-run */    
-            /* NOTE: If anything we ought to remove these ExternSTmt nodes during such a process */
+            // We don't need this, so return null
             return null;
         }
         /** 
