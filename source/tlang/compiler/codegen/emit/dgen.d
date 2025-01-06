@@ -791,8 +791,24 @@ public final class DCodeEmitter : CodeEmitter
 
             emmmmit = emit;
         }
-        // TODO: MAAAAN we don't even have this yet
-        // else if(cast(StringExpression))
+        /**
+         * String literals
+         *
+         * Instructions containing string literals
+         */
+        else if(cast(StringLiteral)instruction)
+        {
+            import tlang.compiler.symbols.strings : StringInfo;
+            StringLiteral sl_instr = cast(StringLiteral)instruction;
+            StringInfo* sl_info = sl_instr.str();
+            assert(sl_info.width() == 1); // TODO: Add support for other string types
+
+            
+            // C-string literal is `"<my content>"`
+            string emit = `"`~sl_info.utf8()~`"`;
+
+            emmmmit = emit;
+        }
         /** 
          * Unsupported instruction
          *
@@ -1769,8 +1785,17 @@ int main()
             // Tack on any objects to link that were specified in Config
             args ~= objectFilesLink;
 
-            // Tack on the output filename (TODO: Fix the output file name)
-            args ~= ["-o", "./tlang.out"]; 
+            // Tack on the output filename
+            string executableOutput;
+            if(config.hasConfig("emit:executable_output"))
+            {
+                executableOutput = config.getConfig("emit:executable_output").text();
+            }
+            else
+            {
+                throw new DGenException("Missing the `emit:executableOutput` option");
+            }
+            args ~= ["-o", executableOutput]; 
 
             
             // Total linking time
@@ -1779,6 +1804,7 @@ int main()
 
             // Now link all object files (the `.o`'s) together
             // and perform linking
+            INFO("Linking args: ", args);
             Pid ccPID = spawnProcess(args);
             int code = wait(ccPID);
             total_l = watch.peek();

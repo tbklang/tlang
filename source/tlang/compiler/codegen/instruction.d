@@ -9,6 +9,7 @@ import gogga;
 import tlang.compiler.symbols.typing.core : Type;
 import tlang.misc.logging;
 import tlang.compiler.codegen.render;
+import tlang.compiler.symbols.strings : StringInfo;
 
 public abstract class Instruction
 {
@@ -239,57 +240,30 @@ public final class LiteralValueFloat : Value, IRenderable
     }
 }
 
-/* FIXME: Implement this */
-/**
-* TODO: This should take in:
-*
-* 1. The string literal
-* 2. It should assign it to an interning pool and get the ID (associate one with the string literal if equal/in-the-pool)
-*/
+/** 
+ * String literal instruction
+ *
+ * Represents a string literal as
+ * a `Value`-based instruction
+ */
 public final class StringLiteral : Value, IRenderable
 {
-    /* String interning pool */
-    private static int[string] internmentCamp;
-    private static int rollCount = 0;
-    private string stringLiteral;
+    private StringInfo _s;
 
-    
-    this(string stringLiteral)
+    this(StringInfo str)
     {
-        this.stringLiteral = stringLiteral;
-
-        /* Intern the string */
-        intern(stringLiteral);
-
-        addInfo = "StrLit: `"~stringLiteral~"`, InternID: "~to!(string)(intern(stringLiteral));
+        this._s = str;
+        addInfo = "StrLit: "~this._s.toString();
     }
 
-    public static int intern(string strLit)
+    public StringInfo* str()
     {
-        /* Search for the string (if it exists return it's pool ID) */
-        foreach(string curStrLit; internmentCamp.keys())
-        {
-            if(cmp(strLit, curStrLit) == 0)
-            {
-                return internmentCamp[strLit];
-            }
-        }
-
-        /* If not, create a new entry (pool it) and return */
-        internmentCamp[strLit] = rollCount;
-        rollCount++; /* TODO: Overflow check */
-
-        return rollCount-1;
-    }
-
-    public string getStringLiteral()
-    {
-        return stringLiteral;
+        return &this._s;
     }
 
     public string render()
     {
-        return format("\"%s\"", stringLiteral);
+        return this._s.toString();
     }
 }
 
