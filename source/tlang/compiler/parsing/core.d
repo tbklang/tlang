@@ -1880,6 +1880,21 @@ public final class Parser
         /* Generated object */
         Statement generated;
 
+        /* If there are any comments available then pop them off now */
+        Comment potComment;
+        if(getAssociatedComment(potComment))
+        {
+            DEBUG(format("Found associated comment: %s", potComment));
+        }
+
+        scope(exit)
+        {
+            if(potComment)
+            {
+                generated.setComment(potComment);
+            }
+        }
+
         /* Save the position of the entrance token (for potential rollback) */
         ulong entrancePos = lexer.getCursor();
 
