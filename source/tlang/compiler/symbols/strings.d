@@ -15,7 +15,7 @@ import tlang.compiler.symbols.expressions : Expression;
  * the same size as its
  * length + ptr
  */
-private union StringData
+public union StringData
 {
     public string utf8;
     public wchar[] utf16;
