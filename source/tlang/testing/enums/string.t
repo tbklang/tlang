@@ -3,7 +3,7 @@ module string;
 enum Message
 {
 	START = "A",
-	END = "B"
+	END
 }
 
 int main()
