@@ -14,7 +14,7 @@ import tlang.compiler.symbols.expressions : Expression;
 import tlang.compiler.symbols.expressions : NumberLiteral, FloatingLiteral, IntegerLiteral;
 import tlang.compiler.symbols.strings : StringExpression;
 
-import tlang.compiler.codegen.instruction : Value, LiteralValue;
+import tlang.compiler.codegen.instruction : Value, LiteralValue, StringLiteral;
 
 import tlang.misc.utils : panic;
 import tlang.misc.logging;
@@ -38,7 +38,9 @@ public Value fromExpression(TypeChecker tc, Expression e)
 
     if(cast(StringExpression)e)
     {
-        panic("Todo, add StrExpr -> ValueInstr support");
+        StringExpression st_expr = cast(StringExpression)e;
+        StringLiteral sli = new StringLiteral(st_expr.data());
+        return sli;
     }
     else if(cast(FloatingLiteral)e)
     {
