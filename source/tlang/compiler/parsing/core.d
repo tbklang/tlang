@@ -1384,8 +1384,6 @@ public final class Parser
     {
         WARN("parseExpression(): Enter");
 
-        import tlang.compiler.symbols.strings : StringExpression;
-
 
         /* The expression to be returned */
         Expression[] retExpression;
@@ -1524,7 +1522,8 @@ public final class Parser
                 
                 /* Add the string to the stack */
                 string str_lit = getCurrentToken().getToken();
-                addRetExp(StringExpression.buildUTF8FromLiteral(str_lit));
+                import tlang.compiler.parsing.strings;
+                addRetExp(buildUTF8FromLiteral(str_lit));
 
                 /* Get the next token */
                 nextToken();
