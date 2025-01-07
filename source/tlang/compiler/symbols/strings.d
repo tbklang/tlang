@@ -98,12 +98,12 @@ public final class StringExpression : Expression
 {
     private StringInfo _data;
 
-    private this(StringData sd, ubyte width)
+    public this(StringData sd, ubyte width)
     {
         this._data = StringInfo(sd, width);
     }
 
-    private this(string zstring)
+    public this(string zstring)
     {
         // UTF-8 multi-byte (smallest is 1 byte per-char)
         StringData sd;
@@ -111,7 +111,7 @@ public final class StringExpression : Expression
         this(sd, 1);
     }
 
-    private this(wchar[] zstring)
+    public this(wchar[] zstring)
     {
         // UTF-16 2-byte padded per-char ALWAYS
         StringData sd;
@@ -119,7 +119,7 @@ public final class StringExpression : Expression
         this(sd, 2);
     }
 
-    private this(dchar[] zstring)
+    public this(dchar[] zstring)
     {
         // UTF-32 4-byte padded per-char ALWAYS
         StringData sd;
@@ -144,7 +144,7 @@ public final class StringExpression : Expression
      *
      * Params:
      *   stringLiteral = the string literal
-     * Returns: 
+     * Returns: a new `StringExpression`
      */
     public static StringExpression buildUTF8FromLiteral(string stringLiteral)
     {
