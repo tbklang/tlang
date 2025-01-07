@@ -15,7 +15,7 @@ import tlang.compiler.symbols.expressions : Expression;
  * the same size as its
  * length + ptr
  */
-private union StringData
+public union StringData
 {
     public string utf8;
     public wchar[] utf16;
@@ -98,12 +98,12 @@ public final class StringExpression : Expression
 {
     private StringInfo _data;
 
-    private this(StringData sd, ubyte width)
+    public this(StringData sd, ubyte width)
     {
         this._data = StringInfo(sd, width);
     }
 
-    private this(string zstring)
+    public this(string zstring)
     {
         // UTF-8 multi-byte (smallest is 1 byte per-char)
         StringData sd;
@@ -111,7 +111,7 @@ public final class StringExpression : Expression
         this(sd, 1);
     }
 
-    private this(wchar[] zstring)
+    public this(wchar[] zstring)
     {
         // UTF-16 2-byte padded per-char ALWAYS
         StringData sd;
@@ -119,7 +119,7 @@ public final class StringExpression : Expression
         this(sd, 2);
     }
 
-    private this(dchar[] zstring)
+    public this(dchar[] zstring)
     {
         // UTF-32 4-byte padded per-char ALWAYS
         StringData sd;
@@ -130,31 +130,6 @@ public final class StringExpression : Expression
     public StringInfo data()
     {
         return this._data;
-    }
-
-    /** 
-     * Builds a new `StringExpression` from the
-     * given raw token input. This input should
-     * start and end with the same character, hence
-     * the minimum length is that of 2 characters.
-     *
-     * These beginning and ending characters will
-     * be stripped and the string's raw contents
-     * will be stored
-     *
-     * Params:
-     *   stringLiteral = the string literal
-     * Returns: 
-     */
-    public static StringExpression buildUTF8FromLiteral(string stringLiteral)
-    {
-        assert(stringLiteral.length >= 2);
-        assert(stringLiteral[0] == stringLiteral[$-1]);
-
-        // if `""` then it's empty string ``, else it is `<stuff between "">`
-        string str_trimmed = stringLiteral.length > 2 ? stringLiteral[1..$-1] : "";
-
-        return new StringExpression(str_trimmed);
     }
 
     public override string toString()
