@@ -1198,6 +1198,61 @@ public final class DCodeEmitter : CodeEmitter
 
     /** 
      * Emits the given enumeration type
+     * of which is a string-based
+     * (<type>* -based).
+     *
+     * Params:
+     *   modOut = the `File` to write out
+     * to
+     *   e = the `Enum` type to emit a
+     * declaration for
+     */
+    private void emitEnumType_string(File modOut, Enum e)
+    {
+        import tlang.compiler.symbols.strings;
+        EnumConstant[] m_s = e.members();
+
+        for(size_t i = 0; i < m_s.length; i++)
+        {
+            auto c = m_s[i];
+            string m_out;
+            import niknaks.functional : Optional;
+
+            // get unique name
+            string c_name = this.e_mapper.getName(e, c.name());
+
+            // emit (TODO: support other string types, get string info)
+            // modOut.writeln(c_name);
+            // modOut.writeln();
+            
+
+            auto opt_v = c.value();
+
+            
+            StringExpression st_expr;
+            if(opt_v.isPresent())
+            {
+                st_expr = cast(StringExpression)opt_v.get();
+                assert(st_expr); // shouldn't be anything else if this method was called
+            }
+            else
+            {
+                StringData sd;
+                sd.utf8 = ""; // FIXME: Determine width/string-type here somehow, via Enum probably
+                st_expr = new StringExpression(sd, 1); 
+            }
+
+            StringInfo si = st_expr.data();
+            assert(si.width() == 1); // FIXME: Support other types here
+            auto si_data = si.data();
+            string dec_type = typeTransform(getBuiltInType(typeChecker, null, "ubyte*"));
+            m_out = format(`%s %s = "%s";`, dec_type, c_name, si_data.utf8);
+            modOut.writeln(m_out);
+        }
+    }
+
+    /** 
+     * Emits the given enumeration type
      * declaration
      *
      * Params:
@@ -1216,6 +1271,7 @@ public final class DCodeEmitter : CodeEmitter
         //
         // This is due to C not allowing enum constants to hav the same name
         import tlang.compiler.symbols.expressions : Expression, IntegerLiteral;
+        import tlang.compiler.symbols.strings;
         string basicEpressionTransform(Expression e)
         {
             // TODO: Add stringexpression
@@ -1244,8 +1300,32 @@ public final class DCodeEmitter : CodeEmitter
             throw noEnumMembers(e);
         }
         
+        import tlang.compiler.symbols.typing.enums : getEnumType;
         Type enum_t = getEnumType(typeChecker, e);
         DEBUG("enum type:", enum_t);
+        bool is_enum_t_ptr = typeChecker.isPointerType(enum_t);
+        DEBUG("is_enum_t_ptr: ", is_enum_t_ptr);
+        Type e_mt = getEnumType(typeChecker, e);
+        DEBUG("e_mt: ", e_mt);
+        // FIXME: The above condition therefore is ONLY possible for string cases
+        assert(m_s.length ? (cast(StringExpression)m_s[0].value().get()) !is null : true);
+
+
+        // if the enum's member type is `<type>*` then
+        // it is a string, in such a case basic replacement
+        // must occur RATHER than an enum declaration of
+        // string literals (which C does not support)
+        bool is_string;
+        if((is_string = typeChecker.isPointerType(e_mt)) == true)
+        {
+            ERROR("Add support for string literal enum member ref replacement");
+            // assert(false);
+
+            emitEnumType_string(modOut, e);
+
+            return;
+        }
+
 
         modOut.writeln(format("enum %s", e.getName()));
 
