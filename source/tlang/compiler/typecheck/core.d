@@ -26,6 +26,7 @@ import tlang.compiler.typecheck.dependency.variables;
 import niknaks.functional : Optional;
 import niknaks.containers : Pool;
 import tlang.compiler.typecheck.helpers.enums : EnumInfo;
+import tlang.compiler.symbols.typing.enums : getEnumType;
 import tlang.compiler.symbols.strings;
 
 /**
@@ -1210,8 +1211,6 @@ public final class TypeChecker
         /* If we were provided an instruction that was enum-typed */
         else if(isEnumType(providedType))
         {
-            import tlang.compiler.symbols.typing.enums : getEnumType;
-
             Enum enum_t = cast(Enum)providedType;
             Type m_type = getEnumType(this, enum_t);
             DEBUG("enum_t:", enum_t);
@@ -3045,6 +3044,23 @@ public final class TypeChecker
 
                 Type indexToType = indexToInstr.getInstrType();
                 assert(indexToType);
+
+                /** 
+                 * If the item being indexed is of an
+                 * enumeration type then update `indexToType`
+                 * to be the `Enum`'s member-type rather than
+                 * just the `Enum` type itself
+                 */
+                if(isEnumType(indexToType))
+                {
+                    Enum indexToType_enum = cast(Enum)indexToType;
+                    Type mt_enum = getEnumType(this, indexToType_enum);
+                    assert(mt_eum);
+                    DEBUG("mt_enum ", mt_enum);
+                    indexToType = mt_enum;
+                }
+
+
                 DEBUG("ArrayIndex: Type of `indexToInstr`: "~indexToType.toString());
 
                 /* Pop the index instruction (the index expression) */
