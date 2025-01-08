@@ -1262,12 +1262,7 @@ public final class DCodeEmitter : CodeEmitter
      */
     private void emitEnumType(File modOut, Enum e)
     {
-        // FIXME: Keep track of enum names relating to their
-        // original `Enum` as we need to rename them actually!
-        //
-        // This is due to C not allowing enum constants to hav the same name
         import tlang.compiler.symbols.expressions : Expression, IntegerLiteral;
-        import tlang.compiler.symbols.strings;
         string basicEpressionTransform(Expression e)
         {
             // TODO: Add stringexpression
@@ -1304,6 +1299,7 @@ public final class DCodeEmitter : CodeEmitter
         Type e_mt = getEnumType(typeChecker, e);
         DEBUG("e_mt: ", e_mt);
         // FIXME: The above condition therefore is ONLY possible for string cases
+        import tlang.compiler.symbols.strings;
         assert(m_s.length ? (cast(StringExpression)m_s[0].value().get()) !is null : true);
 
 
@@ -1314,11 +1310,7 @@ public final class DCodeEmitter : CodeEmitter
         bool is_string;
         if((is_string = typeChecker.isPointerType(e_mt)) == true)
         {
-            ERROR("Add support for string literal enum member ref replacement");
-            // assert(false);
-
             emitEnumType_string(modOut, e);
-
             return;
         }
 
