@@ -1316,16 +1316,17 @@ public final class DCodeEmitter : CodeEmitter
 
 
         modOut.writeln(format("enum %s", e.getName()));
-
         modOut.writeln("{");
         for(size_t i = 0; i < m_s.length; i++)
         {
             auto c = m_s[i];
-            string m_out;
 
             // get unique name
             string c_name = this.e_mapper.getName(e, c.name());
             
+            // emit out
+            string m_out;
+
             auto opt_v = c.value();
             if(opt_v.isPresent())
             {
