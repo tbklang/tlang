@@ -462,3 +462,36 @@ unittest
     assert(ec_expr_2);
     assert(ec_expr_2.getNumber() == "1");
 }
+
+/** 
+ * Tests an unsupported expression type
+ * being used as an enum member's explicit
+ * value
+ */
+unittest
+{
+    string sourceFile = "source/tlang/testing/enums/bad.t";
+
+    File sourceFileFile;
+    sourceFileFile.open(sourceFile);
+    ulong fileSize = sourceFileFile.size();
+    byte[] fileBytes;
+    fileBytes.length = fileSize;
+    fileBytes = sourceFileFile.rawRead(fileBytes);
+    sourceFileFile.close();
+
+    string sourceCode = cast(string) fileBytes;
+    File dummyOut;
+    Compiler compiler = new Compiler(sourceCode, sourceFile, dummyOut);
+
+    /* Perform test */
+    try
+    {
+        compiler.compile();
+        assert(false);
+    }
+    catch(EnumError e)
+    {
+        assert(e.getError() == EnumErrorType.UNSUPPORTED_VALUE_TYPE);
+    }
+}
