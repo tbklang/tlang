@@ -485,7 +485,9 @@ unittest
                         "source/tlang/testing/dotting/simple_func_1.t",
                         "source/tlang/testing/dotting/simple_func_2.t",
                         
-                        "source/tlang/testing/simple_string.t"
+                        "source/tlang/testing/simple_string.t",
+
+                        "source/tlang/testing/enums/string.t",
                         ];
     foreach(string testFile; testFiles)
     {
