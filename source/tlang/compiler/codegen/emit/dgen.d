@@ -26,6 +26,7 @@ import std.datetime.stopwatch : Duration, dur;
 import tlang.compiler.codegen.emit.dgen_simplifier;
 import tlang.compiler.codegen.emit.dgen_enums;
 import tlang.compiler.codegen.emit.dgen_types : DGenException;
+import niknaks.functional : Optional;
 
 public final class DCodeEmitter : CodeEmitter
 {    
@@ -1210,25 +1211,20 @@ public final class DCodeEmitter : CodeEmitter
     private void emitEnumType_string(File modOut, Enum e)
     {
         import tlang.compiler.symbols.strings;
-        EnumConstant[] m_s = e.members();
 
+        // emit (TODO: support other string types, get string info)
+        EnumConstant[] m_s = e.members();
         for(size_t i = 0; i < m_s.length; i++)
         {
             auto c = m_s[i];
-            string m_out;
-            import niknaks.functional : Optional;
 
             // get unique name
             string c_name = this.e_mapper.getName(e, c.name());
 
-            // emit (TODO: support other string types, get string info)
-            // modOut.writeln(c_name);
-            // modOut.writeln();
-            
+            // emit out
+            string m_out;
 
-            auto opt_v = c.value();
-
-            
+            auto opt_v = c.value();        
             StringExpression st_expr;
             if(opt_v.isPresent())
             {
@@ -1334,7 +1330,6 @@ public final class DCodeEmitter : CodeEmitter
         {
             auto c = m_s[i];
             string m_out;
-            import niknaks.functional : Optional;
 
             // get unique name
             string c_name = this.e_mapper.getName(e, c.name());
