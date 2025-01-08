@@ -3055,7 +3055,7 @@ public final class TypeChecker
                 {
                     Enum indexToType_enum = cast(Enum)indexToType;
                     Type mt_enum = getEnumType(this, indexToType_enum);
-                    assert(mt_eum);
+                    assert(mt_enum);
                     DEBUG("mt_enum ", mt_enum);
                     indexToType = mt_enum;
                 }
