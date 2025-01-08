@@ -11,6 +11,11 @@ import niknaks.functional : Optional;
 import tlang.compiler.symbols.mcro : MTypeRewritable;
 
 import tlang.misc.utils : panic;
+import tlang.compiler.typecheck.core : TypeChecker;
+import tlang.misc.logging;
+import tlang.compiler.symbols.expressions : IntegerLiteral, FloatingLiteral;
+import tlang.compiler.symbols.strings : StringExpression;
+import std.string : format;
 
 version(unittest)
 {
@@ -182,9 +187,6 @@ public final class Enum : Type, MTypeRewritable
     }
 }
 
-import tlang.compiler.typecheck.core : TypeChecker;
-import tlang.misc.logging;
-
 /** 
  * Checks if the provided expression
  * is one that is supported as an
@@ -202,9 +204,6 @@ public bool isValidExpression(Expression e)
     import tlang.compiler.symbols.strings : StringExpression;
     return cast(StringExpression)e !is null || cast(NumberLiteral)e !is null;
 }
-
-import tlang.compiler.symbols.expressions : IntegerLiteral, FloatingLiteral;
-import tlang.compiler.symbols.strings : StringExpression;
 
 /** 
  * Given a certain expression this will
@@ -241,8 +240,6 @@ public Type getEnumType(TypeChecker tc, Enum e)
     assert(type_o);
     return type_o;
 }
-
-import std.string : format;
 
 private void enumCheck(TypeChecker tc, Enum e, ref Type constraintOut)
 {
