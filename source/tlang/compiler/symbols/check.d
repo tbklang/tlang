@@ -310,6 +310,16 @@ public enum SymbolType
      */
     SINGLE_LINE_COMMENT,
 
+    /**
+     * Continue keyword
+     */
+    CONTINUE,
+
+    /**
+     * Break keyword 
+     */
+    BREAK,
+
     /** 
      * Unknown symbol
      */
@@ -720,6 +730,16 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.IMPORT;
     }
+    /* continue keyword */
+    else if(cmp(token, "continue") == 0)
+    {
+        return SymbolType.CONTINUE;
+    }
+    /* break keyword */
+    else if(cmp(token, "break") == 0)
+    {
+        return SymbolType.BREAK;
+    }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))
     {
@@ -962,6 +982,14 @@ public string getCharacter(SymbolType symbolIn)
     else if(symbolIn == SymbolType.SEMICOLON)
     {
         return ";";
+    }
+    else if(symbolIn == SymbolType.BREAK)
+    {
+        return "break";
+    }
+    else if(symbolIn == SymbolType.CONTINUE)
+    {
+        return "continue";
     }
     else
     {
