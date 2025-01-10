@@ -20,9 +20,6 @@ import tlang.misc.utils : panic;
 import tlang.misc.logging;
 
 import niknaks.functional : Optional;
-import niknaks.containers : Pool;
-import tlang.compiler.symbols.expressions : IntegerLiteralEncoding;
-import std.conv : to;
 
 /** 
  * Provided an instance of the `TypeChecker`
@@ -111,6 +108,8 @@ public Expression getOrdinal(TypeChecker tc, Enum e, EnumConstant ec)
     return ei.getExpressionFor(ec);
 }
 
+import niknaks.containers : Pool;
+
 public final class EnumInfo
 {
     private Expression[EnumConstant] _v;
@@ -197,6 +196,9 @@ public final class EnumInfo
         return false;
     }
 }
+
+import tlang.compiler.symbols.expressions : IntegerLiteralEncoding;
+import std.conv : to;
 
 private Expression getInitVal()
 {
