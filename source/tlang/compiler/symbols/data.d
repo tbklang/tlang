@@ -1810,3 +1810,57 @@ public final class ExternStmt : Statement
         return "[ExternStatement: (Symbol name: "~getExternalName()~")]";
     }
 }
+
+
+import niknaks.functional : Optional;
+
+/** 
+ * Control flow control statements that
+ * allow for an optional single label
+ * as part of their control mechanism
+ */
+public abstract class LabelControlStatement : Statement
+{
+    private string _l;
+
+    this(string label)
+    {
+        this._l = label;
+    }
+
+    this()
+    {
+        this(null);
+    }
+
+    public Optional!(string) label()
+    {
+        return _l.length ? Optional!(string)(_l) : Optional!(string).empty();
+    }
+}
+
+public final class BreakStatement : LabelControlStatement
+{
+    this(string label)
+    {
+        super(label);
+    }
+
+    this()
+    {
+        super(null);
+    }
+}
+
+public final class ContinueStatement : LabelControlStatement
+{
+    this(string label)
+    {
+        super(label);
+    }
+
+    this()
+    {
+        super(null);
+    }
+}
