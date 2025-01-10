@@ -2304,6 +2304,60 @@ public final class Parser
         WARN("parseComment(): Leave");
     }
 
+    private BreakStatement parseBreak()
+    {
+        // Consume the `break`
+        nextToken();
+
+        Token potLabel = getCurrentToken();
+
+        if(getSymbolType(potLabel) == SymbolType.SEMICOLON)
+        {
+            nextToken(); // consume the ;
+            return new BreakStatement();
+        }
+        else if(getSymbolType(potLabel) == SymbolType.IDENT_TYPE)
+        {
+            string label = potLabel.getToken();
+            nextToken(); // consume the label
+            expect(SymbolType.SEMICOLON, getCurrentToken()); // expect ;
+            nextToken(); // consume the ;
+            return new BreakStatement(label);
+        }
+        else
+        {
+            expect("Expected either a ; or a label name following the `break` keyword");
+            return null; // unreachable
+        }
+    }
+
+    private ContinueStatement parseContinue()
+    {
+        // Consume the `continue`
+        nextToken();
+
+        Token potLabel = getCurrentToken();
+
+        if(getSymbolType(potLabel) == SymbolType.SEMICOLON)
+        {
+            nextToken(); // consume the ;
+            return new ContinueStatement();
+        }
+        else if(getSymbolType(potLabel) == SymbolType.IDENT_TYPE)
+        {
+            string label = potLabel.getToken();
+            nextToken(); // consume the label
+            expect(SymbolType.SEMICOLON, getCurrentToken()); // expect ;
+            nextToken(); // consume the ;
+            return new ContinueStatement(label);
+        }
+        else
+        {
+            expect("Expected either a ; or a label name following the `continue` keyword");
+            return null; // unreachable
+        }
+    }
+
     // TODO: We need to add `parseComment()`
     // support here (see issue #84)
     // TODO: This ic currently dead code and ought to be used/implemented
@@ -2324,6 +2378,16 @@ public final class Parser
         {
             /* Might be a function, might be a variable, or assignment */
             statement = parseName(terminatingSymbol);
+        }
+        /* If it is a break statement */
+        else if(symbol == SymbolType.BREAK)
+        {
+            statement = parseBreak();
+        }
+        /* If it is a continue statement */
+        else if(symbol == SymbolType.CONTINUE)
+        {
+            statement = parseContinue();
         }
         /* If it is an accessor */
         else if(isAccessor(tok))
