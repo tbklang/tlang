@@ -98,9 +98,6 @@ public final class CompilerConfiguration
         /* Enable entry point test generation for DGen */
         config.addConfig("dgen:emit_entrypoint_test", true);
 
-        /* Set the mapping to hashing of entity names for DGen (TODO: This should be changed before release) */
-        config.addConfig("dgen:mapper", "hashmapper");
-
         /* Set the system C compiler for DGen to clang */
         config.addConfig("dgen:compiler", "clang");
 
@@ -139,6 +136,9 @@ public final class CompilerConfiguration
         /* Always warn about unused variables */
         config.addConfig("typecheck:warnUnusedVars", true);
 
+        /* Always warn about unused functions */
+        config.addConfig("typecheck:warnUnusedFuncs", true);
+        
         /* Default executable's name is `tlang.out` */
         config.addConfig("emit:executable_output", "tlang.out");
 

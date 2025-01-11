@@ -531,6 +531,11 @@ public class Function : TypedEntity, Container
         return params;
     }
 
+    public size_t getArity()
+    {
+        return params.length;
+    }
+
     public bool hasParams()
     {
         return params.length != 0;
@@ -700,6 +705,11 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
     public VariableAssignment getAssignment()
     {
         return assignment;
+    }
+
+    public bool hasAssignment()
+    {
+        return this.assignment !is null;
     }
 
     public override string toString()
@@ -1090,6 +1100,11 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
     public Expression[] getCallArguments()
     {
         return arguments;
+    }
+
+    public size_t getArgCount()
+    {
+        return this.arguments.length;
     }
 
     /** 
