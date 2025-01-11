@@ -1,3 +1,8 @@
+/**
+ * Label manager
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.parsing.labels.manager;
 
 import tlang.compiler.parsing.labels.types;
