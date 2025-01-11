@@ -580,11 +580,7 @@ public final class Parser
             if (symbolType == SymbolType.IDENT_TYPE)
             {
                 /* Might be a function definition or variable declaration */
-                structMember = parseTypedDeclaration();
-                
-                /* Should have a semi-colon and consume it */
-                expect(SymbolType.SEMICOLON, getCurrentToken());
-                nextToken();
+                structMember = parseTypedDeclaration(false, true, true, false, true, false, false, SymbolType.SEMICOLON);
             }
             /* If it is an accessor */
             else if (isAccessor(getCurrentToken()))
@@ -627,6 +623,8 @@ public final class Parser
                 expect("Only function definitions and variable declarations allowed in struct body");
             }
             
+            DEBUG("built struct member: ", structMember);
+
             /* Append to struct's body */
             statements ~= structMember;
             
@@ -647,6 +645,9 @@ public final class Parser
         /* Generate a new Struct with the given body Statement(s) */
         generatedStruct = new Struct(structName);
         generatedStruct.addStatements(statements);
+
+        /* Parent all members to the struct */
+        parentToContainer(generatedStruct, statements, true);
         
         /* Expect closing brace (sanity) */
         expect(SymbolType.CCURLY, getCurrentToken());

@@ -14,7 +14,8 @@
 	"name": "tlang",
 	"versions": [
 		"DBG_MODMAN",
-		"DBG_DEBUG_LOGGING"
+		"DBG_DEBUG_LOGGING",
+		"DBG_VERBOSE_LOGGING"
 	],
 	"buildRequirements": ["allowWarnings"]
 }

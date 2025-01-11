@@ -6,6 +6,7 @@ import tlang.compiler.symbols.typing.core;
 
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
+import std.string : format;
 
 /**
 * Used so often that we may as well
@@ -384,6 +385,11 @@ public class Struct : Type, Container, MCloneable
         clonedStruct.parentTo(newParent);
 
         return clonedStruct;
+    }
+
+    public override string toString()
+    {
+        return format("StructType (%s)", getName());
     }
 }
 
