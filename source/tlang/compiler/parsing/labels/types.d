@@ -1,5 +1,7 @@
 module tlang.compiler.parsing.labels.types;
 
+import tlang.compiler.parsing.exceptions : ParserException;
+
 /**
  * Represents a label
  */
@@ -17,9 +19,12 @@ public struct Label
     }
 }
 
-import tlang.compiler.parsing.exceptions : ParserException;
+
 
 public final class LabelException : ParserException
 {
-    
+    this(string msg)
+    {
+        super(msg);
+    }
 }
