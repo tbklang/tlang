@@ -16,7 +16,6 @@ import tlang.compiler.parsing.core : Parser;
 import tlang.compiler.typecheck.core : TypeChecker;
 import tlang.misc.logging;
 import tlang.compiler.core : Compiler, beginCompilation;
-import tlang.compiler.configuration : ConfigEntry;
 import std.conv : to;
 import tlang.compiler.codegen.mapper.core : SymbolMappingTechnique;
 import core.stdc.stdlib : exit;
@@ -47,7 +46,7 @@ mixin template BaseCommand()
     void BaseCommandInit(Compiler compiler)
     {
         // Set the verbosity level
-        compiler.getConfig().addConfig(ConfigEntry("verbosity", debugLevel));
+        compiler.getConfig().addConfig("verbosity", debugLevel);
     }
 }
 
@@ -96,31 +95,38 @@ mixin template EmitBase()
         @(ArgConfig.optional)
         bool preinlineArguments = false; // TODO: Change this later to `true` of course
 
-        @ArgNamed("library-link|ll", "Paths to any object files to ,ink in during the linking phase")
+        @ArgNamed("library-link|ll", "Paths to any object files to link in during the linking phase")
         @(ArgConfig.optional)
         @(ArgConfig.aggregate)
-        string[] bruh;
+        string[] linkFiles;
+
+        @ArgNamed("executable_output|eo", "Path to the Filename of generated object file")
+        @(ArgConfig.optional)
+        string executableOutput = "tlang.out";
     }
 
     void EmitBaseInit(Compiler compiler)
     {
         // Set the symbol mapper technique
-        compiler.getConfig().addConfig(ConfigEntry("dgen:mapper", symbolTechnique));
+        compiler.getConfig().addConfig("dgen:mapper", symbolTechnique);
 
         // Set whether pretty-printed code should be generated
-        compiler.getConfig().addConfig(ConfigEntry("dgen:pretty_code", prettyPrintCodeGen));
+        compiler.getConfig().addConfig("dgen:pretty_code", prettyPrintCodeGen);
 
         // Set whether or not to enable the entry point testing code
-        compiler.getConfig().addConfig(ConfigEntry("dgen:emit_entrypoint_test", entrypointTestEmit));
+        compiler.getConfig().addConfig("dgen:emit_entrypoint_test", entrypointTestEmit);
 
         // Set whether or not to enable pre-inlining of function call arguments in DGen
-        compiler.getConfig().addConfig(ConfigEntry("dgen:preinline_args", preinlineArguments));
+        compiler.getConfig().addConfig("dgen:preinline_args", preinlineArguments);
 
         // Set the C compiler to use for DGen
-        compiler.getConfig().addConfig(ConfigEntry("dgen:compiler", systemCC));
+        compiler.getConfig().addConfig("dgen:compiler", systemCC);
 
         // Set the paths to the object files to link in
-        compiler.getConfig().addConfig(ConfigEntry("linker:link_files", bruh));
+        compiler.getConfig().addConfig("linker:link_files", linkFiles);
+
+        // Set the output of the executable
+        compiler.getConfig().addConfig("emit:executable_output", executableOutput);
     }
 }
 
@@ -136,7 +142,7 @@ mixin template TypeCheckerBase()
     void TypeCheckerInit(Compiler compiler)
     {
         // Set whether to warn about unused variables
-        compiler.getConfig().addConfig(ConfigEntry("typecheck:warnUnusedVars", warnUnusedVariables));
+        compiler.getConfig().addConfig("typecheck:warnUnusedVars", warnUnusedVariables);
     }
 }
 

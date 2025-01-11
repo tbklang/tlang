@@ -12,6 +12,7 @@ import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable
 
 // Module entry management
 import tlang.compiler.modman : ModuleEntry;
+import tlang.compiler.symbols.comments;
 
 /** 
  * The _program_ holds a bunch of _modules_ as
@@ -207,15 +208,32 @@ public class Statement
     }
     /* !!!! END TYPE CHECK ROUTINES AND DATA !!!! */
 
+    /** 
+     * An optionally attached comment
+     */
+    private Comment comment;
 
+    /** 
+     * Returns the comment attached
+     *
+     * Returns: the `Comment` or `null`
+     * if none if attached
+     */
+    public final Comment getComment()
+    {
+        return this.comment;
+    }
 
-
-
-
-
-
-
-
+    /** 
+     * Sets the comment for this node
+     *
+     * Params:
+     *   comment = the `Comment`
+     */
+    public final void setComment(Comment comment)
+    {
+        this.comment = comment;
+    }
 
     private static ulong rollingCount = 0;
 
@@ -675,7 +693,6 @@ public import tlang.compiler.symbols.expressions;
 public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable, MCloneable
 {
     private Expression expression;
-    private Variable variable;
 
     this(Expression expression)
     {
@@ -687,21 +704,9 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
         return expression;
     }
 
-    public Variable getVariable()
-    {
-        return variable;
-    }
-
-    // NOTE-to-self: Very interesting method we have here, is this just for debugging?
-    // (15th May 2023, whilst working on Meta)
-    public void setVariable(Variable variable)
-    {
-        this.variable = variable;
-    }
-
     public override string toString()
     {
-        return "[varAssignDec'd: To: "~variable.toString()~"]";
+        return "[varAssignDec: Expr: "~expression.toString()~"]";
     }
 
     public override Statement[] search(TypeInfo_Class clazzType)

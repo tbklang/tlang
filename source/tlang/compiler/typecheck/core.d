@@ -21,6 +21,7 @@ import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
 import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
+import tlang.compiler.symbols.strings;
 
 /**
 * The Parser only makes sure syntax
@@ -257,7 +258,7 @@ public final class TypeChecker
         /** 
          * Find the variables which were declared but never used
          */
-        if(this.config.hasConfig("typecheck:warnUnusedVars") & this.config.getConfig("typecheck:warnUnusedVars").getBoolean())
+        if(this.config.hasConfig("typecheck:warnUnusedVars") && this.config.getConfig("typecheck:warnUnusedVars").flag())
         {
             Variable[] unusedVariables = getUnusedVariables();
             WARN("There are "~to!(string)(unusedVariables.length)~" unused variables");
@@ -1643,24 +1644,24 @@ public final class TypeChecker
             {
                 DEBUG("Typecheck(): String literal processing...");
 
-                /**
-                * Add the char* type as string literals should be
-                * interned
-                */
-                ERROR("Please implement strings");
-                // assert(false);
-                // addType(getType(modulle, "char*"));
+                StringExpression str_exp = cast(StringExpression)statement;
+                DEBUG("String literal: ", str_exp);
+                Context str_ctx = str_exp.getContext();
+                assert(str_ctx);
                 
-                // /**
-                // * Add the instruction and pass the literal to it
-                // */
-                // StringExpression strExp = cast(StringExpression)statement;
-                // string strLit = strExp.getStringLiteral();
-                // gprintln("String literal: `"~strLit~"`");
-                // StringLiteral strLitInstr = new StringLiteral(strLit);
-                // addInstr(strLitInstr);
+                StringInfo str_data = str_exp.data();
 
-                // gprintln("Typecheck(): String literal processing... [done]");
+                /**
+                 * Add the instruction and pass the literal to it.
+                 * The instruction type for this `Value`-based instruction
+                 * is that of a `ubyte*` as a string literal is
+                 * to be interpreted as a pointer to a `ubyte`
+                 * representing the first byte of the character
+                 * string stored _somewhere_ in memory
+                 */
+                StringLiteral strLitInstr = new StringLiteral(str_data);
+                strLitInstr.setInstrType(getType(str_ctx.getContainer(), "ubyte*"));
+                addInstr(strLitInstr);
             }
             else if(cast(VariableExpression)statement)
             {
@@ -2276,56 +2277,6 @@ public final class TypeChecker
                 ERROR("This ain't it chief");
                 assert(false);
             }
-        }
-        /* VariableAssigbmentDNode */
-        else if(cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode)
-        {
-            import tlang.compiler.typecheck.dependency.variables;
-
-            /* Get the variable's name */
-            string variableName;
-            VariableAssignmentNode varAssignDNode = cast(tlang.compiler.typecheck.dependency.variables.VariableAssignmentNode)dnode;
-            Variable assignTo = (cast(VariableAssignment)varAssignDNode.getEntity()).getVariable();
-            variableName = resolver.generateName(this.program, assignTo);
-            DEBUG("VariableAssignmentNode: "~to!(string)(variableName));
-
-            /* Get the Context of the Variable Assigmnent */
-            Context variableAssignmentContext = (cast(VariableAssignment)varAssignDNode.getEntity()).context;
-
-
-            /**
-            * FIXME: Now with ClassStaticAllocate we will have wrong instructoins for us
-            * ontop of the stack (at the beginning of the queue), I think this leads us
-            * to potentially opping wrong thing off - we should filter pop perhaps
-            */
-
-            /**
-            * Codegen
-            *
-            * 1. Get the variable's name
-            * 2. Pop Value-instruction
-            * 3. Generate VarAssignInstruction with Value-instruction
-            * 4. Set the VarAssignInstr's Context to that of the Variable assigning to
-            */
-            Instruction instr = popInstr();
-            assert(instr);
-            Value valueInstr = cast(Value)instr;
-            assert(valueInstr);
-            WARN("VaribleAssignmentNode(): Just popped off valInstr?: "~to!(string)(valueInstr));
-
-
-            Type rightHandType = valueInstr.getInstrType();
-            DEBUG("RightHandType (assignment): "~to!(string)(rightHandType));
-
-            
-
-        
-            DEBUG(valueInstr is null);/*TODO: FUnc calls not implemented? Then is null for simple_1.t */
-            VariableAssignmentInstr varAssInstr = new VariableAssignmentInstr(variableName, valueInstr);
-            varAssInstr.setContext(variableAssignmentContext);
-            // NOTE: No need setting `varAssInstr.type` as the type if in `getEmbeddedInstruction().type`
-            
-            addInstr(varAssInstr);
         }
         /* TODO: Add support */
         /**

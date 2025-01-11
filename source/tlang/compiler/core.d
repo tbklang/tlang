@@ -17,9 +17,9 @@ import tlang.misc.exceptions;
 import tlang.compiler.codegen.mapper.core : SymbolMapper;
 import tlang.compiler.codegen.mapper.impls : HashMapper, LebanonMapper;
 import std.string : cmp;
-import tlang.compiler.configuration : CompilerConfiguration, ConfigEntry;
+import tlang.compiler.configuration;
 import tlang.compiler.modman;
-
+import tlang.compiler.codegen.emit.types : EmitResult;
 // TODO: Add configentry unittests
 
 /** 
@@ -88,6 +88,76 @@ public final class CompilerException : TError
         super("CompilerError("~to!(string)(errType)~")"~(msg.length ? ": "~msg : ""));
         this.errType = errType;
     }
+}
+
+import niknaks.functional : Result, ok, error;
+import std.exception : ErrnoException;
+
+
+public alias CompileResult = EmitResult;
+
+/** 
+ * Opens up the file at the provided path
+ * and reads all the data from it.
+ *
+ * Params:
+ *   filePath = the path to read from
+ * Returns: a `Result` that, in the happy-path
+ * would return a `string` and in the
+ * unhappy-path would return an `Exception`
+ * due to some I/O error that occurred
+ * during reading
+ */
+public Result!(string, Exception) grabData(string filePath)
+{
+    File sourceFileFile;
+    scope(exit)
+    {
+        sourceFileFile.close();
+    }
+
+    try
+    {
+        sourceFileFile.open(filePath);
+        ulong fileSize = sourceFileFile.size();
+        byte[] fileBytes;
+        fileBytes.length = fileSize;
+        fileBytes = sourceFileFile.rawRead(fileBytes);
+
+        return ok!(string, Exception)(cast(string)fileBytes);
+    }
+    catch(ErrnoException e)
+    {
+        return error!(Exception, string)(e);
+    }
+}
+
+/** 
+ * Constructs a new compiler instance pointed
+ * to the entry point module's file path
+ *
+ * Params:
+ *   path = the entry point module's file
+ * path
+ * Returns: a `Result` containing an instance
+ * of the `Compiler` if it opened successfully,
+ * and if not then the offending `Exception`
+ * that occurred
+ */
+public Result!(Compiler, Exception) forFile(string path)
+{
+    auto r_res = grabData(path);
+
+    if(r_res.is_error())
+    {
+        return error!(Exception, Compiler)(r_res.error());
+    }
+
+    import std.path : pathSplitter, buildPath;
+    File d = File.tmpfile();
+    Compiler c = new Compiler(r_res.ok(), path, d);
+
+    return ok!(Compiler, Exception)(c);
 }
 
 public class Compiler
@@ -266,7 +336,7 @@ public class Compiler
     }
 
     /* Perform code emitting */
-    public void doEmit()
+    public CompileResult doEmit()
     {
         if(typeChecker is null)
         {
@@ -279,7 +349,7 @@ public class Compiler
         }
         
         SymbolMapper mapper;
-        string mapperType = config.getConfig("dgen:mapper").getText();
+        string mapperType = config.getConfig("dgen:mapper").text();
 
         if(cmp(mapperType, "hashmapper") == 0)
         {
@@ -297,10 +367,20 @@ public class Compiler
         this.emitter = new DCodeEmitter(typeChecker, emitOutFile, config, mapper);
         emitter.emit(); // Emit the code
         emitOutFile.close(); // Flush (perform the write() syscall)
-        emitter.finalize(); // Call CC on the file containing generated C code
+        return emitter.finalize(); // Call CC on the file containing generated C code
     }
 
-    public void compile()
+    /** 
+     * Performs the compilation
+     *
+     * Returns: A `CompileResult`
+     * containing information about
+     * the produced output
+     * Throws: TError on any error
+     * that may occur during any
+     * of the compiler's stages
+     */
+    public CompileResult compile()
     {
         /* Setup the lexer, perform the tokenization and obtain the tokens */
         doLex();
@@ -312,7 +392,7 @@ public class Compiler
         doTypeCheck();
 
         /* Perform code emitting */
-        doEmit();
+        return doEmit();
     }
 }
 
@@ -419,7 +499,8 @@ unittest
 
                         "source/tlang/testing/simple_pointer_array_syntax.t",
 
-                        "source/tlang/testing/simple_func_statement.t"
+                        "source/tlang/testing/simple_func_statement.t",
+                        "source/tlang/testing/simple_string.t"
                         ];
     foreach(string testFile; testFiles)
     {
