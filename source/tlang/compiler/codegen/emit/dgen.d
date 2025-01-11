@@ -17,20 +17,29 @@ import tlang.compiler.symbols.data : SymbolType, Variable, Function, VariablePar
 import tlang.compiler.symbols.check : getCharacter;
 import tlang.misc.utils : Stack;
 import tlang.compiler.symbols.typing.core;
+import tlang.compiler.symbols.typing.enums;
 import tlang.compiler.configuration : CompilerConfiguration;
 import tlang.compiler.symbols.containers : Module;
 import std.format : format;
 import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.datetime.stopwatch : Duration, dur;
 import tlang.compiler.codegen.emit.dgen_simplifier;
+import tlang.compiler.codegen.emit.dgen_enums;
 import tlang.compiler.codegen.emit.dgen_types : DGenException;
+import niknaks.functional : Optional;
 
 public final class DCodeEmitter : CodeEmitter
-{
+{    
+    /* Enumeration member-name mapper */
+    private EnumMapper e_mapper;
+
     this(TypeChecker typeChecker, File file, CompilerConfiguration config)
     {
         super(typeChecker, file, config);
+        this.e_mapper = new EnumMapper();
     }
+
+    private alias tc = typeChecker;
 
     private ulong transformDepth = 0;
 
@@ -106,6 +115,12 @@ public final class DCodeEmitter : CodeEmitter
             
             return typeTransform(stackArray.getComponentType());
             // return "KAK TODO";
+        }
+        /* Enumeration type */
+        else if(typeChecker.isEnumType(typeIn))
+        {
+            Enum enum_t = cast(Enum)typeIn;
+            return "enum "~enum_t.getName();
         }
 
         ERROR("Type transform unimplemented for type '"~to!(string)(typeIn)~"'");
@@ -230,6 +245,24 @@ public final class DCodeEmitter : CodeEmitter
             LiteralValue literalValueInstr = cast(LiteralValue)instruction;
 
             emmmmit = to!(string)(literalValueInstr.getLiteralValue());
+        }
+        /**
+         * Enum constant reference
+         *
+         * See_Also: This would be
+         * emitted when the TIR option
+         * is enabled
+         */
+        else if(cast(EnumConstantRef)instruction)
+        {
+            EnumConstantRef ecr = cast(EnumConstantRef)instruction;
+            Enum e = ecr.getEnum();
+            string enumName = e.getName();
+
+            /* Map target to unique enum name */
+            string enumMember = e_mapper.getName(e, ecr.memberTarget());
+            
+            emmmmit = format("%s", enumMember);
         }
         /* FetchValueVar */
         else if(cast(FetchValueVar)instruction)
@@ -582,8 +615,8 @@ public final class DCodeEmitter : CodeEmitter
             }
             else
             {
-                /* Handling of primitive types */
-                if(cast(Primitive)castingTo)
+                /* Handling of primitive types and enumeration types */
+                if(cast(Primitive)castingTo || tc.isEnumType(castingTo))
                 {
                     /* Add the actual cast */
                     emit ~= "("~typeTransform(castingTo)~")";
@@ -846,6 +879,9 @@ public final class DCodeEmitter : CodeEmitter
 
             // Emit static allocation code
             emitStaticAllocations(modOut, curMod);
+
+            // Emit enum types (TODO: When structs is merged and we have `emitTypes()` here then place THIS call in `emitTypes()`)
+            emitEnumTypes(modOut, curMod);
 
             // Emit globals
             emitCodeQueue(modOut, curMod);
@@ -1116,6 +1152,195 @@ public final class DCodeEmitter : CodeEmitter
                 modOut.writeln(externEmit);
             }
         }
+    }
+
+    /** 
+     * Emits all the enumeration type
+     * declarations
+     *
+     * Params:
+     *   modOut = the `File` to write out
+     * to
+     *   mod = the `Module` of which
+     * to emit enumeration types from
+     */
+    private void emitEnumTypes(File modOut, Module mod)
+    {
+        bool allEnums(Entity e_in)
+        {
+            Type t = cast(Type)e_in;
+            return t !is null ? typeChecker.isEnumType(t) : false;
+        }
+
+        Entity[] matches;
+        typeChecker.getResolver().resolveWithin(mod, &allEnums, matches);
+        foreach(Enum e; cast(Enum[])matches)
+        {
+            DEBUG("Emitting enumeration type declaration for '", e, "'...");
+            emitEnumType(modOut, e);
+            modOut.writeln();
+        }
+    }
+
+    /** 
+     * Emits the given enumeration type
+     * of which is a string-based
+     * (<type>* -based).
+     *
+     * Params:
+     *   modOut = the `File` to write out
+     * to
+     *   e = the `Enum` type to emit a
+     * declaration for
+     */
+    private void emitEnumType_string(File modOut, Enum e)
+    {
+        import tlang.compiler.symbols.strings;
+
+        // emit (TODO: support other string types, get string info)
+        EnumConstant[] m_s = e.members();
+        for(size_t i = 0; i < m_s.length; i++)
+        {
+            auto c = m_s[i];
+
+            // get unique name
+            string c_name = this.e_mapper.getName(e, c.name());
+
+            // emit out
+            string m_out;
+
+            auto opt_v = c.value();        
+            StringExpression st_expr;
+            if(opt_v.isPresent())
+            {
+                st_expr = cast(StringExpression)opt_v.get();
+                assert(st_expr); // shouldn't be anything else if this method was called
+            }
+            else
+            {
+                StringData sd;
+                sd.utf8 = ""; // FIXME: Determine width/string-type here somehow, via Enum probably
+                st_expr = new StringExpression(sd, 1); 
+            }
+
+            StringInfo si = st_expr.data();
+            assert(si.width() == 1); // FIXME: Support other types here
+            auto si_data = si.data();
+            string dec_type = typeTransform(getBuiltInType(typeChecker, null, "ubyte*"));
+            m_out = format(`%s %s = "%s";`, dec_type, c_name, si_data.utf8);
+            modOut.writeln(m_out);
+        }
+    }
+
+    /** 
+     * Emits the given enumeration type
+     * declaration
+     *
+     * Params:
+     *   modOut = the `File` to write out
+     * to
+     *   e = the `Enum` type to emit a
+     * declaration for
+     * Throws: 
+     *   DGenError if there is an impossibility
+     * to emit for some reason
+     */
+    private void emitEnumType(File modOut, Enum e)
+    {
+        import tlang.compiler.symbols.expressions : Expression, IntegerLiteral;
+        string basicEpressionTransform(Expression e)
+        {
+            // TODO: Add stringexpression
+            if(cast(IntegerLiteral)e)
+            {
+                IntegerLiteral il = cast(IntegerLiteral)e;
+                return il.getNumber();
+            }
+            else
+            {
+                ERROR("Developer bug: Impossible for an expression like this '", e, "' to be an enum constant value");
+                assert(false);
+            }
+        }
+
+        // FIXME: How to do constraints here in C?
+        // we might need to control flags or put
+        // _some_ macro somewhere
+
+        EnumConstant[] m_s = e.members();
+
+        // Empty enumeration types are unsupported by then C emitter(as C doesn't support them)
+        if(!m_s.length)
+        {
+            import tlang.compiler.codegen.emit.dgen_exceptions : noEnumMembers;
+            throw noEnumMembers(e);
+        }
+        
+        import tlang.compiler.symbols.typing.enums : getEnumType;
+        Type enum_t = getEnumType(typeChecker, e);
+        DEBUG("enum type:", enum_t);
+        bool is_enum_t_ptr = typeChecker.isPointerType(enum_t);
+        DEBUG("is_enum_t_ptr: ", is_enum_t_ptr);
+        Type e_mt = getEnumType(typeChecker, e);
+        DEBUG("e_mt: ", e_mt);
+        // FIXME: The above condition therefore is ONLY possible for string cases
+        import tlang.compiler.symbols.strings;
+        assert(m_s.length ? (cast(StringExpression)m_s[0].value().get()) !is null : true);
+
+
+        // if the enum's member type is `<type>*` then
+        // it is a string, in such a case basic replacement
+        // must occur RATHER than an enum declaration of
+        // string literals (which C does not support)
+        bool is_string;
+        if((is_string = typeChecker.isPointerType(e_mt)) == true)
+        {
+            emitEnumType_string(modOut, e);
+            return;
+        }
+
+
+        modOut.writeln(format("enum %s", e.getName()));
+        modOut.writeln("{");
+        for(size_t i = 0; i < m_s.length; i++)
+        {
+            auto c = m_s[i];
+
+            // get unique name
+            string c_name = this.e_mapper.getName(e, c.name());
+            
+            // emit out
+            string m_out;
+
+            auto opt_v = c.value();
+            if(opt_v.isPresent())
+            {
+                m_out = format
+                (
+                    "%s%s = %s",
+                    genTabs(1),
+                    c_name,
+                    basicEpressionTransform(opt_v.get())
+                );
+            }
+            else
+            {
+                m_out = format
+                (
+                    "%s%s",
+                    genTabs(1),
+                    c_name
+                );
+            }
+
+            if(i != m_s.length-1)
+            {
+                m_out = m_out~",";
+            }
+
+            modOut.writeln(m_out);
+        }
+        modOut.writeln("};");
     }
 
     /** 

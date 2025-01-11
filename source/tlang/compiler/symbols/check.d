@@ -310,6 +310,11 @@ public enum SymbolType
      */
     SINGLE_LINE_COMMENT,
 
+    /**
+     * Enumeration
+     */
+    ENUM,
+
     /** 
      * Unknown symbol
      */
@@ -719,6 +724,11 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "import") == 0)
     {
         return SymbolType.IMPORT;
+    }
+    /* Enumeration keyword `enum` */
+    else if(cmp("enum", token) == 0)
+    {
+        return SymbolType.ENUM;
     }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))

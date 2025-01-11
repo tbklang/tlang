@@ -229,6 +229,35 @@ public class IntegerLiteral : NumberLiteral, MCloneable
 
         return clonedIntegerLiteral;
     }
+
+    /** 
+     * Checks if the given integer literal
+     * encoding is signed
+     *
+     * Params:
+     *   enc = the encoding
+     * Returns: `true` if signed, `false`
+     * otherwise
+     */
+    public static bool isSignedEncoding(IntegerLiteralEncoding enc)
+    {
+        return enc == IntegerLiteralEncoding.SIGNED_INTEGER || 
+                enc == IntegerLiteralEncoding.SIGNED_LONG;
+    }
+
+    /** 
+     * Checks if the given integer literal
+     * encoding is unsigned
+     *
+     * Params:
+     *   enc = the encoding
+     * Returns: `true` if unsigned, `false`
+     * otherwise
+     */
+    public static bool isUnsignedEncoding(IntegerLiteralEncoding enc)
+    {
+        return !isSignedEncoding(enc);
+    }
 }
 
 //TODO: Work on floating point literal encodings

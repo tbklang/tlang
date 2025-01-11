@@ -1,0 +1,48 @@
+module simple;
+
+// Assigned value
+
+enum Sex : uint
+{
+    Male,
+	Female = 60,
+	Unknown
+}
+
+// Assigned value
+
+enum Gender
+{
+	Male,
+	Female = 2147483648,
+	Unknown
+}
+
+// No assigned values
+
+enum Numberless
+{
+	ONE,
+	TWO
+}
+
+// TODO: ghet type chekcing working
+
+// TODO: Make test case where reNum returns an int and coercion
+
+// fails
+
+long retEnum(Gender g)
+{
+	Numberless n_l = cast(Numberless)Gender.Male;
+	ubyte n_1_b = n_l;
+	Gender g1 = Gender.Male;
+	Gender g2 = Gender.Unknown;
+	return g1+g1+Gender.Female;
+}
+
+int main()
+{
+	long l = retEnum(Gender.Female);
+	return cast(int)l;
+}

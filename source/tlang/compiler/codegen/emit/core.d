@@ -12,6 +12,24 @@ import gogga;
 import std.conv : to;
 import tlang.compiler.configuration : CompilerConfiguration;
 
+import tlang.misc.exceptions : TError;
+
+/** 
+ * The general exception type for any
+ * and all code emitter related errors.
+ *
+ * An implementation of the `CodeEmitter`
+ * class should sub-class this one when
+ * throwing emitter-specific exceptions
+ */
+public abstract class CodeEmitError : TError
+{
+    this(string m)
+    {
+        super("CodeEmit error: "~m);
+    }
+}
+
 /**
 * TODO: Perhaps have an interface that can emit(Context/Parent, Statement)
 */

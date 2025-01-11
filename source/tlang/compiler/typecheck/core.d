@@ -24,6 +24,9 @@ import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.misc.utils : panic;
 import tlang.compiler.typecheck.dependency.variables;
 import niknaks.functional : Optional;
+import niknaks.containers : Pool;
+import tlang.compiler.typecheck.helpers.enums : EnumInfo;
+import tlang.compiler.symbols.typing.enums : getEnumType;
 import tlang.compiler.symbols.strings;
 
 /**
@@ -61,6 +64,12 @@ public final class TypeChecker
     private MetaProcessor meta;
 
     /** 
+     * Enum information data store
+     */
+    private Pool!(EnumInfo, Enum) _ePool;
+    private bool tir_flatten_enum_member_refs;
+
+    /** 
      * Constructs a new `TypeChecker` with the given
      * compiler instance
      *
@@ -74,7 +83,20 @@ public final class TypeChecker
         this.program = compiler.getProgram();
 
         this.resolver = new Resolver(program, this);
-        this.meta = new MetaProcessor(this, true);
+        this.meta = new MetaProcessor(this, true);   
+
+        this.tir_flatten_enum_member_refs = this.config.getConfig("tir:flatten_enum_refs").flag();
+    }
+
+    /** 
+     * Returns the enumeration
+     * type pooler instance
+     * which is associated
+     * with this type checker
+     */
+    public auto getEnumPool()
+    {
+        return &this._ePool;
     }
 
     /** 
@@ -910,6 +932,12 @@ public final class TypeChecker
                 same = false;
             }
         }
+        /* Enumeration types */
+        else if(isEnumType(type1) && isEnumType(type2))
+        {
+            // Only equal if they are the same Enum _instance_
+            return type1 is type2;
+        }
         /* Handling for all other cases */
         else if(typeid(type1) == typeid(type2))
         {
@@ -1095,6 +1123,20 @@ public final class TypeChecker
     }
 
     /** 
+     * Checks if the provided type is
+     * an enumeration type
+     *
+     * Params:
+     *   typeIn = the `Type` to test
+     * Returns: `true` if so, `false`
+     * otherwise
+     */
+    public static bool isEnumType(Type typeIn)
+    {
+        return cast(Enum)typeIn !is null;
+    }
+
+    /** 
      * Attempts to perform coercion of the provided Value-instruction
      * with respect to the provided to-type.
      * 
@@ -1165,6 +1207,25 @@ public final class TypeChecker
 
             // Return a cast instruction to the to-type
             return new CastedValueInstruction(providedInstruction, toType);
+        }
+        /* If we were provided an instruction that was enum-typed */
+        else if(isEnumType(providedType))
+        {
+            Enum enum_t = cast(Enum)providedType;
+            Type m_type = getEnumType(this, enum_t);
+            DEBUG("enum_t:", enum_t);
+            DEBUG("enum_t (member type):", enum_t);
+            DEBUG("toType:", toType);
+
+            if(isIntegralType(toType) && isIntegralType(m_type) && isIntegralAssignableTo(cast(Integer)toType, cast(Integer)m_type))
+            {
+                // Return a cast instruction to the to-type
+                return new CastedValueInstruction(providedInstruction, toType);
+            }
+            else
+            {
+                throw new CoercionException(this, toType, providedType);
+            }
         }
         // If it is a LiteralValue (integer literal) (support for issue #94)
         else if(cast(LiteralValue)providedInstruction)
@@ -1287,27 +1348,40 @@ public final class TypeChecker
                 Number toNumericType = cast(Number)toType;
 
                 /**
-                 * If the provided type is less than or equal
-                 * in size to that of the to-type
+                 * Firstly, both must be strictly the same KIND of number
+                 * type
                  */
-                if(providedNumericType.getSize() <= toNumericType.getSize())
+                if(isStrictlySameType(toNumericType, providedNumericType))
                 {
-                    // providedInstruction.setInstrType(toType);
-                    // Return a cast instruction to the to-type
-                    return new CastedValueInstruction(providedInstruction, toType);
+                    /**
+                    * If the provided type is less than or equal
+                    * in size to that of the to-type
+                    */
+                    if(providedNumericType.getSize() <= toNumericType.getSize())
+                    {
+                        // providedInstruction.setInstrType(toType);
+                        // Return a cast instruction to the to-type
+                        return new CastedValueInstruction(providedInstruction, toType);
+                    }
+                    /** 
+                    * If the incoming type is bigger than the toType
+                    *
+                    * E.g.
+                    * ```
+                    * long i = 2;
+                    * byte i1 = i;
+                    * ```
+                    */
+                    else
+                    {
+                        throw new CoercionException(this, toType, providedType, "Loss of size would occur");
+                    }
                 }
-                /** 
-                 * If the incoming type is bigger than the toType
-                 *
-                 * E.g.
-                 * ```
-                 * long i = 2;
-                 * byte i1 = i;
-                 * ```
-                 */
+                // FIXME: Test this with float fromType and int toType (will need float fixed first)
                 else
                 {
-                    throw new CoercionException(this, toType, providedType, "Loss of size would occur");
+                    // TODO: Throw a TypeMismatcherror rather?
+                    throw new CoercionException(this, toType, providedType, "Incompatible types");
                 }
             }
             else
@@ -1316,6 +1390,11 @@ public final class TypeChecker
                 throw new CoercionException(this, toType, providedType);
             }
         }
+    }
+
+    public static bool isIntegralAssignableTo(Integer toType, Integer ofType)
+    {
+        return ofType.getSize() <= toType.getSize();
     }
 
     /** 
@@ -2193,7 +2272,7 @@ public final class TypeChecker
             }
         }
     }
-
+    
     /** 
      * Determines the `Type` that should be used
      * for the given integeral literal encoding
@@ -2271,8 +2350,6 @@ public final class TypeChecker
                     LiteralValue litValInstr = new LiteralValue(integerLiteral.getNumber(), literalEncodingType);
 
                     valInstr = litValInstr;
-
-                    // TODO: Insert get encoding stuff here
                 }
                 /* Generate a LiteralValueFloat (FloatingLiteral) */
                 else
@@ -2364,8 +2441,6 @@ public final class TypeChecker
 
                 if(binOperator == SymbolType.DOT)
                 {
-                    // panic("Implement dot operator typecheck/codegen");
-
                     DEBUG("Humburger");
 
                     // lhs=FetchValueVar rhs=<undetermined>
@@ -2380,6 +2455,60 @@ public final class TypeChecker
                         assert(leftEntity); // Should always be true because dependency generator catches bad names (non-existent)
 
                         Container containerLeft = cast(Container)leftEntity;
+
+                        // If the left-entity refers to an enum-type
+                        if(cast(Type)leftEntity && isEnumType(cast(Type)leftEntity))
+                        {
+                            import tlang.compiler.symbols.typing.enums : EnumConstant, getEnumType;
+                            import niknaks.functional : Optional;
+                            import tlang.compiler.codegen.render : tryRender;
+
+                            Enum e_t = cast(Enum)leftEntity;
+                            Type e_c_t = getEnumType(this, e_t);
+
+                            // Right-hand operand can ONLY be a FetchValueVar
+                            FetchValueVar r_name = cast(FetchValueVar)vRhsInstr;
+                            if(r_name is null)
+                            {
+                                throw new TypeCheckerException
+                                (
+                                    TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                                    format
+                                    (
+                                        "Only references to member names in the %s type are allowed, '%s' in %s.%s is invalid usage",
+                                        e_t.getName(),
+                                        tryRender(vRhsInstr),
+                                        tryRender(vLhsInstr),
+                                        tryRender(vRhsInstr)
+                                    )
+                                );
+                            }
+
+                            Optional!(EnumConstant) r_c_opt = e_t.find(r_name.getTarget());
+                            if(r_c_opt.isEmpty())
+                            {
+                                throw new TypeCheckerException
+                                (
+                                    this,
+                                    TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                                    format
+                                    (
+                                        "Right-hand operand of '%s' of (%s %s %s) refers to an enum member which does not exist",
+                                        tryRender(vRhsInstr),
+                                        tryRender(vLhsInstr),
+                                        binOperator,
+                                        tryRender(vRhsInstr)
+                                    )
+                                );
+                            }
+
+                            EnumConstant r_c = r_c_opt.get();
+                            import tlang.compiler.typecheck.helpers.enums : enumConstantToInstruction;
+                            Value iv = enumConstantToInstruction(this, e_t, r_c, tir_flatten_enum_member_refs);
+                            DEBUG("generated iv:", iv);
+                            addInstr(iv);
+                            return;
+                        }
 
                         // TODO: Handle error message nicwer
                         if(!containerLeft)
@@ -2915,6 +3044,23 @@ public final class TypeChecker
 
                 Type indexToType = indexToInstr.getInstrType();
                 assert(indexToType);
+
+                /** 
+                 * If the item being indexed is of an
+                 * enumeration type then update `indexToType`
+                 * to be the `Enum`'s member-type rather than
+                 * just the `Enum` type itself
+                 */
+                if(isEnumType(indexToType))
+                {
+                    Enum indexToType_enum = cast(Enum)indexToType;
+                    Type mt_enum = getEnumType(this, indexToType_enum);
+                    assert(mt_enum);
+                    DEBUG("mt_enum ", mt_enum);
+                    indexToType = mt_enum;
+                }
+
+
                 DEBUG("ArrayIndex: Type of `indexToInstr`: "~indexToType.toString());
 
                 /* Pop the index instruction (the index expression) */
@@ -3741,6 +3887,12 @@ public final class TypeChecker
             processPseudoEntities(cast(Module)curModule);
         }
 
+        /* Process all enumeration types of the program's modules */
+        foreach(Statement curModule; this.program.getStatements())
+        {
+            processEnums(cast(Module)curModule);
+        }
+
         // TODO: Ensure this is CORRECT! (MODMAN)
         /**
         * Make sure there are no name collisions anywhere
@@ -3756,6 +3908,62 @@ public final class TypeChecker
         /* TODO: Now that everything is defined, no collision */
         /* TODO: Do actual type checking and declarations */
         dependencyCheck();
+    }
+
+    // TODO: This will have to be recursive because of where we
+    // will allow these top be declared
+
+    /** 
+     * Processes all enumeration types
+     * within the given container
+     *
+     * Params:
+     *   c = the `Container` to check
+     */
+    private void processEnums(Container c)
+    {
+        bool allEnums(Entity entity)
+        {
+            return cast(Enum)entity !is null;
+        }
+
+        Entity[] entities;
+        resolver.resolveWithin(c, &allEnums, entities);
+
+        foreach(Enum e; cast(Enum[])entities)
+        {
+            processEnum(e);
+        }
+    }
+
+    import tlang.compiler.symbols.typing.enums : Enum;
+
+    /** 
+     * Does basic pre-flight checks on
+     * the provided enumeration type
+     *
+     * Params:
+     *   e = the `Enum` to check
+     */
+    private void processEnum(Enum e)
+    {
+        DEBUG("Analyzing enumeration '", e, "'...");
+
+        // TODO: Chis could be placed in the `checkEnum(TypeChecker, Enum)` function
+        // Enum cannot have NO members
+        // TODO: Make optional
+        if(e.members().length == 0)
+        {
+            throw new TypeCheckerException
+            (
+                TypeCheckerException.TypecheckError.GENERAL_ERROR,
+                format
+                (
+                    "Enumeration type %s cannot have no members",
+                    e.getName()
+                )
+            );
+        }
     }
 
     private void processPseudoEntities(Container c)

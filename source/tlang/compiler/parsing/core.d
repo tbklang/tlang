@@ -18,6 +18,7 @@ import tlang.compiler.core : Compiler;
 import std.string : format;
 import tlang.compiler.modman;
 import tlang.misc.utils : panic;
+import tlang.compiler.symbols.typing.enums;
 import tlang.compiler.symbols.comments;
 import tlang.compiler.symbols.strings : StringExpression;
 
@@ -1198,7 +1199,7 @@ public final class Parser
                 {
                     // TODO (X-platform): Use `size_t` here
                     literalValue = to!(ulong)(numberLiteralStr);
-                    
+
                     import tlang.compiler.typecheck.literals.ranges;
                     
                     // Signed integer range [0, 2_147_483_647]
@@ -1535,7 +1536,7 @@ public final class Parser
             /* Detect if this expression is coming to an end, then return */
             else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE ||
                     symbol == SymbolType.COMMA || symbol == SymbolType.ASSIGN ||
-                    symbol == SymbolType.CBRACKET)
+                    symbol == SymbolType.CBRACKET || symbol == SymbolType.CCURLY)
             {
                 break;
             }
@@ -2593,6 +2594,183 @@ public final class Parser
         WARN("parseComment(): Leave");
     }
 
+    /** 
+     * Tests the handling of comments
+     */
+    unittest
+    {
+        import tlang.compiler.lexer.kinds.arr : ArrLexer;
+
+        try
+        {
+            string sourceCode = `module myCommentModule;
+        // Hello`;
+
+            File dummyFile;
+            Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+            compiler.doLex();
+            compiler.doParse();
+
+            // FIXME: Re-enable when we we have
+            // a way to extract comments from
+            // AST nodes
+            // assert(parser.hasCommentsOnStack());
+            // assert(parser.getCommentCount() == 1);
+        }
+        catch(TError e)
+        {
+            assert(false);
+        }
+
+        
+
+        try
+        {
+            string sourceCode = `module myCommntedModule;
+        /*Hello */
+        
+        /* Hello*/`;
+
+            File dummyFile;
+            Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+            compiler.doLex();
+            compiler.doParse();
+
+            // FIXME: Re-enable when we we have
+            // a way to extract comments from
+            // AST nodes
+            // assert(parser.hasCommentsOnStack());
+            // assert(parser.getCommentCount() == 1);
+        }
+        catch(TError e)
+        {
+            assert(false);
+        }
+
+    
+        try
+        {
+            string sourceCode = `module myCommentedModule;
+
+        void function()
+        {
+            /*Hello */
+            /* Hello */
+            // Hello
+            //Hello
+        }
+        `;
+
+            File dummyFile;
+            Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+            compiler.doLex();
+            compiler.doParse();
+
+
+            // FIXME: Re-enable when we we have
+            // a way to extract comments from
+            // AST nodes
+            // assert(parser.hasCommentsOnStack());
+            // assert(parser.getCommentCount() == 1);
+            // assert(parser.hasCommentsOnStack());
+            // assert(parser.getCommentCount() == 4);
+        }
+        catch(TError e)
+        {
+            assert(false);
+        }
+    }
+
+    /** 
+     * Parses an enum declaration
+     *
+     * Returns: an `Enum`
+     */
+    private Enum parseEnum()
+    {
+        lexer.nextToken();
+        Token name_t = lexer.getCurrentToken();
+        expect(SymbolType.IDENT_TYPE, name_t);
+        string name = name_t.getToken();
+        DEBUG("enum name:", name);
+        lexer.nextToken();
+
+        Enum e;
+
+        string type;
+        if(getSymbolType(lexer.getCurrentToken()) == SymbolType.INHERIT_OPP)
+        {
+            lexer.nextToken();
+            Token type_t = lexer.getCurrentToken();
+            expect(SymbolType.IDENT_TYPE, type_t);
+            type = type_t.getToken();
+            lexer.nextToken();
+            DEBUG("custom enum constraint type:", type);
+            e = new Enum(name, type);
+        }
+        else
+        {
+            e = new Enum(name);
+        }
+
+        expect(SymbolType.OCURLY, lexer.getCurrentToken());
+        lexer.nextToken();
+
+        Token c;
+        while(getSymbolType(c = lexer.getCurrentToken()) != SymbolType.CCURLY)
+        {
+            expect(SymbolType.IDENT_TYPE, c);
+            string m_name = c.getToken();
+            DEBUG("m_name:", m_name);
+
+            Expression m_exp;
+
+            lexer.nextToken();
+            c = lexer.getCurrentToken();
+
+            EnumConstant e_c;
+
+            scope(exit)
+            {
+                e_c = EnumConstant(m_name, m_exp);
+                e.add(e_c);
+            }
+            
+            if(getSymbolType(c) == SymbolType.COMMA)
+            {
+                lexer.nextToken();
+                continue;
+            }
+            else if(getSymbolType(c) == SymbolType.ASSIGN)
+            {
+                lexer.nextToken();
+                m_exp = parseExpression(); // TODO: Consume expression here? but like only literals
+                
+                if(getSymbolType(lexer.getCurrentToken()) == SymbolType.COMMA)
+                {
+                    lexer.nextToken();
+                    continue;
+                }
+            }
+            else if(getSymbolType(c) == SymbolType.CCURLY)
+            {
+                continue;
+            }
+            else
+            {
+                expect("Expected either an enum member name, a '=' or a ','");
+            }
+        }
+
+        assert(getSymbolType(c) == SymbolType.CCURLY);
+        lexer.nextToken();
+        
+        return e;
+    }
+
     // TODO: We need to add `parseComment()`
     // support here (see issue #84)
     // TODO: This ic currently dead code and ought to be used/implemented
@@ -2672,6 +2850,11 @@ public final class Parser
         {
             ERROR("COMMENTS NOT YET PROPERLY SUPOORTED");
             parseComment();
+        }
+        /* If it is an enumeration type */
+        else if(symbol == SymbolType.ENUM)
+        {
+            statement = parseEnum();
         }
         /* Error out */
         else
@@ -3108,6 +3291,12 @@ public final class Parser
             {
                 ERROR("COMMENTS NOT YET PROPERLY SUPOORTED");
                 parseComment();
+            }
+            /* If it is an enumeration type */
+            else if(symbol == SymbolType.ENUM)
+            {
+                Enum e = parseEnum();
+                modulle.addStatement(e);
             }
             else
             {

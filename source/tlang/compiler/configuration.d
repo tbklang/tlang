@@ -101,6 +101,9 @@ public final class CompilerConfiguration
         /* Set the system C compiler for DGen to clang */
         config.addConfig("dgen:compiler", "clang");
 
+        /* By default, flatten all the enum constant references */
+        config.addConfig("tir:flatten_enum_refs", true);
+
         /**
          * Configure, at compile time, the system type aliases
          */
