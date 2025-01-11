@@ -1864,3 +1864,20 @@ public final class ContinueStatement : LabelControlStatement
         super(null);
     }
 }
+
+/**
+ * Represents a label
+ */
+public final class Label
+{
+    private string _n;
+    this(string name)
+    {
+        this._n = name;
+    }
+
+    public string name()
+    {
+        return this._n;
+    }
+}
