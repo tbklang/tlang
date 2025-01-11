@@ -1,3 +1,8 @@
+/**
+ * Core parser implementation
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.parsing.core;
 
 import tlang.misc.logging;
@@ -17,7 +22,9 @@ import tlang.compiler.symbols.typing.enums;
 import tlang.compiler.symbols.comments;
 import tlang.compiler.symbols.strings : StringExpression;
 
-// TODO: Technically we could make a core parser etc
+/** 
+ * The parser
+ */
 public final class Parser
 {
     /** 
@@ -51,7 +58,7 @@ public final class Parser
         /* TODO: Crash program if not */
         if (!isFine)
         {
-            throw new SyntaxError(this, symbol, token);
+            throw new SyntaxError(symbol, token);
             // expect("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
                     // string)(actualType) ~ " with " ~ token.toString());
         }
@@ -68,7 +75,7 @@ public final class Parser
     {
         ERROR(message);
 
-        throw new ParserException(this, ParserException.ParserErrorType.GENERAL_ERROR, message);
+        throw new ParserException(message);
     }
 
     /** 
@@ -1213,7 +1220,7 @@ public final class Parser
                 }
                 catch(ConvException e)
                 {
-                    throw new ParserException(this, ParserException.ParserErrorType.LITERAL_OVERFLOW, "Literal '"~numberLiteralStr~"' would overflow");
+                    throw new ParserException("Literal '"~numberLiteralStr~"' would overflow");
                 }
             }
 
