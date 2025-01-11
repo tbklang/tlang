@@ -1,3 +1,8 @@
+/**
+ * Label and label-related types
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.parsing.labels.types;
 
 import tlang.compiler.parsing.exceptions : ParserException;
