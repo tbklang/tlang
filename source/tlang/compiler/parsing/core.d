@@ -248,6 +248,8 @@ public final class Parser
                 expect(SymbolType.CCURLY, getCurrentToken());
                 nextToken();
 
+                // TODO: Do label checking here?
+
                 /* Create a branch node */
                 Branch branch = new Branch(currentBranchCondition, currentBranchBody);
                 parentToContainer(branch, currentBranchBody);
@@ -282,6 +284,8 @@ public final class Parser
                     expect(SymbolType.CCURLY, getCurrentToken());
                     nextToken();
 
+                    // TODO: Do label checking here?
+
                     /* Create a branch node */
                     Branch branch = new Branch(currentBranchCondition, currentBranchBody);
                     parentToContainer(branch, currentBranchBody);
@@ -294,6 +298,8 @@ public final class Parser
                     currentBranchBody = parseBody();
                     expect(SymbolType.CCURLY, getCurrentToken());
                     nextToken();
+
+                    // TODO: Do label checking here?
 
                     /* Create a branch node */
                     Branch branch = new Branch(null, currentBranchBody);
@@ -354,6 +360,7 @@ public final class Parser
         expect(SymbolType.CCURLY, getCurrentToken());
         nextToken();
 
+        // TODO: Do label checking here?
 
         /* Create a Branch node coupling the condition and body statements */
         Branch branch = new Branch(branchCondition, branchBody);
@@ -389,6 +396,8 @@ public final class Parser
         branchBody = parseBody();
         expect(SymbolType.CCURLY, getCurrentToken());
         nextToken();
+
+        // TODO: Do label checking here?
 
         /* Expect a `while` */
         expect(SymbolType.WHILE, getCurrentToken());
@@ -460,6 +469,8 @@ public final class Parser
         /* Expect an opening curly `{` and parse the body */
         expect(SymbolType.OCURLY, getCurrentToken());
         branchBody = parseBody();
+
+        // TODO: Do label checking here?
 
         /* Expect a closing curly and move on */
         expect(SymbolType.CCURLY, getCurrentToken());
