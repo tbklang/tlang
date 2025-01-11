@@ -1,3 +1,8 @@
+/**
+ * Core parser implementation
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.parsing.core;
 
 import tlang.misc.logging;
@@ -14,7 +19,9 @@ import std.string : format;
 import tlang.compiler.modman;
 import tlang.compiler.symbols.comments;
 
-// TODO: Technically we could make a core parser etc
+/** 
+ * The parser
+ */
 public final class Parser
 {
     /** 
@@ -48,7 +55,7 @@ public final class Parser
         /* TODO: Crash program if not */
         if (!isFine)
         {
-            throw new SyntaxError(this, symbol, token);
+            throw new SyntaxError(symbol, token);
             // expect("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
                     // string)(actualType) ~ " with " ~ token.toString());
         }
@@ -65,7 +72,7 @@ public final class Parser
     {
         ERROR(message);
 
-        throw new ParserException(this, ParserException.ParserErrorType.GENERAL_ERROR, message);
+        throw new ParserException(message);
     }
 
     /** 
@@ -1139,39 +1146,6 @@ public final class Parser
         return bruh;
     }
 
-
-    /**
-    * Only a subset of expressions are parsed without coming after
-    * an assignment, functioncall parameters etc
-    *
-    * Therefore instead of mirroring a lot fo what is in expression, for now atleast
-    * I will support everything using discard
-    *
-    * TODO: Remove discard and implement the needed mirrors
-    */
-    private DiscardStatement parseDiscard()
-    {
-        /* Consume the `discard` */
-        nextToken();
-
-        /* Parse the following expression */
-        Expression expression = parseExpression();
-
-        /* Expect a semi-colon */
-        expect(SymbolType.SEMICOLON, getCurrentToken());
-        nextToken();
-
-        /* Create a `discard` statement */
-        DiscardStatement discardStatement = new DiscardStatement(expression);
-
-        return discardStatement;
-    }
-
-    /**
-    * Parses the `new Class()` expression
-    */
-
-
     private CastedExpression parseCast()
     {
         CastedExpression castedExpression;
@@ -1230,8 +1204,6 @@ public final class Parser
     private Expression parseExpression()
     {
         WARN("parseExpression(): Enter");
-
-        import tlang.compiler.symbols.strings : StringExpression;
 
 
         /** 
@@ -1382,7 +1354,7 @@ public final class Parser
                         }
                         catch(ConvException e)
                         {
-                            throw new ParserException(this, ParserException.ParserErrorType.LITERAL_OVERFLOW, "Literal '"~numberLiteralStr~"' would overflow");
+                            throw new ParserException("Literal '"~numberLiteralStr~"' would overflow");
                         }
                     }
 
@@ -1471,7 +1443,8 @@ public final class Parser
                 
                 /* Add the string to the stack */
                 string str_lit = getCurrentToken().getToken();
-                addRetExp(StringExpression.buildUTF8FromLiteral(str_lit));
+                import tlang.compiler.parsing.strings;
+                addRetExp(buildUTF8FromLiteral(str_lit));
 
                 /* Get the next token */
                 nextToken();
@@ -2171,17 +2144,6 @@ public final class Parser
                         }
                     }
                     /**
-                     * If we have a `DiscardStatement`
-                     * then we must process its
-                     * contained expression
-                     */
-                    else if(cast(DiscardStatement)statement)
-                    {
-                        DiscardStatement dcrdStmt = cast(DiscardStatement)statement;
-
-                        parentToContainer(container, [dcrdStmt.getExpression()]);
-                    }
-                    /**
                      * If we have an `IfStatement`
                      * then extract its `Branch`
                      * object
@@ -2374,12 +2336,6 @@ public final class Parser
         {
             /* Parse the return statement */
             statement = parseReturn();
-        }
-        /* If it is a `discard` statement */
-        else if(symbol == SymbolType.DISCARD)
-        {
-            /* Parse the discard statement */
-            statement = parseDiscard();
         }
         /* If it is a dereference assigment (a `*`) */
         else if(symbol == SymbolType.STAR)
@@ -3005,71 +2961,6 @@ class myClass2
         assert(cast(Variable)variableEntity);
     }
     catch(TError)
-    {
-        assert(false);
-    }
-}
-
-/**
- * Discard statement test case
- */
-unittest
-{
-    string sourceCode = `
-module parser_discard;
-
-void function()
-{
-    discard function();
-}
-`;
-
-    File dummyFile;
-    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
-
-    try
-    {
-        compiler.doLex();
-        assert(true);
-    }
-    catch(LexerException e)
-    {
-        assert(false);
-    }
-    
-    try
-    {
-        compiler.doParse();
-        Program program = compiler.getProgram();
-
-        // There is only a single module in this program
-        Module modulle = program.getModules()[0];
-
-        /* Module name must be parser_discard */
-        assert(cmp(modulle.getName(), "parser_discard")==0);
-        TypeChecker tc = new TypeChecker(compiler);
-
-        
-        /* Find the function named `function` */
-        Entity func = tc.getResolver().resolveBest(modulle, "function");
-        assert(func);
-        assert(cast(Function)func); // Ensure it is a Funciton
-
-        /* Get the function's body */
-        Container funcContainer = cast(Container)func;
-        assert(funcContainer);
-        Statement[] functionStatements = funcContainer.getStatements();
-        assert(functionStatements.length == 1);
-
-        /* First statement should be a discard */
-        DiscardStatement discard = cast(DiscardStatement)functionStatements[0];
-        assert(discard);
-        
-        /* The statement being discarded should be a function call */
-        FunctionCall functionCall = cast(FunctionCall)discard.getExpression();
-        assert(functionCall);
-    }
-    catch(TError e)
     {
         assert(false);
     }

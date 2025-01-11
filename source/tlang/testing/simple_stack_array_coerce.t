@@ -9,7 +9,7 @@ void coerce(int* in)
 int function()
 {
     int[2] stackArr;
-    discard coerce(stackArr);
+    coerce(stackArr);
 
     return stackArr[0]+stackArr[1];
 }
