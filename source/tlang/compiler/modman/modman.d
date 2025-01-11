@@ -467,7 +467,7 @@ public final class ModuleManager
         if(actualType != expected)
         {
             // TODO: Make SyntaxError have a parser-less version for null-safety in the future
-            throw new SyntaxError(null, expected, got);
+            throw new SyntaxError(expected, got);
         }
     }
 
