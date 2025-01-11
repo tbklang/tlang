@@ -13,6 +13,7 @@ import tlang.compiler.core : Compiler;
 import std.string : format;
 import tlang.compiler.modman;
 import tlang.compiler.symbols.comments;
+import tlang.compiler.parsing.labels;
 
 // TODO: Technically we could make a core parser etc
 public final class Parser
@@ -82,6 +83,7 @@ public final class Parser
     {
         this.lexer = lexer;
         this.compiler = compiler;
+        this.labelman = new LabelManager();
     }
 
     /** 
