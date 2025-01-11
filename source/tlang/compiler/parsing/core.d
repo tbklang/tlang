@@ -65,7 +65,7 @@ public final class Parser
     {
         ERROR(message);
 
-        throw new ParserException(ParserException.ParserErrorType.GENERAL_ERROR, message);
+        throw new ParserException(message);
     }
 
     /** 
@@ -1352,7 +1352,7 @@ public final class Parser
                         }
                         catch(ConvException e)
                         {
-                            throw new ParserException(ParserException.ParserErrorType.LITERAL_OVERFLOW, "Literal '"~numberLiteralStr~"' would overflow");
+                            throw new ParserException("Literal '"~numberLiteralStr~"' would overflow");
                         }
                     }
 

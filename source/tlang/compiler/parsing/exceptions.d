@@ -9,15 +9,9 @@ import std.conv : to;
 
 public class ParserException : TError
 {
-    public enum ParserErrorType
+    this(string message)
     {
-        GENERAL_ERROR,
-        LITERAL_OVERFLOW
-    }
-
-    this(ParserErrorType errType = ParserErrorType.GENERAL_ERROR, string message = "")
-    {
-        super("ParserException("~to!(string)(errType)~"): "~message);
+        super("ParserException: "~message);
     }
 }
 
@@ -33,6 +27,6 @@ public final class SyntaxError : ParserException
         this.provided = getSymbolType(providedToken);
         this.providedToken = providedToken;
 
-        msg = "Syntax error: Expected "~to!(string)(expected)~" but got "~to!(string)(provided)~", see "~providedToken.toString();
+        super("Syntax error: Expected "~to!(string)(expected)~" but got "~to!(string)(provided)~", see "~providedToken.toString());
     }
 }
