@@ -14,10 +14,10 @@ int function()
     stackArr[0] = &val1;
     stackArr[1] = &val2;
     
-    discard coerce_good1(stackArr);
-    discard coerce_good2(stackArr);
-    discard coerce_good3(stackArr);
-    discard coerce_good4(stackArr);
+    coerce_good1(stackArr);
+    coerce_good2(stackArr);
+    coerce_good3(stackArr);
+    coerce_good4(stackArr);
 
     return val1+val2;
 }
