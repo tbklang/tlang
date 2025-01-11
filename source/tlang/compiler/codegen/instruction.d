@@ -714,26 +714,6 @@ public final class PointerDereferenceAssignmentInstruction : Instruction, IRende
     }
 }
 
-public final class DiscardInstruction : Instruction, IRenderable
-{
-    private Value exprInstr;
-
-    this(Value exprInstr)
-    {
-        this.exprInstr = exprInstr;
-    }
-
-    public Value getExpressionInstruction()
-    {
-        return exprInstr;
-    }
-
-    public string render()
-    {
-        return format("discard %s", tryRender(exprInstr));
-    }
-}
-
 public final class CastedValueInstruction : Value, IRenderable
 {
     /* The uncasted original instruction that must be executed-then-trimmed (casted) */
