@@ -1,3 +1,8 @@
+/**
+ * Core parser implementation
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.parsing.core;
 
 import tlang.misc.logging;
@@ -15,7 +20,9 @@ import tlang.compiler.modman;
 import tlang.compiler.symbols.comments;
 import tlang.compiler.parsing.labels;
 
-// TODO: Technically we could make a core parser etc
+/** 
+ * The parser
+ */
 public final class Parser
 {
     /** 
