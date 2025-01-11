@@ -138,6 +138,9 @@ public final class CompilerConfiguration
 
         /* Always warn about unused functions */
         config.addConfig("typecheck:warnUnusedFuncs", true);
+        
+        /* Default executable's name is `tlang.out` */
+        config.addConfig("emit:executable_output", "tlang.out");
 
         return config;
     }

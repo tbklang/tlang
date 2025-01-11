@@ -88,7 +88,75 @@ public final class CompilerException : TError
     }
 }
 
+import niknaks.functional : Result, ok, error;
+import std.exception : ErrnoException;
+
+
 public alias CompileResult = EmitResult;
+
+/** 
+ * Opens up the file at the provided path
+ * and reads all the data from it.
+ *
+ * Params:
+ *   filePath = the path to read from
+ * Returns: a `Result` that, in the happy-path
+ * would return a `string` and in the
+ * unhappy-path would return an `Exception`
+ * due to some I/O error that occurred
+ * during reading
+ */
+public Result!(string, Exception) grabData(string filePath)
+{
+    File sourceFileFile;
+    scope(exit)
+    {
+        sourceFileFile.close();
+    }
+
+    try
+    {
+        sourceFileFile.open(filePath);
+        ulong fileSize = sourceFileFile.size();
+        byte[] fileBytes;
+        fileBytes.length = fileSize;
+        fileBytes = sourceFileFile.rawRead(fileBytes);
+
+        return ok!(string, Exception)(cast(string)fileBytes);
+    }
+    catch(ErrnoException e)
+    {
+        return error!(Exception, string)(e);
+    }
+}
+
+/** 
+ * Constructs a new compiler instance pointed
+ * to the entry point module's file path
+ *
+ * Params:
+ *   path = the entry point module's file
+ * path
+ * Returns: a `Result` containing an instance
+ * of the `Compiler` if it opened successfully,
+ * and if not then the offending `Exception`
+ * that occurred
+ */
+public Result!(Compiler, Exception) forFile(string path)
+{
+    auto r_res = grabData(path);
+
+    if(r_res.is_error())
+    {
+        return error!(Exception, Compiler)(r_res.error());
+    }
+
+    import std.path : pathSplitter, buildPath;
+    File d = File.tmpfile();
+    Compiler c = new Compiler(r_res.ok(), path, d);
+
+    return ok!(Compiler, Exception)(c);
+}
 
 public class Compiler
 {
@@ -418,7 +486,9 @@ unittest
                         "source/tlang/testing/dotting/simple_func_2.t",
 
                         "source/tlang/testing/structs/simple_decl.t",
-                        "source/tlang/testing/structs/simple.t"
+                        "source/tlang/testing/structs/simple.t",
+                        
+                        "source/tlang/testing/simple_string.t"
                         ];
     foreach(string testFile; testFiles)
     {
