@@ -215,6 +215,8 @@ public final class Parser
 
     /**
      * Parses if statements
+     *
+     * Returns: an `IfStatement` AST node
      */
     private IfStatement parseIf()
     {
@@ -330,6 +332,11 @@ public final class Parser
         return ifStmt;
     }
 
+    /** 
+     * Parses a while loop
+     *
+     * Returns: a `WhileLoop` AST node
+     */
     private WhileLoop parseWhile()
     {
         WARN("parseWhile(): Enter");
