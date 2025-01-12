@@ -214,11 +214,8 @@ public final class Parser
 
 
     /**
-    * Parses if statements
-    *
-    * TODO: Check kanban
-    * TOOD: THis should return something
-    */
+     * Parses if statements
+     */
     private IfStatement parseIf()
     {
         WARN("parseIf(): Enter");
