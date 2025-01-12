@@ -19,6 +19,7 @@ import std.string : format;
 import tlang.compiler.modman;
 import tlang.compiler.symbols.comments;
 import tlang.compiler.symbols.comments.manager;
+import niknaks.functional : Optional;
 
 /** 
  * The parser
@@ -501,8 +502,6 @@ public final class Parser
 
         return assignment;
     }
-
-    import niknaks.functional : Optional;
 
     public Statement parseName(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
     {
