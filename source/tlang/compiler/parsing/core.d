@@ -36,7 +36,7 @@ public final class Parser
      * This is updated everytime
      * `nextToken()` is called
      */
-    private Token prevToken;
+    private Token prevToken; // FIXME: Remove this as we don't use it anymore
 
     /** 
      * The associated compiler
