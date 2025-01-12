@@ -49,10 +49,8 @@ public final class Parser
      * Params:
      *   lexer = the token source
      *   compiler = the compiler to be using
-     *
-     * FIXME: Remove null for `compiler`
      */
-    this(LexerInterface lexer, Compiler compiler = null)
+    this(LexerInterface lexer, Compiler compiler)
     {
         this.lexer = lexer;
         this.compiler = compiler;
