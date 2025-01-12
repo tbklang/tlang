@@ -18,6 +18,7 @@ import tlang.compiler.core : Compiler;
 import std.string : format;
 import tlang.compiler.modman;
 import tlang.compiler.symbols.comments;
+import tlang.compiler.symbols.comments.manager;
 
 /** 
  * The parser
@@ -41,6 +42,11 @@ public final class Parser
      * The associated compiler
      */
     private Compiler compiler;
+
+    /** 
+     * Comments management
+     */
+    private CommentManager cman;
 
     /**
     * Crashes the program if the given token is not a symbol
@@ -89,6 +95,7 @@ public final class Parser
     {
         this.lexer = lexer;
         this.compiler = compiler;
+        this.cman = new CommentManager();
     }
 
     /** 
@@ -2258,13 +2265,15 @@ public final class Parser
         return statement;
     }
     
+    /** 
+     * Parses a comment
+     */
     private void parseComment()
     {
         WARN("parseComment(): Enter");
 
         Token curCommentToken = getCurrentToken();
-
-        // pushComment(curCommentToken);
+        cman.pushComment(curCommentToken);
 
         // TODO: Do something here like placing it on some kind of stack
         DEBUG("Comment is: '"~curCommentToken.getToken()~"'");
