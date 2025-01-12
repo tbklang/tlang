@@ -137,7 +137,7 @@ public final class Parser
      * which to search with in. This method will recursively search
      * down the given container and look for any statements which
      * are a kind-of (`isBaseOf`) the requested type. It will return
-     * `true` if any macthes are found.
+     * `true` if any matches are found.
      *
      * The container itself is not considered in this type check.
      *
