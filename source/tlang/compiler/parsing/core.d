@@ -42,22 +42,23 @@ public final class Parser
      */
     private Compiler compiler;
 
-    /**
-    * Crashes the program if the given token is not a symbol
-    * the same as the givne expected one
-    */
+    /** 
+     * Crashes the program if the given token is
+     * not a symbol the same as the given expected
+     * one
+     *
+     * Params:
+     *   symbol = the expected symbol type
+     *   token = the received token
+     */
     public void expect(SymbolType symbol, Token token)
     {
-        /* TODO: Do checking here to see if token is a type of given symbol */
         SymbolType actualType = getSymbolType(token);
         bool isFine = actualType == symbol;
 
-        /* TODO: Crash program if not */
         if (!isFine)
         {
             throw new SyntaxError(symbol, token);
-            // expect("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
-                    // string)(actualType) ~ " with " ~ token.toString());
         }
     }
 
