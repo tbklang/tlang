@@ -6,6 +6,7 @@ tlang.out
 
 # Build files
 tlang-test-library
+libtlang.a
 
 # Package management
 .dub/
