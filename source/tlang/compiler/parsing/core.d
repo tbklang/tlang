@@ -43,6 +43,22 @@ public final class Parser
     private Compiler compiler;
 
     /** 
+     * Constructs a new parser with the given lexer
+     * from which tokens can be sourced from
+     *
+     * Params:
+     *   lexer = the token source
+     *   compiler = the compiler to be using
+     *
+     * FIXME: Remove null for `compiler`
+     */
+    this(LexerInterface lexer, Compiler compiler = null)
+    {
+        this.lexer = lexer;
+        this.compiler = compiler;
+    }
+
+    /** 
      * Crashes the program if the given token is
      * not a symbol the same as the given expected
      * one
@@ -74,22 +90,6 @@ public final class Parser
         ERROR(message);
 
         throw new ParserException(message);
-    }
-
-    /** 
-     * Constructs a new parser with the given lexer
-     * from which tokens can be sourced from
-     *
-     * Params:
-     *   lexer = the token source
-     *   compiler = the compiler to be using
-     *
-     * FIXME: Remove null for `compiler`
-     */
-    this(LexerInterface lexer, Compiler compiler = null)
-    {
-        this.lexer = lexer;
-        this.compiler = compiler;
     }
 
     /** 
