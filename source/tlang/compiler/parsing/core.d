@@ -511,6 +511,7 @@ public final class Parser
         /* If there are any comments available then pop it off now */
         Optional!(Comment) c_opt = cman.popComment();
 
+        /* Upon return set the comment, if there is one */
         scope(exit)
         {
             if(c_opt.isPresent())
