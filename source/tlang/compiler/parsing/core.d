@@ -62,6 +62,7 @@ public final class Parser
     {
         this.lexer = lexer;
         this.compiler = compiler;
+        this.cman = new CommentManager();
     }
 
     /** 
