@@ -192,35 +192,6 @@ public final class Parser
         this.lexer.nextToken();
     }
 
-    /** 
-     * Sets the `Comment` if and only if
-     * the previous token was a comment
-     *
-     * Params:
-     *   comment = the found comment
-     * Returns: `true` if a comment was
-     * found, otherwise `false`
-     */
-    private bool getAssociatedComment(ref Comment comment)
-    {
-        // TODO: null check? on this.prevToken
-
-        // If the previous token was a comment
-        if
-        (
-            getSymbolType(this.prevToken) == SymbolType.SINGLE_LINE_COMMENT ||
-            getSymbolType(this.prevToken) == SymbolType.MULTI_LINE_COMMENT
-        )
-        {
-            DEBUG(format("Parsing a comment from token: '%s'", this.prevToken));
-            comment = Comment.fromToken(this.prevToken);
-            return true;
-        }
-
-        return false;
-    }
-
-
     /**
     * Parses if statements
     *
@@ -532,22 +503,20 @@ public final class Parser
         return assignment;
     }
 
+    import niknaks.functional : Optional;
+
     public Statement parseName(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
     {
         Statement ret;
 
-        /* If there are any comments available then pop them off now */
-        Comment potComment;
-        if(getAssociatedComment(potComment))
-        {
-            DEBUG(format("Found associated comment: %s", potComment));
-        }
+        /* If there are any comments available then pop it off now */
+        Optional!(Comment) c_opt = cman.popComment();
 
         scope(exit)
         {
-            if(potComment)
+            if(c_opt.isPresent())
             {
-                ret.setComment(potComment);
+                ret.setComment(c_opt.get());
             }
         }
 
