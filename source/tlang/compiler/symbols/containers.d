@@ -486,6 +486,7 @@ public class Clazz : Type, Container
 
 public final class Interface : Type, Container
 {
+    private string[] _sis; // super-interfaces
     private Statement[] statements;
 
     // TODO: Implement me
@@ -495,6 +496,16 @@ public final class Interface : Type, Container
 
         /* Weighted as 0 */
         weight = 0;
+    }
+
+    public string[] superInterfaces()
+    {
+        return _sis;
+    }
+
+    public void addSuperInterface(string iname)
+    {
+        _sis ~= iname;
     }
 
     public void addStatement(Statement statement)
