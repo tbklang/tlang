@@ -17,4 +17,20 @@ public struct TypeSignature
         this._name = name;
         this._tl = typeList;
     }
+
+    public string name()
+    {
+        return this._name;
+    }
+
+    // TODO: make this unmodifiable (the returned list)
+    public Type[] typeList()
+    {
+        return this._tl;
+    }
+
+    public bool opEquals(TypeSignature rhs)
+    {
+        return this._name == rhs.name() && this._tl == rhs.typeList();
+    }
 }
