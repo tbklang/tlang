@@ -76,7 +76,38 @@ public bool doesImplement(TypeChecker tc, Clazz cl, Interfaze i)
         }
     }
 
-    return false;
+    // now compare each by name basically
+    for(size_t i_idx = 0; i_idx < i_tss.length; i_idx++)
+    {
+        auto i_ts = i_tss[i_idx];
+
+        
+        TypeSignature c_ts;
+        bool found;
+        c_lp: for(size_t c_idx = 0; c_idx < c_tss.length; c_idx++)
+        {
+            c_ts = c_tss[c_idx];
+
+            if(i_ts.name() == c_ts.name())
+            {
+                found = true;
+                break c_lp;
+            }
+        }
+
+        if(!found)
+        {
+            DEBUG(format("No matching type signatures found for '%s'", i_ts));
+            return false;
+        }
+
+        if(i_ts != c_ts)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 import tlang.compiler.typecheck.core : TypeChecker;
@@ -91,7 +122,10 @@ public TypeSignature fromFunction(TypeChecker tc, Function f)
         Type vp_t = tc.getType(f, vp.getType());
         tl ~= vp_t;
     }
-    return TypeSignature(tc, f.getName(), tc.getType(f, f.getType()), tl);
+    Type retType = tc.getType(f, f.getType());
+    assert(retType);
+    DEBUG("No (rettype): ", retType);
+    return TypeSignature(tc, f.getName(), retType, tl);
 }
 
 version(unittest)
@@ -102,8 +136,8 @@ version(unittest)
     import tlang.compiler.core;
     import std.stdio : File;
 
-    import tlang.compiler.symbols.containers : Module;
-    import tlang.compiler.symbols.data : Program, Function;
+    import tlang.compiler.symbols.containers : Module, Clazz;
+    import tlang.compiler.symbols.data : Program, Function, VariableParameter;
 }
 
 unittest
@@ -119,6 +153,22 @@ unittest
     Module m = p.getModules()[0];
 
     // create an interface with one method
-    // Interfaze i = new Interfaze();
-    // Function f_add = new Function("+", "ubyte")
+    Interfaze i = new Interfaze("addable");
+    VariableParameter[] f_vp = [new VariableParameter("ubyte", "a"), new VariableParameter("ubyte", "b")];
+    Function f_add = new Function("+", "ubyte", [], f_vp);
+    f_vp[0].parentTo(f_add);
+    f_vp[1].parentTo(f_add);
+    i.addStatement(f_add);
+    
+    // create a class and add a function implementation
+    Clazz cl = new Clazz("myImpl");
+
+    VariableParameter[] cl_f_vp = [new VariableParameter("ubyte", "a"), new VariableParameter("ubyte", "b")];
+    Function f_add_impl = new Function("+", "ubyte", [], cl_f_vp);
+    cl_f_vp[0].parentTo(f_add_impl);
+    cl_f_vp[1].parentTo(f_add_impl);
+    cl.addStatement(f_add_impl);
+
+
+    assert(doesImplement(tc, cl, i));
 }
