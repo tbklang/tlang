@@ -9,9 +9,31 @@ import tlang.compiler.typecheck.matching.types;
 
 import tlang.compiler.symbols.containers : Clazz, Interfaze;
 
+import tlang.misc.logging;
+import std.string : format;
+
+// TODO: For loop prevention have a local variable here for visitation
+private bool[Interfaze] _visited;
 
 public Optional!(Clazz[]) findImplementations(TypeChecker tc, Interfaze i)
 {
+    // create entry with default `false`
+    // if it doesn't exist yet
+    if(i !in _visited)
+    {
+        _visited[i] = false;
+    }
+
+    // if already visited
+    if(_visited[i])
+    {
+        // FIXME: place error here
+        ERROR(format("Cyclic interface dependency found. Interface '%s' has aready been visited.", i));
+        assert(false);
+    }
+
+    _visited[i] = true;
+
     // check first for super-interfaces and process those
     // first; bottom of type-tree last
     string[] superIs = i.superInterfaces();
@@ -22,6 +44,8 @@ public Optional!(Clazz[]) findImplementations(TypeChecker tc, Interfaze i)
             Type super_t = tc.getType(i, super_i);
             // TODO: Check here that `super_t` refers to an interface type and throw error if not
             Interfaze super_t_i = cast(Interfaze)super_t;
+
+
             findImplementations(tc, super_t_i);
         }
 
