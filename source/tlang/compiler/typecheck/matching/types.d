@@ -18,16 +18,24 @@ public struct TypeSignature
     private string _name;
     private Type[] _tl;
 
-    package this(TypeChecker tc, string name, Type[] typeList)
+    private Type _rt;
+
+    package this(TypeChecker tc, string name, Type returnType, Type[] typeList)
     {
         this._tc = tc;
         this._name = name;
+        this._rt = returnType;
         this._tl = typeList;
     }
 
     public string name()
     {
         return this._name;
+    }
+
+    public Type returnType()
+    {
+        return this._rt;
     }
 
     // TODO: make this unmodifiable (the returned list)
@@ -43,6 +51,37 @@ public struct TypeSignature
     public Result!(NONE_TYPE, string) cmp(TypeSignature rhs)
     {
         import std.string : format;
+
+        if(this._name != rhs.name())
+        {
+            return error!(string, NONE_TYPE)
+            (
+                format
+                (
+                    "Mismatched type signature names, '%s' != '%s'",
+                    name(),
+                    rhs.name()
+                )
+            );
+        }
+
+        Type this_rt = returnType();
+        Type rhs_rt = rhs.returnType();
+        if(!_tc.isSameType(this_rt, rhs_rt))
+        {
+            return error!(string, NONE_TYPE)
+            (
+                format
+                (
+                    "Mismatch between type %s (returned by '%s') and %s (returned by '%s')",
+                    this_rt,
+                    name(),
+                    rhs_rt,
+                    rhs.name()
+                )
+            );
+        }
+
         if(this._tl.length != rhs.typeList().length)
         {
             return error!(string, NONE_TYPE)
@@ -80,18 +119,7 @@ public struct TypeSignature
             }
         }
 
-        if(this._name != rhs.name())
-        {
-            return error!(string, NONE_TYPE)
-            (
-                format
-                (
-                    "Mismatched type signature names, '%s' != '%s'",
-                    name(),
-                    rhs.name()
-                )
-            );
-        }
+        
 
         return ok!(NONE_TYPE, string)(NONE_TYPE.init);
     }
@@ -124,28 +152,30 @@ unittest
     Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, File.tmpfile());
     TypeChecker tc = new TypeChecker(compiler);
     Type[] t1_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
-    TypeSignature t1 = TypeSignature(tc, "+", t1_tl);
+    TypeSignature t1 = TypeSignature(tc, "+", getBuiltInType(null, null, "ubyte"), t1_tl);
 
     Type[] t2_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
-    TypeSignature t2 = TypeSignature(tc, "+", t2_tl);
+    TypeSignature t2 = TypeSignature(tc, "+", getBuiltInType(null, null, "ubyte"), t2_tl);
 
     assert(t1 == t2);
 }
 
 /**
- * Types don't match
+ * Types match and name matches
+ * but return/evaluation type
+ * doesn't
  */
 unittest
 {
     string sourceFile = "source/tlang/testing/empty.t";
-    
+
     Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, File.tmpfile());
     TypeChecker tc = new TypeChecker(compiler);
     Type[] t1_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
-    TypeSignature t1 = TypeSignature(tc, "+", t1_tl);
+    TypeSignature t1 = TypeSignature(tc, "+", getBuiltInType(null, null, "ubyte"), t1_tl);
 
-    Type[] t2_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "byte")];
-    TypeSignature t2 = TypeSignature(tc, "+", t2_tl);
+    Type[] t2_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
+    TypeSignature t2 = TypeSignature(tc, "+", getBuiltInType(null, null, "byte"), t2_tl);
 
     assert(t1 != t2);
 }
@@ -160,10 +190,28 @@ unittest
     Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, File.tmpfile());
     TypeChecker tc = new TypeChecker(compiler);
     Type[] t1_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
-    TypeSignature t1 = TypeSignature(tc, "+", t1_tl);
+    TypeSignature t1 = TypeSignature(tc, "+", getBuiltInType(null, null, "ubyte"), t1_tl);
+
+    Type[] t2_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "byte")];
+    TypeSignature t2 = TypeSignature(tc, "+", getBuiltInType(null, null, "ubyte"), t2_tl);
+
+    assert(t1 != t2);
+}
+
+/**
+ * Types don't match
+ */
+unittest
+{
+    string sourceFile = "source/tlang/testing/empty.t";
+    
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, File.tmpfile());
+    TypeChecker tc = new TypeChecker(compiler);
+    Type[] t1_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
+    TypeSignature t1 = TypeSignature(tc, "+", getBuiltInType(null, null, "ubyte"), t1_tl);
 
     Type[] t2_tl = [getBuiltInType(null, null, "ubyte")];
-    TypeSignature t2 = TypeSignature(tc, "+", t2_tl);
+    TypeSignature t2 = TypeSignature(tc, "+", getBuiltInType(null, null, "ubyte"), t2_tl);
 
     assert(t1 != t2);
 }
@@ -178,10 +226,10 @@ unittest
     Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, File.tmpfile());
     TypeChecker tc = new TypeChecker(compiler);
     Type[] t1_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
-    TypeSignature t1 = TypeSignature(tc, "+", t1_tl);
+    TypeSignature t1 = TypeSignature(tc, "+", getBuiltInType(null, null, "ubyte"), t1_tl);
 
     Type[] t2_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
-    TypeSignature t2 = TypeSignature(tc, "-", t2_tl);
+    TypeSignature t2 = TypeSignature(tc, "-", getBuiltInType(null, null, "ubyte"), t2_tl);
 
     assert(t1 != t2);
 }
