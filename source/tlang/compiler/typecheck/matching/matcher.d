@@ -61,7 +61,21 @@ public bool doesImplement(TypeChecker tc, Clazz cl, Interfaze i)
         i_tss ~= ts;
     }
 
-    // i.
+    // obtain all class's type sigantures of its
+    // methods (TODO: How will `this` work?, probably
+    // parse-time it should have `this` formal
+    // parameter inserted as the first argument?)
+    TypeSignature[] c_tss;
+    foreach(Statement s; cl.getStatements())
+    {
+        Function f = cast(Function)s;
+        if(f) // TODO: Filter to only non-static functions
+        {
+            TypeSignature ts = fromFunction(tc, f);
+            c_tss ~= ts;
+        }
+    }
+
     return false;
 }
 
@@ -82,5 +96,5 @@ public TypeSignature fromFunction(TypeChecker tc, Function f)
 
 unittest
 {
-    
+    // TypeChecker tc = new TypeChecker()
 }
