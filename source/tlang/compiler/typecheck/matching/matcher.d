@@ -91,10 +91,34 @@ public TypeSignature fromFunction(TypeChecker tc, Function f)
         Type vp_t = tc.getType(f, vp.getType());
         tl ~= vp_t;
     }
-    return TypeSignature(tc, f.getName(), tl);
+    return TypeSignature(tc, f.getName(), tc.getType(f, f.getType()), tl);
+}
+
+version(unittest)
+{
+    import tlang.compiler.symbols.typing.core : Type;
+    import tlang.compiler.symbols.typing.builtins : getBuiltInType;
+    import tlang.compiler.typecheck.core : TypeChecker;
+    import tlang.compiler.core;
+    import std.stdio : File;
+
+    import tlang.compiler.symbols.containers : Module;
+    import tlang.compiler.symbols.data : Program, Function;
 }
 
 unittest
 {
-    // TypeChecker tc = new TypeChecker()
+    string sourceFile = "source/tlang/testing/empty.t";
+    
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, File.tmpfile());
+    TypeChecker tc = new TypeChecker(compiler);
+    compiler.doLex();
+    compiler.doParse();
+
+    Program p = tc.getProgram();
+    Module m = p.getModules()[0];
+
+    // create an interface with one method
+    // Interfaze i = new Interfaze();
+    // Function f_add = new Function("+", "ubyte")
 }
