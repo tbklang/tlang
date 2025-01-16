@@ -484,6 +484,10 @@ public class Clazz : Type, Container
     
 }
 
+public final class Interface : Type, Container
+{
+    // TODO: Implement me
+}
 
 /**
  * Test the `MCloneable`-ity support of `Struct`
