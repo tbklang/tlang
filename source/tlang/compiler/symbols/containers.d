@@ -510,12 +510,18 @@ public final class Interfaze : Type, Container
 
     public void addStatement(Statement statement)
     {
+        Function f = cast(Function)statement;
+        assert(f); // only functions should ever be added to interfaces
+        // assert(f.getStatements().length == 0); // should have no body (FIXME: Disabled as parameters are part of the body)
         this.statements ~= statement;
     }
 
     public void addStatements(Statement[] statements)
     {
-        this.statements ~= statements;
+        foreach(Statement s; statements)
+        {
+            addStatement(s);
+        }
     }
 
     public Statement[] getStatements()
