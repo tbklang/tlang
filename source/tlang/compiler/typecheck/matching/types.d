@@ -4,15 +4,17 @@ import tlang.compiler.symbols.typing.core : Type;
 
 /** 
  * Describes a type signature
- * which is just a list of
- * types in a given order
+ * which is a name coupled with
+ * an ordered list of types
  */
 public struct TypeSignature
 {
+    private string _name;
     private Type[] _tl;
 
-    this(Type[] typeList)
+    this(string name, Type[] typeList)
     {
+        this._name = name;
         this._tl = typeList;
     }
 }

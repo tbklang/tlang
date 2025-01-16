@@ -15,7 +15,7 @@ import std.string : format;
 // TODO: For loop prevention have a local variable here for visitation
 private bool[Interfaze] _visited;
 
-public Optional!(Clazz[]) findImplementations(TypeChecker tc, Interfaze i)
+public bool doesImplement(TypeChecker tc, Clazz cl, Interfaze i)
 {
     // create entry with default `false`
     // if it doesn't exist yet
@@ -46,17 +46,27 @@ public Optional!(Clazz[]) findImplementations(TypeChecker tc, Interfaze i)
             Interfaze super_t_i = cast(Interfaze)super_t;
 
 
-            findImplementations(tc, super_t_i);
+            doesImplement(tc, cl, super_t_i);
         }
 
     }
 
+    // obtain all type sigantures of all functions in
+    // the interface
+    TypeSignature[] i_tss;
+    foreach(Statement s; i.getStatements())
+    {
+        Function f = cast(Function)s;
+        TypeSignature ts = fromFunction(tc, f);
+        i_tss ~= ts;
+    }
+
     // i.
-    return Optional!(Clazz[]).empty();
+    return false;
 }
 
 import tlang.compiler.typecheck.core : TypeChecker;
-import tlang.compiler.symbols.data : Function;
+import tlang.compiler.symbols.data : Function, Statement;
 import tlang.compiler.symbols.typing.core : Type;
 public TypeSignature fromFunction(TypeChecker tc, Function f)
 {
@@ -67,7 +77,7 @@ public TypeSignature fromFunction(TypeChecker tc, Function f)
         Type vp_t = tc.getType(f, vp.getType());
         tl ~= vp_t;
     }
-    return TypeSignature(tl);
+    return TypeSignature(f.getName(), tl);
 }
 
 unittest
