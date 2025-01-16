@@ -101,6 +101,24 @@ unittest
 }
 
 /**
+ * Types don't match
+ */
+unittest
+{
+    string sourceFile = "source/tlang/testing/empty.t";
+    
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, File.tmpfile());
+    TypeChecker tc = new TypeChecker(compiler);
+    Type[] t1_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
+    TypeSignature t1 = TypeSignature(tc, "+", t1_tl);
+
+    Type[] t2_tl = [getBuiltInType(null, null, "ubyte")];
+    TypeSignature t2 = TypeSignature(tc, "+", t2_tl);
+
+    assert(t1 != t2);
+}
+
+/**
  * Types match but names don't match
  */
 unittest
