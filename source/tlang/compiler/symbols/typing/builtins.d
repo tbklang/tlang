@@ -12,20 +12,6 @@ import tlang.compiler.typecheck.core;
 import std.conv : to;
 import tlang.compiler.symbols.data : Container;
 
-private __gshared Type BUILTIN_INT = new Integer("int", 4, true);
-private __gshared Type BUILTIN_UINT = new Integer("uint", 4, false);
-private __gshared Type BUILTIN_LONG = new Integer("long", 8, true);
-private __gshared Type BUILTIN_ULONG = new Integer("ulong", 8, false);
-private __gshared Type BUILTIN_SHORT = new Integer("short", 2, true);
-private __gshared Type BUILTIN_USHORT = new Integer("ushort", 2, false);
-private __gshared Type BUILTIN_BYTE = new Integer("byte", 1, true);
-private __gshared Type BUILTIN_UBYTE = new Integer("ubyte", 1, false);
-
-private __gshared Type BUILTIN_FLOAT = new Float("float", 4);
-private __gshared Type BUILTIN_DOUBLE = new Float("double", 8);
-
-private __gshared Type BUILTIN_VOID = new Void();
-
 /**
 * TODO: We should write spec here like I want int and stuff of proper size so imma hard code em
 * no machine is good if int is not 4, as in imagine short being max addressable unit
@@ -51,66 +37,65 @@ public Type getBuiltInType(TypeChecker tc, Container container, string typeStrin
     /* `int`, signed (2-complement) */
     if(cmp(typeString, "int") == 0)
     {
-        return BUILTIN_INT;
+        return new Integer("int", 4, true);
     }
     /* `uint` unsigned */
     else if(cmp(typeString, "uint") == 0)
     {
-        return BUILTIN_UINT;
+        return new Integer("uint", 4, false);
     }
     /* `long`, signed (2-complement) */
     else if(cmp(typeString, "long") == 0)
     {
-        return BUILTIN_LONG;
+        return new Integer("long", 8, true);
     }
     /* `ulong` unsigned */
     else if(cmp(typeString, "ulong") == 0)
     {
-        return BUILTIN_ULONG;
+        return new Integer("ulong", 8, false);
     }
     /* `short`, signed (2-complement) */
     else if(cmp(typeString, "short") == 0)
     {
-        return BUILTIN_SHORT;
+        return new Integer("short", 2, true);
     }
     /* `ushort` unsigned */
     else if(cmp(typeString, "ushort") == 0)
     {
-        return BUILTIN_USHORT;
+        return new Integer("ushort", 2, false);
     }
     /* `byte`, signed (2-complement) */
     else if(cmp(typeString, "byte") == 0)
     {
-        return BUILTIN_BYTE;
+        return new Integer("byte", 1, true);
     }
     /* `ubyte` unsigned */
     else if(cmp(typeString, "ubyte") == 0)
     {
-        return BUILTIN_UBYTE;
+        return new Integer("ubyte", 1, false);
     }
     /* `void` */
     else if (cmp(typeString, "void") == 0)
     {
-        return BUILTIN_VOID;
+        return new Void();
     }
     /* TODO: Decide on these (floats and doubles need to be specced out) */
     /* `float` */
     else if(cmp(typeString, "float") == 0)
     {
-        return BUILTIN_FLOAT;
+        return new Float("float", 4);
     }
     /* `double` */
     else if(cmp(typeString, "double") == 0)
     {
-        return BUILTIN_DOUBLE;
+        return new Float("double", 8);
     }
     
     
     /* TODO: What do we want? Char enforcement is kind of cringe I guess */
-    /* TODO: This is then a type alias, this could be performed at meta-processor */
     else if(cmp(typeString, "char") == 0)
     {
-        return getBuiltInType(tc, container, "ubyte");
+        return new Integer("ubyte", 1, false);
     }
     /* Stack-based array handling `<componentType>[<number>]` */
     else if(isStackArray(typeString))
