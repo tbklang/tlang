@@ -64,13 +64,14 @@ version(unittest)
 }
 
 
+/**
+ * Types match and name matches
+ */
 unittest
 {
     string sourceFile = "source/tlang/testing/empty.t";
-    File outFile;
-    outFile.open("tlangout.c", "w");
 
-    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, outFile);
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, File.tmpfile());
     TypeChecker tc = new TypeChecker(compiler);
     Type[] t1_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
     TypeSignature t1 = TypeSignature(tc, "+", t1_tl);
@@ -79,4 +80,40 @@ unittest
     TypeSignature t2 = TypeSignature(tc, "+", t2_tl);
 
     assert(t1 == t2);
+}
+
+/**
+ * Types don't match
+ */
+unittest
+{
+    string sourceFile = "source/tlang/testing/empty.t";
+    
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, File.tmpfile());
+    TypeChecker tc = new TypeChecker(compiler);
+    Type[] t1_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
+    TypeSignature t1 = TypeSignature(tc, "+", t1_tl);
+
+    Type[] t2_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "byte")];
+    TypeSignature t2 = TypeSignature(tc, "+", t2_tl);
+
+    assert(t1 != t2);
+}
+
+/**
+ * Types match but names don't match
+ */
+unittest
+{
+    string sourceFile = "source/tlang/testing/empty.t";
+    
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, File.tmpfile());
+    TypeChecker tc = new TypeChecker(compiler);
+    Type[] t1_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
+    TypeSignature t1 = TypeSignature(tc, "+", t1_tl);
+
+    Type[] t2_tl = [getBuiltInType(null, null, "ubyte"), getBuiltInType(null, null, "ubyte")];
+    TypeSignature t2 = TypeSignature(tc, "-", t2_tl);
+
+    assert(t1 != t2);
 }
