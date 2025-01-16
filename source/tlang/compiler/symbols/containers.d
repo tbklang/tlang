@@ -484,7 +484,7 @@ public class Clazz : Type, Container
     
 }
 
-public final class Interface : Type, Container
+public final class Interfaze : Type, Container
 {
     private string[] _sis; // super-interfaces
     private Statement[] statements;
@@ -516,6 +516,24 @@ public final class Interface : Type, Container
     public void addStatements(Statement[] statements)
     {
         this.statements ~= statements;
+    }
+
+    public Statement[] getStatements()
+    {
+        // TODO: Holy naai this is expensive
+        return weightReorder(statements);
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        // FIXME: Implement me
+        assert(false);
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        // FIXME: Implement me
+        assert(false);
     }
 }
 
