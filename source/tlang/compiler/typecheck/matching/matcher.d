@@ -91,7 +91,7 @@ public TypeSignature fromFunction(TypeChecker tc, Function f)
         Type vp_t = tc.getType(f, vp.getType());
         tl ~= vp_t;
     }
-    return TypeSignature(f.getName(), tl);
+    return TypeSignature(tc, f.getName(), tl);
 }
 
 unittest
