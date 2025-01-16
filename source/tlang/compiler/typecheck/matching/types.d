@@ -3,6 +3,9 @@ module tlang.compiler.typecheck.matching.types;
 import tlang.compiler.symbols.typing.core : Type;
 import tlang.compiler.typecheck.core : TypeChecker;
 
+import niknaks.functional : Result, ok, error;
+import tlang.misc.logging;
+
 /** 
  * Describes a type signature
  * which is a name coupled with
@@ -33,11 +36,26 @@ public struct TypeSignature
         return this._tl;
     }
 
-    public bool opEquals(TypeSignature rhs)
+    // TODO: Return a Result!(void, string) where
+    // in the case of an error we put the error text
+    // in there?
+    private alias NONE_TYPE = string;
+    public Result!(NONE_TYPE, string) cmp(TypeSignature rhs)
     {
+        import std.string : format;
         if(this._tl.length != rhs.typeList().length)
         {
-            return false;
+            return error!(string, NONE_TYPE)
+            (
+                format
+                (
+                    "Mismatch between type lists for signatures '%s' (%d types) and '%s' (%d types)",
+                    name(),
+                    typeList().length,
+                    rhs.name(),
+                    rhs.typeList().length
+                )
+            );
         }
 
         for(size_t i = 0; i < this._tl.length; i++)
@@ -46,11 +64,43 @@ public struct TypeSignature
             Type rhs_t = rhs.typeList()[i];
             if(!_tc.isSameType(this_t, rhs_t))
             {
-                return false;
+                return error!(string, NONE_TYPE)
+                (
+                    format
+                    (
+                        "Type signature '%s' has type %s at %d but type signature '%s' has type %s at %d",
+                        name(),
+                        this_t,
+                        i,
+                        rhs.name(),
+                        rhs_t,
+                        i
+                    )
+                );
             }
         }
 
-        return this._name == rhs.name();
+        if(this._name != rhs.name())
+        {
+            return error!(string, NONE_TYPE)
+            (
+                format
+                (
+                    "Mismatched type signature names, '%s' != '%s'",
+                    name(),
+                    rhs.name()
+                )
+            );
+        }
+
+        return ok!(NONE_TYPE, string)(NONE_TYPE.init);
+    }
+
+    public bool opEquals(TypeSignature rhs)
+    {
+        auto res = cmp(rhs);
+        DEBUG(res);
+        return res.is_okay();
     }
 }
 
