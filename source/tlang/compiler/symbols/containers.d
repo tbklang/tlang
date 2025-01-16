@@ -486,7 +486,23 @@ public class Clazz : Type, Container
 
 public final class Interface : Type, Container
 {
+    private Statement[] statements;
+
     // TODO: Implement me
+    this()
+    {
+
+    }
+
+    public void addStatement(Statement statement)
+    {
+        this.statements ~= statement;
+    }
+
+    public void addStatements(Statement[] statements)
+    {
+        this.statements ~= statements;
+    }
 }
 
 /**
