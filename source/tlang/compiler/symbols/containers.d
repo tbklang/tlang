@@ -489,9 +489,12 @@ public final class Interface : Type, Container
     private Statement[] statements;
 
     // TODO: Implement me
-    this()
+    this(string name)
     {
+        super(name);
 
+        /* Weighted as 0 */
+        weight = 0;
     }
 
     public void addStatement(Statement statement)
