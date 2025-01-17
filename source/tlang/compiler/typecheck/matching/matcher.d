@@ -12,12 +12,14 @@ import tlang.compiler.symbols.containers : Clazz, Interfaze;
 import tlang.misc.logging;
 import std.string : format;
 
+import niknaks.functional : Result, ok, error;
+
 // TODO: For loop prevention have a local variable here for visitation
 private bool[Interfaze] _visited;
 
 // TODO: In future don't use a visitation map, just create one
 // in the below function and then pass it into `doesImplement0`
-public bool doesImplement(TypeChecker tc, Clazz cl, Interfaze i)
+public Result!(bool, string) doesImplement(TypeChecker tc, Clazz cl, Interfaze i)
 {
     scope(exit)
     {
@@ -27,7 +29,7 @@ public bool doesImplement(TypeChecker tc, Clazz cl, Interfaze i)
     return doesImplement0(tc, cl, i);
 }
 
-private bool doesImplement0(TypeChecker tc, Clazz cl, Interfaze i)
+private Result!(bool, string) doesImplement0(TypeChecker tc, Clazz cl, Interfaze i)
 {
     // create entry with default `false`
     // if it doesn't exist yet
@@ -39,9 +41,7 @@ private bool doesImplement0(TypeChecker tc, Clazz cl, Interfaze i)
     // if already visited
     if(_visited[i])
     {
-        // FIXME: place error here
-        ERROR(format("Cyclic interface dependency found. Interface '%s' has aready been visited.", i));
-        assert(false);
+        return error!(string, bool)(format("Cyclic interface dependency found. Interface '%s' has aready been visited.", i));
     }
 
     _visited[i] = true;
@@ -62,7 +62,7 @@ private bool doesImplement0(TypeChecker tc, Clazz cl, Interfaze i)
 
             if(!doesImplement(tc, cl, super_t_i))
             {
-                ERROR
+                return error!(string, bool)
                 (
                     format
                     (
@@ -72,7 +72,6 @@ private bool doesImplement0(TypeChecker tc, Clazz cl, Interfaze i)
                         i.getName()
                     )
                 );
-                return false;
             }
         }
 
@@ -124,17 +123,16 @@ private bool doesImplement0(TypeChecker tc, Clazz cl, Interfaze i)
 
         if(!found)
         {
-            DEBUG(format("No matching type signatures found for '%s'", i_ts));
-            return false;
+            return error!(string, bool)(format("No matching type signatures found for '%s'", i_ts));
         }
 
-        if(i_ts != c_ts)
+        if(i_ts != c_ts) // TODO: Call cmp on the TypeSignature here and pop out its Result
         {
-            return false;
+            return error!(string, bool)(format("Mismatched type siganture '%s' and '%s", i_ts, c_ts));
         }
     }
 
-    return true;
+    return ok!(bool, string)(true);
 }
 
 import tlang.compiler.typecheck.core : TypeChecker;
@@ -225,7 +223,7 @@ unittest
     // in its interface spec.
     //
     // This test should therefore fail
-    assert(doesImplement(tc, cl, i) == false);
+    assert(doesImplement(tc, cl, i).is_error());
 
     // We now update `myImpl` and add the previously
     // discussed function as defined in the `mathable`
@@ -236,5 +234,5 @@ unittest
     Function cl_f_ident = new Function("ident", "ubyte", [], cl_f_ident_vp);
     cl_f_ident_vp[0].parentTo(cl_f_ident);
     cl.addStatement(cl_f_ident);
-    assert(doesImplement(tc, cl, i));
+    assert(doesImplement(tc, cl, i).is_okay());
 }
