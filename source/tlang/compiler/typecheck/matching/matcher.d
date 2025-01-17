@@ -15,7 +15,19 @@ import std.string : format;
 // TODO: For loop prevention have a local variable here for visitation
 private bool[Interfaze] _visited;
 
+// TODO: In future don't use a visitation map, just create one
+// in the below function and then pass it into `doesImplement0`
 public bool doesImplement(TypeChecker tc, Clazz cl, Interfaze i)
+{
+    scope(exit)
+    {
+        _visited.clear();
+    }
+
+    return doesImplement0(tc, cl, i);
+}
+
+private bool doesImplement0(TypeChecker tc, Clazz cl, Interfaze i)
 {
     // create entry with default `false`
     // if it doesn't exist yet
@@ -41,12 +53,27 @@ public bool doesImplement(TypeChecker tc, Clazz cl, Interfaze i)
     {
         foreach(string super_i; superIs)
         {
+            // TODO: Do we validate interface inherited names here? Late-checking is good :)
+
             Type super_t = tc.getType(i, super_i);
             // TODO: Check here that `super_t` refers to an interface type and throw error if not
             Interfaze super_t_i = cast(Interfaze)super_t;
 
 
-            doesImplement(tc, cl, super_t_i);
+            if(!doesImplement(tc, cl, super_t_i))
+            {
+                ERROR
+                (
+                    format
+                    (
+                        "%s does not implement interface '%s' which is a sub-interface of '%s'",
+                        cl.getName(),
+                        super_t.getName(),
+                        i.getName()
+                    )
+                );
+                return false;
+            }
         }
 
     }
@@ -153,12 +180,22 @@ unittest
     Module m = p.getModules()[0];
 
     // create an interface with one method
+    Interfaze i_par = new Interfaze("mathable");
+    VariableParameter[] par_f_vp = [new VariableParameter("ubyte", "input")];
+    Function f_ident = new Function("ident", "ubyte", [], par_f_vp);
+    par_f_vp[0].parentTo(f_ident);
+    i_par.addStatement(f_ident);
+
+
+    // create an interface with one method and which
+    // is sub-interfaced by the previous interface
     Interfaze i = new Interfaze("addable");
     VariableParameter[] f_vp = [new VariableParameter("ubyte", "a"), new VariableParameter("ubyte", "b")];
     Function f_add = new Function("+", "ubyte", [], f_vp);
     f_vp[0].parentTo(f_add);
     f_vp[1].parentTo(f_add);
     i.addStatement(f_add);
+    i.addSuperInterface(i_par.getName());
     
     // create a class and add a function implementation
     Clazz cl = new Clazz("myImpl");
@@ -170,5 +207,31 @@ unittest
     cl.addStatement(f_add_impl);
 
 
+    // parent all to module
+    i_par.parentTo(m);
+    i.parentTo(m);
+    cl.parentTo(m);
+
+    // add all to module
+    m.addStatements([i_par, i, cl]);
+
+
+    // currently `myImpl` doesn't implement `addable` entirely
+    // yet as it (`addable`) inherits from `mathable` which has
+    // a single `ubyte`-returning and `ubyte`-consuming function
+    // in its interface spec.
+    //
+    // This test should therefore fail
+    assert(doesImplement(tc, cl, i) == false);
+
+    // We now update `myImpl` and add the previously
+    // discussed function as defined in the `mathable`
+    // interface
+    //
+    // This test should therefore pass
+    VariableParameter[] cl_f_ident_vp = [new VariableParameter("ubyte", "a")];
+    Function cl_f_ident = new Function("ident", "ubyte", [], cl_f_ident_vp);
+    cl_f_ident_vp[0].parentTo(cl_f_ident);
+    cl.addStatement(cl_f_ident);
     assert(doesImplement(tc, cl, i));
 }
