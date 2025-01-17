@@ -1,19 +1,31 @@
+/**
+ * Type signature checking and matching tools
+ *
+ * Includes such routines for checking if
+ * a given class implements a provided interface
+ */
 module tlang.compiler.typecheck.matching.matcher;
 
 import niknaks.functional : Optional;
 import tlang.compiler.typecheck.matching.types;
-
-// TODO: Add method here that takes in an interface and then scans
-// ... for classes that implement it via matching the method's type
-// ... signatures
-
 import tlang.compiler.symbols.containers : Clazz, Interfaze;
-
 import tlang.misc.logging;
 import std.string : format;
-
 import niknaks.functional : Result, ok, error;
 
+/** 
+ * Checks if the given class implements the
+ * provided interface
+ *
+ * Params:
+ *   tc = the `TypeChecker` instance
+ *   cl = the `Clazz` to check
+ *   i = the `Interfaze` to test against
+ * Returns: a `Result` with an okay value
+ * in the auccessful case, else a `Result`
+ * with an error value containing the
+ * error message as a `string`
+ */
 public Result!(bool, string) doesImplement(TypeChecker tc, Clazz cl, Interfaze i)
 {
     bool[Interfaze] _visited;
