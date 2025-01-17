@@ -126,9 +126,10 @@ private Result!(bool, string) doesImplement0(TypeChecker tc, Clazz cl, Interfaze
             return error!(string, bool)(format("No matching type signatures found for '%s'", i_ts));
         }
 
-        if(i_ts != c_ts) // TODO: Call cmp on the TypeSignature here and pop out its Result
+        Result!(bool, string) cmp_res = i_ts.cmp(c_ts);
+        if(cmp_res.is_error()) // TODO: Call cmp on the TypeSignature here and pop out its Result
         {
-            return error!(string, bool)(format("Mismatched type siganture '%s' and '%s", i_ts, c_ts));
+            return cmp_res;
         }
     }
 
