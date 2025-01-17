@@ -184,6 +184,7 @@ unittest
     VariableParameter[] par_f_vp = [new VariableParameter("ubyte", "input")];
     Function f_ident = new Function("ident", "ubyte", [], par_f_vp);
     par_f_vp[0].parentTo(f_ident);
+    f_ident.parentTo(i_par);
     i_par.addStatement(f_ident);
 
 
@@ -194,6 +195,7 @@ unittest
     Function f_add = new Function("+", "ubyte", [], f_vp);
     f_vp[0].parentTo(f_add);
     f_vp[1].parentTo(f_add);
+    f_add.parentTo(i);
     i.addStatement(f_add);
     i.addSuperInterface(i_par.getName());
     
@@ -204,6 +206,7 @@ unittest
     Function f_add_impl = new Function("+", "ubyte", [], cl_f_vp);
     cl_f_vp[0].parentTo(f_add_impl);
     cl_f_vp[1].parentTo(f_add_impl);
+    f_add_impl.parentTo(cl);
     cl.addStatement(f_add_impl);
 
 
