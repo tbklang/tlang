@@ -14,22 +14,14 @@ import std.string : format;
 
 import niknaks.functional : Result, ok, error;
 
-// TODO: For loop prevention have a local variable here for visitation
-private bool[Interfaze] _visited;
-
-// TODO: In future don't use a visitation map, just create one
-// in the below function and then pass it into `doesImplement0`
 public Result!(bool, string) doesImplement(TypeChecker tc, Clazz cl, Interfaze i)
 {
-    scope(exit)
-    {
-        _visited.clear();
-    }
+    bool[Interfaze] _visited;
 
-    return doesImplement0(tc, cl, i);
+    return doesImplement0(tc, cl, i, _visited);
 }
 
-private Result!(bool, string) doesImplement0(TypeChecker tc, Clazz cl, Interfaze i)
+private Result!(bool, string) doesImplement0(TypeChecker tc, Clazz cl, Interfaze i, ref bool[Interfaze] _visited)
 {
     // create entry with default `false`
     // if it doesn't exist yet
@@ -60,7 +52,7 @@ private Result!(bool, string) doesImplement0(TypeChecker tc, Clazz cl, Interfaze
             Interfaze super_t_i = cast(Interfaze)super_t;
 
 
-            if(!doesImplement(tc, cl, super_t_i))
+            if(!doesImplement0(tc, cl, super_t_i, _visited))
             {
                 return error!(string, bool)
                 (
