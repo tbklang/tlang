@@ -489,7 +489,6 @@ public final class Interfaze : Type, Container
     private string[] _sis; // super-interfaces
     private Statement[] statements;
 
-    // TODO: Implement me
     this(string name)
     {
         super(name);
