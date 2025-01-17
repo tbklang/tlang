@@ -6,6 +6,7 @@ import tlang.compiler.symbols.typing.core;
 
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
+import std.string : format;
 
 /**
 * Used so often that we may as well
@@ -390,7 +391,7 @@ public class Clazz : Type, Container
 
     public override string toString()
     {
-        return "Class (Name: "~name~", Parents (Class/Interfaces): "~to!(string)(interfacesClasses)~")";
+        return format("class '%s'", name);
     }
 
     public void addStatement(Statement statement)
