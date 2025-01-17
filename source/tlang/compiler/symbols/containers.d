@@ -541,6 +541,11 @@ public final class Interfaze : Type, Container
         // FIXME: Implement me
         assert(false);
     }
+
+    public override string toString()
+    {
+        return format("interface '%s'", name);
+    }
 }
 
 /**
