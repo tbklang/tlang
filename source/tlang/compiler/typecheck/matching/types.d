@@ -47,14 +47,14 @@ public struct TypeSignature
     // TODO: Return a Result!(void, string) where
     // in the case of an error we put the error text
     // in there?
-    private alias NONE_TYPE = string;
-    public Result!(NONE_TYPE, string) cmp(TypeSignature rhs)
+
+    public Result!(bool, string) cmp(TypeSignature rhs)
     {
         import std.string : format;
 
         if(this._name != rhs.name())
         {
-            return error!(string, NONE_TYPE)
+            return error!(string, bool)
             (
                 format
                 (
@@ -69,7 +69,7 @@ public struct TypeSignature
         Type rhs_rt = rhs.returnType();
         if(!_tc.isSameType(this_rt, rhs_rt))
         {
-            return error!(string, NONE_TYPE)
+            return error!(string, bool)
             (
                 format
                 (
@@ -84,7 +84,7 @@ public struct TypeSignature
 
         if(this._tl.length != rhs.typeList().length)
         {
-            return error!(string, NONE_TYPE)
+            return error!(string, bool)
             (
                 format
                 (
@@ -103,7 +103,7 @@ public struct TypeSignature
             Type rhs_t = rhs.typeList()[i];
             if(!_tc.isSameType(this_t, rhs_t))
             {
-                return error!(string, NONE_TYPE)
+                return error!(string, bool)
                 (
                     format
                     (
@@ -121,7 +121,7 @@ public struct TypeSignature
 
         
 
-        return ok!(NONE_TYPE, string)(NONE_TYPE.init);
+        return ok!(bool, string)(true);
     }
 
     public bool opEquals(TypeSignature rhs)
