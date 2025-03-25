@@ -37,14 +37,14 @@ public interface LexerInterface
      * Params:
      *   cursor = the new position
      */
-    public void setCursor(ulong cursor);
+    public void setCursor(ulong cursor) nothrow;
 
     /** 
      * Retrieves the cursor's current position
      *
      * Returns: the position
      */
-    public ulong getCursor();
+    public ulong getCursor() nothrow;
 
     /**
      * Removes the token at the given position
@@ -71,7 +71,7 @@ public interface LexerInterface
      *
      * Returns: true if more tokens are available, false otherwise
      */
-    public bool hasTokens();
+    public bool hasTokens() nothrow;
 
     /** 
      * Get the line position of the lexer in the source text
