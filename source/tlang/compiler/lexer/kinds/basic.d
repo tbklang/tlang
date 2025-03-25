@@ -44,7 +44,7 @@ public final class BasicLexer : LexerInterface
      *
      * Returns: the `Token`
      */
-    public override Token getCurrentToken()
+    public Token getCurrentToken()
     {
         /* TODO: Throw an exception here when we try get more than we can */
         return tokens[tokenPtr];
@@ -53,7 +53,7 @@ public final class BasicLexer : LexerInterface
     /** 
      * Moves the cursor one token forward
      */
-    public override void nextToken()
+    public void nextToken()
     {
         tokenPtr++;
     }
@@ -61,7 +61,7 @@ public final class BasicLexer : LexerInterface
     /** 
      * Moves the cursor one token backwards
      */
-    public override void previousToken()
+    public void previousToken()
     {
         tokenPtr--;
     }
@@ -72,7 +72,7 @@ public final class BasicLexer : LexerInterface
      * Params:
      *   newPosition = the new position
      */
-    public override void setCursor(ulong newPosition)
+    public void setCursor(ulong newPosition)
     {
         tokenPtr = newPosition;
     }
@@ -82,7 +82,7 @@ public final class BasicLexer : LexerInterface
      *
      * Returns: the position
      */
-    public override ulong getCursor()
+    public ulong getCursor()
     {
         return tokenPtr;
     }
@@ -166,7 +166,7 @@ public final class BasicLexer : LexerInterface
      *
      * Returns: true if more tokens are available, false otherwise
      */
-    public override bool hasTokens()
+    public bool hasTokens()
     {
         return tokenPtr < tokens.length;
     }
@@ -176,7 +176,7 @@ public final class BasicLexer : LexerInterface
      *
      * Returns: the position
      */
-    public override ulong getLine()
+    public ulong getLine()
     {
         return this.line;
     }
@@ -186,7 +186,7 @@ public final class BasicLexer : LexerInterface
      *
      * Returns: the position
      */
-    public override ulong getColumn()
+    public ulong getColumn()
     {
         return this.column;
     }
@@ -196,7 +196,7 @@ public final class BasicLexer : LexerInterface
      *
      * Returns: a `Token[]` containing all tokens
      */
-    public override Token[] getTokens()
+    public Token[] getTokens()
     {
         // todo: compute copy of `currentTokens`
         auto d = this.currentTokens.data();
