@@ -46,6 +46,25 @@ public interface LexerInterface
      */
     public ulong getCursor();
 
+    /**
+     * Removes the token at the given position
+     *
+     * Params:
+     *   cursor = the position of the token
+     * to remove
+     */
+    public void removeToken(ulong cursor);
+
+    /**
+     * Inserts the given token at the given
+     * position
+     *
+     * Params:
+     *   token = the token to insert
+     *   cursor = the position to insert at
+     */
+    public void insertToken(string token, ulong cursor);
+
     /** 
      * Checks whether more tokens are available
      * of not
