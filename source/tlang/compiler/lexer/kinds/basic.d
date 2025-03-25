@@ -2072,4 +2072,14 @@ unittest
     assert(tks[0].getToken() == "a");
     assert(tks[1].getToken() == "b");
     assert(tks[2].getToken() == "c");
+
+    try
+    {
+        currentLexer.insertToken(new Token("c", 0, 0), 4);
+        assert(false);
+    }
+    catch(Exception e)
+    {
+        assert(cast(LexerException)e);
+    }
 }
