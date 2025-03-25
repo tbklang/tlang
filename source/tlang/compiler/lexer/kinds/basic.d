@@ -25,6 +25,7 @@ enum EMPTY = "";
 public final class BasicLexer : LexerInterface
 {
     import std.container.array : Array;
+    import std.container.slist : SList;
 
     /** 
      * Post-perform lex() data
@@ -85,6 +86,57 @@ public final class BasicLexer : LexerInterface
         return tokenPtr;
     }
 
+    /**
+     * Removes the token at the given position
+     *
+     * Params:
+     *   cursor = the position of the token
+     * to remove
+     */
+    public void removeToken(ulong cursor)
+    {
+        // compute a slice including only the element
+        // at the cursor
+        auto r = this.tokens.opSlice()[cursor..cursor+1];
+        this.tokens.linearRemove(r);
+    }
+
+    /**
+     * Inserts the given token at the given
+     * position
+     *
+     * Params:
+     *   token = the token to insert
+     *   cursor = the position to insert at
+     */
+    public void insertToken(Token token, ulong cursor)
+    {
+        // insert at the front (before the entire range)
+        if(cursor == 0)
+        {
+            this.tokens.insertBefore(this.tokens.opSlice(), token);
+        }
+        // 0
+        //[a]
+        //
+        // insert `b` at 0 -> [b, a]
+        //
+        // insert `b` at 1
+        //  0  1
+        // [a, b]
+        //
+        // 
+
+        // insert AFTER the cursor (after the range up-to-but-excluding the cursor)
+        else
+        {
+            // determine slice up to point we want to insert
+            // at
+            auto s = this.tokens.opSlice()[0..cursor];    
+            this.tokens.insertAfter(s, token);
+        }
+    }
+
     /** 
      * Checks whether more tokens are available
      * of not
@@ -123,7 +175,11 @@ public final class BasicLexer : LexerInterface
      */
     public override Token[] getTokens()
     {
-        return tokens.data();
+        // todo: compute copy of `currentTokens`
+        auto d = this.currentTokens.data();
+        DEBUG("d_out: ", d);
+        // return tokens.data();
+        return d;
     }
 
     /**
@@ -1965,4 +2021,50 @@ unittest
     assert(currentLexer.getTokens() == [
         new Token("// ", 0, 0)
         ]);
+}
+
+/**
+ * Testing the insertion
+ * and removal of tokens
+ * from the lexer's stream
+ *
+ * Input: `a b`
+ */
+unittest
+{
+    shout();
+    import std.algorithm.comparison;
+
+    string sourceCode = "a b";
+    BasicLexer currentLexer = new BasicLexer(sourceCode);
+    currentLexer.performLex();
+
+    // ensure tokens `a` and `b` are present
+    Token[] tks = currentLexer.getTokens();
+    assert(tks[0].getToken() == "a");
+    assert(tks[1].getToken() == "b");
+
+    // token should be at 1
+    import std.stdio : stderr;
+    stderr.writeln("cursor: ", currentLexer.getCursor());
+    // assert(currentLexer.getCursor() == 2);
+
+    // remove token `a`
+    currentLexer.removeToken(0);
+
+    // ensure only token `b` is present
+    tks = currentLexer.getTokens();
+    assert(tks[0].getToken() == "b");
+
+    // add token `c` after `b` and `a` before `b`
+    currentLexer.insertToken(new Token("a", 0, 0), 0);
+    currentLexer.insertToken(new Token("c", 0, 0), 2);
+    
+    stderr.writeln("cursor: ", currentLexer.getTokens());
+
+    // ensure we have tokens `a`, `b` and `c`
+    tks = currentLexer.getTokens();
+    assert(tks[0].getToken() == "a");
+    assert(tks[1].getToken() == "b");
+    assert(tks[2].getToken() == "c");
 }
