@@ -26,7 +26,6 @@ enum EMPTY = "";
 public final class BasicLexer : LexerInterface
 {
     import std.container.array : Array;
-    import std.container.slist : SList;
 
     /** 
      * Post-perform lex() data
@@ -198,8 +197,8 @@ public final class BasicLexer : LexerInterface
      */
     public Token[] getTokens()
     {
-        // todo: compute copy of `currentTokens`
-        auto d = this.currentTokens.data();
+        // todo: compute copy of `tokens`
+        auto d = this.tokens.data();
         DEBUG("d_out: ", d);
         // return tokens.data();
         return d;
@@ -211,13 +210,10 @@ public final class BasicLexer : LexerInterface
     private string sourceCode; /* The source to be lexed */
     private ulong line = 1; /* Current line */
     private ulong column = 1;
-    private Array!(Token) currentTokens; /* Current token set */
+    private Array!(Token) tokens; /* Current token set */
     private string currentToken; /* Current token */
     private ulong position; /* Current character position */
     private char currentChar; /* Current character */
-
-    /* The tokens (finally created) */
-    private Array!(Token) tokens;
 
     /** 
      * Constructs a new lexer with the given
@@ -411,7 +407,7 @@ public final class BasicLexer : LexerInterface
                 /* Add the splitter token (only if it isn't empty) */
                 if (splitterToken.length)
                 {
-                    currentTokens ~= new Token(splitterToken, line, column);
+                    tokens ~= new Token(splitterToken, line, column);
                 }
             }
             //else if (currentChar == LS.UNDERSCORE || ((!isSplitter(currentChar) && !isDigit(currentChar)) && currentChar != LS.DOUBLE_QUOTE && currentChar != LS.SINGLE_QUOTE && currentChar != LS.BACKSLASH)) {
@@ -453,10 +449,8 @@ public final class BasicLexer : LexerInterface
         /* If there was a token made at the end then flush it */
         if (currentToken.length)
         {
-            currentTokens ~= new Token(currentToken, line, column);
+            tokens ~= new Token(currentToken, line, column);
         }
-
-        tokens = currentTokens;
     }
 
     /** 
@@ -736,7 +730,7 @@ public final class BasicLexer : LexerInterface
      */
     private void flush()
     {
-        currentTokens ~= new Token(currentToken, line, column);
+        tokens ~= new Token(currentToken, line, column);
         currentToken = EMPTY;
     }
 
