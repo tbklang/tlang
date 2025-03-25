@@ -93,13 +93,31 @@ public final class BasicLexer : LexerInterface
      * Params:
      *   cursor = the position of the token
      * to remove
+     * Throws:
+     *   LexerException if the cursor is out
+     * of bounds
      */
     public void removeToken(ulong cursor)
     {
-        // compute a slice including only the element
-        // at the cursor
-        auto r = this.tokens.opSlice()[cursor..cursor+1];
-        this.tokens.linearRemove(r);
+        if(cursor < this.tokens.opDollar())
+        {
+            // compute a slice including only the element
+            // at the cursor
+            auto r = this.tokens.opSlice()[cursor..cursor+1];
+            this.tokens.linearRemove(r);
+        }
+        else
+        {
+            throw new LexerException
+            (
+                this,
+                format
+                (
+                    "Cursor %d is out of bounds",
+                    cursor
+                )
+            );
+        }   
     }
 
     /**
@@ -110,7 +128,7 @@ public final class BasicLexer : LexerInterface
      *   token = the token to insert
      *   cursor = the position to insert at
      * Throws:
-     *   LexerException if the cursor is otu
+     *   LexerException if the cursor is out
      * of bounds
      */
     public void insertToken(Token token, ulong cursor)
@@ -2076,6 +2094,16 @@ unittest
     try
     {
         currentLexer.insertToken(new Token("c", 0, 0), 4);
+        assert(false);
+    }
+    catch(Exception e)
+    {
+        assert(cast(LexerException)e);
+    }
+
+    try
+    {
+        currentLexer.removeToken(4);
         assert(false);
     }
     catch(Exception e)
