@@ -191,17 +191,17 @@ public final class BasicLexer : LexerInterface
     }
 
     /** 
-     * Exhaustively provide a list of all tokens
+     * Exhaustively provide a list of all tokens.
+     * This will return a copy of the internal
+     * token array.
      *
      * Returns: a `Token[]` containing all tokens
      */
     public Token[] getTokens()
     {
-        // todo: compute copy of `tokens`
+        // return a copy
         auto d = this.tokens.data();
-        DEBUG("d_out: ", d);
-        // return tokens.data();
-        return d;
+        return d.dup;
     }
 
     /**
