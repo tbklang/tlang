@@ -98,7 +98,7 @@ public final class BasicLexer : LexerInterface
      */
     public void removeToken(ulong cursor)
     {
-        if(cursor < this.tokens.opDollar())
+        if(cursor < this.tokens.length)
         {
             // compute a slice including only the element
             // at the cursor
@@ -138,7 +138,7 @@ public final class BasicLexer : LexerInterface
             this.tokens.insertBefore(this.tokens.opSlice(), token);
         }
         // insert AFTER the cursor (after the range up-to-but-excluding the cursor)
-        else if(cursor <= this.tokens.opDollar())
+        else if(cursor <= this.tokens.length)
         {
             // determine slice up to point we want to insert
             // at
