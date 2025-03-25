@@ -11,6 +11,7 @@ import tlang.misc.logging;
 import std.conv : to;
 import std.ascii : isDigit, isAlpha, isWhite;
 import tlang.compiler.lexer.core;
+import std.string : format;
 
 enum EMPTY = "";
 
@@ -108,6 +109,9 @@ public final class BasicLexer : LexerInterface
      * Params:
      *   token = the token to insert
      *   cursor = the position to insert at
+     * Throws:
+     *   LexerException if the cursor is otu
+     * of bounds
      */
     public void insertToken(Token token, ulong cursor)
     {
@@ -116,24 +120,25 @@ public final class BasicLexer : LexerInterface
         {
             this.tokens.insertBefore(this.tokens.opSlice(), token);
         }
-        // 0
-        //[a]
-        //
-        // insert `b` at 0 -> [b, a]
-        //
-        // insert `b` at 1
-        //  0  1
-        // [a, b]
-        //
-        // 
-
         // insert AFTER the cursor (after the range up-to-but-excluding the cursor)
-        else
+        else if(cursor <= this.tokens.opDollar())
         {
             // determine slice up to point we want to insert
             // at
             auto s = this.tokens.opSlice()[0..cursor];    
             this.tokens.insertAfter(s, token);
+        }
+        else
+        {
+            throw new LexerException
+            (
+                this,
+                format
+                (
+                    "Cursor %d is out of bounds",
+                    cursor
+                )
+            );
         }
     }
 
