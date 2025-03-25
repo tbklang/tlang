@@ -24,6 +24,8 @@ enum EMPTY = "";
  */
 public final class BasicLexer : LexerInterface
 {
+    import std.container.array : Array;
+
     /** 
      * Post-perform lex() data
      *
@@ -121,7 +123,7 @@ public final class BasicLexer : LexerInterface
      */
     public override Token[] getTokens()
     {
-        return tokens;
+        return tokens.data();
     }
 
     /**
@@ -130,13 +132,13 @@ public final class BasicLexer : LexerInterface
     private string sourceCode; /* The source to be lexed */
     private ulong line = 1; /* Current line */
     private ulong column = 1;
-    private Token[] currentTokens; /* Current token set */
+    private Array!(Token) currentTokens; /* Current token set */
     private string currentToken; /* Current token */
     private ulong position; /* Current character position */
     private char currentChar; /* Current character */
 
-    /* The tokens */
-    private Token[] tokens;
+    /* The tokens (finally created) */
+    private Array!(Token) tokens;
 
     /** 
      * Constructs a new lexer with the given
