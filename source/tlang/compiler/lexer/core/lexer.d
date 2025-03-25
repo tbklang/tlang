@@ -63,7 +63,7 @@ public interface LexerInterface
      *   token = the token to insert
      *   cursor = the position to insert at
      */
-    public void insertToken(string token, ulong cursor);
+    public void insertToken(Token token, ulong cursor);
 
     /** 
      * Checks whether more tokens are available
