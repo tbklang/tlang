@@ -92,6 +92,33 @@ public final class ArrLexer : LexerInterface
         return tokenPtr < tokens.length;
     }
 
+/**
+     * Removes the token at the given position
+     *
+     * Params:
+     *   cursor = the position of the token
+     * to remove
+     */
+    public void removeToken(ulong cursor)
+    {
+        // fixme: implement this
+        assert(false);
+    }
+
+    /**
+     * Inserts the given token at the given
+     * position
+     *
+     * Params:
+     *   token = the token to insert
+     *   cursor = the position to insert at
+     */
+    public void insertToken(Token token, ulong cursor)
+    {
+        // fixme: implement this
+        assert(false);
+    }
+
     /** 
      * Get the line position of the lexer in the source text
      *
