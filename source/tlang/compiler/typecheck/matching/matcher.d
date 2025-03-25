@@ -45,9 +45,17 @@ private Result!(bool, string) doesImplement0(TypeChecker tc, Clazz cl, Interfaze
     // if already visited
     if(_visited[i])
     {
-        return error!(string, bool)(format("Cyclic interface dependency found. Interface '%s' has aready been visited.", i));
+        return error!(string, bool)
+        (
+            format
+            (
+                "Cyclic interface dependency found. Interface '%s' has aready been visited.",
+                i
+            )
+        );
     }
 
+    // mark as visited
     _visited[i] = true;
 
     // check first for super-interfaces and process those
