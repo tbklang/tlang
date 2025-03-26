@@ -35,8 +35,12 @@ private LexerInterface getLexerFor(string source)
     }
     catch(LexerException e)
     {
-        ERROR("Error in quick-instantiation of a new lexer during parse time");
-        throw e;
+        // todo: in future maybe don't wrap as a streaming
+        // lexer will be throwing stuff left right and center
+        throw new ParserException
+        (
+            "Error in quick-instantiation of a new lexer during parse time: "~e.msg
+        );
     }
     
     return l;
