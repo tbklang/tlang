@@ -1390,7 +1390,9 @@ public final class Parser
             /* If it is a mixin or embedding */
             else if(symbol == SymbolType.MIXIN || symbol == SymbolType.EMBED)
             {
-                // parseMixinOrEmbed(SymbolType)
+                parseMixinOrEmbed();
+                Expression exp = parseExpression();
+                addRetExp(exp);
             }
             /* If it is a cast operator */
             else if(symbol == SymbolType.CAST)
@@ -2291,7 +2293,7 @@ public final class Parser
      * or `embed(strLit)` tokens are all
      * removed
      */
-    private void parseMixinOrEmbed(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
+    private void parseMixinOrEmbed()
     {
         WARN("parseMixin(): Enter");
 
@@ -2318,14 +2320,6 @@ public final class Parser
         this.lexer.removeToken(saved_p);
         this.lexer.removeToken(saved_p);
         this.lexer.removeToken(saved_p);
-
-        // We need to check for a `terminatingSymbol` now
-        // by expecting it, then we must remove said token.
-        //
-        // Only then can we then start inserting tokens from `saved_p`
-        // and then we return
-        expect(terminatingSymbol, getCurrentToken()); // todo: is there even a point to this?
-        // this.lexer.removeToken(saved_p);
 
         LexerInterface sub_lex;
         
@@ -2412,10 +2406,10 @@ public final class Parser
             // it just updates the set of available
             // tokens
             DEBUG("Cursor BEFORE mixin: ", this.lexer.getCursor());
-            parseMixinOrEmbed(SymbolType.SEMICOLON);
+            parseMixinOrEmbed();
             DEBUG("Cursor AFTER mixin: ", this.lexer.getCursor());
             DEBUG("Token left after leaving mixin: ", getCurrentToken());
-            
+
             // a mixin is kind-of "fake" in the sense
             // that now we are ready to ACUTUALLY parse
             // whatever it mixed-in
