@@ -2,5 +2,5 @@ module file;
 
 void main()
 {
-	embed("decl.txt");
+	embed("source/tlang/testing/mixins/decl.txt");
 }
