@@ -85,7 +85,7 @@ jobs:
         run: |
           dub run doveralls -- -t ${{secrets.COVERALLS_REPO_TOKEN}}
         
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: coverage files
           path: \*.lst
