@@ -58,7 +58,7 @@ jobs:
     
     
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install D compiler
         uses: dlang-community/setup-dlang@v1
         with:
@@ -95,7 +95,7 @@ jobs:
     name: Syntax checking
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download tlang compiler
         uses: actions/download-artifact@v3
         with:
@@ -142,7 +142,7 @@ jobs:
     name: Typechecking tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download tlang compiler
         uses: actions/download-artifact@v3
         with:
@@ -397,7 +397,7 @@ jobs:
     name: Emit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download tlang compiler
         uses: actions/download-artifact@v3
         with:
