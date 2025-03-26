@@ -97,7 +97,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download tlang compiler
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tbin
         
@@ -149,7 +149,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download tlang compiler
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tbin
         
@@ -404,7 +404,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download tlang compiler
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tbin
         
