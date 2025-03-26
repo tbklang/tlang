@@ -26,7 +26,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       
       
       - name: Install D compiler
@@ -39,7 +39,7 @@ jobs:
         
       
         
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: tbin
           path: tlang
@@ -58,7 +58,7 @@ jobs:
     
     
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install D compiler
         uses: dlang-community/setup-dlang@v1
         with:
@@ -85,7 +85,7 @@ jobs:
         run: |
           dub run doveralls -- -t ${{secrets.COVERALLS_REPO_TOKEN}}
         
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: coverage files
           path: \*.lst
@@ -95,9 +95,9 @@ jobs:
     name: Syntax checking
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download tlang compiler
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tbin
         
@@ -137,14 +137,19 @@ jobs:
       - name: Simple return (expressionless)
         run: ./tlang syntaxcheck source/tlang/testing/return/simple_return_expressionless.t
 
+      - name: Mixin statement and expression
+        run: ./tlang syntaxcheck source/tlang/testing/mixins/str.t
+      - name: Embedding statement
+        run: ./tlang syntaxcheck source/tlang/testing/mixins/file.t
+
   typecheck:
     needs: [build, unittests]
     name: Typechecking tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download tlang compiler
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tbin
         
@@ -397,9 +402,9 @@ jobs:
     name: Emit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download tlang compiler
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tbin
         
