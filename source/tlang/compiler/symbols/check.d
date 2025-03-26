@@ -310,6 +310,16 @@ public enum SymbolType
      */
     SINGLE_LINE_COMMENT,
 
+    /**
+     * `mixin` keyword
+     */
+    MIXIN,
+
+    /**
+     * `embed` keyword
+     */
+    EMBED,
+
     /** 
      * Unknown symbol
      */
@@ -719,6 +729,16 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "import") == 0)
     {
         return SymbolType.IMPORT;
+    }
+    /* mixin keyword */
+    else if(cmp(token, "mixin") == 0)
+    {
+        return SymbolType.MIXIN;
+    }
+    /* embed keyword */
+    else if(cmp(token, "embed") == 0)
+    {
+        return SymbolType.EMBED;
     }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))
