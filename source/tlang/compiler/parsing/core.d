@@ -1387,6 +1387,11 @@ public final class Parser
                 /* Get the next token */
                 nextToken();
             }
+            /* If it is a mixin or embedding */
+            else if(symbol == SymbolType.MIXIN || symbol == SymbolType.EMBED)
+            {
+                // parseMixinOrEmbed(SymbolType)
+            }
             /* If it is a cast operator */
             else if(symbol == SymbolType.CAST)
             {
@@ -2319,8 +2324,8 @@ public final class Parser
         //
         // Only then can we then start inserting tokens from `saved_p`
         // and then we return
-        expect(terminatingSymbol, getCurrentToken());
-        this.lexer.removeToken(saved_p);
+        expect(terminatingSymbol, getCurrentToken()); // todo: is there even a point to this?
+        // this.lexer.removeToken(saved_p);
 
         LexerInterface sub_lex;
         
