@@ -137,6 +137,11 @@ jobs:
       - name: Simple return (expressionless)
         run: ./tlang syntaxcheck source/tlang/testing/return/simple_return_expressionless.t
 
+      - name: Mixin statement and expression
+        run: ./tlang syntaxcheck source/tlang/testing/mixins/str.t
+      - name: Embedding statement
+        run: ./tlang syntaxcheck source/tlang/testing/mixins/file.t
+
   typecheck:
     needs: [build, unittests]
     name: Typechecking tests

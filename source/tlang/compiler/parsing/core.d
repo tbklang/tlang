@@ -19,6 +19,33 @@ import std.string : format;
 import tlang.compiler.modman;
 import tlang.compiler.symbols.comments;
 
+// returns a lexer instance all prepared for
+// tokenizing the given input source
+import tlang.compiler.lexer.core : LexerInterface;
+private LexerInterface getLexerFor(string source)
+{
+    import tlang.compiler.lexer.core : LexerException;
+    LexerInterface l;
+    try
+    {
+        import tlang.compiler.lexer.kinds.basic : BasicLexer;
+        BasicLexer bl = new BasicLexer(source);
+        bl.performLex();
+        l = bl;
+    }
+    catch(LexerException e)
+    {
+        // todo: in future maybe don't wrap as a streaming
+        // lexer will be throwing stuff left right and center
+        throw new ParserException
+        (
+            "Error in quick-instantiation of a new lexer during parse time: "~e.msg
+        );
+    }
+    
+    return l;
+}
+
 /** 
  * The parser
  */
@@ -1364,6 +1391,13 @@ public final class Parser
                 /* Get the next token */
                 nextToken();
             }
+            /* If it is a mixin or embedding */
+            else if(symbol == SymbolType.MIXIN || symbol == SymbolType.EMBED)
+            {
+                parseMixinOrEmbed();
+                Expression exp = parseExpression();
+                addRetExp(exp);
+            }
             /* If it is a cast operator */
             else if(symbol == SymbolType.CAST)
             {
@@ -2255,6 +2289,84 @@ public final class Parser
         return statement;
     }
     
+    /** 
+     * Parses a mixin or file embedding
+     * leaving the cursor at the place
+     * of the newly inserted tokens
+     * whilst the original `mixin(strLit)`
+     * or `embed(strLit)` tokens are all
+     * removed
+     */
+    private void parseMixinOrEmbed()
+    {
+        WARN("parseMixin(): Enter");
+
+        // save current position (we are ontop of the token `mixin/embed`)
+        auto saved_p = this.lexer.getCursor();
+        SymbolType st = getSymbolType(getCurrentToken());
+
+        nextToken();
+        expect(SymbolType.LBRACE, getCurrentToken());
+
+        nextToken();
+        Token mixin_tok = getCurrentToken();
+        expect(SymbolType.STRING_LITERAL, mixin_tok);
+        import std.string : strip;
+        string mixin_s = mixin_tok.getToken().strip("\"");
+        DEBUG("mixin_s: ", mixin_s);
+
+        nextToken();
+        expect(SymbolType.RBRACE, getCurrentToken());
+
+        // now rewind, then delete our 4 tokens `mixin/embed ( strLit )`
+        this.lexer.setCursor(saved_p);
+        this.lexer.removeToken(saved_p);
+        this.lexer.removeToken(saved_p);
+        this.lexer.removeToken(saved_p);
+        this.lexer.removeToken(saved_p);
+
+        LexerInterface sub_lex;
+        
+        // if `mixin` then interpret the string literal as containing tokens
+        if(st == SymbolType.MIXIN)
+        {
+            sub_lex = getLexerFor(mixin_s); // todo: may throw
+        }
+        // else, if `embed`, then interpret the string literal as
+        // the path to a file which should be read and tokenized
+        else
+        {
+            assert(st == SymbolType.EMBED);
+            alias embed_fp = mixin_s;
+            import std.exception : ErrnoException;
+            
+            try
+            {
+                import tlang.compiler.core : gibFileData;
+                string f_data = gibFileData(embed_fp);
+
+                DEBUG("f_data: ", f_data);
+                sub_lex = getLexerFor(f_data);  // todo: may throw
+            }
+            catch(ErrnoException e)
+            {
+                expect("Error opening file for embedding at '"~embed_fp~"'");
+            }
+        }
+
+        // perform token insertion
+        foreach(Token t; sub_lex.getTokens())
+        {
+            DEBUG("Mixing-in token '", t.getToken(), "'...");
+            this.lexer.insertToken(t, saved_p++);
+        }
+
+
+        DEBUG("Tokens after mixing in: ", this.lexer.getTokens());
+
+        WARN("parseMixin(): Leave");
+    }
+
     private void parseComment()
     {
         WARN("parseComment(): Enter");
@@ -2290,6 +2402,22 @@ public final class Parser
         {
             /* Might be a function, might be a variable, or assignment */
             statement = parseName(terminatingSymbol);
+        }
+        /* If it is a mixin or embedding */
+        else if(symbol == SymbolType.MIXIN || symbol == SymbolType.EMBED)
+        {
+            // doesn't result in a new node, rather
+            // it just updates the set of available
+            // tokens
+            DEBUG("Cursor BEFORE mixin: ", this.lexer.getCursor());
+            parseMixinOrEmbed();
+            DEBUG("Cursor AFTER mixin: ", this.lexer.getCursor());
+            DEBUG("Token left after leaving mixin: ", getCurrentToken());
+
+            // a mixin is kind-of "fake" in the sense
+            // that now we are ready to ACUTUALLY parse
+            // whatever it mixed-in
+            statement = parseStatement(terminatingSymbol);
         }
         /* If it is an accessor */
         else if(isAccessor(tok))
@@ -2359,6 +2487,7 @@ public final class Parser
         // }
         
 
+        DEBUG("statement before leaving: ", statement);
         WARN("parseStatement(): Leave");
 
         return statement;
