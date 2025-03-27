@@ -320,6 +320,11 @@ public enum SymbolType
      */
     EMBED,
 
+    /**
+     * `alias` keyword
+     */
+    ALIAS,
+
     /** 
      * Unknown symbol
      */
@@ -740,6 +745,11 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.EMBED;
     }
+    /* alias keyword */
+    else if(cmp(token, "alias") == 0)
+    {
+        return SymbolType.ALIAS;
+    }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))
     {
@@ -982,6 +992,10 @@ public string getCharacter(SymbolType symbolIn)
     else if(symbolIn == SymbolType.SEMICOLON)
     {
         return ";";
+    }
+    else if(symbolIn == SymbolType.ALIAS)
+    {
+        return "alias";
     }
     else
     {
