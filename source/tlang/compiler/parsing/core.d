@@ -578,6 +578,30 @@ public final class Parser
         string nameTYpe = getCurrentToken().getToken();
         DEBUG("parseName(): Current token: "~getCurrentToken().toString());
 
+        // TODO: Alias check should be done here
+
+        // TODO: Note, how would lookups work if we don't have a resolver?
+        Alias a_pot;
+        if(getAlias(nameTYpe, a_pot))
+        {
+            DEBUG("Found a reference to alias '", nameTYpe, "'");
+            DEBUG("a_pot: ", a_pot);
+            DEBUG("Tokens for alias interpolation: ", a_pot.definition());
+
+            // todo: delete current token (the "alias" reference itself)
+            // ... and insert the new tokens here
+            auto aliasRefTok_pos = this.lexer.getCursor();
+            this.lexer.removeToken(aliasRefTok_pos);
+            foreach(Token t; a_pot.definition())
+            {
+                this.lexer.insertToken(t, aliasRefTok_pos++);
+            }
+
+            ERROR("Devbug: Still busy implementing alias emplacement");
+            assert(false);
+        }
+
+
         /* TODO: The problem here is I don't want to progress the token */
 
         /* Get next token */
@@ -2382,6 +2406,127 @@ public final class Parser
         WARN("parseComment(): Leave");
     }
 
+    private struct Alias
+    {
+        private Token _declName; // name of alias (as token)
+        private Token[] _defToks; // list of tokens
+
+        this(Token name)
+        {
+            this._declName = name;
+        }
+
+        public string name()
+        {
+            return declTok().getToken();
+        }
+
+        public Token declTok()
+        {
+            return this._declName;
+        }
+
+        public Token[] definition()
+        {
+            return this._defToks;
+        }
+
+        public void define(Token[] toks)
+        {
+            this._defToks = toks;
+        }
+
+        public string toString()
+        {
+            return format("Alias (name: %s, toks: %s)", name(), definition());
+        }
+    }
+
+    // TODO: How to make accessible, should module (after `parse()`) maybe
+    // have this copied to it?
+    private Alias[string] _aliases;
+
+    /** 
+     * Stores a new alias entry
+     *
+     * Params:
+     *   a = the alias to store
+     */
+    private void storeAlias(Alias a)
+    {
+        auto entName = a.name();
+        this._aliases[entName] = a;
+        DEBUG(format("Stored alias definition for '%s' as %s", entName, a));
+    }
+
+    /** 
+     * Looks up an alias by the given name,
+     * returning it via the reference parameter
+     * if found
+     *
+     * Params:
+     *   name = the alias's name
+     *   a = the alias (if found)
+     * Returns: `true` if found, `false`
+     * otherwise
+     */
+    private bool getAlias(string name, ref Alias a)
+    {
+        Alias* a_ptr = name in this._aliases;
+
+        if(a_ptr)
+        {
+            a = *a_ptr;
+            return true;
+        }
+        return false;
+    }
+
+    /** 
+     * Parses the declaration of an alias
+     *
+     * `alias d = mixin("int j = ")`
+     */
+    private void parseAlias()
+    {
+        WARN("parseAlias(): Enter");
+
+        // consume `alias` token
+        nextToken();
+
+        // obtain the alias's name
+        Token a_t = getCurrentToken();
+        expect(SymbolType.IDENT_TYPE, a_t);
+        Alias a = Alias(a_t);
+
+        // move to next token and expect an `=`
+        nextToken();
+        expect(SymbolType.ASSIGN, getCurrentToken());
+
+        // move onto first token of the alias's body
+        nextToken();
+
+        // now collect tokens until we hit a `;`
+        Token[] col;
+        Token c_tok;
+        while(getSymbolType(c_tok = getCurrentToken()) != SymbolType.SEMICOLON)
+        {
+            col ~= c_tok;
+            nextToken();
+        }
+        a.define(col);
+
+        // consume the `;`
+        nextToken();
+
+        DEBUG("Created alias: ", a);
+        storeAlias(a);
+
+
+
+        WARN("parseAlias(): Leave");
+    }
+
     // TODO: We need to add `parseComment()`
     // support here (see issue #84)
     // TODO: This ic currently dead code and ought to be used/implemented
@@ -2418,6 +2563,11 @@ public final class Parser
             // that now we are ready to ACUTUALLY parse
             // whatever it mixed-in
             statement = parseStatement(terminatingSymbol);
+        }
+        /* If it is an alias declaration */
+        else if(symbol == SymbolType.ALIAS)
+        {
+            parseAlias();
         }
         /* If it is an accessor */
         else if(isAccessor(tok))
@@ -2819,6 +2969,11 @@ public final class Parser
                 }
 
                 modulle.addStatement(statement);
+            }
+            /* If it is an alias declaration */
+            else if(symbol == SymbolType.ALIAS)
+            {
+                parseAlias();
             }
             /* If it is an accessor */
             else if (isAccessor(tok))
