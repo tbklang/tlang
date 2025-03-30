@@ -2,11 +2,13 @@ module tlang.compiler.codegen.instruction;
 
 import std.conv : to;
 import tlang.compiler.typecheck.dependency.core : Context;
-import std.string : cmp;
+import std.string : cmp, format;
 import tlang.compiler.symbols.data : SymbolType;
 import tlang.compiler.symbols.check : getCharacter;
 import gogga;
 import tlang.compiler.symbols.typing.core : Type;
+import tlang.compiler.codegen.render;
+import tlang.compiler.symbols.strings : StringInfo;
 
 public class Instruction
 {
@@ -34,11 +36,6 @@ public class Instruction
     {
         this.context = context;
     }
-}
-
-public class FetchInst :  Instruction
-{
-
 }
 
 public class Value : Instruction
@@ -70,7 +67,7 @@ public class ClassStaticInitAllocate : Instruction
     }
 }
 
-public class VariableAssignmentInstr : Instruction
+public class VariableAssignmentInstr : Instruction, IRenderable
 {
     /* Name of variable being declared */
     public string varName; /*TODO: Might not be needed */
@@ -84,9 +81,14 @@ public class VariableAssignmentInstr : Instruction
 
         addInfo = "assignTo: "~varName~", valInstr: "~data.toString();
     }
+
+    public string render()
+    {
+        return format("%s = %s", varName, tryRender(data));
+    }
 }
 
-public final class VariableDeclaration : StorageDeclaration
+public final class VariableDeclaration : StorageDeclaration, IRenderable
 {
     /* Name of variable being declared */
     public const string varName;
@@ -95,7 +97,7 @@ public final class VariableDeclaration : StorageDeclaration
     public const byte length;
 
     /* Type of the variable being declared */
-    public const Type varType;
+    public Type varType;
 
     /* Value-instruction to be assigned */
     private Value varAssInstr;
@@ -117,9 +119,19 @@ public final class VariableDeclaration : StorageDeclaration
         return varAssInstr;
     }
 
+    public bool hasAssignmentInstr()
+    {
+        return varAssInstr !is null;
+    }
+
+    public string render()
+    {
+        string varAssInstr_s = hasAssignmentInstr() ? format(" = %s", tryRender(getAssignmentInstr())) : "";
+        return format("%s %s%s", varType.getName(), varName, varAssInstr_s);
+    }
 }
 
-public final class FetchValueVar : Value
+public final class FetchValueVar : Value, IRenderable
 {
     /* Name of variable to fetch from */
     public string varName;
@@ -134,10 +146,15 @@ public final class FetchValueVar : Value
 
         addInfo = "fetchVarValName: "~varName~", VarLen: "~to!(string)(length);
     }
+
+    public string render()
+    {
+        return varName;
+    }
 }
 
 /* Used for integers */
-public final class LiteralValue : Value
+public final class LiteralValue : Value, IRenderable
 {
     /* Data */
     private string data;
@@ -159,9 +176,14 @@ public final class LiteralValue : Value
     {
         return produceToStrEnclose("Data: "~to!(string)(data)~", Type: "~to!(string)(type));
     }
+
+    public string render()
+    {
+        return data;
+    }
 }
 
-public final class LiteralValueFloat : Value
+public final class LiteralValueFloat : Value, IRenderable
 {
     /* Data */
     private string data;
@@ -183,111 +205,194 @@ public final class LiteralValueFloat : Value
     {
         return produceToStrEnclose("Data: "~to!(string)(data)~", Type: "~to!(string)(type));
     }
-}
 
-/* FIXME: Implement this */
-/**
-* TODO: This should take in:
-*
-* 1. The string literal
-* 2. It should assign it to an interning pool and get the ID (associate one with the string literal if equal/in-the-pool)
-*/
-public final class StringLiteral : Value
-{
-    /* String interning pool */
-    private static int[string] internmentCamp;
-    private static int rollCount = 0;
-    private string stringLiteral;
-
-    
-    this(string stringLiteral)
+    public string render()
     {
-        this.stringLiteral = stringLiteral;
-
-        /* Intern the string */
-        intern(stringLiteral);
-
-        addInfo = "StrLit: `"~stringLiteral~"`, InternID: "~to!(string)(intern(stringLiteral));
-    }
-
-    public static int intern(string strLit)
-    {
-        /* Search for the string (if it exists return it's pool ID) */
-        foreach(string curStrLit; internmentCamp.keys())
-        {
-            if(cmp(strLit, curStrLit) == 0)
-            {
-                return internmentCamp[strLit];
-            }
-        }
-
-        /* If not, create a new entry (pool it) and return */
-        internmentCamp[strLit] = rollCount;
-        rollCount++; /* TODO: Overflow check */
-
-        return rollCount-1;
-    }
-
-    public string getStringLiteral()
-    {
-        return stringLiteral;
+        return data;
     }
 }
 
-/**
-* BinOpInstr instruction
-*
-* Any sort of Binary Operator
-*/
-public class BinOpInstr : Value
+/** 
+ * String literal instruction
+ *
+ * Represents a string literal as
+ * a `Value`-based instruction
+ */
+public final class StringLiteral : Value, IRenderable
 {
-    public const Value lhs;
-    public const Value rhs;
-    public const SymbolType operator;
+    private StringInfo _s;
 
+    this(StringInfo str)
+    {
+        this._s = str;
+        addInfo = "StrLit: "~this._s.toString();
+    }
+
+    public StringInfo* str()
+    {
+        return &this._s;
+    }
+
+    public string render()
+    {
+        return this._s.toString();
+    }
+}
+
+/** 
+ * Operator instruction
+ *
+ * This represents any instruction
+ * which has a single operator.
+ */
+public abstract class OperatorInstruction : Value
+{
+    /** 
+     * The operator
+     */
+    protected SymbolType operator;
+
+    /** 
+     * Constructs a new operator
+     * instruction with the given
+     * operator
+     *
+     * Params:
+     *   operator = the operator
+     */
+    this(SymbolType operator)
+    {
+        this.operator = operator;
+    }
+
+    /** 
+     * Sets the operator
+     *
+     * Params:
+     *   operator = the new operator
+     */
+    public final void setOperator(SymbolType operator)
+    {
+        this.operator = operator;
+    }
+
+    /** 
+     * Returns the operator
+     *
+     * Returns: the operator
+     */
+    public final SymbolType getOperator()
+    {
+        return this.operator;
+    }
+}
+
+/**
+* Binary operator instruction
+*
+* Any sort of binary operation
+*/
+public final class BinOpInstr : OperatorInstruction, IRenderable
+{
+    private Value lhs;
+    private Value rhs;
+
+    /** 
+     * Constructs a new binary operator
+     * instruction with the given
+     * parameters
+     *
+     * Params:
+     *   lhs = the left-hand operand 
+     *   rhs = the right-hand operand
+     *   operator = the operator
+     */
     this(Value lhs, Value rhs, SymbolType operator)
     {
+        super(operator);
         this.lhs = lhs;
         this.rhs = rhs;
-        this.operator = operator;
 
         addInfo = "BinOpType: "~to!(string)(operator)~", LhsValInstr: "~lhs.toString()~", RhsValInstr: "~rhs.toString();
     }
+
+    /** 
+     * Returns the left-hand operand
+     * instruction
+     *
+     * Returns: the instruction
+     */
+    public Value getLHSInstr()
+    {
+        return this.lhs;
+    }
+
+    /** 
+     * Returns the right-hand operand
+     * instruction
+     *
+     * Returns: the instruction
+     */
+    public Value getRHSInstr()
+    {
+        return this.rhs;
+    }
+
+    public string render()
+    {
+        // TODO: Remove casts from const
+        return format
+        (
+            "%s %s %s",
+            tryRender(cast(Instruction)this.lhs),
+            getCharacter(this.operator),
+            tryRender(cast(Instruction)this.rhs)
+        );
+    }
 }
 
 /**
-* UnaryOpInstr instruction
+* Unary operator instruction
 *
-* Any sort of Unary Operator
+* Any sort of unary operation
 */
-public class UnaryOpInstr : Value
+public final class UnaryOpInstr : OperatorInstruction, IRenderable
 {
     private Value exp;
-    private SymbolType operator;
 
+    /** 
+     * Constructs a new unary operator
+     * instruction with the given
+     * parameters
+     *
+     * Params:
+     *   exp = the singular operand
+     *   operator = the operator
+     */
     this(Value exp, SymbolType operator)
     {
+        super(operator);
         this.exp = exp;
-        this.operator = operator;
 
         addInfo = "UnaryOpType: "~to!(string)(operator)~", Instr: "~exp.toString();
     }
 
-    public SymbolType getOperator()
-    {
-        return operator;
-    }
-
+    /** 
+     * Returns the singular opernad
+     * instruction
+     *
+     * Returns: the instruction
+     */
     public Value getOperand()
     {
         return exp;
     }
-}
 
-/**
-* 2022 New things
-*
-*/
+    public string render()
+    {
+        return format("%s%s", getCharacter(operator), tryRender(exp));
+    }
+}
 
 //public class CallInstr : Instruction
 public class CallInstr : Value
@@ -295,7 +400,7 @@ public class CallInstr : Value
 
 }
 
-public class FuncCallInstr : CallInstr
+public class FuncCallInstr : CallInstr, IRenderable
 {
     /** 
      * This is described in the corresponding AST node
@@ -357,10 +462,23 @@ public class FuncCallInstr : CallInstr
     {
         statementLevel = true;
     }
+
+    public string render()
+    {
+        string arg_s;
+        foreach(Value arg; evaluationInstructions)
+        {
+            arg_s ~= format("%s, ", tryRender(arg));
+        }
+        import std.string : strip;
+        arg_s = strip(arg_s, ", ");
+
+        return format("%s(%s)", functionName, arg_s);
+    }
 }
 
 
-public final class ReturnInstruction : Instruction
+public final class ReturnInstruction : Instruction, IRenderable
 {
     private Value returnExprInstr;
 
@@ -383,9 +501,14 @@ public final class ReturnInstruction : Instruction
     {
         return returnExprInstr !is null;
     }
+
+    public string render()
+    {
+        return format("return %s", tryRender(returnExprInstr));
+    }
 }
 
-public final class IfStatementInstruction : Instruction
+public final class IfStatementInstruction : Instruction, IRenderable
 {
     private BranchInstruction[] branchInstructions;
 
@@ -400,9 +523,36 @@ public final class IfStatementInstruction : Instruction
     {
         return branchInstructions;
     }
+
+    public string render()
+    {
+        bool fst = true;
+        string s;
+        foreach(BranchInstruction b; branchInstructions)
+        {
+            if(b.hasConditionInstr()) // `if` or `else if`
+            {
+                if(fst) // `if`
+                {
+                    s ~= format("if(%s) {}\n", tryRender(b.getConditionInstr()));
+                    fst = false;
+                }
+                else // `else if`
+                {
+                    s ~= format("else if(%s) {}\n", tryRender(b.getConditionInstr()));
+                }
+            }
+            else // `else`
+            {
+                s ~= "else {}";
+            }
+        }
+
+        return s;
+    }
 }
 
-public final class WhileLoopInstruction : Instruction
+public final class WhileLoopInstruction : Instruction, IRenderable
 {
     private BranchInstruction branchInstruction;
 
@@ -417,9 +567,14 @@ public final class WhileLoopInstruction : Instruction
     {
         return branchInstruction;
     }
+
+    public string render()
+    {
+        return format("while(%s) {}", tryRender(branchInstruction.getConditionInstr()));
+    }
 }
 
-public final class ForLoopInstruction : Instruction
+public final class ForLoopInstruction : Instruction, IRenderable
 {
     private Instruction preRunInstruction;
     private BranchInstruction branchInstruction;
@@ -454,6 +609,14 @@ public final class ForLoopInstruction : Instruction
     {
         return branchInstruction;
     }
+
+    public string render()
+    {
+        string postIterate_s = hasPostIterationInstruction() ? tryRender(branchInstruction.getBodyInstructions()[$-1]) : "";
+        string preRun_s = hasPreRunInstruction() ? tryRender(getPreRunInstruction()) : "";
+        string iterInstr_s = tryRender(getBranchInstruction().getConditionInstr());
+        return format("for(%s; %s; %s) {}", preRun_s, iterInstr_s, postIterate_s);
+    }
 }
 
 public final class BranchInstruction : Instruction
@@ -485,8 +648,7 @@ public final class BranchInstruction : Instruction
     }
 }
 
-
-public final class PointerDereferenceAssignmentInstruction : Instruction
+public final class PointerDereferenceAssignmentInstruction : Instruction, IRenderable
 {
     private Value pointerEvalInstr;
     private Value assigmnetExprInstr;
@@ -513,24 +675,22 @@ public final class PointerDereferenceAssignmentInstruction : Instruction
     {
         return derefCount;
     }
-}
 
-public final class DiscardInstruction : Instruction
-{
-    private Value exprInstr;
-
-    this(Value exprInstr)
+    public string render()
     {
-        this.exprInstr = exprInstr;
-    }
+        import niknaks.text : genX;
 
-    public Value getExpressionInstruction()
-    {
-        return exprInstr;
+        return format
+        (
+            "%s%s = %s",
+            genX(getDerefCount(), "*"),
+            tryRender(getPointerEvalInstr()),
+            tryRender(getAssExprInstr())
+        );
     }
 }
 
-public final class CastedValueInstruction : Value
+public final class CastedValueInstruction : Value, IRenderable
 {
     /* The uncasted original instruction that must be executed-then-trimmed (casted) */
     private Value uncastedValue;
@@ -572,9 +732,14 @@ public final class CastedValueInstruction : Value
     {
         this.relax = relax;
     }
+
+    public string render()
+    {
+        return format("cast(%s)%s", getCastToType(), tryRender(getEmbeddedInstruction()));
+    }
 }
 
-public final class ArrayIndexInstruction : Value
+public final class ArrayIndexInstruction : Value, IRenderable
 {
     /* Index-to instruction */
     private Value indexTo;
@@ -602,10 +767,15 @@ public final class ArrayIndexInstruction : Value
     {
         return "ArrayIndexInstr [IndexTo: "~indexTo.toString()~", Index: "~index.toString()~"]";
     }
+
+    public string render()
+    {
+        return format("%s[%s]", tryRender(getIndexedToInstr()), tryRender(getIndexInstr()));
+    }
 }
 
 //TODO: ArrayIndexAssignmentInstruction
-public final class ArrayIndexAssignmentInstruction : Instruction
+public final class ArrayIndexAssignmentInstruction : Instruction, IRenderable
 {
     // TODO: We then need the left hand side array evaluation instruction (a pointer value basically)
     // private Value arrayPtrEval;
@@ -636,10 +806,15 @@ public final class ArrayIndexAssignmentInstruction : Instruction
     {
         return assignment;
     }
+
+    public string render()
+    {
+        return format("%s = %s", tryRender(getArrayPtrEval()), tryRender(getAssignmentInstr()));
+    }
 }
 
 // TODO: StackArrayIndexInstruction
-public final class StackArrayIndexInstruction : Value
+public final class StackArrayIndexInstruction : Value, IRenderable
 {
     /* Index-to instruction */
     private Value indexTo;
@@ -667,10 +842,15 @@ public final class StackArrayIndexInstruction : Value
     {
         return "StackArrayIndexInstr [IndexTo: "~indexTo.toString()~", Index: "~index.toString()~"]";
     }
+
+    public string render()
+    {
+        return format("%s[%s]", tryRender(getIndexedToInstr()), tryRender(getIndexInstr()));
+    }
 }
 
 // TODO: StackArrayIndexAssignmentInstruction
-public final class StackArrayIndexAssignmentInstruction : Instruction
+public final class StackArrayIndexAssignmentInstruction : Instruction, IRenderable
 {
     // TODO: We need a `string` field here which is looked up with the 
     // ... associated context of this instruction and refers to the
@@ -709,5 +889,10 @@ public final class StackArrayIndexAssignmentInstruction : Instruction
     public override string toString()
     {
         return "StackArrayASSIGN [name: "~arrayName~", index: "~index.toString()~", Assignment: "~assignment.toString()~"]";
+    }
+
+    public string render()
+    {
+        return format("%s[%s] = %s", getArrayName(), tryRender(getIndexInstr()), tryRender(getAssignedValue()));
     }
 }

@@ -1,167 +1,59 @@
+/** 
+ * Compiler configuration mechanism
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
+ */
 module tlang.compiler.configuration;
 
 import tlang.compiler.core : CompilerException, CompilerError;
 import std.string : cmp;
 
-private union ConfigValue
-{
-    ulong number;
-    bool boolean;
-    string text;
-    string[] textArray;
-}
+import niknaks.config : Registry;
+public import niknaks.config : ConfigEntry;
 
-public enum ConfigType
-{
-    NUMBER,
-    BOOLEAN,
-    TEXT,
-    TEXT_ARRAY
-}
-
-public struct ConfigEntry
-{
-    private string name;
-    private ConfigValue value;
-    private ConfigType type;
-
-    private this(string entryName, ConfigType entryType)
-    {
-        this.name = entryName;
-        this.type = entryType;
-    }
-
-    this(VType)(string entryName, VType valType)
-    {
-        this(entryName, ConfigType.TEXT);
-        value.text = to!(string)(valType);
-    }
-
-    this(string entryName, ulong entryValue)
-    {
-        this(entryName, ConfigType.NUMBER);
-        value.number = entryValue;
-    }
-    
-    this(string entryName, bool entryValue)
-    {
-        this(entryName, ConfigType.BOOLEAN);
-        value.boolean = entryValue;
-    }
-
-    this(string entryName, string entryValue)
-    {
-        this(entryName, ConfigType.TEXT);
-        value.text = entryValue;
-    }
-
-    this(string entryName, string[] entryValue)
-    {
-        this(entryName, ConfigType.TEXT_ARRAY);
-        value.textArray = entryValue;
-    }
-
-    public ulong getNumber()
-    {
-        if(type == ConfigType.NUMBER)
-        {
-            return value.number;
-        }
-        else
-        {
-            throw new CompilerException(CompilerError.CONFIG_TYPE_ERROR, "Type mismatch for key '"~name~"'");
-        }
-    }
-
-    public bool getBoolean()
-    {
-        if(type == ConfigType.BOOLEAN)
-        {
-            return value.boolean;
-        }
-        else
-        {
-            throw new CompilerException(CompilerError.CONFIG_TYPE_ERROR, "Type mismatch for key '"~name~"'");
-        }
-    }
-
-    public string getText()
-    {
-        if(type == ConfigType.TEXT)
-        {
-            return value.text;
-        }
-        else
-        {
-            throw new CompilerException(CompilerError.CONFIG_TYPE_ERROR, "Type mismatch for key '"~name~"'");
-        }
-    }
-
-    public string[] getArray()
-    {
-        if(type == ConfigType.TEXT_ARRAY)
-        {
-            return value.textArray;
-        }
-        else
-        {
-            throw new CompilerException(CompilerError.CONFIG_TYPE_ERROR, "Type mismatch for key '"~name~"'");
-        }
-    }
-
-    public string getName()
-    {
-        return name;
-    }
-
-    public ConfigType getType()
-    {
-        return type;
-    }
-    
-}
-
+/** 
+ * Configuration registry
+ * for a compiler
+ */
 public final class CompilerConfiguration
 {
-    private ConfigEntry[] entries;
+    private Registry reg;
 
-    public void addConfig(ConfigEntry entry)
+    this()
     {
-        // If duplicate then update entry
-        if(hasConfig(entry.getName()))
-        {
-            updateConfig(entry);
-        }
-        // Else, add a new entry
-        else
-        {
-            entries ~= entry;
-        }
+        reg.setAllowOverwrite(true);
     }
 
-    private void updateConfig(ConfigEntry newEntry)
+    /** 
+     * Places the given value at
+     * the provided name, overwiting
+     * any previous entries if
+     * already present
+     *
+     * Params:
+     *   name = the entry's name
+     *   value = the entry's value
+     */
+    public void addConfig(T)(string name, T value)
     {
-        for(ulong i = 0; i < entries.length; i++)
-        {
-            if(cmp(entries[i].getName(), newEntry.getName()) == 0)
-            {
-                if(entries[i].getType() == newEntry.getType())
-                {
-                    entries[i] = newEntry;
-                    break;
-                }
-                else
-                {
-                    throw new CompilerException(CompilerError.CONFIG_TYPE_ERROR, "Tried updating an entry to a different type");
-                }
-            }
-        }
+        this.reg.newEntry(name, value);
     }
 
+    /** 
+     * Obtains the entry at the
+     * given name
+     *
+     * Params:
+     *   key = the entry's name
+     * Returns: a `ConfigEntry`
+     * Throws: 
+     *   CompilerException if no
+     * such entry exists
+     */
     public ConfigEntry getConfig(string key)
     {
         ConfigEntry foundEntry;
-        if(hasConfig_internal(key, foundEntry))
+        if(reg.getEntry_nothrow(key, foundEntry))
         {
             return foundEntry;
         }
@@ -171,23 +63,20 @@ public final class CompilerConfiguration
         }
     }
 
-    private bool hasConfig_internal(string key, ref ConfigEntry foundEntry)
-    {
-        foreach(ConfigEntry curEntry; entries)
-        {
-            if(cmp(curEntry.getName(), key) == 0)
-            {
-                foundEntry = curEntry;
-                return true;
-            }
-        }
-        return false;
-    }
-
+    /** 
+     * Checks if an entry at
+     * the given name exists
+     *
+     * Params:
+     *   key = the name to
+     * check by
+     * Returns: `true` if it
+     * exists, `false` otherwise
+     */
     public bool hasConfig(string key)
     {
         ConfigEntry _discard;
-        return hasConfig_internal(key, _discard);
+        return reg.getEntry_nothrow(key, _discard);
     }
 
     /** 
@@ -201,19 +90,19 @@ public final class CompilerConfiguration
         CompilerConfiguration config = new CompilerConfiguration();
 
         /* Enable Behaviour-C fixes (TODO: This should be changed to true before release) */
-        config.addConfig(ConfigEntry("dgen:preinline_args", false));
+        config.addConfig("dgen:preinline_args", false);
 
         /* Enable pretty code generation for DGen */
-        config.addConfig(ConfigEntry("dgen:pretty_code", true));
+        config.addConfig("dgen:pretty_code", true);
 
         /* Enable entry point test generation for DGen */
-        config.addConfig(ConfigEntry("dgen:emit_entrypoint_test", true));
+        config.addConfig("dgen:emit_entrypoint_test", true);
 
         /* Set the mapping to hashing of entity names for DGen (TODO: This should be changed before release) */
-        config.addConfig(ConfigEntry("dgen:mapper", "hashmapper"));
+        config.addConfig("dgen:mapper", "hashmapper");
 
         /* Set the system C compiler for DGen to clang */
-        config.addConfig(ConfigEntry("dgen:compiler", "clang"));
+        config.addConfig("dgen:compiler", "clang");
 
         /**
          * Configure, at compile time, the system type aliases
@@ -221,12 +110,12 @@ public final class CompilerConfiguration
         version(X86)
         {
             /* Set maximum width to 4 bytes (32-bits) */
-            config.addConfig(ConfigEntry("types:max_width", 4));
+            config.addConfig("types:max_width", 4);
         }
         else version(X86_64)
         {
             /* Set maximum width to 8 bytes (64-bits) */
-            config.addConfig(ConfigEntry("types:max_width", 8));
+            config.addConfig("types:max_width", 8);
         }
 
         /**
@@ -236,7 +125,7 @@ public final class CompilerConfiguration
          * sort of things here
          */
         string[] searchPaths = [];
-        config.addConfig(ConfigEntry("modman:path", searchPaths));
+        config.addConfig("modman:path", searchPaths);
 
         /**
          * If enabled then a module with
@@ -245,10 +134,13 @@ public final class CompilerConfiguration
          */
         // FIXME: Make true by default - this WILL break many unittests and semantic ones
         // so be very sure before you enable this
-        config.addConfig(ConfigEntry("modman:strict_headers", false));
+        config.addConfig("modman:strict_headers", false);
         
         /* Always warn about unused variables */
-        config.addConfig(ConfigEntry("typecheck:warnUnusedVars", true));
+        config.addConfig("typecheck:warnUnusedVars", true);
+
+        /* Default executable's name is `tlang.out` */
+        config.addConfig("emit:executable_output", "tlang.out");
 
         return config;
     }

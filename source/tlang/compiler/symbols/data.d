@@ -12,6 +12,7 @@ import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable
 
 // Module entry management
 import tlang.compiler.modman : ModuleEntry;
+import tlang.compiler.symbols.comments;
 
 /** 
  * The _program_ holds a bunch of _modules_ as
@@ -241,15 +242,32 @@ public class Statement
     }
     /* !!!! END TYPE CHECK ROUTINES AND DATA !!!! */
 
+    /** 
+     * An optionally attached comment
+     */
+    private Comment comment;
 
+    /** 
+     * Returns the comment attached
+     *
+     * Returns: the `Comment` or `null`
+     * if none if attached
+     */
+    public final Comment getComment()
+    {
+        return this.comment;
+    }
 
-
-
-
-
-
-
-
+    /** 
+     * Sets the comment for this node
+     *
+     * Params:
+     *   comment = the `Comment`
+     */
+    public final void setComment(Comment comment)
+    {
+        this.comment = comment;
+    }
 
     private static ulong rollingCount = 0;
 
@@ -709,7 +727,6 @@ public import tlang.compiler.symbols.expressions;
 public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable, MCloneable
 {
     private Expression expression;
-    private Variable variable;
 
     this(Expression expression)
     {
@@ -721,21 +738,9 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
         return expression;
     }
 
-    public Variable getVariable()
-    {
-        return variable;
-    }
-
-    // NOTE-to-self: Very interesting method we have here, is this just for debugging?
-    // (15th May 2023, whilst working on Meta)
-    public void setVariable(Variable variable)
-    {
-        this.variable = variable;
-    }
-
     public override string toString()
     {
-        return "[varAssignDec'd: To: "~variable.toString()~"]";
+        return "[varAssignDec: Expr: "~expression.toString()~"]";
     }
 
     public override Statement[] search(TypeInfo_Class clazzType)
@@ -1069,6 +1074,9 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
     {
         super(functionName);
         this.arguments = arguments;
+
+        /* Weighted as 2 */
+        weight = 2;
     }
 
     public override string toString()
@@ -1756,77 +1764,6 @@ public final class Branch : Entity, Container
                 }
             }
 
-            return false;
-        }
-    }
-}
-
-public final class DiscardStatement : Statement, MStatementSearchable, MStatementReplaceable
-{
-    private Expression expression;
-
-    this(Expression expression)
-    {
-        this.expression = expression;
-
-        /* Weighted as 2 */
-        weight = 2;
-    }
-
-    public Expression getExpression()
-    {
-        return expression;
-    }
-
-    public override string toString()
-    {
-        return "[DiscardStatement: (Exp: "~expression.toString()~")]";
-    }
-
-    public override Statement[] search(TypeInfo_Class clazzType)
-    {
-        /* List of returned matches */
-        Statement[] matches;
-
-        /* Are we (ourselves) of this type? */
-        if(clazzType.isBaseOf(this.classinfo))
-        {
-            matches ~= [this];
-        }
-
-        /* Recurse on our `Expression` (if possible) */
-        MStatementSearchable innerStmt = cast(MStatementSearchable)expression;
-        if(innerStmt)
-        {
-            matches ~= innerStmt.search(clazzType); 
-        }
-
-        return matches;
-    }
-
-    public override bool replace(Statement thiz, Statement that)
-    {
-        import std.stdio;
-        writeln("Replace() enter discard");
-
-        /* Check if our `Expression` matches, then replace */
-        if(expression == thiz)
-        {
-            // NOTE: This legit makes no sense and won't do anything, we could remove this
-            // and honestly should probably make this return false
-            // FIXME: Make this return `false` (see above)
-            expression = cast(Expression)that;
-            return true;
-        }
-        /* If not direct match, then recurse and replace (if possible) */
-        else if(cast(MStatementReplaceable)expression)
-        {
-            MStatementReplaceable replStmt = cast(MStatementReplaceable)expression;
-            return replStmt.replace(thiz, that);
-        }
-        /* If not direct match and not replaceable */
-        else
-        {
             return false;
         }
     }

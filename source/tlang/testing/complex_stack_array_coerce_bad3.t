@@ -11,7 +11,7 @@ int function()
     stackArr[0] = &val1;
     stackArr[1] = &val2;
     
-    discard coerce_bad3(stackArr);
+    coerce_bad3(stackArr);
 
     return val1+val2;
 }

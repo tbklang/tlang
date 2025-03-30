@@ -1,6 +1,6 @@
 module tlang.compiler.codegen.emit.dgen;
 
-import tlang.compiler.codegen.emit.core : CodeEmitter;
+import tlang.compiler.codegen.emit.core;
 import tlang.compiler.typecheck.core;
 import std.container.slist : SList;
 import tlang.compiler.codegen.instruction;
@@ -23,6 +23,7 @@ import tlang.compiler.symbols.containers : Module;
 import std.format : format;
 import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.datetime.stopwatch : Duration, dur;
+import tlang.compiler.codegen.emit.dgen_types : DGenException;
 
 public final class DCodeEmitter : CodeEmitter
 {
@@ -64,7 +65,7 @@ public final class DCodeEmitter : CodeEmitter
         string tabStr;
 
         /* Only generate tabs if enabled in compiler config */
-        if(config.getConfig("dgen:pretty_code").getBoolean())
+        if(config.getConfig("dgen:pretty_code").flag())
         {
             for(ulong i = 0; i < count; i++)
             {
@@ -305,13 +306,13 @@ public final class DCodeEmitter : CodeEmitter
              * 
              * See issue #140 (https://deavmi.assigned.network/git/tlang/tlang/issues/140#issuecomment-1892)
              */
-            Type leftHandOpType = (cast(Value)binOpInstr.lhs).getInstrType();
-            Type rightHandOpType = (cast(Value)binOpInstr.rhs).getInstrType();
+            Type leftHandOpType = (cast(Value)binOpInstr.getLHSInstr()).getInstrType();
+            Type rightHandOpType = (cast(Value)binOpInstr.getRHSInstr()).getInstrType();
 
             if(typeChecker.isPointerType(leftHandOpType))
             {
                 // Sanity check the other side should have been coerced to CastedValueInstruction
-                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.rhs;
+                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.getRHSInstr();
                 assert(cvInstr);
 
                 DEBUG("CastedValueInstruction relax setting: Da funk RIGHT ");
@@ -322,7 +323,7 @@ public final class DCodeEmitter : CodeEmitter
             else if(typeChecker.isPointerType(rightHandOpType))
             {
                 // Sanity check the other side should have been coerced to CastedValueInstruction
-                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.lhs;
+                CastedValueInstruction cvInstr = cast(CastedValueInstruction)binOpInstr.getLHSInstr();
                 assert(cvInstr);
 
                 DEBUG("CastedValueInstruction relax setting: Da funk LEFT ");
@@ -331,7 +332,7 @@ public final class DCodeEmitter : CodeEmitter
                 cvInstr.setRelax(true);
             }
 
-            emmmmit = transform(binOpInstr.lhs)~to!(string)(getCharacter(binOpInstr.operator))~transform(binOpInstr.rhs);
+            emmmmit = transform(binOpInstr.getLHSInstr())~to!(string)(getCharacter(binOpInstr.getOperator()))~transform(binOpInstr.getRHSInstr());
         }
         /* FuncCallInstr */
         else if(cast(FuncCallInstr)instruction)
@@ -392,10 +393,18 @@ public final class DCodeEmitter : CodeEmitter
             Context context = returnInstruction.getContext();
             assert(context);
 
-            /* Get the return expression instruction */
-            Value returnExpressionInstr = returnInstruction.getReturnExpInstr();
-
-            emmmmit = "return "~transform(returnExpressionInstr)~";";
+            /* If there is an expression returned */
+            if(returnInstruction.hasReturnExpInstr())
+            {
+                /* Get the return expression instruction */
+                Value returnExpressionInstr = returnInstruction.getReturnExpInstr();
+                emmmmit = "return "~transform(returnExpressionInstr)~";";
+            }
+            /* Expression-less return */
+            else
+            {
+                emmmmit = "return;";
+            }
         }
         /**
         * If statements (IfStatementInstruction)
@@ -565,21 +574,6 @@ public final class DCodeEmitter : CodeEmitter
             emmmmit = emit;
         }
         /**
-        * Discard instruction (DiscardInstruction)
-        */
-        else if(cast(DiscardInstruction)instruction)
-        {
-            DiscardInstruction discardInstruction = cast(DiscardInstruction)instruction;
-            Value valueInstruction = discardInstruction.getExpressionInstruction();
-
-            string emit;
-
-            /* Transform the expression */
-            emit ~= transform(valueInstruction)~";";
-
-            emmmmit = emit;
-        }
-        /**
         * Type casting instruction (CastedValueInstruction)
         */
         else if(cast(CastedValueInstruction)instruction)
@@ -614,7 +608,7 @@ public final class DCodeEmitter : CodeEmitter
                     emit ~= "("~typeTransform(castingTo)~")";
 
                     /* The expression being casted */
-                    emit ~= transform(uncastedInstruction);
+                    emit ~= "("~transform(uncastedInstruction)~")";
                 }
                 else
                 {
@@ -798,8 +792,24 @@ public final class DCodeEmitter : CodeEmitter
 
             emmmmit = emit;
         }
-        // TODO: MAAAAN we don't even have this yet
-        // else if(cast(StringExpression))
+        /**
+         * String literals
+         *
+         * Instructions containing string literals
+         */
+        else if(cast(StringLiteral)instruction)
+        {
+            import tlang.compiler.symbols.strings : StringInfo;
+            StringLiteral sl_instr = cast(StringLiteral)instruction;
+            StringInfo* sl_info = sl_instr.str();
+            assert(sl_info.width() == 1); // TODO: Add support for other string types
+
+            
+            // C-string literal is `"<my content>"`
+            string emit = `"`~sl_info.utf8()~`"`;
+
+            emmmmit = emit;
+        }
         /** 
          * Unsupported instruction
          *
@@ -809,7 +819,14 @@ public final class DCodeEmitter : CodeEmitter
          */
         else
         {
-            emmmmit = "<TODO: Base emit: "~to!(string)(instruction)~">";
+            if(instruction is null)
+            {
+                emmmmit = "<TODO: transform() called but instruction was null>";
+            }
+            else
+            {
+                emmmmit = "<TODO: Base emit: "~to!(string)(instruction)~">";
+            }
         }
 
         return emmmmit;
@@ -880,7 +897,7 @@ public final class DCodeEmitter : CodeEmitter
             //
             // In such test cases we assume that the first module
             // is the one we care about
-            if(config.getConfig("dgen:emit_entrypoint_test").getBoolean())
+            if(config.getConfig("dgen:emit_entrypoint_test").flag())
             {
                 WARN("Generating a testcase entrypoint for this program");
 
@@ -1649,7 +1666,7 @@ int main()
      * This requires that the `emit()`
      * step must have already been completed
      */
-    public override void finalize()
+    public override EmitResult finalize()
     {
         import tlang.compiler.symbols.data : Program;
         Program program = this.typeChecker.getProgram();
@@ -1665,7 +1682,7 @@ int main()
         scope(exit)
         {
             // Clean up all generated C files
-            if(config.hasConfig("dgen:afterexit:clean_c_files") && config.getConfig("dgen:afterexit:clean_c_files").getBoolean())
+            if(config.hasConfig("dgen:afterexit:clean_c_files") && config.getConfig("dgen:afterexit:clean_c_files").flag())
             {
                 foreach(string srcFile; srcFiles)
                 {
@@ -1681,7 +1698,7 @@ int main()
             }
 
             // Clean up all generates object files
-            if(config.hasConfig("dgen:afterexit:clean_obj_files") && config.getConfig("dgen:afterexit:clean_obj_files").getBoolean())
+            if(config.hasConfig("dgen:afterexit:clean_obj_files") && config.getConfig("dgen:afterexit:clean_obj_files").flag())
             {
                 foreach(string objFile; objectFiles)
                 {
@@ -1699,14 +1716,14 @@ int main()
 
         try
         {
-            string systemCompiler = config.getConfig("dgen:compiler").getText();
+            string systemCompiler = config.getConfig("dgen:compiler").text();
             INFO("Using system C compiler '"~systemCompiler~"' for compilation");
 
             // Check for object files to be linked in
             string[] objectFilesLink;
             if(config.hasConfig("linker:link_files"))
             {
-                objectFilesLink = config.getConfig("linker:link_files").getArray();
+                objectFilesLink = config.getConfig("linker:link_files").array();
                 INFO("Object files to be linked in: "~to!(string)(objectFilesLink));
             }
             else
@@ -1715,11 +1732,17 @@ int main()
             }
 
             // Total compilation time
-            Duration total = Duration.zero();
+            StopWatch watch = StopWatch(AutoStart.yes);
+            Duration total_c = Duration.zero();
 
             // TODO: Do for-each generation of `.o` files here with `-c`
             foreach(Module curMod; programModules)
             {
+                scope(exit)
+                {
+                    watch.reset();
+                }
+                
                 string modFileSrcPath = format("%s.c", curMod.getName());
                 srcFiles ~= modFileSrcPath;
                 string modFileObjPath = format("%s.o", curMod.getName());
@@ -1728,18 +1751,16 @@ int main()
 
                 INFO("Compiling now with arguments: "~to!(string)(args));
 
-                StopWatch watch = StopWatch(AutoStart.yes);
                 Pid ccPID = spawnProcess(args);
                 int code = wait(ccPID);
                 if(code)
                 {
-                    //NOTE: Make this a TLang exception
-                    throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
+                    throw new DGenException("The CC exited with a non-zero exit code (%d)", code);
                 }
 
                 Duration compTime = watch.peek();
                 INFO(format("Compiled %s in %sms", curMod.getName(), compTime.total!("msecs")()));
-                total = dur!("msecs")(total.total!("msecs")()+compTime.total!("msecs")());
+                total_c = dur!("msecs")(total_c.total!("msecs")()+compTime.total!("msecs")());
 
                 // Only add it to the list of files if it was generated
                 // (this guards against the clean up routines spitting out errors
@@ -1747,7 +1768,7 @@ int main()
                 objectFiles ~= modFileObjPath;
             }
 
-            INFO(format("Total compilation time took %s", total));
+            INFO(format("Total compilation time took %s", total_c));
 
             // Now determine the entry point module
             // Module entryModule;
@@ -1766,25 +1787,42 @@ int main()
             // Tack on any objects to link that were specified in Config
             args ~= objectFilesLink;
 
-            // Tack on the output filename (TODO: Fix the output file name)
-            args ~= ["-o", "./tlang.out"]; 
+            // Tack on the output filename
+            string executableOutput;
+            if(config.hasConfig("emit:executable_output"))
+            {
+                executableOutput = config.getConfig("emit:executable_output").text();
+            }
+            else
+            {
+                throw new DGenException("Missing the `emit:executableOutput` option");
+            }
+            args ~= ["-o", executableOutput]; 
 
             
+            // Total linking time
+            Duration total_l = Duration.zero();
+            watch.reset();
 
             // Now link all object files (the `.o`'s) together
             // and perform linking
+            INFO("Linking args: ", args);
             Pid ccPID = spawnProcess(args);
             int code = wait(ccPID);
+            total_l = watch.peek();
 
             if(code)
             {
-                //NOTE: Make this a TLang exception
-                throw new Exception("The CC exited with a non-zero exit code ("~to!(string)(code)~")");
+                throw new DGenException("The CC exited with a non-zero exit code (%d)", code);
             }
+
+            INFO(format("Total linking time took %s", total_l));
+
+            return EmitResult("./tlang.out", total_c+total_l);
         }
         catch(ProcessException e)
         {
-            ERROR("NOTE: Case where it exited and Pid now inavlid (if it happens it would throw processexception surely)?");
+            ERROR("NOTE: Case where it exited and Pid now invalid (if it happens it would throw processexception surely)?");
             assert(false);
         }
     }
@@ -1818,7 +1856,7 @@ private Predicate!(Entity) derive_functionAccMod(AccessorType accModType)
         {
             return false;
         }
-        // Onyl care about those with a matching
+        // Only care about those with a matching
         // modifier
         else
         {
@@ -1854,7 +1892,7 @@ private Predicate!(Entity) derive_variableAccMod(AccessorType accModType)
         {
             return false;
         }
-        // Onyl care about those with a matching
+        // Only care about those with a matching
         // modifier
         else
         {

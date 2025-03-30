@@ -2,10 +2,11 @@
 tlangout.c
 tlang.out
 *.o
+*.c
 
 # Build files
-#tlang
 tlang-test-library
+libtlang.a
 
 # Package management
 .dub/

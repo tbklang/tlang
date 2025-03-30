@@ -5,22 +5,9 @@ import std.conv : to;
 
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
+import std.string : format;
 
-/* TODO: Look into arrays later */
-public class StringExpression : Expression
-{
-    private string ztring;
 
-    this(string ztring)
-    {
-        this.ztring = ztring;
-    }
-
-    public string getStringLiteral()
-    {
-        return ztring;
-    }
-}
 
 public class OperatorExpression : Expression
 {

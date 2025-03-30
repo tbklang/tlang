@@ -236,6 +236,11 @@ public enum SymbolType
     EQUALS,
 
     /**
+     * Non-equality operator `!=`
+     */
+    NOT_EQUALS,
+
+    /**
      * Greater than operator `>`
      */
     GREATER_THAN,
@@ -309,6 +314,16 @@ public enum SymbolType
      * `alias` keyword
      */
     ALIAS,
+
+    /**
+     * `mixin` keyword
+     */
+    MIXIN,
+
+    /**
+     * `embed` keyword
+     */
+    EMBED,
 
     /** 
      * Unknown symbol
@@ -725,6 +740,16 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.ALIAS;
     }
+    /* mixin keyword */
+    else if(cmp(token, "mixin") == 0)
+    {
+        return SymbolType.MIXIN;
+    }
+    /* embed keyword */
+    else if(cmp(token, "embed") == 0)
+    {
+        return SymbolType.EMBED;
+    }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))
     {
@@ -739,6 +764,11 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp(token, "==") == 0)
     {
         return SymbolType.EQUALS;
+    }
+    /* Non-equality `!=` check */
+    else if(cmp(token, "!=") == 0)
+    {
+        return SymbolType.NOT_EQUALS;
     }
     /* Assign `=` check */
     else if (token[0] == '=')
@@ -893,7 +923,7 @@ public bool isBinaryOp(Token token)
             tokenStr[0] == '^' || tokenStr[0] == '~'       ||
             tokenStr[0] == '<' || tokenStr[0] == '>'       ||
             cmp(">=", tokenStr) == 0 || cmp("<=", tokenStr) == 0 ||
-            cmp("==", tokenStr) == 0;
+            cmp("==", tokenStr) == 0 || cmp("!=", tokenStr) == 0;
 }
 
 /** 
@@ -935,6 +965,10 @@ public string getCharacter(SymbolType symbolIn)
     else if(symbolIn == SymbolType.EQUALS)
     {
         return "==";
+    }
+    else if(symbolIn == SymbolType.NOT_EQUALS)
+    {
+        return "!=";
     }
     else if(symbolIn == SymbolType.SMALLER_THAN)
     {

@@ -150,7 +150,7 @@ public final class ModuleManager
     this(Compiler compiler)
     {
         // Add search paths discovered from configuration entry
-        string[] cmdLinePaths = compiler.getConfig().getConfig("modman:path").getArray();
+        string[] cmdLinePaths = compiler.getConfig().getConfig("modman:path").array();
         addSearchPaths(cmdLinePaths);
         
         this.compiler = compiler;
@@ -467,7 +467,7 @@ public final class ModuleManager
         if(actualType != expected)
         {
             // TODO: Make SyntaxError have a parser-less version for null-safety in the future
-            throw new SyntaxError(null, expected, got);
+            throw new SyntaxError(expected, got);
         }
     }
 
