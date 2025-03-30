@@ -574,7 +574,7 @@ jobs:
       - name: Alias expression test that returns 3
         run: |
           set -e
-          ./tlang compile source/tlang/testing/simple_aliases.t
+          ./tlang compile source/tlang/testing/aliases/simple.t
 
           set +e
           ./tlang.out
