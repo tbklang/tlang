@@ -9,18 +9,9 @@ int cnt()
 
 alias expr = cnt();
 
-alias inner = 1;
-
-int identity(int i)
-{
-	return i;
-}
-
 int main()
 {
-	alias inner = sizeof(ubyte)-cast(ubyte)1;
 	int i = expr;
-	int p = expr;
-	int o = identity(inner);
-	return i+p+o;
+	int p = 1;
+	return i+p;
 }
