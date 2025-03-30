@@ -584,7 +584,7 @@ unittest
                         "source/tlang/testing/universal_coerce/simple_coerce_literal_good_stdalo.t",
                         "source/tlang/testing/simple_function_return_type_check_good.t",
                         "source/tlang/testing/modules/a.t",
-                        "source/tlang/testing/simple_aliases.t"
+                        "source/tlang/testing/aliases/simple.t"
     ];
 
     foreach(string testFileGood; testFilesGood)
