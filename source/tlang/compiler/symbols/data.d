@@ -417,9 +417,11 @@ public final class VariableParameter : Variable
     }
 }
 
+import tlang.compiler.symbols.mcro : MTypeRewritable, MPositionable;
+
 /* TODO: Don't make this a Container, or maybe (make sure I don't rely on COntainer casting for other shit
 * though, also the recent changes) */
-public class Function : TypedEntity, Container
+public class Function : TypedEntity, Container, MPositionable
 {
     private VariableParameter[] params;
     private Statement[] bodyStatements;
@@ -594,6 +596,19 @@ public class Function : TypedEntity, Container
 
             return false;
         }
+    }
+
+    public override size_t position(Statement statement)
+    {
+        for(size_t i = 0; i < this.bodyStatements.length; i++)
+        {
+            if(statement == this.bodyStatements[i])
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 }
 
@@ -990,7 +1005,7 @@ public class PointerDereferenceAssignment : Statement
     }
 }
 
-public class IdentExpression : Expression, MStatementSearchable, MStatementReplaceable
+public abstract class IdentExpression : Expression, MStatementSearchable, MStatementReplaceable
 {
     /* name */
     private string name;
@@ -1032,7 +1047,7 @@ public class IdentExpression : Expression, MStatementSearchable, MStatementRepla
     }
 }
 
-public class VariableExpression : IdentExpression
+public class VariableExpression : IdentExpression, MCloneable
 {
 
     this(string identifier)
@@ -1044,9 +1059,25 @@ public class VariableExpression : IdentExpression
     {
         return "[varExp: "~getName()~"]";
     }
+
+    /** 
+     * Clones this variable expression
+     *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone(Container newParent = null)
+    {
+        VariableExpression cpy = new VariableExpression(getName());
+        cpy.parentTo(newParent);
+        return cpy;
+    }
 }
 
-public class Call : IdentExpression
+public abstract class Call : IdentExpression
 {
     this(string ident)
     {
@@ -1109,8 +1140,6 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
 
     public override Statement[] search(TypeInfo_Class clazzType)
     {
-        // TODO: Implement me
-
         /* List of returned matches */
         Statement[] matches;
 
@@ -1137,33 +1166,45 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
 
     public override bool replace(Statement thiz, Statement that)
     {
-        // TODO: Implement me
+        /* Cannot replace ourselves directly */
+        if(thiz == this)
+        {
+            return false;
+        }
+        /* Look at the arguments */
+        else
+        {
+            for(size_t i = 0; i < this.arguments.length; i++)
+            {
+                Expression arg = this.arguments[i];
 
-        // /* Check if our `Expression` matches, then replace */
-        // if(expression == thiz)
-        // {
-        //     // NOTE: This legit makes no sense and won't do anything, we could remove this
-        //     // and honestly should probably make this return false
-        //     // FIXME: Make this return `false` (see above)
-        //     expression = cast(Expression)that;
-        //     return true;
-        // }
-        // /* If not direct match, then recurse and replace (if possible) */
-        // else if(cast(MStatementReplaceable)expression)
-        // {
-        //     MStatementReplaceable replStmt = cast(MStatementReplaceable)expression;
-        //     return replStmt.replace(thiz, that);
-        // }
-        // /* If not direct match and not replaceable */
-        // else
-        // {
-        //     return false;
-        // }
+                /* Direct replacement */
+                if(arg == thiz)
+                {
+                    this.arguments[i] = cast(Expression)that;
+                    this.arguments[i].parentTo(arg.parentOf());
+                    return true;
+                }
+            }
+
+            for(size_t i = 0; i < this.arguments.length; i++)
+            {
+                Expression arg = this.arguments[i];
+
+                /* Replacing somewhere within */
+                MStatementReplaceable exprRepl = cast(MStatementReplaceable)arg;
+                if(exprRepl && exprRepl.replace(thiz, that))
+                {
+                    return true;
+                }
+            }
+        }
+        
         return false;
     }
 
     /** 
-     * Clones this integer literal
+     * Clones this function call
      *
      * Param:
      *   newParent = the `Container` to re-parent the
@@ -1175,12 +1216,14 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
     {
         // Clone arguments
         Expression[] clonedArgs;
-        foreach(Expression arg; clonedArgs)
+        foreach(Expression arg; this.arguments)
         {
             MCloneable argClonable = cast(MCloneable)arg;
+            DEBUG(typeid(arg));
+            assert(argClonable);
             if(argClonable)
             {
-                clonedArgs ~= cast(Expression)argClonable.clone();
+                clonedArgs ~= cast(Expression)argClonable.clone(newParent);
             }
         }
 

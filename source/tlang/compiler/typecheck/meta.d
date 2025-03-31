@@ -12,6 +12,20 @@ import tlang.compiler.configuration;
 import tlang.compiler.symbols.aliases : AliasDeclaration;
 import std.string : format;
 
+import tlang.misc.exceptions : TError;
+
+/**
+ * Represents an exception that
+ * occurs during meta processing
+ */
+public class MetaException : TError
+{
+    this(string msg)
+    {
+        super(format("MetaException: %s", msg));
+    }
+}
+
 /** 
  * The `MetaProcessor` is used to do a pass over a `Container`
  * to process any macro and macro-like entities
@@ -96,14 +110,12 @@ public class MetaProcessor
                             }
                             else
                             {
-                                // TODO: Throw an exception here that an ident_type should be present as the argument
-                                ERROR("The argument to `sizeof` should be an ident");
+                                throw new MetaException("The argument to `sizeof` should be a type");
                             }
                         }
                         else
                         {
-                            // TODO: Throw an exception here as only 1 argument is allowed
-                            ERROR("To use the `sizeof` macro you require a single argument to be passed to it");
+                            throw new MetaException("To use the `sizeof` macro you require a single argument to be passed to it");   
                         }
                     }
                 }
@@ -144,6 +156,8 @@ public class MetaProcessor
 
     private void doAliasExpression(Container container, Statement curStmt)
     {
+        Resolver resolver = tc.getResolver(); // TODO: Remove from here, make a field
+
         DEBUG(format("doAliasExpression(cntnr:%s, stmt=%s)", container, curStmt));
 
         // Find any VariableExpression(s) from curStmt (TODO: should be container or nah?)
@@ -181,6 +195,22 @@ public class MetaProcessor
                 {
                     // Nearest matched alias
                     AliasDeclaration nearestAlias = matched[0];
+
+                    // Only continue if the alias being referred to
+                    // appears before the place it is being referred
+                    // AT
+                    if(resolver.isThizAfterThat(nearestAlias, varExp))
+                    {
+                        throw new MetaException
+                        (
+                            format
+                            (
+                                "Usage of an alias %s in %s prior to its declaration",
+                                nearestAlias,
+                                varExp
+                            )
+                        );
+                    }
 
                     // Now extract the alias's expression and clone it
                     // and make its parent the VariableExpression's
@@ -282,7 +312,7 @@ public class MetaProcessor
                     DEBUG("Found type alias '"~identName~"' which concretely is '"~concereteType~"'");
 
                     // Replace with concrete type
-                    container.replace(identExp, new IdentExpression(concereteType));
+                    container.replace(identExp, new VariableExpression(concereteType));
                 }
             }
         }

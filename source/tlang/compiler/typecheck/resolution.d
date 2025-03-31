@@ -209,7 +209,7 @@ public final class Resolver
      * indirectly (or if it IS the container `c`)
      * Returns: `true` if so, `false` otherwise
      */
-    public bool isDescendant(Container c, Entity e)
+    public bool isDescendant(Container c, Statement e)
     {
         /**
          * If they are the same
@@ -223,7 +223,7 @@ public final class Resolver
          */
         else
         {
-            Entity currentEntity = e;
+            Statement currentEntity = e;
 
             do
             {
@@ -261,7 +261,7 @@ public final class Resolver
                 // that actually belonged to the same tree as
                 // the starting node. This becomes `null` because
                 // remember that a `Program` is not a kind-of `Entity`
-                currentEntity = cast(Entity)(parentOfCurrent);
+                currentEntity = cast(Statement)(parentOfCurrent);
             }
             while (currentEntity);
 
@@ -423,6 +423,94 @@ public final class Resolver
                 collectUpwards(parent, pred, collected);
             }
         }
+    }
+
+
+    import tlang.compiler.symbols.mcro : MPositionable;
+    private enum Pos
+    {
+        LVL_BEFORE,
+        LVL_AFTER,
+        SAME,
+        LEFT_OUTER,
+        LEFT_INNER,
+        NOT_FOUND
+    }
+
+    private Pos positionalize(Statement thiz, Statement that)
+    {
+        Container thizParent = thiz.parentOf();
+        Container thatParent = that.parentOf();
+
+        Entity thizParentEnt = cast(Entity)thizParent;
+        Entity thatParentEnt = cast(Entity)thatParent;
+
+        /* If sharing a parent */
+        if(thizParent == thatParent)
+        {
+            // Using the parent 
+            MPositionable positionable = cast(MPositionable)thizParent;
+
+            if(positionable)
+            {
+                size_t thizPos = positionable.position(thiz);
+                size_t thatPos = positionable.position(that);
+
+                DEBUG("thizPos=%d", thizPos);
+                DEBUG("thatPos=%d", thatPos);
+
+                // If one or other is not found, climb to common position
+
+                if(thizPos != -1 && thatPos != -1)
+                {
+                    if(thizPos == thatPos)
+                    {
+                        return Pos.SAME;
+                    }
+                    else
+                    {
+                        return thizPos < thatPos ? Pos.LVL_BEFORE : Pos.LVL_AFTER;
+                    }
+                }
+                else
+                {
+                    return Pos.NOT_FOUND;
+                }
+            }
+            else
+            {
+                return Pos.NOT_FOUND;    
+            }
+        }
+        /* If `thiz` is `that` */
+        else if(thiz == that)
+        {
+            return Pos.SAME;
+        }
+        /* If `that` is within `thiz`'s parent */
+        else if(isDescendant(thizParent, that))
+        {
+            return Pos.LEFT_OUTER;
+        }
+        /* If `thiz` is within `that`'s parent */
+        else if(isDescendant(thatParent, thiz))
+        {
+            return Pos.LEFT_INNER;
+        }
+
+        return Pos.NOT_FOUND;
+    }
+
+    public bool isThizBeforeThat(Statement thiz, Statement that)
+    {
+        Pos result = positionalize(thiz, that);
+        return result == Pos.LEFT_OUTER || result == Pos.LVL_BEFORE;
+    }
+
+    public bool isThizAfterThat(Statement thiz, Statement that)
+    {
+        Pos result = positionalize(thiz, that);
+        return result == Pos.LEFT_INNER || result == Pos.LVL_AFTER; 
     }
 
 
