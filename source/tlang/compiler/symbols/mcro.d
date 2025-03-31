@@ -170,5 +170,5 @@ public interface MPositionable
      * Returns: the position or -1
      * if invalid
      */
-    public size_t position(Statement statement);
+    public ptrdiff_t position(Statement statement);
 }
