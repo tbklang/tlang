@@ -598,7 +598,7 @@ public class Function : TypedEntity, Container, MPositionable
         }
     }
 
-    public override size_t position(Statement statement)
+    public override ptrdiff_t position(Statement statement)
     {
         for(size_t i = 0; i < this.bodyStatements.length; i++)
         {
