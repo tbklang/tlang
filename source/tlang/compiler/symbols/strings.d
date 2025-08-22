@@ -164,7 +164,6 @@ public StringExpression combine(StringExpression left, StringExpression right)
 
     // once converted (or if matched) we can then
     // combine
-    StringInfo s_si;
     StringData s_sid;
     if(w_chosen == 1)
     {
@@ -179,9 +178,6 @@ public StringExpression combine(StringExpression left, StringExpression right)
         s_sid.utf32 = left_si.data().utf32~right_si.data().utf32;
     }
 
-    s_si = StringInfo(s_sid, w_chosen);
-
-
-    StringExpression s_exp = new StringExpression(s_si, w_chosen);
+    StringExpression s_exp = new StringExpression(s_sid, w_chosen);
     return s_exp;
 }
