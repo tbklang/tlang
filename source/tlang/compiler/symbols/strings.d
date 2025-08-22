@@ -151,12 +151,37 @@ public StringExpression combine(StringExpression left, StringExpression right)
     if(left_si.width() < right_si.width())
     {
         w_chosen = right_si.width();
+
+        // TODO: up convert here
     }
     // right_si's width -> left_si's width
     else if(left_si.width() > right_si.width())
     {
         w_chosen = left_si.width();
+
+        // TODO: upconvert here
     }
 
-    
+    // once converted (or if matched) we can then
+    // combine
+    StringInfo s_si;
+    StringData s_sid;
+    if(w_chosen == 1)
+    {
+        s_sid.utf8 = left_si.data().utf8~right_si.data().utf8;
+    }
+    else if(w_chosen == 2)
+    {
+        s_sid.utf16 = left_si.data().utf16~right_si.data().utf16;
+    }
+    else if(w_chosen == 4)
+    {
+        s_sid.utf32 = left_si.data().utf32~right_si.data().utf32;
+    }
+
+    s_si = StringInfo(s_sid, w_chosen);
+
+
+    StringExpression s_exp = new StringExpression(s_si);
+    return s_exp;
 }
