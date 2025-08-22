@@ -3843,6 +3843,8 @@ void function(int i, int p)
  */
 unittest
 {
+    import tlang.compiler.symbols.strings : StringExpression;
+
     string sourceCode = `
 module strcat;
 
@@ -3873,8 +3875,14 @@ ubyte* str = "Hello"     " world";
         TypeChecker tc = new TypeChecker(compiler);
 
         /* Find the variable named `str` */
-        Entity varEnt = tc.getResolver().resolveBest(modulle, "p");
+        Entity varEnt = tc.getResolver().resolveBest(modulle, "str");
         Variable var = cast(Variable)varEnt;
+
+        VariableAssignment var_ass = var.getAssignment();
+        Expression e = var_ass.getExpression();
+        StringExpression strExp = cast(StringExpression)e;
+        assert(strExp);
+        assert(strExp.data().utf8() == "Hello world";
         
     }
     catch(TError e)
