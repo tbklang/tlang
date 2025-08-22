@@ -3882,7 +3882,7 @@ ubyte* str = "Hello"     " world";
         Expression e = var_ass.getExpression();
         StringExpression strExp = cast(StringExpression)e;
         assert(strExp);
-        assert(strExp.data().utf8() == "Hello world";
+        assert(strExp.data().utf8() == "Hello world");
         
     }
     catch(TError e)
