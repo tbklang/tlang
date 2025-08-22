@@ -3878,12 +3878,12 @@ ubyte* str = "Hello"     " world";
         Entity varEnt = tc.getResolver().resolveBest(modulle, "str");
         Variable var = cast(Variable)varEnt;
 
+        /* Ensure that the string concatenation results in `"Hello world"` */
         VariableAssignment var_ass = var.getAssignment();
         Expression e = var_ass.getExpression();
         StringExpression strExp = cast(StringExpression)e;
         assert(strExp);
         assert(strExp.data().utf8() == "Hello world");
-        
     }
     catch(TError e)
     {
