@@ -1478,11 +1478,35 @@ public final class Parser
             else if (symbol == SymbolType.STRING_LITERAL)
             {
                 // TODO: Add different string encoding support
+
+                import tlang.compiler.symbols.strings : StringExpression;
+
+                // If there is something on the stack
+                StringExpression prev_str;
+                if(hasExp())
+                {
+                    // If it isn't a string then that is an error
+                    auto pot_str = peek();
+                    if(!cast(StringExpression)pot_str)
+                    {
+                        expect("Expected a string concatenation but got "~to!(string)(pot_str));
+                    }
+
+                    prev_str = cast(StringExpression)pot_str;
+                }
                 
+                // TODO: Encoding - I need a method to place the two StringInfo's
+                // together from what it seems
+
+                /* Get current string literal and remove the wrapping `"   "` */
+                string str_lit = buildUTF8FromLiteral(getCurrentToken().getToken());
+
+                /* Do we need to perform string concatenation? */
+                // str_lit = prev_str ? prev_str.getLiteral())~str_lit : str_lit;
+
                 /* Add the string to the stack */
-                string str_lit = getCurrentToken().getToken();
                 import tlang.compiler.parsing.strings;
-                addRetExp(buildUTF8FromLiteral(str_lit));
+                addRetExp(str_lit);
 
                 /* Get the next token */
                 nextToken();
