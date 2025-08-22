@@ -137,3 +137,26 @@ public final class StringExpression : Expression
         return this._data.toString();
     }
 }
+
+// todo: we need to define a _single_ StringData hence the decision HAS TO
+// be made here
+
+// rule: always go to the width of the bigger StringData of the two
+public StringExpression combine(StringExpression left, StringExpression right)
+{
+    auto left_si = left.data(), right_si = right.data();
+    ubyte w_chosen = left_si.width();
+
+    // left_si's width -> right_si's width
+    if(left_si.width() < right_si.width())
+    {
+        w_chosen = right_si.width();
+    }
+    // right_si's width -> left_si's width
+    else if(left_si.width() > right_si.width())
+    {
+        w_chosen = left_si.width();
+    }
+
+    
+}
