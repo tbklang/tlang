@@ -1493,7 +1493,7 @@ public final class Parser
                         expect("Expected a string concatenation but got "~to!(string)(pot_str));
                     }
 
-                    prev_str = cast(StringExpression)pot_str;
+                    prev_str = cast(StringExpression)removeExp();
                 }
                 
                 // TODO: Assuming, thus far UTF8 encoding
