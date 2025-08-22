@@ -182,6 +182,6 @@ public StringExpression combine(StringExpression left, StringExpression right)
     s_si = StringInfo(s_sid, w_chosen);
 
 
-    StringExpression s_exp = new StringExpression(s_si);
+    StringExpression s_exp = new StringExpression(s_si, w_chosen);
     return s_exp;
 }
