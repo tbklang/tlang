@@ -1264,6 +1264,13 @@ public final class Parser
             return retExpression.length != 0;
         }
 
+        Expression peek()
+        {
+            assert(hasExp()); //sanity check: assume you called `hasExp()` prior to this call
+
+            return retExpression[$-1];
+        }
+
         void expressionStackSanityCheck()
         {
             /* If we don't have 1 on the stack */
