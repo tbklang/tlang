@@ -3837,3 +3837,49 @@ void function(int i, int p)
         assert(false);
     }
 }
+
+/**
+ * String concatenation test
+ */
+unittest
+{
+    string sourceCode = `
+module strcat;
+
+ubyte* str = "Hello"     " world";
+`;
+
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+    try
+    {
+        compiler.doLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    try
+    {
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
+
+        TypeChecker tc = new TypeChecker(compiler);
+
+        /* Find the variable named `str` */
+        Entity varEnt = tc.getResolver().resolveBest(modulle, "p");
+        Variable var = cast(Variable)varEnt;
+        
+    }
+    catch(TError e)
+    {
+        stderr.write(e);
+        assert(false);
+    }
+}
