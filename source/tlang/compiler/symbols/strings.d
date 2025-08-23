@@ -138,6 +138,45 @@ public final class StringExpression : Expression
     }
 }
 
+
+public StringInfo convertTo(ubyte width, StringInfo src)
+{
+    if(width == src.width())
+    {
+        return src;
+    }
+    // UTF-8 to UTF-16
+    else if(src.width() == 1 && width == 2)
+    {
+
+    }
+    // UTF-8 to UTF-32
+    else if(src.width() == 1 && width == 4)
+    {
+
+    }
+    // UTF-16 to UTF-8
+    else if(src.width() == 2 && width == 1)
+    {
+
+    }
+    // UTF-16 to UTF-32
+    else if(src.width() == 2 && width == 4)
+    {
+
+    }
+    // UTF-32 to UTF-8
+    else if(src.width() == 4 && width == 1)
+    {
+
+    }
+    // UTF-32 to UTF-16
+    else if(src.width() == 4 && width == 2)
+    {
+
+    }
+}
+
 // todo: we need to define a _single_ StringData hence the decision HAS TO
 // be made here
 
@@ -153,6 +192,8 @@ public StringExpression combine(StringExpression left, StringExpression right)
         w_chosen = right_si.width();
 
         // TODO: up convert here
+
+        if(left_si.width() )
     }
     // right_si's width -> left_si's width
     else if(left_si.width() > right_si.width())
@@ -229,5 +270,25 @@ unittest
     assert(s_comb.data().width == 4);
 
     // ensure combination of data worked
+    assert(s_comb.data().utf32() == "Hello world"d);
+}
+
+unittest
+{
+    // create one with UTF-8 encoding and another
+    // with UTF-32 encoding
+    StringExpression s1 = new StringExpression("Hello");
+    StringExpression s2 = new StringExpression(" world"d);
+    assert(s1.data().width == 1 && s2.data().width == 4);
+    auto s_comb = combine(s1, s2);
+
+    // then we should expect the bigger encoding scheme
+    // of the two to be chosen; hence UTF-32
+    assert(s_comb.data().width == 4);
+
+    // ensure combination of data worked
+    import std.stdio;
+    stderr.writeln(cast(ubyte[])s_comb.data().utf32());
+    stderr.writeln(s_comb.data().utf32());
     assert(s_comb.data().utf32() == "Hello world"d);
 }
