@@ -181,3 +181,22 @@ public StringExpression combine(StringExpression left, StringExpression right)
     StringExpression s_exp = new StringExpression(s_sid, w_chosen);
     return s_exp;
 }
+
+// TODO: Add a unittest here for conversions
+
+unittest
+{
+    // create both with UTF-8 encoding
+    StringExpression s1 = new StringExpression("Hello");
+    StringExpression s2 = new StringExpression(" world");
+    assert(s1.data().width == 1 && s2.data().width == 1);
+    auto s_comb = combine(s1, s2);
+
+    // ensure the combination is a UTF-8 encoded
+    // string
+    assert(s_comb.data().width == 1);
+
+    // ensure combination of data worked
+    assert(s_comb.data().utf8() == "Hello world");
+
+}
