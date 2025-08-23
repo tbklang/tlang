@@ -18,8 +18,8 @@ import tlang.compiler.symbols.expressions : Expression;
 public union StringData
 {
     public string utf8;
-    public wchar[] utf16;
-    public dchar[] utf32;
+    public wstring utf16;
+    public dstring utf32;
 }
 
 /** 
@@ -111,7 +111,7 @@ public final class StringExpression : Expression
         this(sd, 1);
     }
 
-    public this(wchar[] zstring)
+    public this(wstring zstring)
     {
         // UTF-16 2-byte padded per-char ALWAYS
         StringData sd;
@@ -119,7 +119,7 @@ public final class StringExpression : Expression
         this(sd, 2);
     }
 
-    public this(dchar[] zstring)
+    public this(dstring zstring)
     {
         // UTF-32 4-byte padded per-char ALWAYS
         StringData sd;
@@ -198,5 +198,20 @@ unittest
 
     // ensure combination of data worked
     assert(s_comb.data().utf8() == "Hello world");
+}
 
+unittest
+{
+    // create both with UTF-16 encoding
+    StringExpression s1 = new StringExpression("Hello"w);
+    StringExpression s2 = new StringExpression(" world"w);
+    assert(s1.data().width == 2 && s2.data().width == 2);
+    auto s_comb = combine(s1, s2);
+
+    // ensure the combination is a UTF-16 encoded
+    // string
+    assert(s_comb.data().width == 2);
+
+    // ensure combination of data worked
+    assert(s_comb.data().utf16() == "Hello world"w);
 }
