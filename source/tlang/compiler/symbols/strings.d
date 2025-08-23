@@ -199,17 +199,13 @@ public StringExpression combine(StringExpression left, StringExpression right)
     if(left_si.width() < right_si.width())
     {
         w_chosen = right_si.width();
-
-        // TODO: up convert here
-
-        // if(left_si.width() )
+        left_si = convertTo(w_chosen, left_si);
     }
     // right_si's width -> left_si's width
     else if(left_si.width() > right_si.width())
     {
         w_chosen = left_si.width();
-
-        // TODO: upconvert here
+        right_si = convertTo(w_chosen, right_si);
     }
 
     // once converted (or if matched) we can then
