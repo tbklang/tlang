@@ -215,3 +215,19 @@ unittest
     // ensure combination of data worked
     assert(s_comb.data().utf16() == "Hello world"w);
 }
+
+unittest
+{
+    // create both with UTF-32 encoding
+    StringExpression s1 = new StringExpression("Hello"d);
+    StringExpression s2 = new StringExpression(" world"d);
+    assert(s1.data().width == 4 && s2.data().width == 4);
+    auto s_comb = combine(s1, s2);
+
+    // ensure the combination is a UTF-32 encoded
+    // string
+    assert(s_comb.data().width == 4);
+
+    // ensure combination of data worked
+    assert(s_comb.data().utf32() == "Hello world"d);
+}
