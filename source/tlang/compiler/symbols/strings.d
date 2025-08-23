@@ -141,6 +141,9 @@ public final class StringExpression : Expression
 
 public StringInfo convertTo(ubyte width, StringInfo src)
 {
+    import std.utf : toUTF8, toUTF16, toUTF32;
+    StringData sd;
+
     if(width == src.width())
     {
         return src;
@@ -148,33 +151,39 @@ public StringInfo convertTo(ubyte width, StringInfo src)
     // UTF-8 to UTF-16
     else if(src.width() == 1 && width == 2)
     {
-
+        sd.utf16 = toUTF16(src.data().utf8);
     }
     // UTF-8 to UTF-32
     else if(src.width() == 1 && width == 4)
     {
-
+        sd.utf32 = toUTF32(src.data().utf8);
     }
     // UTF-16 to UTF-8
     else if(src.width() == 2 && width == 1)
     {
-
+        sd.utf8 = toUTF8(src.data().utf16);
     }
     // UTF-16 to UTF-32
     else if(src.width() == 2 && width == 4)
     {
-
+        sd.utf32 = toUTF32(src.data().utf16);
     }
     // UTF-32 to UTF-8
     else if(src.width() == 4 && width == 1)
     {
-
+        sd.utf8 = toUTF8(src.data().utf32);
     }
     // UTF-32 to UTF-16
     else if(src.width() == 4 && width == 2)
     {
-
+        sd.utf16 = toUTF16(src.data().utf32);
     }
+    else
+    {
+        assert(false); // programming bug if we get here, then I missed something
+    }
+
+    return StringInfo(sd, width);
 }
 
 // todo: we need to define a _single_ StringData hence the decision HAS TO
@@ -193,7 +202,7 @@ public StringExpression combine(StringExpression left, StringExpression right)
 
         // TODO: up convert here
 
-        if(left_si.width() )
+        // if(left_si.width() )
     }
     // right_si's width -> left_si's width
     else if(left_si.width() > right_si.width())
