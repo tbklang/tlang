@@ -1222,10 +1222,15 @@ public final class Parser
         string str_raw = str_tok.getToken();
         DEBUG("str_raw: ", str_raw);
 
+        // Should at the very least be `""`, `""w` or `""d`
+        assert(str_raw.length >= 2);
+        assert(str_raw[0] == '"');
+        assert(str_raw[$-1] == '"' || str_raw[$-1] == 'w' || str_raw[$-1] == 'd');
+
         import tlang.compiler.parsing.strings : StrEnc, createExpression;
 
         // TODO: Add support for "s"w and "s"d
-        
+
         // TODO: Strlen need to be at least 2, which is guaranteed
         // here. And there is also possibiity it may be three.
 
