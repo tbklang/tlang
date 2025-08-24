@@ -31,3 +31,10 @@ public static StringExpression buildUTF8FromLiteral(string stringLiteral)
 
     return new StringExpression(str_trimmed);
 }
+
+public enum StrEnc : ubyte
+{
+    UTF_8 = 1,
+    UTF_16 = 2,
+    UTF_32 = 4
+}
