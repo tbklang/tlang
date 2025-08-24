@@ -32,6 +32,37 @@ public static StringExpression buildUTF8FromLiteral(string stringLiteral)
     return new StringExpression(str_trimmed);
 }
 
+public static StringExpression createExpression
+(
+    string contents,
+    StrEnc encoding
+)
+{
+    StringExpression str_exp;
+
+    if(encoding == StrEnc.UTF_8)
+    {
+        // the `string` type is UTF-8
+        str_exp = new StringExpression(contents);
+    }
+    else if(encoding == StrEnc.UTF_16)
+    {
+        import std.utf : toUTF16;
+        str_exp = new StringExpression(toUTF16(contents));
+    }
+    else if(encoding == StrEnc.UTF_32)
+    {
+        import std.utf : toUTF32;
+        str_exp = new StringExpression(toUTF32(contents));
+    }
+    else
+    {
+        assert(false);
+    }
+
+    return str_exp;
+}
+
 public enum StrEnc : ubyte
 {
     UTF_8 = 1,
