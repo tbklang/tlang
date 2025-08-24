@@ -1212,6 +1212,51 @@ public final class Parser
         return castedExpression;
     }
 
+    import tlang.compiler.symbols.strings : StringExpression;
+
+    private StringExpression parseString()
+    {
+        /* Obtain the string token literal (with "") */
+        auto str_tok = getCurrentToken();
+        assert(getSymbolType(str_tok) == SymbolType.STRING_LITERAL);
+        string str_raw = str_tok.getToken();
+        DEBUG("str_raw: ", str_raw);
+
+        import tlang.compiler.parsing.strings : StrEnc, createExpression;
+
+        // TODO: Add support for "s"w and "s"d
+        
+        // TODO: Strlen need to be at least 2, which is guaranteed
+        // here. And there is also possibiity it may be three.
+
+
+        string str_data;
+        StrEnc str_enc;
+
+        // UTF-16
+        if(str_raw[$-1] == 'w')
+        {
+            str_data = str_raw[1..$-1];
+            str_enc = StrEnc.UTF_16;
+        }
+        // UTF-32
+        else if(str_raw[$-1] == 'd')
+        {
+            str_data = str_raw[1..$-1];
+            str_enc = StrEnc.UTF_32;
+        }
+        // UTF-8
+        else
+        {
+            assert(str_raw[$-1] == '"');
+            str_data = str_raw[1..$];
+            str_enc = StrEnc.UTF_8;
+        }
+
+        auto str_exp = createExpression(str_data, str_enc);
+        return str_exp;
+    }
+
     /**
     * Parses an expression
     *
