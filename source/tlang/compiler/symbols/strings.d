@@ -18,8 +18,8 @@ import tlang.compiler.symbols.expressions : Expression;
 public union StringData
 {
     public string utf8;
-    public wchar[] utf16;
-    public dchar[] utf32;
+    public wstring utf16;
+    public dstring utf32;
 }
 
 /** 
@@ -111,7 +111,7 @@ public final class StringExpression : Expression
         this(sd, 1);
     }
 
-    public this(wchar[] zstring)
+    public this(wstring zstring)
     {
         // UTF-16 2-byte padded per-char ALWAYS
         StringData sd;
@@ -119,7 +119,7 @@ public final class StringExpression : Expression
         this(sd, 2);
     }
 
-    public this(dchar[] zstring)
+    public this(dstring zstring)
     {
         // UTF-32 4-byte padded per-char ALWAYS
         StringData sd;
