@@ -49,9 +49,23 @@ public static StringExpression createExpression
     return str_exp;
 }
 
+/** 
+ * String encoding
+ */
 public enum StrEnc : ubyte
 {
+    /**
+     * UTF-8 is 1 byte variadic
+     */
     UTF_8 = 1,
+
+    /**
+     * UTF-16 is 2 bytes
+     */
     UTF_16 = 2,
+
+    /**
+     * UTF-32 is 4 bytes
+     */
     UTF_32 = 4
 }
