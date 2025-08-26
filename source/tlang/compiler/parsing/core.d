@@ -1254,7 +1254,7 @@ public final class Parser
         else
         {
             assert(str_raw[$-1] == '"');
-            str_data = str_raw[1..$];
+            str_data = str_raw[1..$-1];
             str_enc = StrEnc.UTF_8;
         }
 
@@ -1520,12 +1520,9 @@ public final class Parser
             /* If it is a string literal */
             else if (symbol == SymbolType.STRING_LITERAL)
             {
-                // TODO: Add different string encoding support
-                
-                /* Add the string to the stack */
-                string str_lit = getCurrentToken().getToken();
-                import tlang.compiler.parsing.strings;
-                addRetExp(buildUTF8FromLiteral(str_lit));
+                /* Add the string expession to the stack */
+                auto str_exp = parseString();
+                addRetExp(str_exp);
 
                 /* Get the next token */
                 nextToken();
