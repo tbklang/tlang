@@ -32,6 +32,17 @@ public static StringExpression buildUTF8FromLiteral(string stringLiteral)
     return new StringExpression(str_trimmed);
 }
 
+/** 
+ * Creates a new `StringExpression` with the given
+ * encoding details and the raw string contents
+ * itself.
+ *
+ * Params:
+ *   contents = the string without the enclosing `""`
+ * characters
+ *   encoding = the encoding to use
+ * Returns: a new `StringExpression`
+ */
 public static StringExpression createExpression
 (
     string contents,
