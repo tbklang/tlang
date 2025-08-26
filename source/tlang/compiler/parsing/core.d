@@ -1241,13 +1241,13 @@ public final class Parser
         // UTF-16
         if(str_raw[$-1] == 'w')
         {
-            str_data = str_raw[1..$-1];
+            str_data = str_raw[1..$-2];
             str_enc = StrEnc.UTF_16;
         }
         // UTF-32
         else if(str_raw[$-1] == 'd')
         {
-            str_data = str_raw[1..$-1];
+            str_data = str_raw[1..$-2];
             str_enc = StrEnc.UTF_32;
         }
         // UTF-8
