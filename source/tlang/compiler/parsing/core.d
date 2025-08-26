@@ -1214,6 +1214,13 @@ public final class Parser
 
     import tlang.compiler.symbols.strings : StringExpression;
 
+    /** 
+     * Parses a string and returns a new
+     * `StringExpression` with the correct
+     * encoding present
+     *
+     * Returns: a `StringExpression`
+     */
     private StringExpression parseString()
     {
         /* Obtain the string token literal (with "") */
