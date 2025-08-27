@@ -227,8 +227,6 @@ public StringExpression combine(StringExpression left, StringExpression right)
     return s_exp;
 }
 
-// TODO: Add a unittest here for conversions
-
 unittest
 {
     // create both with UTF-8 encoding
