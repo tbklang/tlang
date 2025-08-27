@@ -1534,8 +1534,6 @@ public final class Parser
             /* If it is a string literal */
             else if (symbol == SymbolType.STRING_LITERAL)
             {
-                // TODO: Add different string encoding support
-
                 import tlang.compiler.symbols.strings : StringExpression, combine;
 
                 // If there is something on the stack
@@ -1551,16 +1549,8 @@ public final class Parser
 
                     prev_str = cast(StringExpression)removeExp();
                 }
-                
-                // TODO: Assuming, thus far UTF8 encoding
-                // ... we should add something like u32"Hello"
-                // ... for when we want to specify it
 
-                // TODO: Encoding - I need a method to place the two StringInfo's
-                // together from what it seems
-
-                /* Get current string literal and remove the wrapping `"   "` */
-                // StringExpression str_lit = buildUTF8FromLiteral(getCurrentToken().getToken());
+                /* Parse the current string literal into an expression */
                 StringExpression str_lit = parseString();
 
                 /* Do we need to perform string concatenation? */
@@ -1570,16 +1560,7 @@ public final class Parser
                 }
 
                 /* Add the string to the stack */
-                import tlang.compiler.parsing.strings;
                 addRetExp(str_lit);
-
-
-
-
-
-                // /* Add the string expession to the stack */
-                // auto str_exp = parseString();
-                // addRetExp(str_exp);
 
                 /* Get the next token */
                 nextToken();
