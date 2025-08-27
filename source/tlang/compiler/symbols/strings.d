@@ -26,17 +26,11 @@ public union StringData
 /** 
  * Contains the raw string data
  * along with some information
- * regarding it (like how it _should_
- * inevitably be encoded)
- *
- * Note, we don't actually
- * perform the conversion
- * here. That is a concern
- * for the emitter.
+ * regarding it
  */
 public struct StringInfo
 {
-    private string _literal;
+    private StringData _data;
     private StrEnc _width;
 
     invariant
@@ -44,9 +38,9 @@ public struct StringInfo
         assert(_width == StrEnc.UTF_8 || _width == StrEnc.UTF_16 || _width == StrEnc.UTF_32);
     }
 
-    this(string data, StrEnc width)
+    this(StringData data, StrEnc width)
     {
-        this.literal = data;
+        this._data = data;
         this._width = width;
     }
 
