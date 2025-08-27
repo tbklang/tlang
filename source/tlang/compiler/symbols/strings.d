@@ -151,32 +151,32 @@ public StringInfo convertTo(StrEnc width, StringInfo src)
         return src;
     }
     // UTF-8 to UTF-16
-    else if(src.width() == 1 && width == StrEnc.UTF_16)
+    else if(src.width() == StrEnc.UTF_8 && width == StrEnc.UTF_16)
     {
         sd.utf16 = toUTF16(src.data().utf8);
     }
     // UTF-8 to UTF-32
-    else if(src.width() == 1 && width == 4)
+    else if(src.width() == StrEnc.UTF_8 && width == StrEnc.UTF_32)
     {
         sd.utf32 = toUTF32(src.data().utf8);
     }
     // UTF-16 to UTF-8
-    else if(src.width() == StrEnc.UTF_16 && width == 1)
+    else if(src.width() == StrEnc.UTF_16 && width == StrEnc.UTF_8)
     {
         sd.utf8 = toUTF8(src.data().utf16);
     }
     // UTF-16 to UTF-32
-    else if(src.width() == StrEnc.UTF_16 && width == 4)
+    else if(src.width() == StrEnc.UTF_16 && width == StrEnc.UTF_32)
     {
         sd.utf32 = toUTF32(src.data().utf16);
     }
     // UTF-32 to UTF-8
-    else if(src.width() == 4 && width == 1)
+    else if(src.width() == StrEnc.UTF_32 && width == StrEnc.UTF_8)
     {
         sd.utf8 = toUTF8(src.data().utf32);
     }
     // UTF-32 to UTF-16
-    else if(src.width() == 4 && width == StrEnc.UTF_16)
+    else if(src.width() == StrEnc.UTF_32 && width == StrEnc.UTF_16)
     {
         sd.utf16 = toUTF16(src.data().utf32);
     }
@@ -210,7 +210,7 @@ public StringExpression combine(StringExpression left, StringExpression right)
     // once converted (or if matched) we can then
     // combine
     StringData s_sid;
-    if(w_chosen == 1)
+    if(w_chosen == StrEnc.UTF_8)
     {
         s_sid.utf8 = left_si.data().utf8~right_si.data().utf8;
     }
@@ -218,7 +218,7 @@ public StringExpression combine(StringExpression left, StringExpression right)
     {
         s_sid.utf16 = left_si.data().utf16~right_si.data().utf16;
     }
-    else if(w_chosen == 4)
+    else if(w_chosen == StrEnc.UTF_32)
     {
         s_sid.utf32 = left_si.data().utf32~right_si.data().utf32;
     }
@@ -234,12 +234,12 @@ unittest
     // create both with UTF-8 encoding
     StringExpression s1 = new StringExpression("Hello");
     StringExpression s2 = new StringExpression(" world");
-    assert(s1.data().width == 1 && s2.data().width == 1);
+    assert(s1.data().width == StrEnc.UTF_8 && s2.data().width == StrEnc.UTF_8);
     auto s_comb = combine(s1, s2);
 
     // ensure the combination is a UTF-8 encoded
     // string
-    assert(s_comb.data().width == 1);
+    assert(s_comb.data().width == StrEnc.UTF_8);
 
     // ensure combination of data worked
     assert(s_comb.data().utf8() == "Hello world");
@@ -266,12 +266,12 @@ unittest
     // create both with UTF-32 encoding
     StringExpression s1 = new StringExpression("Hello"d);
     StringExpression s2 = new StringExpression(" world"d);
-    assert(s1.data().width == 4 && s2.data().width == 4);
+    assert(s1.data().width == StrEnc.UTF_32 && s2.data().width == StrEnc.UTF_32);
     auto s_comb = combine(s1, s2);
 
     // ensure the combination is a UTF-32 encoded
     // string
-    assert(s_comb.data().width == 4);
+    assert(s_comb.data().width == StrEnc.UTF_32);
 
     // ensure combination of data worked
     assert(s_comb.data().utf32() == "Hello world"d);
@@ -283,12 +283,12 @@ unittest
     // with UTF-32 encoding
     StringExpression s1 = new StringExpression("Hello");
     StringExpression s2 = new StringExpression(" world"d);
-    assert(s1.data().width == 1 && s2.data().width == 4);
+    assert(s1.data().width == StrEnc.UTF_8 && s2.data().width == StrEnc.UTF_32);
     auto s_comb = combine(s1, s2);
 
     // then we should expect the bigger encoding scheme
     // of the two to be chosen; hence UTF-32
-    assert(s_comb.data().width == 4);
+    assert(s_comb.data().width == StrEnc.UTF_32);
 
     // ensure combination of data worked
     import std.stdio;
@@ -303,12 +303,12 @@ unittest
     // with UTF-8 encoding
     StringExpression s1 = new StringExpression("Hello"w);
     StringExpression s2 = new StringExpression(" world");
-    assert(s1.data().width == 2 && s2.data().width == 1);
+    assert(s1.data().width == StrEnc.UTF_16 && s2.data().width == StrEnc.UTF_8);
     auto s_comb = combine(s1, s2);
 
     // then we should expect the bigger encoding scheme
     // of the two to be chosen; hence UTF-16
-    assert(s_comb.data().width == 2);
+    assert(s_comb.data().width == StrEnc.UTF_16);
 
     // ensure combination of data worked
     import std.stdio;
