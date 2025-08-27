@@ -1537,7 +1537,6 @@ public final class Parser
                 // TODO: Add different string encoding support
 
                 import tlang.compiler.symbols.strings : StringExpression, combine;
-                import tlang.compiler.parsing.strings : buildUTF8FromLiteral;
 
                 // If there is something on the stack
                 StringExpression prev_str;
