@@ -831,15 +831,22 @@ public final class DCodeEmitter : CodeEmitter
             else if(sl_enc == StrEnc.UTF_16)
             {
                 // TODO: Use character array initializer? Maybe too long colummns? Also will need byte swap
+                import std.utf : toUTF8;
+                string utf8_lit = toUTF8(sl_info.utf16());
 
                 // C-string literal (with UTF-16) is `u"<my content>"`
+                // See: https://en.cppreference.com/w/cpp/language/character_literal.html
+                emit = `u"`~utf8_lit~`"`;
             }
             else if(sl_enc == StrEnc.UTF_32)
             {
                 // TODO: Use character array initializer? Maybe too long colummns? Also will need byte swap
+                import std.utf : toUTF8;
+                string utf8_lit = toUTF8(sl_info.utf32());
 
                 // C-string literal (with UTF-32) is `U"<my content>"`
-
+                // See: https://en.cppreference.com/w/cpp/language/character_literal.html
+                emit = `U"`~utf8_lit~`"`;
             }
 
             // TODO: We never needed to ACTUALLY convert the whole
