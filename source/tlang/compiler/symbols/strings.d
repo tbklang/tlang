@@ -7,6 +7,7 @@
 module tlang.compiler.symbols.strings;
 
 import tlang.compiler.symbols.expressions : Expression;
+import tlang.compiler.parsing.strings : StrEnc;
 
 /** 
  * The string data itself
@@ -21,8 +22,6 @@ public union StringData
     public wstring utf16;
     public dstring utf32;
 }
-
-import tlang.compiler.parsing.strings : StrEnc;
 
 /** 
  * Contains the raw string data
