@@ -22,6 +22,8 @@ public union StringData
     public dstring utf32;
 }
 
+import tlang.compiler.parsing.strings : StrEnc;
+
 /** 
  * Contains the raw string data
  * along with some information
@@ -30,14 +32,14 @@ public union StringData
 public struct StringInfo
 {
     private StringData _data;
-    private ubyte _width;
+    private StrEnc _width;
 
     invariant
     {
         assert(_width == 1 || _width == 2 || _width == 4);
     }
 
-    this(StringData data, ubyte width)
+    this(StringData data, StrEnc width)
     {
         this._data = data;
         this._width = width;
@@ -48,7 +50,7 @@ public struct StringInfo
         return this._data;
     }
 
-    public ubyte width()
+    public StrEnc width()
     {
         return this._width;
     }
@@ -98,7 +100,7 @@ public final class StringExpression : Expression
 {
     private StringInfo _data;
 
-    public this(StringData sd, ubyte width)
+    public this(StringData sd, StrEnc width)
     {
         this._data = StringInfo(sd, width);
     }
@@ -108,7 +110,7 @@ public final class StringExpression : Expression
         // UTF-8 multi-byte (smallest is 1 byte per-char)
         StringData sd;
         sd.utf8 = zstring;
-        this(sd, 1);
+        this(sd, StrEnc.UTF_8);
     }
 
     public this(wstring zstring)
@@ -116,7 +118,7 @@ public final class StringExpression : Expression
         // UTF-16 2-byte padded per-char ALWAYS
         StringData sd;
         sd.utf16 = zstring;
-        this(sd, 2);
+        this(sd, StrEnc.UTF_16);
     }
 
     public this(dstring zstring)
@@ -124,7 +126,7 @@ public final class StringExpression : Expression
         // UTF-32 4-byte padded per-char ALWAYS
         StringData sd;
         sd.utf32 = zstring;
-        this(sd, 4);
+        this(sd, StrEnc.UTF_32);
     }
 
     public StringInfo data()
@@ -139,7 +141,7 @@ public final class StringExpression : Expression
 }
 
 
-public StringInfo convertTo(ubyte width, StringInfo src)
+public StringInfo convertTo(StrEnc width, StringInfo src)
 {
     import std.utf : toUTF8, toUTF16, toUTF32;
     StringData sd;
@@ -190,7 +192,7 @@ public StringInfo convertTo(ubyte width, StringInfo src)
 public StringExpression combine(StringExpression left, StringExpression right)
 {
     auto left_si = left.data(), right_si = right.data();
-    ubyte w_chosen = left_si.width();
+    StrEnc w_chosen = left_si.width();
 
     // left_si's width -> right_si's width
     if(left_si.width() < right_si.width())
