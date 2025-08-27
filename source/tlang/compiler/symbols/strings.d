@@ -186,9 +186,6 @@ public StringInfo convertTo(ubyte width, StringInfo src)
     return StringInfo(sd, width);
 }
 
-// todo: we need to define a _single_ StringData hence the decision HAS TO
-// be made here
-
 // rule: always go to the width of the bigger StringData of the two
 public StringExpression combine(StringExpression left, StringExpression right)
 {
@@ -296,4 +293,24 @@ unittest
     stderr.writeln(cast(ubyte[])s_comb.data().utf32());
     stderr.writeln(s_comb.data().utf32());
     assert(s_comb.data().utf32() == "Hello world"d);
+}
+
+unittest
+{
+    // create one with UTF-16 encoding and another
+    // with UTF-8 encoding
+    StringExpression s1 = new StringExpression("Hello"w);
+    StringExpression s2 = new StringExpression(" world");
+    assert(s1.data().width == 2 && s2.data().width == 1);
+    auto s_comb = combine(s1, s2);
+
+    // then we should expect the bigger encoding scheme
+    // of the two to be chosen; hence UTF-16
+    assert(s_comb.data().width == 2);
+
+    // ensure combination of data worked
+    import std.stdio;
+    stderr.writeln(cast(ubyte[])s_comb.data().utf16());
+    stderr.writeln(s_comb.data().utf16());
+    assert(s_comb.data().utf16() == "Hello world"w);
 }
