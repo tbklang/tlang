@@ -804,6 +804,17 @@ public final class DCodeEmitter : CodeEmitter
             StringInfo* sl_info = sl_instr.str();
             assert(sl_info.width() == 1); // TODO: Add support for other string types
 
+            // TODO: We never needed to ACTUALLY convert the whole
+            // thing. Therefore ensure it is UTF 8.
+
+
+
+            // string str_lit_emit = format("%s%s", )
+
+            // TODO: Should we have ever actually combined the different
+            // strings in different ways earlier, or delayed that till
+            // here where it ultimatey matters?
+
             
             // C-string literal is `"<my content>"`
             string emit = `"`~sl_info.utf8()~`"`;
