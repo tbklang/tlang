@@ -800,9 +800,47 @@ public final class DCodeEmitter : CodeEmitter
         else if(cast(StringLiteral)instruction)
         {
             import tlang.compiler.symbols.strings : StringInfo;
+            import tlang.compiler.parsing.strings : StrEnc;
             StringLiteral sl_instr = cast(StringLiteral)instruction;
             StringInfo* sl_info = sl_instr.str();
-            assert(sl_info.width() == 1); // TODO: Add support for other string types
+            StrEnc sl_enc = sl_info.width();
+            assert(sl_enc == StrEnc.UTF_8); // TODO: Add support for other string types
+
+
+
+            // TODO: For utf ensure this is placed by byte order of
+            // the host machine, if we do a raw array then we'll have
+            // to do so
+
+            // to emit
+            string emit;
+
+            // If UTF-8 just take the literal
+            // as is and don't even use an array
+            // initializer (we could and wouldn't
+            // need any byte swapping anyways
+            // as it is variable-length encoded
+            // and doesn't see character points
+            // as integral units - i.e. it's
+            // a smarter more-stateful parser)
+            if(sl_enc == StrEnc.UTF_8)
+            {
+                // C-string literal is `"<my content>"`
+                emit = `"`~sl_info.utf8()~`"`;
+            }
+            else if(sl_enc == StrEnc.UTF_16)
+            {
+                // TODO: Use character array initializer? Maybe too long colummns? Also will need byte swap
+
+                // C-string literal (with UTF-16) is `u"<my content>"`
+            }
+            else if(sl_enc == StrEnc.UTF_32)
+            {
+                // TODO: Use character array initializer? Maybe too long colummns? Also will need byte swap
+
+                // C-string literal (with UTF-32) is `U"<my content>"`
+
+            }
 
             // TODO: We never needed to ACTUALLY convert the whole
             // thing. Therefore ensure it is UTF 8.
@@ -816,8 +854,7 @@ public final class DCodeEmitter : CodeEmitter
             // here where it ultimatey matters?
 
             
-            // C-string literal is `"<my content>"`
-            string emit = `"`~sl_info.utf8()~`"`;
+            
 
             emmmmit = emit;
         }
