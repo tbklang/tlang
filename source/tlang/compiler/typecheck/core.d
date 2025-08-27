@@ -1642,6 +1642,7 @@ public final class TypeChecker
             /* String literal */
             else if(cast(StringExpression)statement)
             {
+                import tlang.compiler.parsing.strings : StrEnc;
                 DEBUG("Typecheck(): String literal processing...");
 
                 StringExpression str_exp = cast(StringExpression)statement;
@@ -1650,17 +1651,33 @@ public final class TypeChecker
                 assert(str_ctx);
                 
                 StringInfo str_data = str_exp.data();
+                StrEnc str_enc = str_data.width();
+                Type str_type;
+                if(str_enc == StrEnc.UTF_8)
+                {
+                    str_type = getType(str_ctx.getContainer(), "ubyte*");
+                }
+                else if(str_enc == StrEnc.UTF_16)
+                {
+                    str_type = getType(str_ctx.getContainer(), "ushort*");
+                }
+                else if(str_enc == StrEnc.UTF_32)
+                {
+                    str_type = getType(str_ctx.getContainer(), "uint*");
+                }
+                assert(str_type);
 
                 /**
                  * Add the instruction and pass the literal to it.
                  * The instruction type for this `Value`-based instruction
-                 * is that of a `ubyte*` as a string literal is
-                 * to be interpreted as a pointer to a `ubyte`
-                 * representing the first byte of the character
-                 * string stored _somewhere_ in memory
+                 * is that of a `ubyte*`, `ushort*` or `uint*` as
+                 * a string literal is to be interpreted as a pointer
+                 * to a `ubyte`, `ushort` or `uint` representing the
+                 * encoding of the first character of the string
+                 * stored _somewhere_ in memory
                  */
                 StringLiteral strLitInstr = new StringLiteral(str_data);
-                strLitInstr.setInstrType(getType(str_ctx.getContainer(), "ubyte*"));
+                strLitInstr.setInstrType(str_type);
                 addInstr(strLitInstr);
             }
             else if(cast(VariableExpression)statement)
