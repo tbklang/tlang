@@ -36,7 +36,7 @@ public struct StringInfo
 
     invariant
     {
-        assert(_width == 1 || _width == 2 || _width == 4);
+        assert(_width == StrEnc.UTF_8 || _width == StrEnc.UTF_16 || _width == StrEnc.UTF_32);
     }
 
     this(StringData data, StrEnc width)
@@ -58,15 +58,15 @@ public struct StringInfo
     public string toString()
     {
         import std.string : format;
-        if(_width == 1)
+        if(_width == StrEnc.UTF_8)
         {
             return format("\"%s\" (UTF%d)", this._data.utf8, _width*8);
         }
-        else if(_width == 2)
+        else if(_width == StrEnc.UTF_16)
         {
             return format("\"%s\" (UTF%d)", this._data.utf16, _width*8);
         }
-        else if(_width == 4)
+        else if(_width == StrEnc.UTF_32)
         {
             return format("\"%s\" (UTF%d)", this._data.utf32, _width*8);
         }
@@ -76,19 +76,19 @@ public struct StringInfo
 
     public auto utf8()
     {
-        assert(_width == 1);
+        assert(_width == StrEnc.UTF_8);
         return this._data.utf8;
     }
 
     public auto utf16()
     {
-        assert(_width == 2);
+        assert(_width == StrEnc.UTF_16);
         return this._data.utf16;
     }
 
     public auto utf32()
     {
-        assert(_width == 4);
+        assert(_width == StrEnc.UTF_32);
         return this._data.utf32;
     }
 }
@@ -151,7 +151,7 @@ public StringInfo convertTo(StrEnc width, StringInfo src)
         return src;
     }
     // UTF-8 to UTF-16
-    else if(src.width() == 1 && width == 2)
+    else if(src.width() == 1 && width == StrEnc.UTF_16)
     {
         sd.utf16 = toUTF16(src.data().utf8);
     }
@@ -161,12 +161,12 @@ public StringInfo convertTo(StrEnc width, StringInfo src)
         sd.utf32 = toUTF32(src.data().utf8);
     }
     // UTF-16 to UTF-8
-    else if(src.width() == 2 && width == 1)
+    else if(src.width() == StrEnc.UTF_16 && width == 1)
     {
         sd.utf8 = toUTF8(src.data().utf16);
     }
     // UTF-16 to UTF-32
-    else if(src.width() == 2 && width == 4)
+    else if(src.width() == StrEnc.UTF_16 && width == 4)
     {
         sd.utf32 = toUTF32(src.data().utf16);
     }
@@ -176,7 +176,7 @@ public StringInfo convertTo(StrEnc width, StringInfo src)
         sd.utf8 = toUTF8(src.data().utf32);
     }
     // UTF-32 to UTF-16
-    else if(src.width() == 4 && width == 2)
+    else if(src.width() == 4 && width == StrEnc.UTF_16)
     {
         sd.utf16 = toUTF16(src.data().utf32);
     }
@@ -214,7 +214,7 @@ public StringExpression combine(StringExpression left, StringExpression right)
     {
         s_sid.utf8 = left_si.data().utf8~right_si.data().utf8;
     }
-    else if(w_chosen == 2)
+    else if(w_chosen == StrEnc.UTF_16)
     {
         s_sid.utf16 = left_si.data().utf16~right_si.data().utf16;
     }
@@ -250,12 +250,12 @@ unittest
     // create both with UTF-16 encoding
     StringExpression s1 = new StringExpression("Hello"w);
     StringExpression s2 = new StringExpression(" world"w);
-    assert(s1.data().width == 2 && s2.data().width == 2);
+    assert(s1.data().width == StrEnc.UTF_16 && s2.data().width == StrEnc.UTF_16);
     auto s_comb = combine(s1, s2);
 
     // ensure the combination is a UTF-16 encoded
     // string
-    assert(s_comb.data().width == 2);
+    assert(s_comb.data().width == StrEnc.UTF_16);
 
     // ensure combination of data worked
     assert(s_comb.data().utf16() == "Hello world"w);
