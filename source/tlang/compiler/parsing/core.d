@@ -1212,6 +1212,63 @@ public final class Parser
         return castedExpression;
     }
 
+    import tlang.compiler.symbols.strings : StringExpression;
+
+    /** 
+     * Parses a string and returns a new
+     * `StringExpression` with the correct
+     * encoding present
+     *
+     * Returns: a `StringExpression`
+     */
+    private StringExpression parseString()
+    {
+        /* Obtain the string token literal (with "") */
+        auto str_tok = getCurrentToken();
+        assert(getSymbolType(str_tok) == SymbolType.STRING_LITERAL);
+        string str_raw = str_tok.getToken();
+        DEBUG("str_raw: ", str_raw);
+
+        // Should at the very least be `""`, `""w` or `""d`
+        assert(str_raw.length >= 2);
+        assert(str_raw[0] == '"');
+        assert(str_raw[$-1] == '"' || str_raw[$-1] == 'w' || str_raw[$-1] == 'd');
+
+        import tlang.compiler.parsing.strings : StrEnc, createExpression;
+
+        // TODO: Add support for "s"w and "s"d
+
+        // TODO: Strlen need to be at least 2, which is guaranteed
+        // here. And there is also possibiity it may be three.
+
+
+        string str_data;
+        StrEnc str_enc;
+
+        // UTF-16
+        if(str_raw[$-1] == 'w')
+        {
+            str_data = str_raw[1..$-2];
+            str_enc = StrEnc.UTF_16;
+        }
+        // UTF-32
+        else if(str_raw[$-1] == 'd')
+        {
+            str_data = str_raw[1..$-2];
+            str_enc = StrEnc.UTF_32;
+        }
+        // UTF-8
+        else
+        {
+            assert(str_raw[$-1] == '"');
+            str_data = str_raw[1..$-1];
+            str_enc = StrEnc.UTF_8;
+        }
+
+        auto str_exp = createExpression(str_data, str_enc);
+        return str_exp;
+    }
+
     /**
     * Parses an expression
     *
@@ -1504,7 +1561,8 @@ public final class Parser
                 // together from what it seems
 
                 /* Get current string literal and remove the wrapping `"   "` */
-                StringExpression str_lit = buildUTF8FromLiteral(getCurrentToken().getToken());
+                // StringExpression str_lit = buildUTF8FromLiteral(getCurrentToken().getToken());
+                StringExpression str_lit = parseString();
 
                 /* Do we need to perform string concatenation? */
                 if(prev_str)
@@ -1515,6 +1573,14 @@ public final class Parser
                 /* Add the string to the stack */
                 import tlang.compiler.parsing.strings;
                 addRetExp(str_lit);
+
+
+
+
+
+                // /* Add the string expession to the stack */
+                // auto str_exp = parseString();
+                // addRetExp(str_exp);
 
                 /* Get the next token */
                 nextToken();
