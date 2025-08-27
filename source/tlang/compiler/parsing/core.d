@@ -1321,6 +1321,13 @@ public final class Parser
             return retExpression.length != 0;
         }
 
+        Expression peek()
+        {
+            assert(hasExp()); //sanity check: assume you called `hasExp()` prior to this call
+
+            return retExpression[$-1];
+        }
+
         void expressionStackSanityCheck()
         {
             /* If we don't have 1 on the stack */
@@ -1527,9 +1534,33 @@ public final class Parser
             /* If it is a string literal */
             else if (symbol == SymbolType.STRING_LITERAL)
             {
-                /* Add the string expession to the stack */
-                auto str_exp = parseString();
-                addRetExp(str_exp);
+                import tlang.compiler.symbols.strings : StringExpression, combine;
+
+                // If there is something on the stack
+                StringExpression prev_str;
+                if(hasExp())
+                {
+                    // If it isn't a string then that is an error
+                    auto pot_str = peek();
+                    if(!cast(StringExpression)pot_str)
+                    {
+                        expect("Expected a string concatenation but got "~to!(string)(pot_str));
+                    }
+
+                    prev_str = cast(StringExpression)removeExp();
+                }
+
+                /* Parse the current string literal into an expression */
+                StringExpression str_lit = parseString();
+
+                /* Do we need to perform string concatenation? */
+                if(prev_str)
+                {
+                    str_lit = combine(prev_str, str_lit);
+                }
+
+                /* Add the string to the stack */
+                addRetExp(str_lit);
 
                 /* Get the next token */
                 nextToken();
@@ -3849,6 +3880,60 @@ void function(int i, int p)
     }
     catch(TError e)
     {
+        assert(false);
+    }
+}
+
+/**
+ * String concatenation test
+ */
+unittest
+{
+    import tlang.compiler.symbols.strings : StringExpression;
+
+    string sourceCode = `
+module strcat;
+
+ubyte* str = "Hello"     " world";
+`;
+
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+    try
+    {
+        compiler.doLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    try
+    {
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
+
+        TypeChecker tc = new TypeChecker(compiler);
+
+        /* Find the variable named `str` */
+        Entity varEnt = tc.getResolver().resolveBest(modulle, "str");
+        Variable var = cast(Variable)varEnt;
+
+        /* Ensure that the string concatenation results in `"Hello world"` */
+        VariableAssignment var_ass = var.getAssignment();
+        Expression e = var_ass.getExpression();
+        StringExpression strExp = cast(StringExpression)e;
+        assert(strExp);
+        assert(strExp.data().utf8() == "Hello world");
+    }
+    catch(TError e)
+    {
+        stderr.write(e);
         assert(false);
     }
 }
