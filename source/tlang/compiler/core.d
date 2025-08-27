@@ -503,7 +503,9 @@ unittest
                         "source/tlang/testing/simple_string.t",
 
                         "source/tlang/testing/mixins/str.t",
-                        "source/tlang/testing/mixins/file.t"
+                        "source/tlang/testing/mixins/file.t",
+
+                        "source/tlang/testing/strings/encoding.t"
                         ];
     foreach(string testFile; testFiles)
     {
