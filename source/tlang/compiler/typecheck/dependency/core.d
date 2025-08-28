@@ -1407,6 +1407,26 @@ public class DNodeGenerator
 
             return funcCallDNode;
         }
+        /**
+         * Expression statements
+         */
+        else if(cast(ExpressionStatement)entity)
+        {
+            ExpressionStatement expStmt = cast(ExpressionStatement)entity;
+            expStmt.setContext(context);
+
+            // Pool the expression statement (a container for an expression)
+            DNode expStmtDNode = pool(expStmt);
+
+            // And then expressionPass() the expression itself
+            Expression innerExp = expStmt.getExpression();
+            DNode innerExpDNode = expressionPass(innerExp, context);
+
+            // Now `DNode[ExpStmt]` --(needs)-> `DNode[Expression]`
+            expStmtDNode.needs(innerExpDNode);
+
+            return expStmtDNode;
+        }
 
         return null;
     }
