@@ -14,7 +14,7 @@ public final class ExpressionStatement : Statement
     private Expression _e;
     this(Expression exp)
     {
-        this.e = exp;
+        this._e = exp;
     }
 
     public Expression getExpression()
