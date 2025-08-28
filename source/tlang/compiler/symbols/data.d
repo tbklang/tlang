@@ -1020,6 +1020,8 @@ public class Call : IdentExpression
     }
 }
 
+public import tlang.compiler.symbols.expstmt : ExpressionStatement;
+
 // FIXME: Finish adding proper `MStatementSearchable` and `MStatementReplaceable` to `FunctionCall`
 public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable
 {
