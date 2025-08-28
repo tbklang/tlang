@@ -1269,6 +1269,123 @@ public final class Parser
         return str_exp;
     }
 
+    /** 
+     * Parses the number literal
+     *
+     * Throws: ParserException if the
+     * range of the literal is out of
+     * bounds
+     * Returns: a `NumberLiteral`
+     */
+    private NumberLiteral parseNumber()
+    {
+        /** 
+         * Helper methods
+         *
+         * (TODO: These should be moved elsewhere)
+         */
+        bool isFloatLiteral(string numberLiteral)
+        {
+            import std.string : indexOf;
+            bool isFloat = indexOf(numberLiteral, ".") > -1; 
+            return isFloat;
+        }
+
+        auto num_tok = getCurrentToken();
+        assert(getSymbolType(num_tok) == SymbolType.STRING_LITERAL);
+
+        string numberLiteralStr = num_tok.getToken();
+        NumberLiteral numberLiteral;
+
+        // If floating point literal
+        if(isFloatLiteral(numberLiteralStr))
+        {
+            // TODO: Issue #94, siiliar to below for integers
+            numberLiteral = new FloatingLiteral(getCurrentToken().getToken());
+        }
+        // Else, then an integer literal
+        else
+        {
+            // TODO: Issue #94, we should be checking the range here
+            // ... along with any explicit encoders and setting it
+            // ... for now default to SIGNED_INTEGER.
+            IntegerLiteralEncoding chosenEncoding;
+            // TODO (X-platform): Use `size_t` here
+            ulong literalValue;
+
+
+            
+            
+            // TODO: Add a check for the `U`, `UL` stuff here
+            import std.algorithm.searching : canFind;
+            // Explicit integer encoding (unsigned long)
+            if(canFind(numberLiteralStr, "UL"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
+
+                // Strip the `UL` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
+            }
+            // Explicit integer encoding (signed long)
+            else if(canFind(numberLiteralStr, "L"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+
+                // Strip the `L` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
+            }
+            // Explicit integer encoding (unsigned int)
+            else if(canFind(numberLiteralStr, "UI"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_INTEGER;
+
+                // Strip the `UI` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
+            }
+            // Explicit integer encoding (signed int)
+            else if(canFind(numberLiteralStr, "I"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+
+                // Strip the `I` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
+            }
+            else
+            {
+                try
+                {
+                    // TODO (X-platform): Use `size_t` here
+                    literalValue = to!(ulong)(numberLiteralStr);
+                    
+
+                    // Signed integer range [0, 2_147_483_647]
+                    if(literalValue >= 0 && literalValue <= 2_147_483_647)
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+                    }
+                    // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
+                    else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+                    }
+                    // Unsigned long range [9_223_372_036_854_775_808, 18_446_744_073_709_551_615]
+                    else
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
+                    }
+                }
+                catch(ConvException e)
+                {
+                    throw new ParserException("Literal '"~numberLiteralStr~"' would overflow");
+                }
+            }
+
+            numberLiteral = new IntegerLiteral(numberLiteralStr, chosenEncoding);
+        }
+
+        return numberLiteral;
+    }
+
     /**
     * Parses an expression
     *
@@ -1285,20 +1402,6 @@ public final class Parser
     private Expression parseExpression()
     {
         WARN("parseExpression(): Enter");
-
-
-        /** 
-         * Helper methods
-         *
-         * (TODO: These should be moved elsewhere)
-         */
-        bool isFloatLiteral(string numberLiteral)
-        {
-            import std.string : indexOf;
-            bool isFloat = indexOf(numberLiteral, ".") > -1; 
-            return isFloat;
-        }
-
 
         /* The expression to be returned */
         Expression[] retExpression;
@@ -1360,94 +1463,8 @@ public final class Parser
             /* If it is a number literal */
             if (symbol == SymbolType.NUMBER_LITERAL)
             { 
-                string numberLiteralStr = getCurrentToken().getToken();
-                NumberLiteral numberLiteral;
-
-                // If floating point literal
-                if(isFloatLiteral(numberLiteralStr))
-                {
-                    // TODO: Issue #94, siiliar to below for integers
-                    numberLiteral = new FloatingLiteral(getCurrentToken().getToken());
-                }
-                // Else, then an integer literal
-                else
-                {
-                    // TODO: Issue #94, we should be checking the range here
-                    // ... along with any explicit encoders and setting it
-                    // ... for now default to SIGNED_INTEGER.
-                    IntegerLiteralEncoding chosenEncoding;
-                    // TODO (X-platform): Use `size_t` here
-                    ulong literalValue;
-
-
-                    
-                    
-                    // TODO: Add a check for the `U`, `UL` stuff here
-                    import std.algorithm.searching : canFind;
-                    // Explicit integer encoding (unsigned long)
-                    if(canFind(numberLiteralStr, "UL"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
-
-                        // Strip the `UL` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
-                    }
-                    // Explicit integer encoding (signed long)
-                    else if(canFind(numberLiteralStr, "L"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
-
-                        // Strip the `L` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
-                    }
-                    // Explicit integer encoding (unsigned int)
-                    else if(canFind(numberLiteralStr, "UI"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_INTEGER;
-
-                        // Strip the `UI` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
-                    }
-                    // Explicit integer encoding (signed int)
-                    else if(canFind(numberLiteralStr, "I"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
-
-                        // Strip the `I` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
-                    }
-                    else
-                    {
-                        try
-                        {
-                            // TODO (X-platform): Use `size_t` here
-                            literalValue = to!(ulong)(numberLiteralStr);
-                            
-
-                            // Signed integer range [0, 2_147_483_647]
-                            if(literalValue >= 0 && literalValue <= 2_147_483_647)
-                            {
-                                chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
-                            }
-                            // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
-                            else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
-                            {
-                                chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
-                            }
-                            // Unsigned long range [9_223_372_036_854_775_808, 18_446_744_073_709_551_615]
-                            else
-                            {
-                                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
-                            }
-                        }
-                        catch(ConvException e)
-                        {
-                            throw new ParserException("Literal '"~numberLiteralStr~"' would overflow");
-                        }
-                    }
-
-                    numberLiteral = new IntegerLiteral(numberLiteralStr, chosenEncoding);
-                }
+                /* Parse the number literal */
+                NumberLiteral numberLiteral = parseNumber();
                 
                 /* Add expression to stack */
                 addRetExp(numberLiteral);
