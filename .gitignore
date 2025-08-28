@@ -5,7 +5,7 @@ tlang.out
 *.c
 
 # Build files
-./tlang
+/tlang
 tlang-test-library
 libtlang.a
 
