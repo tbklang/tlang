@@ -1390,23 +1390,6 @@ public class DNodeGenerator
             // We don't need this, so return null
             return null;
         }
-        /** 
-         * Function call (statement-level)
-         */
-        else if(cast(FunctionCall)entity)
-        {
-            FunctionCall funcCall = cast(FunctionCall)entity;
-            funcCall.setContext(context);
-            
-            // It MUST be if we are processing it in `generalPass()`
-            assert(funcCall.isStatementLevelFuncCall());
-            INFO("Function calls (at statement level)");
-
-            // The FunctionCall is an expression, so to get a DNode from it `expressionPass()` it
-            DNode funcCallDNode = expressionPass(funcCall, context);
-
-            return funcCallDNode;
-        }
         /**
          * Expression statements
          */
