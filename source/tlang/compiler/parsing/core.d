@@ -1440,8 +1440,6 @@ public final class Parser
         /* TODO: Makes sure that expressions like 1 1 don't wortk */
         /* TODO: It must always be consumed */
 
-        /* TODO: Implement expression parsing */
-
         /**
         * We loop here until we hit something that closes
         * an expression, in other words an expression
