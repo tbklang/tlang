@@ -589,6 +589,7 @@ public final class Parser
         {
             previousToken();
             FunctionCall funcCall = parseFuncCall();
+            ExpressionStatement expStmt = new ExpressionStatement(funcCall);
 
             // TODO: Here we should, rather, be making
             // an expression statement. The DNode for
@@ -604,12 +605,9 @@ public final class Parser
             // where EmbeddedStatement is made, and hence if nowhere
             // else then those are the only scenarios that can ever
             // play out
-            ret = funcCall;
+            ret = expStmt;
 
-            /* Set the flag to say this is a statement-level function call */
-            funcCall.makeStatementLevel();
-
-             /* Expect a semi-colon */
+            /* Expect a semi-colon */
             expect(SymbolType.SEMICOLON, getCurrentToken());
             nextToken();
         }
@@ -2354,6 +2352,20 @@ public final class Parser
                         // branch the container as we have
                         // done so above
                         parentToContainer(branch, branchBody);
+                    }
+                    /**
+                     * Expression statements
+                     *
+                     * These have an embedded expression
+                     * within that needs parenting
+                     */
+                    else if(cast(ExpressionStatement)statement)
+                    {
+                        ExpressionStatement expStmt = cast(ExpressionStatement)statement;
+                        Expression innerExp = expStmt.getExpression();
+
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
                     }
                 }
             }
