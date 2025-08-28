@@ -1279,11 +1279,6 @@ public final class Parser
      */
     private NumberLiteral parseNumber()
     {
-        /** 
-         * Helper methods
-         *
-         * (TODO: These should be moved elsewhere)
-         */
         bool isFloatLiteral(string numberLiteral)
         {
             import std.string : indexOf;
