@@ -1292,7 +1292,7 @@ public final class Parser
         }
 
         auto num_tok = getCurrentToken();
-        assert(getSymbolType(num_tok) == SymbolType.STRING_LITERAL);
+        assert(getSymbolType(num_tok) == SymbolType.NUMBER_LITERAL);
 
         string numberLiteralStr = num_tok.getToken();
         NumberLiteral numberLiteral;
