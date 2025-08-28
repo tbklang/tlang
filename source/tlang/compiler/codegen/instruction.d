@@ -897,13 +897,13 @@ public final class StackArrayIndexAssignmentInstruction : Instruction, IRenderab
     }
 }
 
-public final class EmbeddedValueInstruction : Value
+public final class EmbeddedValueInstruction : Instruction
 {
     private Value _v;
-    
+
     this(Value embed)
     {
-        this._v = value;
+        this._v = embed;
     }
 
     public Value getEmbed()
