@@ -589,6 +589,21 @@ public final class Parser
         {
             previousToken();
             FunctionCall funcCall = parseFuncCall();
+
+            // TODO: Here we should, rather, be making
+            // an expression statement. The DNode for
+            // this should be DNode[ExpressionStatement] -(needs)-> FuncCall
+            
+            // then, default behavior is DNode processing for FuncCall
+            // should leave it atop the stack. And if nothing else happens
+            // it remains. However, if expression statement comes
+            // along then it must pop expression off.
+            //
+            // Parsring ensures that nothing can just randomly become
+            // a statement, as this is 1 of the 2 scenarios
+            // where EmbeddedStatement is made, and hence if nowhere
+            // else then those are the only scenarios that can ever
+            // play out
             ret = funcCall;
 
             /* Set the flag to say this is a statement-level function call */
