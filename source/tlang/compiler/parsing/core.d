@@ -1295,7 +1295,7 @@ public final class Parser
         // If floating point literal
         if(isFloatLiteral(numberLiteralStr))
         {
-            // TODO: Issue #94, siiliar to below for integers
+            // TODO: Issue #94, similiar to below for integers
             numberLiteral = new FloatingLiteral(getCurrentToken().getToken());
         }
         // Else, then an integer literal
