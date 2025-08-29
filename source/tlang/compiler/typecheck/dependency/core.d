@@ -1398,6 +1398,8 @@ public class DNodeGenerator
             ExpressionStatement expStmt = cast(ExpressionStatement)entity;
             expStmt.setContext(context);
 
+            DEBUG("Yo, ExpStmt: ", expStmt);
+
             // Pool the expression statement (a container for an expression)
             DNode expStmtDNode = pool(expStmt);
 
