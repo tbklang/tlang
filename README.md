@@ -28,3 +28,18 @@ A list of all commands can be found by typing in the following:
 ```
 ./tlang
 ```
+
+
+## Docker images
+
+Docker images are also made available and can be accessed
+via the following:
+
+```
+docker pull ghcr.io/tbklang/tlang:vardec_varass_dependency/amd64
+```
+
+| Platform | Docker image 																				|
+|----------|------------------------------------------------------|
+| `amd64`  | ghcr.io/tbklang/tlang:vardec_varass_dependency/amd64 |
+| `arm64`  | ghcr.io/tbklang/tlang:vardec_varass_dependency/arm64 |
