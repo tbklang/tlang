@@ -36,10 +36,15 @@ Docker images are also made available and can be accessed
 via the following:
 
 ```
-docker pull ghcr.io/tbklang/tlang:vardec_varass_dependency/amd64
+docker pull ghcr.io/tbklang/tlang:vardec_varass_dependency
 ```
+
+The following platforms are supported:
 
 | Platform | Docker image 																				|
 |----------|------------------------------------------------------|
-| `amd64`  | ghcr.io/tbklang/tlang:vardec_varass_dependency/amd64 |
-| `arm64`  | ghcr.io/tbklang/tlang:vardec_varass_dependency/arm64 |
+| `amd64`  | `ghcr.io/tbklang/tlang:vardec_varass_dependency --platform linux/arm64` |
+| `arm64`  | `ghcr.io/tbklang/tlang:vardec_varass_dependency --platform linux/arm64` |
+
+Just using the line shown earlier will automatically detect your
+platform though. The above is just more explicit.
