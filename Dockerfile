@@ -21,6 +21,12 @@ RUN dub build
 # TODO: Pin version
 FROM ubuntu:latest AS base
 
+# TODO: Make configurable which `cc` to
+# use for the `DGen` backend
+# Install clang 
+RUN apt update
+RUN apt install clang -y
+
 # Copy across binary
 COPY --from=build /tmp/build/tlang /bin/tlang
 RUN chmod +x /bin/tlang
