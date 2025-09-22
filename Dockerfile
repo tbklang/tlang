@@ -14,4 +14,16 @@ RUN mkdir build
 WORKDIR build
 COPY . .
 
+# Perform build
+RUN dub build
 
+# TODO: Switch to something else
+# TODO: Pin version
+FROM ubuntu:latest AS base
+
+# Copy across binary
+COPY --from=build /tmp/build/tlang /bin/tlang
+RUN chmod +x /bin/tlang
+
+# Entrypoint is the compiler
+ENTRYPOINT ["tlang"]
