@@ -7,3 +7,11 @@ FROM ubuntu:latest AS build
 
 RUN apt update
 RUN apt install ldc dub -y
+
+# Copy source files across
+WORKDIR /tmp
+RUN mkdir build
+WORKDIR build
+COPY . .
+
+
