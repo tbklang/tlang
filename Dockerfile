@@ -6,7 +6,7 @@ FROM ubuntu:latest AS build
 	# Or maybe just which version
 
 RUN apt update
-RUN apt install ldc dub -y
+RUN apt install ldc dub gcc -y
 
 # Copy source files across
 WORKDIR /tmp
