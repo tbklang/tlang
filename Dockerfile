@@ -6,4 +6,4 @@ FROM ubuntu:latest AS build
 	# Or maybe just which version
 
 RUN apt update
-RUN apt install ldc2 dub -y
+RUN apt install ldc dub -y
