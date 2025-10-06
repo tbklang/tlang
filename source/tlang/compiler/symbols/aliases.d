@@ -16,6 +16,7 @@ public final class AliasDeclaration : Statement
     {
         this.aliasName = aliasName;
         this.aliasExpr = aliasExpr;
+        this.weight = 2;
     }
 
     public string getName()
