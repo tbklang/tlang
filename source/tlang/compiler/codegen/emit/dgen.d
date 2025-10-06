@@ -821,6 +821,23 @@ public final class DCodeEmitter : CodeEmitter
 
             emmmmit = emit;
         }
+        /**
+         * Embedded value instruction
+         *
+         * Treat the `Value`-based
+         * instruction as statement level
+         * by transforming it and then
+         * placing the result before
+         * a single `;`.
+         */
+        else if(cast(EmbeddedValueInstruction)instruction)
+        {
+            auto evi = cast(EmbeddedValueInstruction)instruction;
+
+            string evi_emit = transform(evi.getEmbed());
+            string emit = format("%s;", evi_emit);
+            emmmmit = emit;
+        }
         /** 
          * Unsupported instruction
          *

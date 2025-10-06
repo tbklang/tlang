@@ -589,12 +589,25 @@ public final class Parser
         {
             previousToken();
             FunctionCall funcCall = parseFuncCall();
-            ret = funcCall;
+            ExpressionStatement expStmt = new ExpressionStatement(funcCall);
 
-            /* Set the flag to say this is a statement-level function call */
-            funcCall.makeStatementLevel();
+            // TODO: Here we should, rather, be making
+            // an expression statement. The DNode for
+            // this should be DNode[ExpressionStatement] -(needs)-> FuncCall
+            
+            // then, default behavior is DNode processing for FuncCall
+            // should leave it atop the stack. And if nothing else happens
+            // it remains. However, if expression statement comes
+            // along then it must pop expression off.
+            //
+            // Parsring ensures that nothing can just randomly become
+            // a statement, as this is 1 of the 2 scenarios
+            // where EmbeddedStatement is made, and hence if nowhere
+            // else then those are the only scenarios that can ever
+            // play out
+            ret = expStmt;
 
-             /* Expect a semi-colon */
+            /* Expect a semi-colon */
             expect(SymbolType.SEMICOLON, getCurrentToken());
             nextToken();
         }
@@ -2339,6 +2352,20 @@ public final class Parser
                         // branch the container as we have
                         // done so above
                         parentToContainer(branch, branchBody);
+                    }
+                    /**
+                     * Expression statements
+                     *
+                     * These have an embedded expression
+                     * within that needs parenting
+                     */
+                    else if(cast(ExpressionStatement)statement)
+                    {
+                        ExpressionStatement expStmt = cast(ExpressionStatement)statement;
+                        Expression innerExp = expStmt.getExpression();
+
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
                     }
                 }
             }
