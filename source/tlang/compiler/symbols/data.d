@@ -1373,7 +1373,7 @@ import std.string : format;
  * Represents a return statement with an expression
  * to be returned
  */
-public final class ReturnStmt : Statement
+public final class ReturnStmt : Statement, MStatementSearchable
 {
     // The Expression being returned
     private Expression returnExpression;
@@ -1399,6 +1399,30 @@ public final class ReturnStmt : Statement
     public bool hasReturnExpression()
     {
         return returnExpression !is null;
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on `returnExpression` (if any) */
+        if(returnExpression)
+        {
+            MStatementSearchable innerStmt = cast(MStatementSearchable)returnExpression;
+            if(innerStmt)
+            {
+                matches ~= innerStmt.search(clazzType); 
+            }
+        }
+
+        return matches;
     }
 
     public override string toString()
