@@ -2,6 +2,7 @@ module tlang.compiler.symbols.data;
 
 public import tlang.compiler.symbols.check;
 import std.conv : to;
+import std.string : format;
 import tlang.compiler.typecheck.dependency.core : Context;
 
 // For debug printing
@@ -1187,16 +1188,6 @@ public abstract class Call : IdentExpression
 // FIXME: Finish adding proper `MStatementSearchable` and `MStatementReplaceable` to `FunctionCall`
 public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable, MCloneable, MPositionable
 {
-    /* Whether this is statement-level function call or not */
-
-    /** 
-     * Function calls either appear as part of an expression
-     * (i.e. from `parseExpression()`) or directly as a statement
-     * in the body of a `Container`. This affects how code generation
-     * works and hence one needs to disambiguate between the two.
-     */
-    private bool isStatementLevel = false;
-
     /* Argument list */
     private Expression[] arguments;
 
@@ -1217,24 +1208,6 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
     public Expression[] getCallArguments()
     {
         return arguments;
-    }
-
-    /** 
-     * Mark this function call as statement-level
-     */
-    public void makeStatementLevel()
-    {
-        this.isStatementLevel = true;
-    }
-
-    /** 
-     * Determines if this function call is statement-level
-     *
-     * Returns: true if so, false otherwise
-     */
-    public bool isStatementLevelFuncCall()
-    {
-        return isStatementLevel;
     }
 
     public override Statement[] search(TypeInfo_Class clazzType)
@@ -2043,5 +2016,36 @@ public final class ExternStmt : Statement
     public override string toString()
     {
         return "[ExternStatement: (Symbol name: "~getExternalName()~")]";
+    }
+}
+
+/** 
+ * This is a non-expression, so, a normal
+ * statement that contains an expression
+ *
+ * Examples are:
+ * 1. standalone function calls
+ * 2. i++
+ */
+public final class ExpressionStatement : Statement
+{
+    private Expression _e;
+
+    this(Expression exp)
+    {
+        this._e = exp;
+
+        /* Weighted like any other statement */
+        this.weight = 2;
+    }
+
+    public Expression getExpression()
+    {
+        return this._e;
+    }
+
+    public override string toString()
+    {
+        return format("ExpressionStmt [e: %s]", _e);
     }
 }

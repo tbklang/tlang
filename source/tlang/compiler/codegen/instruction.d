@@ -896,3 +896,18 @@ public final class StackArrayIndexAssignmentInstruction : Instruction, IRenderab
         return format("%s[%s] = %s", getArrayName(), tryRender(getIndexInstr()), tryRender(getAssignedValue()));
     }
 }
+
+public final class EmbeddedValueInstruction : Instruction
+{
+    private Value _v;
+
+    this(Value embed)
+    {
+        this._v = embed;
+    }
+
+    public Value getEmbed()
+    {
+        return this._v;
+    }
+}

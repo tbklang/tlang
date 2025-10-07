@@ -1390,22 +1390,27 @@ public class DNodeGenerator
             // We don't need this, so return null
             return null;
         }
-        /** 
-         * Function call (statement-level)
+        /**
+         * Expression statements
          */
-        else if(cast(FunctionCall)entity)
+        else if(cast(ExpressionStatement)entity)
         {
-            FunctionCall funcCall = cast(FunctionCall)entity;
-            funcCall.setContext(context);
-            
-            // It MUST be if we are processing it in `generalPass()`
-            assert(funcCall.isStatementLevelFuncCall());
-            INFO("Function calls (at statement level)");
+            ExpressionStatement expStmt = cast(ExpressionStatement)entity;
+            expStmt.setContext(context);
 
-            // The FunctionCall is an expression, so to get a DNode from it `expressionPass()` it
-            DNode funcCallDNode = expressionPass(funcCall, context);
+            DEBUG("Yo, ExpStmt: ", expStmt);
 
-            return funcCallDNode;
+            // Pool the expression statement (a container for an expression)
+            DNode expStmtDNode = pool(expStmt);
+
+            // And then expressionPass() the expression itself
+            Expression innerExp = expStmt.getExpression();
+            DNode innerExpDNode = expressionPass(innerExp, context);
+
+            // Now `DNode[ExpStmt]` --(needs)-> `DNode[Expression]`
+            expStmtDNode.needs(innerExpDNode);
+
+            return expStmtDNode;
         }
 
         return null;

@@ -590,12 +590,25 @@ public final class Parser
         {
             previousToken();
             FunctionCall funcCall = parseFuncCall();
-            ret = funcCall;
+            ExpressionStatement expStmt = new ExpressionStatement(funcCall);
 
-            /* Set the flag to say this is a statement-level function call */
-            funcCall.makeStatementLevel();
+            // TODO: Here we should, rather, be making
+            // an expression statement. The DNode for
+            // this should be DNode[ExpressionStatement] -(needs)-> FuncCall
+            
+            // then, default behavior is DNode processing for FuncCall
+            // should leave it atop the stack. And if nothing else happens
+            // it remains. However, if expression statement comes
+            // along then it must pop expression off.
+            //
+            // Parsring ensures that nothing can just randomly become
+            // a statement, as this is 1 of the 2 scenarios
+            // where EmbeddedStatement is made, and hence if nowhere
+            // else then those are the only scenarios that can ever
+            // play out
+            ret = expStmt;
 
-             /* Expect a semi-colon */
+            /* Expect a semi-colon */
             expect(SymbolType.SEMICOLON, getCurrentToken());
             nextToken();
         }
@@ -1213,6 +1226,175 @@ public final class Parser
         return castedExpression;
     }
 
+    import tlang.compiler.symbols.strings : StringExpression;
+
+    /** 
+     * Parses a string and returns a new
+     * `StringExpression` with the correct
+     * encoding present
+     *
+     * Returns: a `StringExpression`
+     */
+    private StringExpression parseString()
+    {
+        /* Obtain the string token literal (with "") */
+        auto str_tok = getCurrentToken();
+        assert(getSymbolType(str_tok) == SymbolType.STRING_LITERAL);
+        string str_raw = str_tok.getToken();
+        DEBUG("str_raw: ", str_raw);
+
+        // Should at the very least be `""`, `""w` or `""d`
+        assert(str_raw.length >= 2);
+        assert(str_raw[0] == '"');
+        assert(str_raw[$-1] == '"' || str_raw[$-1] == 'w' || str_raw[$-1] == 'd');
+
+        import tlang.compiler.parsing.strings : StrEnc, createExpression;
+
+        // TODO: Add support for "s"w and "s"d
+
+        // TODO: Strlen need to be at least 2, which is guaranteed
+        // here. And there is also possibiity it may be three.
+
+
+        string str_data;
+        StrEnc str_enc;
+
+        // UTF-16
+        if(str_raw[$-1] == 'w')
+        {
+            str_data = str_raw[1..$-2];
+            str_enc = StrEnc.UTF_16;
+        }
+        // UTF-32
+        else if(str_raw[$-1] == 'd')
+        {
+            str_data = str_raw[1..$-2];
+            str_enc = StrEnc.UTF_32;
+        }
+        // UTF-8
+        else
+        {
+            assert(str_raw[$-1] == '"');
+            str_data = str_raw[1..$-1];
+            str_enc = StrEnc.UTF_8;
+        }
+
+        auto str_exp = createExpression(str_data, str_enc);
+        return str_exp;
+    }
+
+    /** 
+     * Parses the number literal
+     *
+     * Throws: ParserException if the
+     * range of the literal is out of
+     * bounds
+     * Returns: a `NumberLiteral`
+     */
+    private NumberLiteral parseNumber()
+    {
+        bool isFloatLiteral(string numberLiteral)
+        {
+            import std.string : indexOf;
+            bool isFloat = indexOf(numberLiteral, ".") > -1; 
+            return isFloat;
+        }
+
+        auto num_tok = getCurrentToken();
+        assert(getSymbolType(num_tok) == SymbolType.NUMBER_LITERAL);
+
+        string numberLiteralStr = num_tok.getToken();
+        NumberLiteral numberLiteral;
+
+        // If floating point literal
+        if(isFloatLiteral(numberLiteralStr))
+        {
+            // TODO: Issue #94, similiar to below for integers
+            numberLiteral = new FloatingLiteral(getCurrentToken().getToken());
+        }
+        // Else, then an integer literal
+        else
+        {
+            // TODO: Issue #94, we should be checking the range here
+            // ... along with any explicit encoders and setting it
+            // ... for now default to SIGNED_INTEGER.
+            IntegerLiteralEncoding chosenEncoding;
+            // TODO (X-platform): Use `size_t` here
+            ulong literalValue;
+
+
+            
+            
+            // TODO: Add a check for the `U`, `UL` stuff here
+            import std.algorithm.searching : canFind;
+            // Explicit integer encoding (unsigned long)
+            if(canFind(numberLiteralStr, "UL"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
+
+                // Strip the `UL` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
+            }
+            // Explicit integer encoding (signed long)
+            else if(canFind(numberLiteralStr, "L"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+
+                // Strip the `L` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
+            }
+            // Explicit integer encoding (unsigned int)
+            else if(canFind(numberLiteralStr, "UI"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_INTEGER;
+
+                // Strip the `UI` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
+            }
+            // Explicit integer encoding (signed int)
+            else if(canFind(numberLiteralStr, "I"))
+            {
+                chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+
+                // Strip the `I` away
+                numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
+            }
+            else
+            {
+                try
+                {
+                    // TODO (X-platform): Use `size_t` here
+                    literalValue = to!(ulong)(numberLiteralStr);
+                    
+
+                    // Signed integer range [0, 2_147_483_647]
+                    if(literalValue >= 0 && literalValue <= 2_147_483_647)
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
+                    }
+                    // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
+                    else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
+                    }
+                    // Unsigned long range [9_223_372_036_854_775_808, 18_446_744_073_709_551_615]
+                    else
+                    {
+                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
+                    }
+                }
+                catch(ConvException e)
+                {
+                    throw new ParserException("Literal '"~numberLiteralStr~"' would overflow");
+                }
+            }
+
+            numberLiteral = new IntegerLiteral(numberLiteralStr, chosenEncoding);
+        }
+
+        return numberLiteral;
+    }
+
     /**
     * Parses an expression
     *
@@ -1229,20 +1411,6 @@ public final class Parser
     private Expression parseExpression()
     {
         WARN("parseExpression(): Enter");
-
-
-        /** 
-         * Helper methods
-         *
-         * (TODO: These should be moved elsewhere)
-         */
-        bool isFloatLiteral(string numberLiteral)
-        {
-            import std.string : indexOf;
-            bool isFloat = indexOf(numberLiteral, ".") > -1; 
-            return isFloat;
-        }
-
 
         /* The expression to be returned */
         Expression[] retExpression;
@@ -1265,6 +1433,13 @@ public final class Parser
             return retExpression.length != 0;
         }
 
+        Expression peek()
+        {
+            assert(hasExp()); //sanity check: assume you called `hasExp()` prior to this call
+
+            return retExpression[$-1];
+        }
+
         void expressionStackSanityCheck()
         {
             /* If we don't have 1 on the stack */
@@ -1278,8 +1453,6 @@ public final class Parser
         /* TODO: Unless I am wrong we can do a check that retExp should always be length 1 */
         /* TODO: Makes sure that expressions like 1 1 don't wortk */
         /* TODO: It must always be consumed */
-
-        /* TODO: Implement expression parsing */
 
         /**
         * We loop here until we hit something that closes
@@ -1297,94 +1470,8 @@ public final class Parser
             /* If it is a number literal */
             if (symbol == SymbolType.NUMBER_LITERAL)
             { 
-                string numberLiteralStr = getCurrentToken().getToken();
-                NumberLiteral numberLiteral;
-
-                // If floating point literal
-                if(isFloatLiteral(numberLiteralStr))
-                {
-                    // TODO: Issue #94, siiliar to below for integers
-                    numberLiteral = new FloatingLiteral(getCurrentToken().getToken());
-                }
-                // Else, then an integer literal
-                else
-                {
-                    // TODO: Issue #94, we should be checking the range here
-                    // ... along with any explicit encoders and setting it
-                    // ... for now default to SIGNED_INTEGER.
-                    IntegerLiteralEncoding chosenEncoding;
-                    // TODO (X-platform): Use `size_t` here
-                    ulong literalValue;
-
-
-                    
-                    
-                    // TODO: Add a check for the `U`, `UL` stuff here
-                    import std.algorithm.searching : canFind;
-                    // Explicit integer encoding (unsigned long)
-                    if(canFind(numberLiteralStr, "UL"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
-
-                        // Strip the `UL` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
-                    }
-                    // Explicit integer encoding (signed long)
-                    else if(canFind(numberLiteralStr, "L"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
-
-                        // Strip the `L` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
-                    }
-                    // Explicit integer encoding (unsigned int)
-                    else if(canFind(numberLiteralStr, "UI"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.UNSIGNED_INTEGER;
-
-                        // Strip the `UI` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-2];
-                    }
-                    // Explicit integer encoding (signed int)
-                    else if(canFind(numberLiteralStr, "I"))
-                    {
-                        chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
-
-                        // Strip the `I` away
-                        numberLiteralStr = numberLiteralStr[0..numberLiteralStr.length-1];
-                    }
-                    else
-                    {
-                        try
-                        {
-                            // TODO (X-platform): Use `size_t` here
-                            literalValue = to!(ulong)(numberLiteralStr);
-                            
-
-                            // Signed integer range [0, 2_147_483_647]
-                            if(literalValue >= 0 && literalValue <= 2_147_483_647)
-                            {
-                                chosenEncoding = IntegerLiteralEncoding.SIGNED_INTEGER;
-                            }
-                            // Signed long range [2_147_483_648, 9_223_372_036_854_775_807]
-                            else if(literalValue >= 2_147_483_648 && literalValue <= 9_223_372_036_854_775_807)
-                            {
-                                chosenEncoding = IntegerLiteralEncoding.SIGNED_LONG;
-                            }
-                            // Unsigned long range [9_223_372_036_854_775_808, 18_446_744_073_709_551_615]
-                            else
-                            {
-                                chosenEncoding = IntegerLiteralEncoding.UNSIGNED_LONG;
-                            }
-                        }
-                        catch(ConvException e)
-                        {
-                            throw new ParserException("Literal '"~numberLiteralStr~"' would overflow");
-                        }
-                    }
-
-                    numberLiteral = new IntegerLiteral(numberLiteralStr, chosenEncoding);
-                }
+                /* Parse the number literal */
+                NumberLiteral numberLiteral = parseNumber();
                 
                 /* Add expression to stack */
                 addRetExp(numberLiteral);
@@ -1471,12 +1558,33 @@ public final class Parser
             /* If it is a string literal */
             else if (symbol == SymbolType.STRING_LITERAL)
             {
-                // TODO: Add different string encoding support
-                
+                import tlang.compiler.symbols.strings : StringExpression, combine;
+
+                // If there is something on the stack
+                StringExpression prev_str;
+                if(hasExp())
+                {
+                    // If it isn't a string then that is an error
+                    auto pot_str = peek();
+                    if(!cast(StringExpression)pot_str)
+                    {
+                        expect("Expected a string concatenation but got "~to!(string)(pot_str));
+                    }
+
+                    prev_str = cast(StringExpression)removeExp();
+                }
+
+                /* Parse the current string literal into an expression */
+                StringExpression str_lit = parseString();
+
+                /* Do we need to perform string concatenation? */
+                if(prev_str)
+                {
+                    str_lit = combine(prev_str, str_lit);
+                }
+
                 /* Add the string to the stack */
-                string str_lit = getCurrentToken().getToken();
-                import tlang.compiler.parsing.strings;
-                addRetExp(buildUTF8FromLiteral(str_lit));
+                addRetExp(str_lit);
 
                 /* Get the next token */
                 nextToken();
@@ -2245,6 +2353,20 @@ public final class Parser
                         // branch the container as we have
                         // done so above
                         parentToContainer(branch, branchBody);
+                    }
+                    /**
+                     * Expression statements
+                     *
+                     * These have an embedded expression
+                     * within that needs parenting
+                     */
+                    else if(cast(ExpressionStatement)statement)
+                    {
+                        ExpressionStatement expStmt = cast(ExpressionStatement)statement;
+                        Expression innerExp = expStmt.getExpression();
+
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
                     }
                 }
             }
@@ -3843,6 +3965,60 @@ void function(int i, int p)
     }
     catch(TError e)
     {
+        assert(false);
+    }
+}
+
+/**
+ * String concatenation test
+ */
+unittest
+{
+    import tlang.compiler.symbols.strings : StringExpression;
+
+    string sourceCode = `
+module strcat;
+
+ubyte* str = "Hello"     " world";
+`;
+
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+    try
+    {
+        compiler.doLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    try
+    {
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
+
+        TypeChecker tc = new TypeChecker(compiler);
+
+        /* Find the variable named `str` */
+        Entity varEnt = tc.getResolver().resolveBest(modulle, "str");
+        Variable var = cast(Variable)varEnt;
+
+        /* Ensure that the string concatenation results in `"Hello world"` */
+        VariableAssignment var_ass = var.getAssignment();
+        Expression e = var_ass.getExpression();
+        StringExpression strExp = cast(StringExpression)e;
+        assert(strExp);
+        assert(strExp.data().utf8() == "Hello world");
+    }
+    catch(TError e)
+    {
+        stderr.write(e);
         assert(false);
     }
 }

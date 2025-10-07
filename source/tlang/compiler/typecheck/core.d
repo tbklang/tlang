@@ -1643,6 +1643,7 @@ public final class TypeChecker
             /* String literal */
             else if(cast(StringExpression)statement)
             {
+                import tlang.compiler.parsing.strings : StrEnc;
                 DEBUG("Typecheck(): String literal processing...");
 
                 StringExpression str_exp = cast(StringExpression)statement;
@@ -1651,17 +1652,33 @@ public final class TypeChecker
                 assert(str_ctx);
                 
                 StringInfo str_data = str_exp.data();
+                StrEnc str_enc = str_data.width();
+                Type str_type;
+                if(str_enc == StrEnc.UTF_8)
+                {
+                    str_type = getType(str_ctx.getContainer(), "ubyte*");
+                }
+                else if(str_enc == StrEnc.UTF_16)
+                {
+                    str_type = getType(str_ctx.getContainer(), "ushort*");
+                }
+                else if(str_enc == StrEnc.UTF_32)
+                {
+                    str_type = getType(str_ctx.getContainer(), "uint*");
+                }
+                assert(str_type);
 
                 /**
                  * Add the instruction and pass the literal to it.
                  * The instruction type for this `Value`-based instruction
-                 * is that of a `ubyte*` as a string literal is
-                 * to be interpreted as a pointer to a `ubyte`
-                 * representing the first byte of the character
-                 * string stored _somewhere_ in memory
+                 * is that of a `ubyte*`, `ushort*` or `uint*` as
+                 * a string literal is to be interpreted as a pointer
+                 * to a `ubyte`, `ushort` or `uint` representing the
+                 * encoding of the first character of the string
+                 * stored _somewhere_ in memory
                  */
                 StringLiteral strLitInstr = new StringLiteral(str_data);
-                strLitInstr.setInstrType(getType(str_ctx.getContainer(), "ubyte*"));
+                strLitInstr.setInstrType(str_type);
                 addInstr(strLitInstr);
             }
             else if(cast(VariableExpression)statement)
@@ -1986,8 +2003,6 @@ public final class TypeChecker
             /* Function calls */
             else if(cast(FunctionCall)statement)
             {
-                // gprintln("FuncCall hehe (REMOVE AFTER DONE)");
-
                 FunctionCall funcCall = cast(FunctionCall)statement;
 
                 // Find the top-level container of the function being called
@@ -2090,32 +2105,13 @@ public final class TypeChecker
                 /**
                 * Codegen
                 *
-                * 1. Create FuncCallInstr
-                * 2. Evaluate args and process them?! wait done elsewhere yeah!!!
-                * 3. Pop args into here
-                * 4. addInstr(combining those args)
-                *   4.1. If this is a statement-level function then `addInstrB()` is used
-                * 5. Done
+                * 1. Create FuncCallInstr (above)
+                * 2. Evaluate args (above)
+                * 3. Embed into the FuncCallInstr at the correct index (above)
+                * 4. Push `FuncCallInstr` to top of stack
                 */
                 funcCallInstr.setContext(funcCall.getContext());
-
-                // If not a statement-level function call then it is an expression
-                // ... and ought to be placed at the top of the stack for later consumption
-                if(!funcCall.isStatementLevelFuncCall())
-                {
-                    addInstr(funcCallInstr);
-                }
-                // If this IS a statement-level function call then it is not meant
-                // ... to be placed on the top of the stack as it won't be consumed later,
-                // ... rather it is finalised and should be added to the back of the code queue
-                else
-                {
-                    addInstrB(funcCallInstr);
-
-                    // We also, for emitter, must transfer this flag over by
-                    // ... marking this function call instruction as statement-level
-                    funcCallInstr.markStatementLevel();
-                }
+                addInstr(funcCallInstr);
 
                 /* Set the Value instruction's type */
                 Type funcCallInstrType = getType(func.parentOf(), func.getType());
@@ -2822,6 +2818,46 @@ public final class TypeChecker
 
                 /* Add the instruction */
                 addInstrB(generatedInstruction);
+            }
+            /* Expression statement */
+            else if(cast(ExpressionStatement)statement)
+            {
+                ExpressionStatement expStmt = cast(ExpressionStatement)statement;
+
+                // The implication is that we must have something
+                // on the stack that is `Value`-based which represents
+                // the expression-as-statement
+                auto instr = popInstr();
+                assert(instr);
+
+                // Now, since this is indicating we want a statement,
+                // we should therefore place this `Value`-based instruction
+                // at the back of the queue rather than infront of it (on
+                // top of the stack)
+                auto v_instr = cast(Value)instr;
+                assert(v_instr);
+
+                // Now, we want to embed the `Value`-based instruction
+                // into an `EmbeddedValueInstruction` and we will then
+                // add that to the back of the queue instead of the
+                // front (top of the stack).
+                // 
+                // Shoving the `Value`-based instruction
+                // to the back of the queue won't work by
+                // itself, we need a corresponding TIR to
+                // be able to know. Just emitting this
+                // makes it hard for the emitter to know
+                // what the hell to do with the thing,
+                // it doesn't treat functioncalls
+                // EVER as statements hence we need
+                // to embed an instruction so as to
+                // make that possible
+                auto e_instr = new EmbeddedValueInstruction(v_instr);
+
+                // No typing information needed for a statement,
+                // we just need to add it to the back of the queue
+                DEBUG("Making statement-level: ", v_instr, ", result: ", e_instr);
+                addInstrB(e_instr);
             }
             /* Case of no matches */
             else
