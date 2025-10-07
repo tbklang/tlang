@@ -590,6 +590,23 @@ jobs:
               set -e
               exit 1
           fi
+      - name: Complex alias usage 1
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/aliases/complex_usage_1.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 6 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
 
 
 ##################################

@@ -22,5 +22,5 @@ int main()
 	int i = expr;
 	int p = expr;
 	int o = identity(inner);
-	return i+p+o;
+	return i+p+o+expr;
 }
