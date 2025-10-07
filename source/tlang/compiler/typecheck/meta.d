@@ -195,10 +195,14 @@ public class MetaProcessor
                 {
                     // Nearest matched alias
                     AliasDeclaration nearestAlias = matched[0];
+                    DEBUG("matched: ", matched);
+                    DEBUG("matched[0]: ", matched[0]);
 
                     // Only continue if the alias being referred to
                     // appears before the place it is being referred
                     // AT
+                    DEBUG("ccc nearestAlias: ", nearestAlias);
+                    DEBUG("ccc aliasUse: ", varExp);
                     if(resolver.isThizAfterThat(nearestAlias, varExp))
                     {
                         throw new MetaException
