@@ -1373,7 +1373,7 @@ import std.string : format;
  * Represents a return statement with an expression
  * to be returned
  */
-public final class ReturnStmt : Statement, MStatementSearchable
+public final class ReturnStmt : Statement, MStatementSearchable, MStatementReplaceable
 {
     // The Expression being returned
     private Expression returnExpression;
@@ -1423,6 +1423,45 @@ public final class ReturnStmt : Statement, MStatementSearchable
         }
 
         return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* Cannot replace ourselves directly */
+        if(thiz == this)
+        {
+            return false;
+        }
+        /* Replace the expression (if any) */
+        else if(returnExpression !is null && returnExpression == thiz)
+        {
+            auto that_exp = cast(Expression)that;
+            if(that_exp)
+            {
+                returnExpression = that_exp;
+                return true;
+            }
+            // failed to replace with non-`Expression` AST node
+            else
+            {
+                return false;
+            }
+        }
+        /* Attempt replacing something _inside of_ the Expression (if it exists) */
+        else if(returnExpression !is null)
+        {
+            auto ret_exp_repbl = cast(MStatementReplaceable)returnExpression;
+            if(ret_exp_repbl)
+            {
+                return ret_exp_repbl.replace(thiz, that);
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
+        return false;
     }
 
     public override string toString()
