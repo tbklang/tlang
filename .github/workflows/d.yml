@@ -571,10 +571,12 @@ jobs:
               exit 1
           fi
 
-      - name: Alias expression test that returns 3
+
+      # Alias support
+      - name: Simple alias usage
         run: |
           set -e
-          ./tlang compile source/tlang/testing/aliases/simple.t
+          ./tlang compile source/tlang/testing/aliases/simple_usage.t
 
           set +e
           ./tlang.out
