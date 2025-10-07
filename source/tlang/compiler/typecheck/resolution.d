@@ -450,17 +450,19 @@ public final class Resolver
         {
             // Using the parent 
             MPositionable positionable = cast(MPositionable)thizParent;
+            DEBUG("ccc thizParent (MPositionable): ", positionable);
 
             if(positionable)
             {
-                size_t thizPos = positionable.position(thiz);
-                size_t thatPos = positionable.position(that);
+                ptrdiff_t thizPos = positionable.position(thiz);
+                ptrdiff_t thatPos = positionable.position(that);
 
-                DEBUG("thizPos=%d", thizPos);
-                DEBUG("thatPos=%d", thatPos);
+                DEBUG("ccc thiz: ", thiz);
+                DEBUG("ccc thizPos=", thizPos);
+                DEBUG("ccc that: ", that);
+                DEBUG("ccc thatPos=", thatPos);
 
                 // If one or other is not found, climb to common position
-
                 if(thizPos != -1 && thatPos != -1)
                 {
                     if(thizPos == thatPos)
@@ -474,6 +476,7 @@ public final class Resolver
                 }
                 else
                 {
+                    DEBUG("ccc: we are here");
                     return Pos.NOT_FOUND;
                 }
             }
@@ -510,6 +513,7 @@ public final class Resolver
     public bool isThizAfterThat(Statement thiz, Statement that)
     {
         Pos result = positionalize(thiz, that);
+        DEBUG("ccc posResult: ", result, "thiz: ", thiz, "that: ", that);
         return result == Pos.LEFT_INNER || result == Pos.LVL_AFTER; 
     }
 
