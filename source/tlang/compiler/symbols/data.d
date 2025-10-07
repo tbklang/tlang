@@ -436,7 +436,7 @@ public class Function : TypedEntity, Container, MPositionable
         // such that they are lookup-able.
         addStatements(cast(Statement[])params);
 
-        // Add the funciton's body
+        // Add the function's body
         addStatements(bodyStatements);
 
         // Save a seperate copy of the parameters (to seperate them from the
@@ -459,11 +459,16 @@ public class Function : TypedEntity, Container, MPositionable
 
     public void addStatement(Statement statement)
     {
+        // DEBUG("ccc, adding statement: ", statement);
         this.bodyStatements~=statement;
     }
 
     public void addStatements(Statement[] statements)
     {
+        foreach(s; statements)
+        {
+            // DEBUG("ccc, adding statement: ", s);
+        }
         this.bodyStatements~=statements;
     }
 
@@ -600,19 +605,58 @@ public class Function : TypedEntity, Container, MPositionable
 
     public override ptrdiff_t position(Statement statement)
     {
+        // DEBUG("ccc (position call) this.bodyStatements: ", this.bodyStatements);
+        // Perform initial level-based direct-match scan
         for(size_t i = 0; i < this.bodyStatements.length; i++)
         {
-            if(statement == this.bodyStatements[i])
+            auto cs = this.bodyStatements[i];
+            // DEBUG("ccc statement (to): ", statement);
+            // DEBUG("ccc statement (cur): ", cs, " @ pos ", i);
+
+            // if match then return immediately
+            if(statement == cs)
             {
                 return i;
             }
         }
 
+        // continue but now do nested scan on each member
+        // till we find a match
+        lp: for(size_t i = 0; i < this.bodyStatements.length; i++)
+        {
+            auto cs = this.bodyStatements[i];
+
+            // For nested cases, so long as we can find it
+            // ... (that is the `statement`) within `cs`
+            // ... then consider it found and at the position
+            // ... of its containing statement. We consider
+            // ... it found if the position returned is
+            // ... non-negative.
+            if(cast(MPositionable)cs)
+            {
+                auto cs_mp = cast(MPositionable)cs;
+                // DEBUG("ccc cs_mp (to): ", cs_mp);
+                ptrdiff_t p = cs_mp.position(statement) >= 0 ? i : -1;
+
+                // nothing was found, try next one
+                if(p == -1)
+                {
+                    continue lp;
+                }
+                // DEBUG("ccc (to's position relative to cur): ", p);
+
+                // if found _somewhere inside_ this AST node
+                // then return the outer AST node's position
+                return i;
+            }
+        }
+
+        // really, not found
         return -1;
     }
 }
 
-public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable, MCloneable
+public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable, MCloneable, MPositionable
 {
     /* TODO: Just make this an Expression */
     private VariableAssignment assignment;
@@ -727,6 +771,26 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
 
         return clonedVarDec;
     }
+
+    public override ptrdiff_t position(Statement statement)
+    {
+        // if we are what was being looked for
+        if(statement == this)
+        {
+            return 0;
+        }
+        // if it occurs within us it can only be because of
+        // our assignment. Any find counts as position 1.
+        else if(this.assignment)
+        {
+            // check within assignment
+            return this.assignment.position(statement) > -1 ? 1 : -1;
+        }
+        else
+        {
+            return -1;
+        }
+    }
 }
 
 
@@ -739,7 +803,7 @@ public import tlang.compiler.symbols.expressions;
 /**
 * TODO: Rename to `VariableDeclarationAssignment`
 */
-public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable, MCloneable
+public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable, MCloneable, MPositionable
 {
     private Expression expression;
 
@@ -840,6 +904,27 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
         clonedVarAss.parentTo(newParent);
 
         return clonedVarAss;
+    }
+
+    public override ptrdiff_t position(Statement statement)
+    {
+        // if it is me, then return position zero
+        if(this == statement)
+        {
+            return 0;
+        }
+        // check expression
+        else if(cast(MPositionable)this.expression)
+        {
+            auto exp_mp = cast(MPositionable)this.expression;
+
+            return exp_mp.position(statement) > -1 ? 1 : -1;
+        }
+        // not found
+        else
+        {
+            return -1;
+        }
     }
 }
 
@@ -1005,7 +1090,7 @@ public class PointerDereferenceAssignment : Statement
     }
 }
 
-public abstract class IdentExpression : Expression, MStatementSearchable, MStatementReplaceable
+public abstract class IdentExpression : Expression, MStatementSearchable, MStatementReplaceable, MPositionable
 {
     /* name */
     private string name;
@@ -1044,6 +1129,20 @@ public abstract class IdentExpression : Expression, MStatementSearchable, MState
     {
         // Nothing to replace within us
         return false;
+    }
+
+    public override ptrdiff_t position(Statement statement)
+    {
+        // if it is me, then position 0
+        if(this == statement)
+        {
+            return 0;
+        }
+        // not found
+        else
+        {
+            return -1;
+        }
     }
 }
 
@@ -1086,7 +1185,7 @@ public abstract class Call : IdentExpression
 }
 
 // FIXME: Finish adding proper `MStatementSearchable` and `MStatementReplaceable` to `FunctionCall`
-public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable, MCloneable
+public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable, MCloneable, MPositionable
 {
     /* Whether this is statement-level function call or not */
 
@@ -1236,7 +1335,37 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
 
         return clonedFuncCall;
     }
+
+    public override ptrdiff_t position(Statement statement)
+    {
+        // if it is me, then 0
+        if(this == statement)
+        {
+            return 0;
+        }
+
+        // perhaps within me (directly or within one of
+        // ... the arguments)
+        foreach(Expression e; this.arguments)
+        {
+            auto e_mp = cast(MPositionable)e;
+
+            ptrdiff_t e_pos = e_mp.position(statement);
+            if(e_pos == -1)
+            {
+                return -1;
+            }
+
+            // if found, then the position is 1
+            return 1;
+        }
+
+        // not found
+        return -1;
+    }
 }
+
+import std.string : format;
 
 /** 
  * ReturnStmt
@@ -1270,6 +1399,11 @@ public final class ReturnStmt : Statement
     public bool hasReturnExpression()
     {
         return returnExpression !is null;
+    }
+
+    public override string toString()
+    {
+        return format("ReturnStmt [e: %s]", hasReturnExpression() ? getReturnExpression().toString() : "No retExp");
     }
 }
 
