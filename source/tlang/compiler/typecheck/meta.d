@@ -226,6 +226,8 @@ public class MetaProcessor
                     // Now, from the current container, replace the
                     // VariableExpression with the cloned expression
                     MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
+                    DEBUG("Assertion check (for varExp): ", varExp);
+                    DEBUG("Assertion check: ", container);
                     assert(containerRepl);
                     assert(containerRepl.replace(varExp, clonedExpr));
 
@@ -234,7 +236,7 @@ public class MetaProcessor
         }
         else
         {
-            DEBUG("Skipping non MStatementSearchable node");
+            DEBUG("Skipping non MStatementSearchable node: ", curStmt);
         } 
     }
 
