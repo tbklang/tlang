@@ -18,9 +18,9 @@ int identity(int i)
 
 int main()
 {
-	alias inner = sizeof(ubyte)-cast(ubyte)1;
+	alias inner = sizeof(uint)-cast(ubyte)1;
 	int i = expr;
 	int p = expr;
 	int o = identity(inner);
-	return i+p+expr;
+	return i+p+expr+o;
 }

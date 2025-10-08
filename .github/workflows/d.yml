@@ -599,7 +599,7 @@ jobs:
           ./tlang.out
 
           
-          if [ $? = 6 ]
+          if [ $? = 9 ]
           then
               set -e
               exit 0
