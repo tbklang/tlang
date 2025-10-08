@@ -3,6 +3,9 @@ module tlang.compiler.symbols.expressions;
 import tlang.compiler.symbols.data;
 import std.conv : to;
 
+// Debugging
+import tlang.misc.logging;
+
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
 import std.string : format;
@@ -121,23 +124,34 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
             rhs = cast(Expression)that;
             return true;
         }
+
+
         /* If not direct match, then recurse and replace on left-hand side `Expression` (if possible) */
-        else if(cast(MStatementReplaceable)lhs)
+        if(cast(MStatementReplaceable)lhs)
         {
             MStatementReplaceable lhsCasted = cast(MStatementReplaceable)lhs;
-            return lhsCasted.replace(thiz, that);
+            auto i = lhsCasted.replace(thiz, that);
+            DEBUG("Assertion check: Hi", i, " @lhs: ", lhs);
+            if(i)
+            {
+                return i;
+            }
         }
+
         /* If not direct match, then recurse and replace on right-hand side `Expression` (if possible) */
-        else if(cast(MStatementReplaceable)rhs)
+        if(cast(MStatementReplaceable)rhs)
         {
             MStatementReplaceable rhsCasted = cast(MStatementReplaceable)rhs;
-            return rhsCasted.replace(thiz, that);
+            auto i = rhsCasted.replace(thiz, that);
+            DEBUG("Assertion check: Hi", i, " @rhs: ", rhs);
+            if(i)
+            {
+                return i;
+            }
         }
+
         /* If not direct match and not replaceable */
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
     /** 
