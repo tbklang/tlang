@@ -131,7 +131,6 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
         {
             MStatementReplaceable lhsCasted = cast(MStatementReplaceable)lhs;
             auto i = lhsCasted.replace(thiz, that);
-            DEBUG("Assertion check: Hi", i, " @lhs: ", lhs);
             if(i)
             {
                 return i;
@@ -143,7 +142,6 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
         {
             MStatementReplaceable rhsCasted = cast(MStatementReplaceable)rhs;
             auto i = rhsCasted.replace(thiz, that);
-            DEBUG("Assertion check: Hi", i, " @rhs: ", rhs);
             if(i)
             {
                 return i;
