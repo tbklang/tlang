@@ -230,7 +230,6 @@ public class MetaProcessor
                     DEBUG("Assertion check: ", container);
                     assert(containerRepl);
                     assert(containerRepl.replace(varExp, clonedExpr));
-
                 }
             }
         }
