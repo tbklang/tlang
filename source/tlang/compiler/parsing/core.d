@@ -2368,6 +2368,20 @@ public final class Parser
                         // Share the same parent
                         parentToContainer(container, [innerExp]);
                     }
+                    /** 
+                     * Alias declarations
+                     *
+                     * These have an embedded expression
+                     * within that needs parenting
+                     */
+                    else if(cast(AliasDeclaration)statement)
+                    {
+                        AliasDeclaration aliasDecl = cast(AliasDeclaration)statement;
+                        Expression innerExp = aliasDecl.getExpr();
+
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
+                    }
                 }
             }
         }
