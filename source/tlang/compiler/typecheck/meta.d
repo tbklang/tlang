@@ -311,20 +311,20 @@ public class MetaProcessor
             DEBUG("a_i_e (before): ", a_i_e);
             DEBUG("a_i_e_after (after): ", a_i_e_after);
 
-            // TODO: Call positionaliza chech here between `a_i` and `a_refFrom`
+            // Call positionaliza chech here between `a_i` and `a_refFrom`
             // in order to check use-before-declare
-            // if(r.isThizAfterThat(a_i, a_refFrom))
-            // {
-            //     throw new MetaException
-            //     (
-            //         format
-            //         (
-            //             "Usage of an alias %s in %s prior to its declaration",
-            //             a_i,
-            //             a_refFrom
-            //         )
-            //     );
-            // }
+            if(r.isThizAfterThat(a_i, a_refFrom))
+            {
+                throw new MetaException
+                (
+                    format
+                    (
+                        "Usage of an alias %s in %s prior to its declaration",
+                        a_i,
+                        a_refFrom
+                    )
+                );
+            }
 
             // TODO: Insert replacement code here
             DEBUG("e: ", e);// FIXME: Yes, we are replacing things WAY to high
