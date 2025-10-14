@@ -1322,6 +1322,7 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
         foreach(Expression e; this.arguments)
         {
             auto e_mp = cast(MPositionable)e;
+            DEBUG(e);assert(e_mp);
 
             ptrdiff_t e_pos = e_mp.position(statement);
             if(e_pos == -1)
