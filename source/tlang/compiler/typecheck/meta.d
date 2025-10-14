@@ -394,98 +394,10 @@ public class MetaProcessor
 
         // Find any VariableExpression(s) from curStmt (TODO: should be container or nah?)
         MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
+        DEBUG("curStmt: ", curStmt);
+        assert(searchableStmt);
 
         doAliasExpression2(container, searchableStmt);
-        return;
-
-
-        if(searchableStmt)
-        {
-            VariableExpression[] foundStmts = cast(VariableExpression[])searchableStmt.search(VariableExpression.classinfo);
-            DEBUG("foundStmts: ", foundStmts);
-
-            // Now, for all VariableExpressions, do
-            lp: foreach(VariableExpression varExp; foundStmts)
-            {
-                // Extract the name/referent, then match all aliases
-                // that have the same name
-                // (these should have been generated from closest to
-                // furthest when obtained from the resolver, so any
-                // tie breaking would be the logically closest 
-                // alias with the same name)
-                //
-                // Achor the search to start from the VarExp
-                DEBUG("ddd varExp: ", varExp);
-
-                proc(container, varExp);
-                continue lp;
-
-                AliasDeclaration[] declaredAliases = findAliasesFrom(varExp.parentOf());
-                DEBUG("DeclAlis: ", declaredAliases);
-                AliasDeclaration[] matched;
-                string varExpIdent = varExp.getName();
-                bool filterAliasesToName(AliasDeclaration aliasDecl)
-                {
-                    return cmp(aliasDecl.getName(), varExpIdent) == 0;
-                }    
-                filter!(AliasDeclaration)(declaredAliases, predicateOf!(filterAliasesToName), matched);
-
-                DEBUG(format("Matched aliases for VarExp '%s': %s", varExpIdent, matched));
-
-                // If there is no match then it isn't an alias referent
-                // hence we only care IF it IS an alias referent
-                if(matched.length)
-                {
-                    // Nearest matched alias
-                    AliasDeclaration nearestAlias = matched[0];
-                    DEBUG("matched: ", matched);
-                    DEBUG("matched[0]: ", matched[0]);
-
-                    // Only continue if the alias being referred to
-                    // appears before the place it is being referred
-                    // AT
-                    DEBUG("ccc nearestAlias: ", nearestAlias);
-                    DEBUG("ccc aliasUse: ", varExp);
-                    if(resolver.isThizAfterThat(nearestAlias, varExp))
-                    {
-                        throw new MetaException
-                        (
-                            format
-                            (
-                                "Usage of an alias %s in %s prior to its declaration",
-                                nearestAlias,
-                                varExp
-                            )
-                        );
-                    }
-
-                    // TODO: Process the alias's expression itself
-                    dothing(container, varExp, nearestAlias);
-
-                    // Now extract the alias's expression and clone it
-                    // and make its parent the VariableExpression's
-                    // (as it will take its exact place)
-                    MCloneable cloneableExpr = cast(MCloneable)nearestAlias.getExpr();
-                    assert(cloneableExpr);
-                    Expression clonedExpr = cast(Expression)cloneableExpr.clone(varExp.parentOf());
-
-                    // TODO: Add recursive alias detection here
-                    // if(cast(Alias))
-
-                    // Now, from the current container, replace the
-                    // VariableExpression with the cloned expression
-                    MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
-                    DEBUG("Assertion check (for varExp): ", varExp);
-                    DEBUG("Assertion check: ", container);
-                    assert(containerRepl);
-                    assert(containerRepl.replace(varExp, clonedExpr));
-                }
-            }
-        }
-        else
-        {
-            DEBUG("Skipping non MStatementSearchable node: ", curStmt);
-        } 
     }
 
     /** 
