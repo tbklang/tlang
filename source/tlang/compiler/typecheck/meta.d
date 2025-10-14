@@ -303,8 +303,9 @@ public class MetaProcessor
             auto a_i = a_ref.decl;
             DEBUG("a decl: ", a_i);
             auto a_i_e = a_i.getExpr();
+            DEBUG("a_i_e: ", a_i_e);
             auto a_i_e_p = a_i_e.parentOf();
-            DEBUG(a_i_e);
+            DEBUG("a_i_e_p: ", a_i_e_p);
             assert(a_i_e_p);
             proc(a_i_e_p, a_i_e);
             auto a_i_e_after = a_i.getExpr();
@@ -331,8 +332,12 @@ public class MetaProcessor
 
             // Clone the `a_i_e_after` and then use that
             // for replacement
+            //
+            // We clone and set its parent to the same
+            // parent at the reference site, i.e. `a_refFrom`'s
+            // parent.
             auto a_i_e_after_cl = cast(MCloneable)a_i_e_after; assert(a_i_e_after);
-            auto r_s = c.replace(a_refFrom, a_i_e_after_cl.clone());
+            auto r_s = c.replace(a_refFrom, a_i_e_after_cl.clone(a_refFrom.parentOf()));
             DEBUG("r_s: ", r_s);
         }
     }
