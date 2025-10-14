@@ -372,20 +372,6 @@ public class MetaProcessor
         DEBUG("--------------");
     }
 
-
-    private void doAliasExpression2(Container container, MStatementSearchable searchableStmt)
-    {
-        Expression[] foundStmts = cast(Expression[])searchableStmt.search(Expression.classinfo);
-        foreach(e; foundStmts)
-        {
-            DEBUG("eb: ", e);
-            proc(container, e);
-            DEBUG("ea: ", e);
-        }
-
-        WARN("Exit");
-    }
-
     private void doAliasExpression(Container container, Statement curStmt)
     {
         Resolver resolver = tc.getResolver(); // TODO: Remove from here, make a field
@@ -397,7 +383,15 @@ public class MetaProcessor
         DEBUG("curStmt: ", curStmt);
         assert(searchableStmt);
 
-        doAliasExpression2(container, searchableStmt);
+        Expression[] foundStmts = cast(Expression[])searchableStmt.search(Expression.classinfo);
+        foreach(e; foundStmts)
+        {
+            DEBUG("eb: ", e);
+            proc(container, e);
+            DEBUG("ea: ", e);
+        }
+
+        WARN("Exit");
     }
 
     /** 
