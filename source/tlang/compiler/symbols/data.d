@@ -2028,7 +2028,7 @@ public final class ExternStmt : Statement
  * 1. standalone function calls
  * 2. i++
  */
-public final class ExpressionStatement : Statement
+public final class ExpressionStatement : Statement, MStatementSearchable
 {
     private Expression _e;
 
@@ -2048,5 +2048,26 @@ public final class ExpressionStatement : Statement
     public override string toString()
     {
         return format("ExpressionStmt [e: %s]", _e);
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on the embedded `Expression` */
+        auto _ems = cast(MStatementSearchable)_e;
+        if(_ems)
+        {
+            matches ~= _ems.search(clazzType);
+        }
+
+        return matches;
     }
 }
