@@ -571,7 +571,8 @@ jobs:
               exit 1
           fi
 
-
+      - name: String literal encoding
+        run: ./tlang compile source/tlang/testing/strings/encoding.t
 
 ##################################
 ####### Deployment section #######
