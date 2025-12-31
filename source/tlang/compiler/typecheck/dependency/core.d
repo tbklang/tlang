@@ -574,15 +574,6 @@ public class DNodeGenerator
             */
             foreach(Expression actualArgument; funcCall.getCallArguments())
             {
-                ExpressionDNode actualArgumentDNode = poolT!(ExpressionDNode, Expression)(actualArgument);
-                // dnode.needs(actualArgumentDNode);
-
-                // gprintln("We need to add recursion here", DebugType.ERROR);
-                // gprintln("Func?: "~to!(string)(cast(FunctionCall)actualArgument));
-                // gprintln("Literal?: "~to!(string)(cast(NumberLiteral)actualArgument));
-                // gprintln("Hello baba", DebugType.ERROR);
-
-                /* TODO: Ensure the correct context */
                 dnode.needs(expressionPass(actualArgument, context));
             }
         }
