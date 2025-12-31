@@ -697,28 +697,6 @@ public class DNodeGenerator
                     */
                     Function funcHandle = cast(Function)namedEntity;
                     
-                    /**
-                    * FIXME: Find the best place for this. Functions will always
-                    * be declared (atleast for basic examples as like now) in
-                    * the module level
-                    */
-                    Context cont = new Context(tc.getResolver().findContainerOfType(Module.classinfo, funcHandle), InitScope.STATIC);
-                    // cont.container = tc.getModule();
-                    // cont.
-                    funcHandle.setContext(cont);
-
-                    // funcHandle
-                    
-
-                    /**
-                    * FIXME: Do we have to visit the function, I am not sure, like maybe declaration
-                    * or surely it is already declared??!?!?
-                    *
-                    * Does pooling it make sense? Do we force a visitation?
-                    */
-                    FuncDecNode funcDecNode = poolT!(FuncDecNode, Function)(funcHandle);
-                    dnode.needs(funcDecNode);
-
                     WARN("Muh function handle: "~namedEntity.toString());
                 }
                 else
