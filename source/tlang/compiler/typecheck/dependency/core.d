@@ -42,6 +42,11 @@ public final class Context
         this.container = container;
     }
 
+    this(Container container)
+    {
+    	this(container, InitScope.STATIC);
+    }
+
     public bool isAllowUp()
     {
         return allowUp;
@@ -564,10 +569,6 @@ public class DNodeGenerator
             // DNode funcDefDNode = retrieveFunctionDefinitionNode(tc.getResolver().generateName(tc.getModule(), funcEntity));
             // gprintln("FuncCall (FuncDefNode): "~to!(string)(funcDefDNode));
             // dnode.needs(funcDefDNode); /* NOTE: New code as of 4th October 2022 */
-
-            //NOTE: Check if we need to set a context here to that of the context we occuring in
-            funcCall.context = context;
-
 
             /**
             * Go through each argument generating a fresh DNode for each expression

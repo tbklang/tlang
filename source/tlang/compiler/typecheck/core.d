@@ -2004,6 +2004,10 @@ public final class TypeChecker
             {
                 FunctionCall funcCall = cast(FunctionCall)statement;
 
+                // Generate call-site context
+                Context callSite_ctx = new Context(funcCall.parentOf());
+                assert(callSite_ctx.getContainer());
+
                 // Find the top-level container of the function being called
                 // and then use this as the container to resolve our function
                 // being-called to (as a starting point)
@@ -2109,7 +2113,7 @@ public final class TypeChecker
                 * 3. Embed into the FuncCallInstr at the correct index (above)
                 * 4. Push `FuncCallInstr` to top of stack
                 */
-                funcCallInstr.setContext(funcCall.getContext());
+                funcCallInstr.setContext(callSite_ctx);
                 addInstr(funcCallInstr);
 
                 /* Set the Value instruction's type */
