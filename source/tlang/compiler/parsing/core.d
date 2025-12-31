@@ -2367,6 +2367,20 @@ public final class Parser
                         // Share the same parent
                         parentToContainer(container, [innerExp]);
                     }
+                    /**
+                     * Casted expressions
+                     *
+                     * These have an inner expression
+                     * within that needs parenting
+                     */
+                    else if(cast(CastedExpression)statement)
+                    {
+                    	CastedExpression cstdExpr = cast(CastedExpression)statement;
+                        Expression innerExp = cstdExpr.getEmbeddedExpression();
+                    	
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
+                    }
                 }
             }
         }
