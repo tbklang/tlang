@@ -672,14 +672,9 @@ public class DNodeGenerator
                      * Check if the variable being referenced has been
                      * visited (i.e. declared)
                      *
-                     * If it has then setup dependency, if not then error
-                     * out
+                     * If it has not then throw an error
                      */
-                    if(varDecNode.isVisisted())
-                    {
-                        dnode.needs(varDecNode);
-                    }
-                    else
+                    if(!varDecNode.isVisisted())
                     {
                         expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
                     }
