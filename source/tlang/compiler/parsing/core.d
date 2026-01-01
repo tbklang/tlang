@@ -2395,6 +2395,22 @@ public final class Parser
                         // Share the same parent
                         parentToContainer(container, [innerExp]);
                     }
+                    /**
+                     * Array index
+                     *
+                     * These have two inner expressions,
+                     * the `indexTo` and `indexOf` which
+                     * need parenting
+                     */
+                    else if(cast(ArrayIndex)statement)
+                    {
+                    	ArrayIndex aiExpr = cast(ArrayIndex)statement;
+                    	Expression indexToExpr = aiExpr.getIndexed();
+                    	Expression indexExpr = aiExpr.getIndex();
+
+                        // Share the same parent
+                        parentToContainer(container, [indexToExpr, indexExpr]);                    	
+                    }
                 }
             }
         }
