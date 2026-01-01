@@ -2381,6 +2381,20 @@ public final class Parser
                         // Share the same parent
                         parentToContainer(container, [innerExp]);
                     }
+                    /**
+                     * Unary operator expression
+                     *
+                     * These have an innser expression
+                     * within that needs parenting
+                     */
+                    else if(cast(UnaryOperatorExpression)statement)
+                    {
+                    	UnaryOperatorExpression cstdExpr = cast(UnaryOperatorExpression)statement;
+                        Expression innerExp = cstdExpr.getExpression();
+                    	
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
+                    }
                 }
             }
         }
