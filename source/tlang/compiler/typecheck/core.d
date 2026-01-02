@@ -1687,6 +1687,16 @@ public final class TypeChecker
                 auto g  = cast(VariableExpression)statement;
                 assert(g);
 
+                // Derive context at call-site
+                if(g.parentOf() is null)
+                {
+                	ERROR("Fatal, why is this null", g, getProgram());
+                	assert(false);
+                }
+                assert(g.parentOf());
+                Context callSite_ctx = new Context(g.parentOf());
+                assert(callSite_ctx.getContainer());
+
                 /* FIXME: It would seem that g.getContext() is returning null, so within function body's context is not being set */
                 DEBUG("VarExp: "~g.getName());
                 DEBUG(g.getContext());
