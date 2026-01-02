@@ -2398,6 +2398,10 @@ public final class TypeChecker
             else if(cast(ReturnStmt)statement)
             {
                 ReturnStmt returnStatement = cast(ReturnStmt)statement;
+
+				// Derive call-site context
+				Context callSite_ctx = new Context(returnStatement.parentOf());
+                
                 Function funcContainer = cast(Function)resolver.findContainerOfType(Function.classinfo, returnStatement);
 
                 /* Generated return instruction */
@@ -2481,7 +2485,7 @@ public final class TypeChecker
                  * 3. Set the Context of the instruction
                  * 4. Add this instruction back
                  */
-                returnInstr.setContext(returnStatement.getContext());
+                returnInstr.setContext(callSite_ctx);
                 addInstrB(returnInstr);
             }
             /**
