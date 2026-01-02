@@ -42,6 +42,11 @@ public final class Context
         this.container = container;
     }
 
+    this(Container container)
+    {
+    	this(container, InitScope.STATIC);
+    }
+
     public bool isAllowUp()
     {
         return allowUp;
@@ -565,24 +570,11 @@ public class DNodeGenerator
             // gprintln("FuncCall (FuncDefNode): "~to!(string)(funcDefDNode));
             // dnode.needs(funcDefDNode); /* NOTE: New code as of 4th October 2022 */
 
-            //NOTE: Check if we need to set a context here to that of the context we occuring in
-            funcCall.context = context;
-
-
             /**
             * Go through each argument generating a fresh DNode for each expression
             */
             foreach(Expression actualArgument; funcCall.getCallArguments())
             {
-                ExpressionDNode actualArgumentDNode = poolT!(ExpressionDNode, Expression)(actualArgument);
-                // dnode.needs(actualArgumentDNode);
-
-                // gprintln("We need to add recursion here", DebugType.ERROR);
-                // gprintln("Func?: "~to!(string)(cast(FunctionCall)actualArgument));
-                // gprintln("Literal?: "~to!(string)(cast(NumberLiteral)actualArgument));
-                // gprintln("Hello baba", DebugType.ERROR);
-
-                /* TODO: Ensure the correct context */
                 dnode.needs(expressionPass(actualArgument, context));
             }
         }
@@ -680,14 +672,9 @@ public class DNodeGenerator
                      * Check if the variable being referenced has been
                      * visited (i.e. declared)
                      *
-                     * If it has then setup dependency, if not then error
-                     * out
+                     * If it has not then throw an error
                      */
-                    if(varDecNode.isVisisted())
-                    {
-                        dnode.needs(varDecNode);
-                    }
-                    else
+                    if(!varDecNode.isVisisted())
                     {
                         expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
                     }
@@ -705,28 +692,6 @@ public class DNodeGenerator
                     */
                     Function funcHandle = cast(Function)namedEntity;
                     
-                    /**
-                    * FIXME: Find the best place for this. Functions will always
-                    * be declared (atleast for basic examples as like now) in
-                    * the module level
-                    */
-                    Context cont = new Context(tc.getResolver().findContainerOfType(Module.classinfo, funcHandle), InitScope.STATIC);
-                    // cont.container = tc.getModule();
-                    // cont.
-                    funcHandle.setContext(cont);
-
-                    // funcHandle
-                    
-
-                    /**
-                    * FIXME: Do we have to visit the function, I am not sure, like maybe declaration
-                    * or surely it is already declared??!?!?
-                    *
-                    * Does pooling it make sense? Do we force a visitation?
-                    */
-                    FuncDecNode funcDecNode = poolT!(FuncDecNode, Function)(funcHandle);
-                    dnode.needs(funcDecNode);
-
                     WARN("Muh function handle: "~namedEntity.toString());
                 }
                 else
