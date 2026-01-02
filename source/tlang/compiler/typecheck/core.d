@@ -2494,6 +2494,10 @@ public final class TypeChecker
             else if(cast(IfStatement)statement)
             {
                 IfStatement ifStatement = cast(IfStatement)statement;
+
+				// Derive call-site context
+				Context callSite_ctx = new Context(ifStatement.parentOf());
+                
                 BranchInstruction[] branchInstructions;
 
                 /* Get the if statement's branches */
@@ -2562,10 +2566,8 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 IfStatementInstruction ifStatementInstruction = new IfStatementInstruction(branchInstructions);
-                ifStatementInstruction.setContext(ifStatement.getContext());
+                ifStatementInstruction.setContext(callSite_ctx);
                 addInstrB(ifStatementInstruction);
-
-                DEBUG("If!");
             }
             /**
             * While loop (WhileLoop)
@@ -2573,6 +2575,9 @@ public final class TypeChecker
             else if(cast(WhileLoop)statement)
             {
                 WhileLoop whileLoop = cast(WhileLoop)statement;
+
+   				// Derive call-site context
+				Context callSite_ctx = new Context(whileLoop.parentOf());
 
                 // FIXME: Do-while loops are still being considered in terms of dependency construction
                 if(whileLoop.isDoWhile)
@@ -2615,7 +2620,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 WhileLoopInstruction whileLoopInstruction = new WhileLoopInstruction(branchInstr);
-                whileLoopInstruction.setContext(whileLoop.getContext());
+                whileLoopInstruction.setContext(callSite_ctx);
                 addInstrB(whileLoopInstruction);
             }
             /**
