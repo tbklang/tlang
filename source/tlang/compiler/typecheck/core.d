@@ -1643,12 +1643,13 @@ public final class TypeChecker
             else if(cast(StringExpression)statement)
             {
                 import tlang.compiler.parsing.strings : StrEnc;
-                DEBUG("Typecheck(): String literal processing...");
 
                 StringExpression str_exp = cast(StringExpression)statement;
                 DEBUG("String literal: ", str_exp);
-                Context str_ctx = str_exp.getContext();
-                assert(str_ctx);
+
+                // Derive usage-site context
+                Context str_ctx = new Context(str_exp.parentOf());
+                assert(str_ctx.getContainer());
                 
                 StringInfo str_data = str_exp.data();
                 StrEnc str_enc = str_data.width();
