@@ -1712,7 +1712,6 @@ public final class TypeChecker
                 /* The type of a FetchValueInstruction is the type of the variable being fetched */
                 fVV.setInstrType(variableType);
             }
-            // else if(cast()) !!!! Continue here 
             else if(cast(BinaryOperatorExpression)statement)
             {
                 BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
