@@ -1693,23 +1693,20 @@ public final class TypeChecker
                 assert(gVar);
                 string variableName = resolver.generateName(this.program, gVar);
 
-                
                 /* TODO: TYpe needs ansatz too `.updateName()` call */
                 Type variableType = getType(callSite_ctx.getContainer(), gVar.getType());
-
 
                 /**
                 * Codegen
                 *
-                * FIXME: Add type info, length
-                *
                 * 1. Generate the instruction
-                * 2. Set the Context of it to where the VariableExpression occurred
+                * 2. Set the Context of it to what we derived
+                * earlier
+                * 3. Push onto top of stack
+                * 4. Set `Value`-based instruction's type
                 */
                 FetchValueVar fVV = new FetchValueVar(variableName, 4);
                 fVV.setContext(callSite_ctx);
-
-
                 addInstr(fVV);
 
                 /* The type of a FetchValueInstruction is the type of the variable being fetched */
