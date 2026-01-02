@@ -2356,9 +2356,9 @@ public final class TypeChecker
                 string variableName = vasa.getVariableName();
 
                 /* Extract information about the variable declaration of the avriable being assigned to */
-                Context variableContext = vasa.getContext();
-                Variable variable = cast(Variable)resolver.resolveBest(variableContext.container, variableName);
-                Type variableDeclarationType = getType(variableContext.container, variable.getType());
+                Context callSite_ctx = new Context(vasa.parentOf());
+                Variable variable = cast(Variable)resolver.resolveBest(callSite_ctx.getContainer(), variableName);
+                Type variableDeclarationType = getType(callSite_ctx.getContainer(), variable.getType());
 
                 /**
                 * Codegen
@@ -2389,7 +2389,7 @@ public final class TypeChecker
 
                 /* Generate a variable assignment instruction and add it to the codequeue */
                 VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, assignmentInstr);
-                vAInstr.setContext(vasa.getContext());
+                vAInstr.setContext(callSite_ctx);
                 addInstrB(vAInstr);
             }
             /**
