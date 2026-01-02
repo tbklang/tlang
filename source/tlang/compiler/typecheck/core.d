@@ -2107,11 +2107,13 @@ public final class TypeChecker
             else if(cast(CastedExpression)statement)
             {
                 CastedExpression castedExpression = cast(CastedExpression)statement;
-                DEBUG("Context: "~to!(string)(castedExpression.context));
-                DEBUG("ParentOf: "~to!(string)(castedExpression.parentOf()));
+
+                // Derive call-site context
+                Context callSite_ctx = new Context(castedExpression.parentOf());
+                assert(callSite_ctx.getContainer());
                 
                 /* Extract the type that the cast is casting towards */
-                Type castToType = getType(castedExpression.context.container, castedExpression.getToType());
+                Type castToType = getType(callSite_ctx.getContainer(), castedExpression.getToType());
 
 
                 /**
@@ -2134,7 +2136,7 @@ public final class TypeChecker
 
                 // TODO: Remove the `castToType` argument, this should be solely based off of the `.type` (as set below)
                 CastedValueInstruction castedValueInstruction = new CastedValueInstruction(uncastedInstruction, castToType);
-                castedValueInstruction.setContext(castedExpression.context);
+                castedValueInstruction.setContext(callSite_ctx);
 
                 addInstr(castedValueInstruction);
 
