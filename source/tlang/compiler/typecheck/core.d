@@ -1644,12 +1644,13 @@ public final class TypeChecker
             else if(cast(StringExpression)statement)
             {
                 import tlang.compiler.parsing.strings : StrEnc;
-                DEBUG("Typecheck(): String literal processing...");
 
                 StringExpression str_exp = cast(StringExpression)statement;
                 DEBUG("String literal: ", str_exp);
-                Context str_ctx = str_exp.getContext();
-                assert(str_ctx);
+
+                // Derive usage-site context
+                Context str_ctx = new Context(str_exp.parentOf());
+                assert(str_ctx.getContainer());
                 
                 StringInfo str_data = str_exp.data();
                 StrEnc str_enc = str_data.width();
@@ -1683,53 +1684,36 @@ public final class TypeChecker
             }
             else if(cast(VariableExpression)statement)
             {
-
-                DEBUG("Yaa, it's rewind time");
                 auto g  = cast(VariableExpression)statement;
-                assert(g);
 
-                /* FIXME: It would seem that g.getContext() is returning null, so within function body's context is not being set */
-                DEBUG("VarExp: "~g.getName());
-                DEBUG(g.getContext());
-                auto gVar = cast(TypedEntity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
-                DEBUG("gVar nullity?: "~to!(string)(gVar is null));
+                // Derive context at call-site
+                Context callSite_ctx = new Context(g.parentOf());
+                assert(callSite_ctx.getContainer());
 
-                /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
+                // Lookup the entity being referred to by the var-exp
+                auto gVar = cast(TypedEntity)resolver.resolveBest(callSite_ctx.getContainer(), g.getName());
+                assert(gVar);
                 string variableName = resolver.generateName(this.program, gVar);
 
-                DEBUG("VarName: "~variableName);
-                DEBUG("Halo");
-
-                DEBUG("Yaa, it's rewind time1: "~to!(string)(gVar.getType()));
-                DEBUG("Yaa, it's rewind time2: "~to!(string)(gVar.getContext()));
-                
-                /* TODO: Above TYpedEntity check */
-                /* TODO: still wip the expresison parser */
-
                 /* TODO: TYpe needs ansatz too `.updateName()` call */
-                Type variableType = getType(gVar.getContext().getContainer(), gVar.getType());
-
-                DEBUG("Yaa, it's rewind time");
-
+                Type variableType = getType(callSite_ctx.getContainer(), gVar.getType());
 
                 /**
                 * Codegen
                 *
-                * FIXME: Add type info, length
-                *
                 * 1. Generate the instruction
-                * 2. Set the Context of it to where the VariableExpression occurred
+                * 2. Set the Context of it to what we derived
+                * earlier
+                * 3. Push onto top of stack
+                * 4. Set `Value`-based instruction's type
                 */
                 FetchValueVar fVV = new FetchValueVar(variableName, 4);
-                fVV.setContext(g.getContext());
-
-
+                fVV.setContext(callSite_ctx);
                 addInstr(fVV);
 
                 /* The type of a FetchValueInstruction is the type of the variable being fetched */
                 fVV.setInstrType(variableType);
             }
-            // else if(cast()) !!!! Continue here 
             else if(cast(BinaryOperatorExpression)statement)
             {
                 BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
@@ -2005,6 +1989,10 @@ public final class TypeChecker
             {
                 FunctionCall funcCall = cast(FunctionCall)statement;
 
+                // Generate call-site context
+                Context callSite_ctx = new Context(funcCall.parentOf());
+                assert(callSite_ctx.getContainer());
+
                 // Find the top-level container of the function being called
                 // and then use this as the container to resolve our function
                 // being-called to (as a starting point)
@@ -2110,7 +2098,7 @@ public final class TypeChecker
                 * 3. Embed into the FuncCallInstr at the correct index (above)
                 * 4. Push `FuncCallInstr` to top of stack
                 */
-                funcCallInstr.setContext(funcCall.getContext());
+                funcCallInstr.setContext(callSite_ctx);
                 addInstr(funcCallInstr);
 
                 /* Set the Value instruction's type */
@@ -2121,11 +2109,13 @@ public final class TypeChecker
             else if(cast(CastedExpression)statement)
             {
                 CastedExpression castedExpression = cast(CastedExpression)statement;
-                DEBUG("Context: "~to!(string)(castedExpression.context));
-                DEBUG("ParentOf: "~to!(string)(castedExpression.parentOf()));
+
+                // Derive call-site context
+                Context callSite_ctx = new Context(castedExpression.parentOf());
+                assert(callSite_ctx.getContainer());
                 
                 /* Extract the type that the cast is casting towards */
-                Type castToType = getType(castedExpression.context.container, castedExpression.getToType());
+                Type castToType = getType(callSite_ctx.getContainer(), castedExpression.getToType());
 
 
                 /**
@@ -2148,7 +2138,7 @@ public final class TypeChecker
 
                 // TODO: Remove the `castToType` argument, this should be solely based off of the `.type` (as set below)
                 CastedValueInstruction castedValueInstruction = new CastedValueInstruction(uncastedInstruction, castToType);
-                castedValueInstruction.setContext(castedExpression.context);
+                castedValueInstruction.setContext(callSite_ctx);
 
                 addInstr(castedValueInstruction);
 
@@ -2159,6 +2149,12 @@ public final class TypeChecker
             else if(cast(ArrayIndex)statement)
             {
                 ArrayIndex arrayIndex = cast(ArrayIndex)statement;
+
+				// Derive usage-site contxt
+				Context callSite_ctx = new Context(arrayIndex.parentOf());
+				assert(arrayIndex.parentOf());
+				
+                
                 Type accessType;
 
                 /* Pop the thing being indexed (the indexTo expression) */
@@ -2219,7 +2215,7 @@ public final class TypeChecker
                     */
                     StackArrayIndexInstruction stackArrayIndexInstr = new StackArrayIndexInstruction(indexToInstr, indexInstr);
                     stackArrayIndexInstr.setInstrType(accessType);
-                    stackArrayIndexInstr.setContext(arrayIndex.context);
+                    stackArrayIndexInstr.setContext(callSite_ctx);
 
                     ERROR("IndexTo: "~indexToInstr.toString());
                     ERROR("Index: "~indexInstr.toString());
@@ -2292,13 +2288,16 @@ public final class TypeChecker
             * Emit a variable declaration instruction
             */
             Variable variablePNode = cast(Variable)dnode.getEntity();
-            DEBUG("HELLO FELLA");
 
+            // Derive usage-site context
+            Context callSite_ctx = new Context(variablePNode.parentOf());
+            assert(callSite_ctx.getContainer());
+
+			// TODO/NOTE: Generating full name below
             string variableName = resolver.generateName(this.program, variablePNode);
-            DEBUG("HELLO FELLA (name): "~variableName);
             
 
-            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
+            Type variableDeclarationType = getType(callSite_ctx.getContainer(), variablePNode.getType());
 
 
             // Check if this variable declaration has an assignment attached
@@ -2329,7 +2328,7 @@ public final class TypeChecker
 
             /* Generate a variable declaration instruction and add it to the codequeue */
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variableDeclarationType, assignmentInstr);
-            varDecInstr.setContext(variablePNode.context);
+            varDecInstr.setContext(callSite_ctx);
             addInstrB(varDecInstr);
         }
         /* TODO: Add class init, see #8 */
@@ -2360,9 +2359,9 @@ public final class TypeChecker
                 string variableName = vasa.getVariableName();
 
                 /* Extract information about the variable declaration of the avriable being assigned to */
-                Context variableContext = vasa.getContext();
-                Variable variable = cast(Variable)resolver.resolveBest(variableContext.container, variableName);
-                Type variableDeclarationType = getType(variableContext.container, variable.getType());
+                Context callSite_ctx = new Context(vasa.parentOf());
+                Variable variable = cast(Variable)resolver.resolveBest(callSite_ctx.getContainer(), variableName);
+                Type variableDeclarationType = getType(callSite_ctx.getContainer(), variable.getType());
 
                 /**
                 * Codegen
@@ -2393,7 +2392,7 @@ public final class TypeChecker
 
                 /* Generate a variable assignment instruction and add it to the codequeue */
                 VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, assignmentInstr);
-                vAInstr.setContext(vasa.getContext());
+                vAInstr.setContext(callSite_ctx);
                 addInstrB(vAInstr);
             }
             /**
@@ -2402,6 +2401,10 @@ public final class TypeChecker
             else if(cast(ReturnStmt)statement)
             {
                 ReturnStmt returnStatement = cast(ReturnStmt)statement;
+
+				// Derive call-site context
+				Context callSite_ctx = new Context(returnStatement.parentOf());
+                
                 Function funcContainer = cast(Function)resolver.findContainerOfType(Function.classinfo, returnStatement);
 
                 /* Generated return instruction */
@@ -2485,7 +2488,7 @@ public final class TypeChecker
                  * 3. Set the Context of the instruction
                  * 4. Add this instruction back
                  */
-                returnInstr.setContext(returnStatement.getContext());
+                returnInstr.setContext(callSite_ctx);
                 addInstrB(returnInstr);
             }
             /**
@@ -2494,6 +2497,10 @@ public final class TypeChecker
             else if(cast(IfStatement)statement)
             {
                 IfStatement ifStatement = cast(IfStatement)statement;
+
+				// Derive call-site context
+				Context callSite_ctx = new Context(ifStatement.parentOf());
+                
                 BranchInstruction[] branchInstructions;
 
                 /* Get the if statement's branches */
@@ -2562,10 +2569,8 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 IfStatementInstruction ifStatementInstruction = new IfStatementInstruction(branchInstructions);
-                ifStatementInstruction.setContext(ifStatement.getContext());
+                ifStatementInstruction.setContext(callSite_ctx);
                 addInstrB(ifStatementInstruction);
-
-                DEBUG("If!");
             }
             /**
             * While loop (WhileLoop)
@@ -2573,6 +2578,9 @@ public final class TypeChecker
             else if(cast(WhileLoop)statement)
             {
                 WhileLoop whileLoop = cast(WhileLoop)statement;
+
+   				// Derive call-site context
+				Context callSite_ctx = new Context(whileLoop.parentOf());
 
                 // FIXME: Do-while loops are still being considered in terms of dependency construction
                 if(whileLoop.isDoWhile)
@@ -2615,7 +2623,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 WhileLoopInstruction whileLoopInstruction = new WhileLoopInstruction(branchInstr);
-                whileLoopInstruction.setContext(whileLoop.getContext());
+                whileLoopInstruction.setContext(callSite_ctx);
                 addInstrB(whileLoopInstruction);
             }
             /**
@@ -2624,6 +2632,9 @@ public final class TypeChecker
             else if(cast(ForLoop)statement)
             {
                 ForLoop forLoop = cast(ForLoop)statement;
+
+                // Derive call-site context
+   				Context callSite_ctx = new Context(forLoop.parentOf());
 
                 /* Pop-off the Value-instruction for the condition */
                 Value valueInstrCondition = cast(Value)popInstr();
@@ -2661,7 +2672,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 ForLoopInstruction forLoopInstruction = new ForLoopInstruction(branchInstr, preRunInstruction);
-                forLoopInstruction.setContext(forLoop.context);
+                forLoopInstruction.setContext(callSite_ctx);
                 addInstrB(forLoopInstruction);
             }
             /* Branch */
@@ -2677,6 +2688,9 @@ public final class TypeChecker
             else if(cast(PointerDereferenceAssignment)statement)
             {
                 PointerDereferenceAssignment ptrDerefAss = cast(PointerDereferenceAssignment)statement;
+
+                // Derive call-site context
+   				Context callSite_ctx = new Context(ptrDerefAss.parentOf());
                 
                 /* Pop off the pointer dereference expression instruction (LHS) */
                 Value lhsPtrExprInstr = cast(Value)popInstr();
@@ -2695,7 +2709,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 PointerDereferenceAssignmentInstruction pointerDereferenceAssignmentInstruction = new PointerDereferenceAssignmentInstruction(lhsPtrExprInstr, rhsExprInstr, ptrDerefAss.getDerefCount());
-                pointerDereferenceAssignmentInstruction.setContext(ptrDerefAss.context);
+                pointerDereferenceAssignmentInstruction.setContext(callSite_ctx);
                 addInstrB(pointerDereferenceAssignmentInstruction);
             }
             /**
@@ -2704,6 +2718,9 @@ public final class TypeChecker
             else if(cast(ArrayAssignment)statement)
             {
                 ArrayAssignment arrayAssignment = cast(ArrayAssignment)statement;
+
+                // Derive call-site context
+   				Context callSite_ctx = new Context(arrayAssignment.parentOf());
 
                 ERROR("Note, dependency processing of ArrayAssignment is not yet implemented, recall seggy");
                 printCodeQueue();
@@ -2782,7 +2799,7 @@ public final class TypeChecker
 
                     // TODO: Set context
                     /* Set the context */
-                    stackAssignmentInstr.setContext(arrayAssignment.getContext());
+                    stackAssignmentInstr.setContext(callSite_ctx);
 
 
                     DEBUG(">>>>> "~stackAssignmentInstr.toString());
@@ -2867,9 +2884,6 @@ public final class TypeChecker
                 WARN("NO MATCHES FIX ME FOR: "~to!(string)(statement));
             }
         }
-        
-
-
     }
 
     /**

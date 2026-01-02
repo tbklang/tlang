@@ -2382,6 +2382,66 @@ public final class Parser
                         // Share the same parent
                         parentToContainer(container, [innerExp]);
                     }
+                    /**
+                     * Casted expressions
+                     *
+                     * These have an inner expression
+                     * within that needs parenting
+                     */
+                    else if(cast(CastedExpression)statement)
+                    {
+                    	CastedExpression cstdExpr = cast(CastedExpression)statement;
+                        Expression innerExp = cstdExpr.getEmbeddedExpression();
+                    	
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
+                    }
+                    /**
+                     * Unary operator expression
+                     *
+                     * These have an innser expression
+                     * within that needs parenting
+                     */
+                    else if(cast(UnaryOperatorExpression)statement)
+                    {
+                    	UnaryOperatorExpression cstdExpr = cast(UnaryOperatorExpression)statement;
+                        Expression innerExp = cstdExpr.getExpression();
+                    	
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
+                    }
+                    /**
+                     * Array index
+                     *
+                     * These have two inner expressions,
+                     * the `indexTo` and `indexOf` which
+                     * need parenting
+                     */
+                    else if(cast(ArrayIndex)statement)
+                    {
+                    	ArrayIndex aiExpr = cast(ArrayIndex)statement;
+                    	Expression indexToExpr = aiExpr.getIndexed();
+                    	Expression indexExpr = aiExpr.getIndex();
+
+                        // Share the same parent
+                        parentToContainer(container, [indexToExpr, indexExpr]);                    	
+                    }
+                    /**
+                     * Array assignment (stack array)
+                     *
+                     * Contains an `ArrayIndex` expression (left-hand side)
+                     * and a right-hand side expression (the value being assigned)
+                     * which both need parenting
+                     */
+                    else if(cast(ArrayAssignment)statement)
+                    {
+                        ArrayAssignment aaExpr = cast(ArrayAssignment)statement;
+						Expression arrayIndex = aaExpr.getArrayLeft();
+						Expression assExpr = aaExpr.getAssignmentExpression();
+						
+                        // Share the same parent
+                        parentToContainer(container, [arrayIndex, assExpr]);   
+                    }
                 }
             }
         }
