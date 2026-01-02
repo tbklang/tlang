@@ -2148,6 +2148,12 @@ public final class TypeChecker
             else if(cast(ArrayIndex)statement)
             {
                 ArrayIndex arrayIndex = cast(ArrayIndex)statement;
+
+				// Derive usage-site contxt
+				Context callSite_ctx = new Context(arrayIndex.parentOf());
+				assert(arrayIndex.parentOf());
+				
+                
                 Type accessType;
 
                 /* Pop the thing being indexed (the indexTo expression) */
@@ -2208,7 +2214,7 @@ public final class TypeChecker
                     */
                     StackArrayIndexInstruction stackArrayIndexInstr = new StackArrayIndexInstruction(indexToInstr, indexInstr);
                     stackArrayIndexInstr.setInstrType(accessType);
-                    stackArrayIndexInstr.setContext(arrayIndex.context);
+                    stackArrayIndexInstr.setContext(callSite_ctx);
 
                     ERROR("IndexTo: "~indexToInstr.toString());
                     ERROR("Index: "~indexInstr.toString());
