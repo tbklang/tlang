@@ -2307,10 +2307,12 @@ public final class TypeChecker
             {
                 Instruction poppedInstr = popInstr();
                 assert(poppedInstr);
+                DEBUG(poppedInstr);
 
                 // Obtain the value instruction of the variable assignment
                 // ... along with the assignment's type
                 assignmentInstr = cast(Value)poppedInstr;
+                DEBUG(assignmentInstr);
                 assert(assignmentInstr);
                 Type assignmentType = assignmentInstr.getInstrType();
 
