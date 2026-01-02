@@ -2287,13 +2287,16 @@ public final class TypeChecker
             * Emit a variable declaration instruction
             */
             Variable variablePNode = cast(Variable)dnode.getEntity();
-            DEBUG("HELLO FELLA");
 
+            // Derive usage-site context
+            Context callSite_ctx = new Context(variablePNode.parentOf());
+            assert(callSite_ctx.getContainer());
+
+			// TODO/NOTE: Generating full name below
             string variableName = resolver.generateName(this.program, variablePNode);
-            DEBUG("HELLO FELLA (name): "~variableName);
             
 
-            Type variableDeclarationType = getType(variablePNode.context.container, variablePNode.getType());
+            Type variableDeclarationType = getType(callSite_ctx.getContainer(), variablePNode.getType());
 
 
             // Check if this variable declaration has an assignment attached
@@ -2322,7 +2325,7 @@ public final class TypeChecker
 
             /* Generate a variable declaration instruction and add it to the codequeue */
             VariableDeclaration varDecInstr = new VariableDeclaration(variableName, 4, variableDeclarationType, assignmentInstr);
-            varDecInstr.setContext(variablePNode.context);
+            varDecInstr.setContext(callSite_ctx);
             addInstrB(varDecInstr);
         }
         /* TODO: Add class init, see #8 */
