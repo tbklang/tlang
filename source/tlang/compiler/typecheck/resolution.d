@@ -454,8 +454,12 @@ public final class Resolver
 
             if(positionable)
             {
+                DEBUG("here");
                 ptrdiff_t thizPos = positionable.position(thiz);
+                DEBUG("here2");
+                DEBUG("that: ", that);
                 ptrdiff_t thatPos = positionable.position(that);
+                DEBUG("here3");
 
                 DEBUG("ccc thiz: ", thiz);
                 DEBUG("ccc thizPos=", thizPos);
