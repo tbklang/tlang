@@ -374,24 +374,24 @@ public class MetaProcessor
 
     private void doAliasExpression(Container container, Statement curStmt)
     {
-        Resolver resolver = tc.getResolver(); // TODO: Remove from here, make a field
+        // Resolver resolver = tc.getResolver(); // TODO: Remove from here, make a field
 
-        DEBUG(format("doAliasExpression(cntnr:%s, stmt=%s)", container, curStmt));
+        // DEBUG(format("doAliasExpression(cntnr:%s, stmt=%s)", container, curStmt));
 
-        // Find any VariableExpression(s) from curStmt (TODO: should be container or nah?)
-        MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
-        DEBUG("curStmt: ", curStmt);
-        assert(searchableStmt);
+        // // Find any VariableExpression(s) from curStmt (TODO: should be container or nah?)
+        // MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
+        // DEBUG("curStmt: ", curStmt);
+        // assert(searchableStmt);
 
-        Expression[] foundStmts = cast(Expression[])searchableStmt.search(Expression.classinfo);
-        foreach(e; foundStmts)
-        {
-            DEBUG("eb: ", e);
-            proc(container, e);
-            DEBUG("ea: ", e);
-        }
+        // Expression[] foundStmts = cast(Expression[])searchableStmt.search(Expression.classinfo);
+        // foreach(e; foundStmts)
+        // {
+        //     DEBUG("eb: ", e);
+        //     proc(container, e);
+        //     DEBUG("ea: ", e);
+        // }
 
-        WARN("Exit");
+        // WARN("Exit");
     }
 
     /** 
