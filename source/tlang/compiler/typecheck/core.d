@@ -2630,6 +2630,9 @@ public final class TypeChecker
             {
                 ForLoop forLoop = cast(ForLoop)statement;
 
+                // Derive call-site context
+   				Context callSite_ctx = new Context(forLoop.parentOf());
+
                 /* Pop-off the Value-instruction for the condition */
                 Value valueInstrCondition = cast(Value)popInstr();
                 assert(valueInstrCondition);
@@ -2666,7 +2669,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 ForLoopInstruction forLoopInstruction = new ForLoopInstruction(branchInstr, preRunInstruction);
-                forLoopInstruction.setContext(forLoop.context);
+                forLoopInstruction.setContext(callSite_ctx);
                 addInstrB(forLoopInstruction);
             }
             /* Branch */
@@ -2682,6 +2685,9 @@ public final class TypeChecker
             else if(cast(PointerDereferenceAssignment)statement)
             {
                 PointerDereferenceAssignment ptrDerefAss = cast(PointerDereferenceAssignment)statement;
+
+                // Derive call-site context
+   				Context callSite_ctx = new Context(ptrDerefAss.parentOf());
                 
                 /* Pop off the pointer dereference expression instruction (LHS) */
                 Value lhsPtrExprInstr = cast(Value)popInstr();
@@ -2700,7 +2706,7 @@ public final class TypeChecker
                 * 3. Add the instruction
                 */
                 PointerDereferenceAssignmentInstruction pointerDereferenceAssignmentInstruction = new PointerDereferenceAssignmentInstruction(lhsPtrExprInstr, rhsExprInstr, ptrDerefAss.getDerefCount());
-                pointerDereferenceAssignmentInstruction.setContext(ptrDerefAss.context);
+                pointerDereferenceAssignmentInstruction.setContext(callSite_ctx);
                 addInstrB(pointerDereferenceAssignmentInstruction);
             }
             /**
@@ -2709,6 +2715,9 @@ public final class TypeChecker
             else if(cast(ArrayAssignment)statement)
             {
                 ArrayAssignment arrayAssignment = cast(ArrayAssignment)statement;
+
+                // Derive call-site context
+   				Context callSite_ctx = new Context(arrayAssignment.parentOf());
 
                 ERROR("Note, dependency processing of ArrayAssignment is not yet implemented, recall seggy");
                 printCodeQueue();
@@ -2787,7 +2796,7 @@ public final class TypeChecker
 
                     // TODO: Set context
                     /* Set the context */
-                    stackAssignmentInstr.setContext(arrayAssignment.getContext());
+                    stackAssignmentInstr.setContext(callSite_ctx);
 
 
                     DEBUG(">>>>> "~stackAssignmentInstr.toString());
@@ -2872,9 +2881,6 @@ public final class TypeChecker
                 WARN("NO MATCHES FIX ME FOR: "~to!(string)(statement));
             }
         }
-        
-
-
     }
 
     /**
