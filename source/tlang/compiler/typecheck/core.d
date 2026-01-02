@@ -1682,43 +1682,20 @@ public final class TypeChecker
             }
             else if(cast(VariableExpression)statement)
             {
-
-                DEBUG("Yaa, it's rewind time");
                 auto g  = cast(VariableExpression)statement;
-                assert(g);
 
                 // Derive context at call-site
-                if(g.parentOf() is null)
-                {
-                	ERROR("Fatal, why is this null", g, getProgram());
-                	assert(false);
-                }
-                assert(g.parentOf());
                 Context callSite_ctx = new Context(g.parentOf());
                 assert(callSite_ctx.getContainer());
 
-                /* FIXME: It would seem that g.getContext() is returning null, so within function body's context is not being set */
-                DEBUG("VarExp: "~g.getName());
-                DEBUG(g.getContext());
-                auto gVar = cast(TypedEntity)resolver.resolveBest(g.getContext().getContainer(), g.getName());
-                DEBUG("gVar nullity?: "~to!(string)(gVar is null));
-
-                /* TODO; Above crashes when it is a container, eish baba - from dependency generation with `TestClass.P.h` */
+                // Lookup the entity being referred to by the var-exp
+                auto gVar = cast(TypedEntity)resolver.resolveBest(callSite_ctx.getContainer(), g.getName());
+                assert(gVar);
                 string variableName = resolver.generateName(this.program, gVar);
 
-                DEBUG("VarName: "~variableName);
-                DEBUG("Halo");
-
-                DEBUG("Yaa, it's rewind time1: "~to!(string)(gVar.getType()));
-                DEBUG("Yaa, it's rewind time2: "~to!(string)(gVar.getContext()));
                 
-                /* TODO: Above TYpedEntity check */
-                /* TODO: still wip the expresison parser */
-
                 /* TODO: TYpe needs ansatz too `.updateName()` call */
-                Type variableType = getType(gVar.getContext().getContainer(), gVar.getType());
-
-                DEBUG("Yaa, it's rewind time");
+                Type variableType = getType(callSite_ctx.getContainer(), gVar.getType());
 
 
                 /**
@@ -1730,7 +1707,7 @@ public final class TypeChecker
                 * 2. Set the Context of it to where the VariableExpression occurred
                 */
                 FetchValueVar fVV = new FetchValueVar(variableName, 4);
-                fVV.setContext(g.getContext());
+                fVV.setContext(callSite_ctx);
 
 
                 addInstr(fVV);
