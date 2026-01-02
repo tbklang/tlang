@@ -77,6 +77,9 @@ public final class AliasDeclaration : Statement, MStatementSearchable, MStatemen
 
             aliasExpr = newAliasExpr;
             DEBUG("aliasdecl(", getName() ,") replace: thiz=", thiz, "that=", that);
+            assert(thiz.parentOf());
+            DEBUG("that parent: ", that.parentOf());
+            assert(aliasExpr.parentOf());
             return true;
         }
         /* Exhausted all possibilities */
