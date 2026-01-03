@@ -602,18 +602,23 @@ public class DNodeGenerator
                 return poolT!(ExpressionDNode, Expression)(li);
             }
 
-            /* TODO: We need to fetch the cached function definition here and call it */
-            Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
-            assert(funcEntity);
+            /* Fetch the referred-to function */
+            Entity entity = resolver.resolveBest(context.container, funcCall.getName());
+            Function funcEntity = cast(Function)entity;
+
+            if(entity is null)
+            {
+                // TODO: Render out nicely here
+                expect("Attempting to call function named '"~funcCall.getName()~"' which does not exist");
+            }
+            else if(funcEntity is null)
+            {
+                // TODO: Render out nicely here
+                expect("Trying to call "~entity.toString()~" which is not a function");
+            }
             
-            // FIXME: The below is failing (we probably need a forward look ahead?)
-            // OR use the addFuncDef list?
-            //WAIT! We don't need a funcDefNode actually. No, we lierally do not.
-            //Remmeber, they are done in a seperate pass, what we need is just our FUncCall DNode
-            // WHICH we have below as `dnode`!!!!
-            // DNode funcDefDNode = retrieveFunctionDefinitionNode(tc.getResolver().generateName(tc.getModule(), funcEntity));
-            // gprintln("FuncCall (FuncDefNode): "~to!(string)(funcDefDNode));
-            // dnode.needs(funcDefDNode); /* NOTE: New code as of 4th October 2022 */
+            /* Increment reference count */
+            tc.touch(funcEntity);
 
             /**
             * Go through each argument generating a fresh DNode for each expression
@@ -1241,6 +1246,7 @@ public class DNodeGenerator
             DEBUG("Hello");
             Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func);
             this.funcDefStore.addFunctionDef(owner, func);
+            tc.touch(func);
 
             return null;
         }
