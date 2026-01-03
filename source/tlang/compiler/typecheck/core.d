@@ -3983,6 +3983,38 @@ unittest
 }
 
 /** 
+ * Tests the unused aliases detection mechanism
+ *
+ * Case: Positive (unused variables exist)
+ * Source file: source/tlang/testing/aliases/unused_alias.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/aliases/unused_alias.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    /**
+     * There should be 1 unused alias and then
+     * it should be named `f`
+     */
+    AliasDeclaration[] unusedAliases = tc.getUnusedAliases();
+    assert(unusedAliases.length == 1);
+    AliasDeclaration unusedAliasActual = unusedAliases[0];
+    AliasDeclaration unusedAliasExpected = cast(AliasDeclaration)tc.getResolver().resolveBest(compiler.getProgram().getModules()[0], "f");
+    assert(unusedAliasActual is unusedAliasExpected);
+}
+
+/** 
  * Tests the unused variable detection mechanism
  *
  * Case: Negative (unused variables do NOT exist)
