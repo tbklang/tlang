@@ -1134,41 +1134,15 @@ public class DNodeGenerator
          */
         else if(cast(AliasDeclaration)entity)
         {
-            ERROR("Devbug: Add support for alias declaration! To store them");
-
             AliasDeclaration ad = cast(AliasDeclaration)entity;
             auto aliasName = ad.getName();
             auto aliasExpr = ad.getExpr();
 
-            // /**
-            //  * Do a check right here, whilst we can, for this
-            //  * to not contain any `Entity` references to things
-            //  * other than `AliasDeclaration`'s
-            //  */
-            // bool onlyEnt_pred(Statement stmt)
-            // {
-            //     auto ent = cast(Entity)stmt;
-            //     if(ent is null)
-            //     {
-            //         return false;
-            //     }
-
-            //     // return ent.getName() == aliasName;
-            //     return true;
-            // }
-
-            // Statement[] coll;
-            // this.resolver.collectWithin(entity.parentOf(), &onlyEnt_pred, coll);
-            // DEBUG("coll: ", coll);
-
-
-
-            // assert(false);
-
-            DEBUG("Noted, this is the alias declaration: ", ad);
+            /* Add an entry to the reference counting map */
+            tc.touch(ad);
         }
         /**
-        * Variable asignments
+        * Variable assignments
         */
         else if(cast(VariableAssignmentStdAlone)entity)
         {

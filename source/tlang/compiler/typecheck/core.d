@@ -24,6 +24,8 @@ import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.symbols.strings;
 
+import tlang.compiler.symbols.aliases : AliasDeclaration;
+
 /**
 * The Parser only makes sure syntax
 * is adhered to (and, well, partially)
@@ -269,6 +271,40 @@ public final class TypeChecker
                 {
                     // TODO: Get a nicer name, full path-based
                     INFO("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never used");
+                }
+            }
+        }
+
+        /** 
+         * Find the functions which were declared but never used
+         */
+        if(this.config.hasConfig("typecheck:warnUnusedFuncs") && this.config.getConfig("typecheck:warnUnusedFuncs").flag())
+        {
+            Function[] unusedFunctions = getUnusedFunctions();
+            WARN("There are "~to!(string)(unusedFunctions.length)~" unused functions");
+            if(unusedFunctions.length)
+            {
+                foreach(Function unusedFunction; unusedFunctions)
+                {
+                    // TODO: Get a nicer name, full path-based
+                    INFO("Function '"~to!(string)(unusedFunction.getName())~"' is declared but never used");
+                }
+            }
+        }
+
+        /** 
+         * Find the aliases which were declared but never used
+         */
+        if(this.config.hasConfig("typecheck:warnUnusedAliases") && this.config.getConfig("typecheck:warnUnusedAliases").flag())
+        {
+            AliasDeclaration[] unusedAliases = getUnusedAliases();
+            WARN("There are "~to!(string)(unusedAliases.length)~" unused aliases");
+            if(unusedAliases.length)
+            {
+                foreach(AliasDeclaration unusedAlias; unusedAliases)
+                {
+                    // TODO: Get a nicer name, full path-based
+                    INFO("Alias '"~to!(string)(unusedAlias.getName())~"' is declared but never used");
                 }
             }
         }
@@ -3467,30 +3503,49 @@ public final class TypeChecker
         //assert()
     }
 
-    /** 
-     * Maps a given `Variable` to its reference
-     * count. This includes the declaration
-     * thereof.
-     */
-    private uint[Variable] varRefCounts;
 
     /** 
-     * Increments the given variable's reference
+     * Maps a given `Entity` to its reference
+     * count.
+     *
+     * This includes the declaration itself,
+     * hence any function reading from this
+     * will need to be aware of that.
+     */
+    private uint[Entity] entityRefs;
+
+    /** 
+     * Increments the given entity's reference
      * count
      *
      * Params:
-     *   variable = the variable
+     *   entity = the entity
      */
-    void touch(Variable variable)
+    void touch(Entity entity)
     {
         // Create entry if not existing yet
-        if(variable !in this.varRefCounts)
+        if(entity !in this.entityRefs)
         {
-            this.varRefCounts[variable] = 0;    
+            this.entityRefs[entity] = 0;    
         }
 
         // Increment count
-        this.varRefCounts[variable]++;
+        this.entityRefs[entity]++;
+    }
+
+
+    public Entity[] getUnusedEntities()
+    {
+        Entity[] unused;
+        foreach(Entity ent; this.entityRefs.keys())
+        {
+            if(!(this.entityRefs[ent] > 1))
+            {
+                unused ~= ent;
+            }
+        }
+
+        return unused;
     }
 
     /** 
@@ -3502,11 +3557,54 @@ public final class TypeChecker
     public Variable[] getUnusedVariables()
     {
         Variable[] unused;
-        foreach(Variable variable; this.varRefCounts.keys())
+        foreach(Entity ent; getUnusedEntities())
         {
-            if(!(this.varRefCounts[variable] > 1))
+            auto v_pot = cast(Variable)ent;
+            if(v_pot)
             {
-                unused ~= variable;
+                unused ~= v_pot;
+            }
+        }
+
+        return unused;
+    }
+
+    /** 
+     * Returns all functions which were declared
+     * but not used
+     *
+     * Returns: the array of functions
+     */
+    public Function[] getUnusedFunctions()
+    {
+        Function[] unused;
+        foreach(Entity ent; getUnusedEntities())
+        {
+            auto v_pot = cast(Function)ent;
+            if(v_pot)
+            {
+                unused ~= v_pot;
+            }
+        }
+
+        return unused;
+    }
+
+    /** 
+     * Returns all aliases which were declared
+     * but not used
+     *
+     * Returns: the array of aliases
+     */
+    public AliasDeclaration[] getUnusedAliases()
+    {
+        AliasDeclaration[] unused;
+        foreach(Entity ent; getUnusedEntities())
+        {
+            auto v_pot = cast(AliasDeclaration)ent;
+            if(v_pot)
+            {
+                unused ~= v_pot;
             }
         }
 
