@@ -756,6 +756,21 @@ public class DNodeGenerator
                     auto ad_parent = ad.parentOf();
                     DEBUG("ad_parent: ", ad_parent);
 
+
+                    /* Pool the node */
+                    DNode aliasDecNode = pool(ad);
+
+                    /**
+                     * Check if the alias being referenced has been
+                     * visited (i.e. declared)
+                     *
+                     * If it has not then throw an error
+                     */
+                    if(!aliasDecNode.isVisisted())
+                    {
+                        expect("Cannot reference alias "~ad.getName()~" which exists but has not been declared yet");
+                    }
+
                     /**
                      * Obtain the expression, perform a clone
                      * and parent to `ad_parent`
@@ -1142,6 +1157,10 @@ public class DNodeGenerator
             AliasDeclaration ad = cast(AliasDeclaration)entity;
             auto aliasName = ad.getName();
             auto aliasExpr = ad.getExpr();
+
+            /* Set as visited */
+            DNode aliasDNode = pool(ad);
+            aliasDNode.markVisited();
 
             /* Add an entry to the reference counting map */
             tc.touch(ad);
