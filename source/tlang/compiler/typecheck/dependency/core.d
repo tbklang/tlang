@@ -12,11 +12,12 @@ import tlang.compiler.typecheck.exceptions;
 import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
+import tlang.compiler.symbols.aliases : AliasDeclaration;
 import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
-
+import tlang.compiler.symbols.mcro : MCloneable, MStatementReplaceable;
 
 /**
 * Passed around
@@ -553,9 +554,53 @@ public class DNodeGenerator
         */
         else if (cast(FunctionCall)exp)
         {
-            /* TODO: Implement argument expression dependency */
             FunctionCall funcCall = cast(FunctionCall)exp;
-            DEBUG("FuncCall: "~funcCall.getName());
+            string funcCall_n = funcCall.getName();
+            DEBUG("FuncCall: ", funcCall_n);
+
+
+            Container funcCall_p = funcCall.parentOf();
+            assert(funcCall_p);
+
+            /** 
+             * In the case we have a function named
+             * `sizeof()` then we want to replace
+             * it in place with a different expression
+             */
+            if(funcCall_n == "sizeof")
+            {
+                // TODO: Get the expression inside
+                Expression[] a = funcCall.getCallArguments();
+                if(a.length != 1)
+                {
+                    // TODO: Make a argString for Expression[] that formats it nicely
+                    expect("sizeof() expects a single argument, not "~to!(string)(a));
+                }
+
+                auto a_s = cast(VariableExpression)a[0];
+                if(a_s is null)
+                {
+                    // TODO: Make a argString, sizeof(offendingItem)
+                    expect("sizeof() must contain a type name not, "~to!(string)(a_s));
+                }
+
+                string n = a_s.getName();
+                DEBUG("sizeof() type: ", n);
+
+                import tlang.compiler.typecheck.meta : determineSizeOfLiteral;
+                IntegerLiteral li = determineSizeOfLiteral(this.tc, n);
+                DEBUG("sizeof() mapped '", n, "' to ", li);
+
+                // Set to use the same parent as `funcCall`
+                li.parentTo(funcCall_p);
+
+                // Replace `funcCall` in `funcCall_p` with `li`
+                auto funcCall_p_cl = cast(MStatementReplaceable)funcCall_p;
+                assert(funcCall_p_cl);
+                funcCall_p_cl.replace(funcCall, li);
+
+                return poolT!(ExpressionDNode, Expression)(li);
+            }
 
             /* TODO: We need to fetch the cached function definition here and call it */
             Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
@@ -640,6 +685,11 @@ public class DNodeGenerator
             VariableExpression varExp = cast(VariableExpression)exp;
             string nearestName = varExp.getName();
 
+            DEBUG("varExp: ", varExp);
+            Container varExp_p = varExp.parentOf();
+            DEBUG("varExp_p: ", varExp_p);
+            assert(varExp_p);
+
             // Set the context of the variable expression
             varExp.setContext(context);
            
@@ -693,6 +743,45 @@ public class DNodeGenerator
                     Function funcHandle = cast(Function)namedEntity;
                     
                     WARN("Muh function handle: "~namedEntity.toString());
+                }
+                else if(cast(AliasDeclaration)namedEntity)
+                {
+                    AliasDeclaration ad = cast(AliasDeclaration)namedEntity;
+                    DEBUG("ad: ", ad);
+                    auto ad_parent = ad.parentOf();
+                    DEBUG("ad_parent: ", ad_parent);
+
+                    /**
+                     * Obtain the expression, perform a clone
+                     * and parent to `ad_parent`
+                     */
+                    auto ad_expr = ad.getExpr();
+                    DEBUG("ad_expr: ",ad_expr);
+
+                    auto ad_expr_cl = cast(MCloneable)ad_expr;
+                    assert(ad_expr_cl);
+
+                    // TODO: Do touch()'ing `ad` here to track
+                    // ... it (and maybe make it generic) - and
+                    // ... make the touch mechanism dynamic to
+                    // ... be able to discover and make nice names
+                    // ... `x unused FUNCTIONS/VARIABLES/ALIASES`
+                    // ... (this would have to be in the type checker)
+
+                    auto cloned = ad_expr_cl.clone(varExp_p);
+                    assert(cloned);
+                    DEBUG("cloned: ", cloned);
+
+                    /**
+                     * Replace `varExp` in `varExp_p`
+                     * with `cloned`
+                     */
+                    auto varExp_p_rpl = cast(MStatementReplaceable)varExp_p;
+                    assert(varExp_p_rpl);
+                    varExp_p_rpl.replace(varExp, cloned);
+
+                    auto cloned_as_expr = cast(Expression)cloned;
+                    dnode = cast(ExpressionDNode)expressionPass(cloned_as_expr, context);
                 }
                 else
                 {
@@ -1039,6 +1128,44 @@ public class DNodeGenerator
             /* The current container is dependent on this variable declaration */
             // node.needs(variableDNode);
             return variableDNode;
+        }
+        /**
+         * Alias declarations
+         */
+        else if(cast(AliasDeclaration)entity)
+        {
+            ERROR("Devbug: Add support for alias declaration! To store them");
+
+            AliasDeclaration ad = cast(AliasDeclaration)entity;
+            auto aliasName = ad.getName();
+            auto aliasExpr = ad.getExpr();
+
+            // /**
+            //  * Do a check right here, whilst we can, for this
+            //  * to not contain any `Entity` references to things
+            //  * other than `AliasDeclaration`'s
+            //  */
+            // bool onlyEnt_pred(Statement stmt)
+            // {
+            //     auto ent = cast(Entity)stmt;
+            //     if(ent is null)
+            //     {
+            //         return false;
+            //     }
+
+            //     // return ent.getName() == aliasName;
+            //     return true;
+            // }
+
+            // Statement[] coll;
+            // this.resolver.collectWithin(entity.parentOf(), &onlyEnt_pred, coll);
+            // DEBUG("coll: ", coll);
+
+
+
+            // assert(false);
+
+            DEBUG("Noted, this is the alias declaration: ", ad);
         }
         /**
         * Variable asignments
