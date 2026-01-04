@@ -1,17 +1,18 @@
+/**
+ * Base error type definitions
+ */
 module tlang.misc.exceptions;
 
-public class TError : Exception
+/** 
+ * Base type for all error types in
+ * the TLang compiler
+ */
+public abstract class TError : Exception
 {
     private string _ss;
 
     this(string subSystem, string message)
     {
-        /* Generate eerror message using gogga */
-        //byte[] messageBytes = generateMessage(message, DebugType.ERROR);
-        /* TODO: Check the vnode for path of fd 0, dont vt100 is not tty device */
-
-        //super(messageBytes);
-
         super(message);
         this._ss = subSystem;
     }
