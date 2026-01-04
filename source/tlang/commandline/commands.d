@@ -19,6 +19,7 @@ import tlang.compiler.core : Compiler, beginCompilation;
 import std.conv : to;
 import tlang.compiler.codegen.mapper.core : SymbolMappingTechnique;
 import core.stdc.stdlib : exit;
+import tlang.commandline.error_handling : handleError;
 
 //TODO: Re-order the definitions below so that they appear with compile first, then lex, parse, ..., help
 
@@ -204,8 +205,7 @@ struct compileCommand
         }
         catch(TError t)
         {
-            ERROR(t.msg);
-            exit(-1);
+            handleError(t);
         }
         catch(ErrnoException e)
         {
@@ -257,8 +257,7 @@ struct lexCommand
         }
         catch(TError t)
         {
-            ERROR(t.msg);
-            exit(-1);
+            handleError(t);
         }
         catch(ErrnoException e)
         {
@@ -307,8 +306,7 @@ struct parseCommand
         }
         catch(TError t)
         {
-            ERROR(t.msg);
-            exit(-1);
+            handleError(t);
         }
         catch(ErrnoException e)
         {
@@ -363,8 +361,7 @@ struct typecheckCommand
         }
         catch(TError t)
         {
-            ERROR(t.msg);
-            exit(-1);
+            handleError(t);
         }
         catch(ErrnoException e)
         {
