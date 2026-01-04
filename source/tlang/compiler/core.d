@@ -20,6 +20,9 @@ import std.string : cmp;
 import tlang.compiler.configuration;
 import tlang.compiler.modman;
 import tlang.compiler.codegen.emit.types : EmitResult;
+
+import tlang.misc.messaging : info;
+
 // TODO: Add configentry unittests
 
 /** 
@@ -257,6 +260,8 @@ public class Compiler
     /* Setup the lexer and begin lexing */
     public void doLex()
     {
+        info("Tokenizing", inputFilePath);
+        
         /* Setup the lexer and begin lexing */
         this.lexer = new BasicLexer(inputSource);
         (cast(BasicLexer)(this.lexer)).performLex();
@@ -277,6 +282,8 @@ public class Compiler
     /* Spawn a new parser with the provided tokens */
     public void doParse()
     {
+        info("Parsing", inputFilePath);
+
         Token[] lexedTokens = getTokens();
 
         if(lexedTokens.length == 0)
@@ -305,6 +312,8 @@ public class Compiler
      */
     public void doTypeCheck()
     {
+        info("Type checking source file", inputFilePath);
+
         if(this.parser is null)
         {
             throw new CompilerException(CompilerError.PARSE_NOT_YET_PERFORMED);
@@ -338,6 +347,8 @@ public class Compiler
     /* Perform code emitting */
     public CompileResult doEmit()
     {
+        info("Performing code emit for ", inputFilePath);
+
         if(typeChecker is null)
         {
             throw new CompilerException(CompilerError.TYPECHECK_NOT_YET_PERFORMED);
@@ -382,6 +393,8 @@ public class Compiler
      */
     public CompileResult compile()
     {
+        info("Compiling from", inputFilePath);
+
         /* Setup the lexer, perform the tokenization and obtain the tokens */
         doLex();
 
