@@ -21,6 +21,11 @@ public final class DependencyException : TError
         this.errTye = errTye;
     }
 
+    this(string m)
+    {
+        super("depgen", m);
+    }
+
     public DependencyError getErrorType()
     {
         return errTye;
