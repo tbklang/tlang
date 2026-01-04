@@ -35,7 +35,7 @@ jobs:
           compiler: ${{ matrix.dc }}
 
       - name: Build
-        run: dub build -dwi
+        run: dub build
         
       
         
