@@ -995,7 +995,7 @@ public final class Resolver
      *   startingNode = the starting AST node (as a `Statement`)
      * Returns: the found `Container`, or `null` if not found
      */
-    public Container findContainerOfType(TypeInfo_Class containerType, Statement startingNode)
+    public static Container findContainerOfType(TypeInfo_Class containerType, Statement startingNode)
     {
         DEBUG
         (
