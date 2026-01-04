@@ -6,7 +6,10 @@ import std.conv : to, ConvException;
 import std.string : cmp, split;
 import std.string : format;
 import std.stdio;
+
 import tlang.misc.logging;
+import tlang.misc.messaging;
+
 import tlang.compiler.parsing.core;
 import tlang.compiler.typecheck.resolution;
 import tlang.compiler.typecheck.exceptions;
@@ -264,13 +267,12 @@ public final class TypeChecker
         if(this.config.hasConfig("typecheck:warnUnusedVars") && this.config.getConfig("typecheck:warnUnusedVars").flag())
         {
             Variable[] unusedVariables = getUnusedVariables();
-            WARN("There are "~to!(string)(unusedVariables.length)~" unused variables");
+            tip("There are", unusedVariables.length, "unused variables");
             if(unusedVariables.length)
             {
                 foreach(Variable unusedVariable; unusedVariables)
                 {
-                    // TODO: Get a nicer name, full path-based
-                    INFO("Variable '"~to!(string)(unusedVariable.getName())~"' is declared but never used");
+                    tip(unusedVariable, "is declared but never used");
                 }
             }
         }
@@ -281,13 +283,12 @@ public final class TypeChecker
         if(this.config.hasConfig("typecheck:warnUnusedFuncs") && this.config.getConfig("typecheck:warnUnusedFuncs").flag())
         {
             Function[] unusedFunctions = getUnusedFunctions();
-            WARN("There are "~to!(string)(unusedFunctions.length)~" unused functions");
+            tip("There are", unusedFunctions.length, "unused functions");
             if(unusedFunctions.length)
             {
                 foreach(Function unusedFunction; unusedFunctions)
                 {
-                    // TODO: Get a nicer name, full path-based
-                    INFO("Function '"~to!(string)(unusedFunction.getName())~"' is declared but never used");
+                    tip(unusedFunction, "is declared but never used");
                 }
             }
         }
@@ -298,13 +299,12 @@ public final class TypeChecker
         if(this.config.hasConfig("typecheck:warnUnusedAliases") && this.config.getConfig("typecheck:warnUnusedAliases").flag())
         {
             AliasDeclaration[] unusedAliases = getUnusedAliases();
-            WARN("There are "~to!(string)(unusedAliases.length)~" unused aliases");
+            tip("There are", unusedAliases.length, "unused aliases");
             if(unusedAliases.length)
             {
                 foreach(AliasDeclaration unusedAlias; unusedAliases)
                 {
-                    // TODO: Get a nicer name, full path-based
-                    INFO("Alias '"~to!(string)(unusedAlias.getName())~"' is declared but never used");
+                    tip(unusedAlias, "is declared but never used");
                 }
             }
         }
@@ -1530,6 +1530,47 @@ public final class TypeChecker
         {
             // Do nothing
         }
+    }
+
+    /** 
+     * Checks if the provided expression is 
+     * callable
+     *
+     * This can be any `IdentExpression` that
+     * refers to a `Function` as that would
+     * be something that can be called.
+     *
+     * It would also include any `FunctionCall`
+     * that has a return type of something
+     * that is callable, like a function pointer.
+     */
+    public bool isCallable(Expression exp)
+    {
+        if(cast(VariableExpression)exp)
+        {
+            VariableExpression varExp = cast(VariableExpression)exp;
+            string target = varExp.getName();
+
+            auto ent = this.resolver.resolveBest(varExp.parentOf(), target);
+            return cast(FunctionCall)ent !is null;
+        }
+        else if(cast(FunctionCall)exp)
+        {
+            FunctionCall fcall = cast(FunctionCall)exp;
+            Entity e = resolver.resolveBest(fcall.parentOf(), fcall.getName());
+            // TODO : Null check for not found?
+
+            Function func = cast(Function)e;
+            // TODO: Null check for not-a-function target
+
+            Type t = getType(func.parentOf(), func.getType());
+            // TODO : Null check for not found?
+            
+            // FIXME: What does a function pointer in T
+            // ... even look like?
+        }
+
+        return false;
     }
 
     /** 
@@ -3581,7 +3622,9 @@ public final class TypeChecker
         foreach(Entity ent; getUnusedEntities())
         {
             auto v_pot = cast(Function)ent;
-            if(v_pot)
+
+            // `main` is implicitly called by loader
+            if(v_pot && v_pot.getName() != "main")
             {
                 unused ~= v_pot;
             }
@@ -4012,6 +4055,39 @@ unittest
     AliasDeclaration unusedAliasActual = unusedAliases[0];
     AliasDeclaration unusedAliasExpected = cast(AliasDeclaration)tc.getResolver().resolveBest(compiler.getProgram().getModules()[0], "f");
     assert(unusedAliasActual is unusedAliasExpected);
+}
+
+/** 
+ * Tests the unused function detection mechanism
+ * but where the use is via an alias
+ *
+ * Case: Positive (unused variables exist)
+ * Source file: source/tlang/testing/aliases/func_use_via_alias.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/aliases/func_use_via_alias.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+    compiler.doTypeCheck();
+    TypeChecker tc = compiler.getTypeChecker();
+
+    // All aliases should be used
+    assert(tc.getUnusedAliases().length == 0);
+
+    // All functions should be used
+    info(tc.getUnusedFunctions());
+    assert(tc.getUnusedFunctions().length == 0);
+
+    // All variables should be used
+    assert(tc.getUnusedVariables().length == 0);
 }
 
 /** 
