@@ -19,7 +19,9 @@ import tlang.compiler.core : Compiler, beginCompilation;
 import std.conv : to;
 import tlang.compiler.codegen.mapper.core : SymbolMappingTechnique;
 import core.stdc.stdlib : exit;
+
 import tlang.commandline.error_handling : handleError;
+import tlang.misc.messaging : error;
 
 //TODO: Re-order the definitions below so that they appear with compile first, then lex, parse, ..., help
 
@@ -209,12 +211,12 @@ struct compileCommand
         }
         catch(ErrnoException e)
         {
-            ERROR("Could not open source file "~sourceFile);
+            error("Could not open source file", sourceFile);
             exit(-2);
         }
         catch(Exception e)
         {
-            ERROR(e.msg);
+            error(e.msg);
             exit(-1);
         }
     }
@@ -261,7 +263,7 @@ struct lexCommand
         }
         catch(ErrnoException e)
         {
-            ERROR("Could not open source file "~sourceFile);
+            error("Could not open source file", sourceFile);
             exit(-2);
         }
     }
@@ -310,7 +312,7 @@ struct parseCommand
         }
         catch(ErrnoException e)
         {
-            ERROR("Could not open source file "~sourceFile);
+            error("Could not open source file", sourceFile);
             exit(-2);
         }
     }
@@ -365,7 +367,7 @@ struct typecheckCommand
         }
         catch(ErrnoException e)
         {
-            ERROR("Could not open source file "~sourceFile);
+            error("Could not open source file", sourceFile);
             exit(-2);
         }
     }
