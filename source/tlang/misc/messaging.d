@@ -81,6 +81,10 @@ private string genToString(T)(T item, Resolver r = null)
     {
         return format("%s", item);
     }
+    // TODO: Handle expressions here with a sort of IASTRender
+    // and ASTRenderer
+    // TODO: SymbolType support
+    // TODO: Token support
     else
     {
         return format("'%s'", to!(string)(item));
