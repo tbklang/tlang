@@ -7,7 +7,8 @@ int identity(int i)
 
 int main()
 {
-	alias inner = sizeof(uint)-cast(ubyte)1;
-	int o = identity(inner+inner-inner);
+	alias oneDef = 1;
+	alias two = oneDef+oneDef;
+	int o = identity(two+oneDef);
 	return o;
 }
