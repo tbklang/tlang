@@ -1,9 +1,15 @@
+/** 
+ * Routines used for handling any
+ * `TError`(s) that occur during
+ * command-line usage
+ */
 module tlang.commandline.error_handling;
 
+// base exception type
 import tlang.misc.exceptions : TError;
-import tlang.compiler.typecheck.dependency.exceptions : DependencyException;
 
-import tlang.misc.messaging;
+// logging-related and misc.
+import tlang.misc.messaging : error;
 import core.stdc.stdlib : exit;
 
 /** 
@@ -16,19 +22,10 @@ import core.stdc.stdlib : exit;
  */
 public void handleError(TError e) @noreturn
 {
-    // TODO: Format things way better now
-    // error(e.msg);
-    
-
-    string subSystem = "";
+    string subSystem = e.getSubSystem();
     string message = e.msg;
+    error(subSystem, message);
 
-    if(cast(DependencyException)e)
-    {
-        subSystem = "depgen";
-    }
-
-    // error(message, subSystem);
-    error(message);
+    // then exit
     exit(-1);
 }
