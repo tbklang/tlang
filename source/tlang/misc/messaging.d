@@ -83,8 +83,11 @@ private string genToString(T)(T item, Resolver r = null)
     }
     // TODO: Handle expressions here with a sort of IASTRender
     // and ASTRenderer
+    
     // TODO: SymbolType support
     // TODO: Token support
+
+    // TODO: Add array support (it should make them appear as {1, 2, ...})
     else
     {
         return format("'%s'", to!(string)(item));
