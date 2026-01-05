@@ -607,7 +607,23 @@ jobs:
               set -e
               exit 1
           fi
+      - name: Alias capture example
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/aliases/usage_capture.t
 
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 4 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
 
 ##################################
 ####### Deployment section #######
