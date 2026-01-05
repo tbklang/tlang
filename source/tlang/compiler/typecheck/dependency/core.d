@@ -605,77 +605,77 @@ public class DNodeGenerator
             /* Fetch the referred-to function */
             Entity entity = resolver.resolveBest(context.container, funcCall.getName());
 
-            /** 
-             * Check if we are calling an alias,
-             * then perform replacement
-             */
-            if(cast(AliasDeclaration)entity)
-            {
-                ERROR("Not implemented yet");
-                assert(false);
+            // /** 
+            //  * Check if we are calling an alias,
+            //  * then perform replacement
+            //  */
+            // if(cast(AliasDeclaration)entity)
+            // {
+            //     ERROR("Not implemented yet");
+            //     assert(false);
 
-                AliasDeclaration ad = cast(AliasDeclaration)entity;
-                DEBUG("ad: ", ad);
-                auto ad_parent = ad.parentOf();
-                DEBUG("ad_parent: ", ad_parent);
+            //     AliasDeclaration ad = cast(AliasDeclaration)entity;
+            //     DEBUG("ad: ", ad);
+            //     auto ad_parent = ad.parentOf();
+            //     DEBUG("ad_parent: ", ad_parent);
 
 
-                /* Pool the node */
-                DNode aliasDecNode = pool(ad);
+            //     /* Pool the node */
+            //     DNode aliasDecNode = pool(ad);
 
-                /**
-                 * Check if the alias being referenced has been
-                 * visited (i.e. declared)
-                 *
-                 * If it has not then throw an error
-                 */
-                if(!aliasDecNode.isVisisted())
-                {
-                    expect("Cannot reference alias", ad, "which exists but has not been declared yet");
-                }
+            //     /**
+            //      * Check if the alias being referenced has been
+            //      * visited (i.e. declared)
+            //      *
+            //      * If it has not then throw an error
+            //      */
+            //     if(!aliasDecNode.isVisisted())
+            //     {
+            //         expect("Cannot reference alias", ad, "which exists but has not been declared yet");
+            //     }
 
-                /**
-                 * Obtain the expression, perform a clone
-                 * and parent to `ad_parent`
-                 */
-                auto ad_expr = ad.getExpr();
-                DEBUG("ad_expr: ",ad_expr);
+            //     /**
+            //      * Obtain the expression, perform a clone
+            //      * and parent to `ad_parent`
+            //      */
+            //     auto ad_expr = ad.getExpr();
+            //     DEBUG("ad_expr: ",ad_expr);
 
-                // FIXME: Ensure that `ad_expr` is callable
-                // ... so _if_ it is a function call itself
-                // ... then it must have a return type that
-                // ... is callable
-                if(tc.isCallable(ad_expr))
-                {
-                    // TODO: Make nicer error
-                    expect("The expression", ad_expr, "is not callable");
-                }
+            //     // FIXME: Ensure that `ad_expr` is callable
+            //     // ... so _if_ it is a function call itself
+            //     // ... then it must have a return type that
+            //     // ... is callable
+            //     if(tc.isCallable(ad_expr))
+            //     {
+            //         // TODO: Make nicer error
+            //         expect("The expression", ad_expr, "is not callable");
+            //     }
 
-                auto ad_expr_cl = cast(MCloneable)ad_expr;
-                assert(ad_expr_cl);
+            //     auto ad_expr_cl = cast(MCloneable)ad_expr;
+            //     assert(ad_expr_cl);
 
-                // TODO: Do touch()'ing `ad` here to track
-                // ... it (and maybe make it generic) - and
-                // ... make the touch mechanism dynamic to
-                // ... be able to discover and make nice names
-                // ... `x unused FUNCTIONS/VARIABLES/ALIASES`
-                // ... (this would have to be in the type checker)
+            //     // TODO: Do touch()'ing `ad` here to track
+            //     // ... it (and maybe make it generic) - and
+            //     // ... make the touch mechanism dynamic to
+            //     // ... be able to discover and make nice names
+            //     // ... `x unused FUNCTIONS/VARIABLES/ALIASES`
+            //     // ... (this would have to be in the type checker)
 
-                auto cloned = ad_expr_cl.clone(funcCall_p);
-                assert(cloned);
-                DEBUG("cloned: ", cloned);
+            //     auto cloned = ad_expr_cl.clone(funcCall_p);
+            //     assert(cloned);
+            //     DEBUG("cloned: ", cloned);
 
-                /**
-                 * Replace `funcCall` in `funcCall_p`
-                 * with `cloned`
-                 */
-                auto funcCall_p_rpl = cast(MStatementReplaceable)funcCall_p;
-                assert(funcCall_p_rpl);
-                funcCall_p_rpl.replace(funcCall, cloned);
+            //     /**
+            //      * Replace `funcCall` in `funcCall_p`
+            //      * with `cloned`
+            //      */
+            //     auto funcCall_p_rpl = cast(MStatementReplaceable)funcCall_p;
+            //     assert(funcCall_p_rpl);
+            //     funcCall_p_rpl.replace(funcCall, cloned);
 
-                auto cloned_as_expr = cast(Expression)cloned;
-                return cast(ExpressionDNode)expressionPass(cloned_as_expr, context);
-            }
+            //     auto cloned_as_expr = cast(Expression)cloned;
+            //     return cast(ExpressionDNode)expressionPass(cloned_as_expr, context);
+            // }
 
 
 
