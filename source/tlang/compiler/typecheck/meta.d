@@ -71,9 +71,6 @@ public class MetaProcessor
         {
             DEBUG("MetaProcessor: Examining AST node '"~curStmt.toString()~"'...");
 
-            // Perform alias expression replacement
-            doAliasExpression(container, curStmt);
-
             // Perform replacement of all type alises to concrete types, such as `size_t`
             doTypeAlias(container, curStmt);
 
@@ -91,33 +88,33 @@ public class MetaProcessor
                 {
                     FunctionCall curFuncCall = cast(FunctionCall)curFoundStmt;
 
-                    if(curFuncCall.getName() == "sizeof")
-                    {
-                        DEBUG("Elo");
-                        Expression[] arguments = curFuncCall.getCallArguments();
-                        if(arguments.length == 1)
-                        {
-                            IdentExpression potentialIdentExp = cast(IdentExpression)arguments[0];
-                            if(potentialIdentExp)
-                            {
-                                string typeName = potentialIdentExp.getName();
-                                IntegerLiteral replacementStmt = sizeOf_Literalize(typeName);
-                                DEBUG("sizeof: Replace '"~curFoundStmt.toString()~"' with '"~replacementStmt.toString()~"'");
+                    // if(curFuncCall.getName() == "sizeof")
+                    // {
+                    //     DEBUG("Elo");
+                    //     Expression[] arguments = curFuncCall.getCallArguments();
+                    //     if(arguments.length == 1)
+                    //     {
+                    //         IdentExpression potentialIdentExp = cast(IdentExpression)arguments[0];
+                    //         if(potentialIdentExp)
+                    //         {
+                    //             string typeName = potentialIdentExp.getName();
+                    //             IntegerLiteral replacementStmt = sizeOf_Literalize(typeName);
+                    //             DEBUG("sizeof: Replace '"~curFoundStmt.toString()~"' with '"~replacementStmt.toString()~"'");
 
-                                /* Traverse down from the `Container` we are process()'ing and apply the replacement */
-                                MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
-                                containerRepl.replace(curFoundStmt, replacementStmt);
-                            }
-                            else
-                            {
-                                throw new MetaException("The argument to `sizeof` should be a type");
-                            }
-                        }
-                        else
-                        {
-                            throw new MetaException("To use the `sizeof` macro you require a single argument to be passed to it");   
-                        }
-                    }
+                    //             /* Traverse down from the `Container` we are process()'ing and apply the replacement */
+                    //             MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
+                    //             containerRepl.replace(curFoundStmt, replacementStmt);
+                    //         }
+                    //         else
+                    //         {
+                    //             throw new MetaException("The argument to `sizeof` should be a type");
+                    //         }
+                    //     }
+                    //     else
+                    //     {
+                    //         throw new MetaException("To use the `sizeof` macro you require a single argument to be passed to it");   
+                    //     }
+                    // }
                 }
             }
 
@@ -142,76 +139,6 @@ public class MetaProcessor
     import std.string : cmp;
 
     import tlang.compiler.typecheck.resolution : Resolver;
-        
-    private AliasDeclaration[] findAliasesFrom(Container from)
-    {
-        Resolver resolver = tc.getResolver(); // TODO: Remove from here, make a field
-
-        // Predicate to only find aliases (amongst all the different types of statements)
-        bool isAliasDecl(Statement stmt) { return cast(AliasDeclaration)stmt !is null; }
-        Statement[] declaredAliasesStmts;
-        DEBUG("ddd (before): ", from);
-        resolver.collectUpwards(from, predicateOf!(isAliasDecl), declaredAliasesStmts);
-        return cast(AliasDeclaration[])declaredAliasesStmts;
-    }
-
-    private AliasDeclaration findNearestAliasDecl(Container from, string name)
-    {
-        auto r = tc.getResolver();
-
-        // Predicate to only find aliases (amongst all the different types of statements)
-        // and of which match our name
-        bool p(Statement stmt)
-        {
-            auto ad = cast(AliasDeclaration)stmt;
-            return ad ? ad.getName() == name : false;
-        }
-
-        Statement[] m;
-        r.collectUpwards(from, predicateOf!(p), m);
-        DEBUG("m: ", m);
-        auto ads = cast(AliasDeclaration[])m;
-
-        return ads.length ? ads[0] : null;
-    }
-
-    private bool processVarExp(Container c, VariableExpression v_exp)
-    {
-        // auto p = v_exp.parentOf(); assert(p);
-        auto p = c;
-        auto p_ident = v_exp.getName();
-        auto r = tc.getResolver();
-        
-        // TODO: Now here sort of lies the problem, `p_ident`
-        // could then refer to _anything_, so we really need
-        // to check a lot of things:
-        //
-        // 1. Some entity -> is it a type reference?
-        // 2. Some entity -> then is it an alias?
-        DEBUG("name reference '", p_ident, "'");
-        
-        // Type t = tc.getType(c, p_ident);
-
-        // /* If maps to a type? Do nothing */
-        // if(t)
-        // {
-        //     DEBUG("name '", p_ident, "' is type: ", t);
-        //     return false;
-        // }
-        
-        /* If it maps to an alias? */
-        auto a = findNearestAliasDecl(c, p_ident);
-        if(a)
-        {
-            DEBUG("name '", p_ident, "' refers to an alias: ", a);
-            return true;
-        }
-
-        // TODO: Okay, but this doesn't feel right,, I should not
-        // chekc this here
-        return false;
-        // throw new MetaException("Eish, this refers to niks");
-    }
 
     private VariableExpression[] getNameReferences(Container c, Expression e)
     {
@@ -237,161 +164,6 @@ public class MetaProcessor
         }
 
         return [];
-    }
-
-    private struct AliasRef
-    {
-        AliasDeclaration decl;
-        VariableExpression reff;
-    }
-
-    // find all `VariableExpression` in `e` and then find
-    // all alias declarations that exist with names matching
-    // `a_i`.getName()
-    private AliasRef[] aliasesIn(Container c, Expression e)
-    {
-        // discover all name references
-        auto n_s = getNameReferences(c, e);
-
-        // find all names that refer to aliases declarations
-        AliasRef[] a_s;
-        auto r = tc.getResolver();
-        DEBUG("n_s: ", n_s);
-        foreach(n; n_s)
-        {
-            DEBUG("n: ", n);
-            bool p(Statement stmt)
-            {
-                auto ad = cast(AliasDeclaration)stmt;
-                return ad !is null && ad.getName() == n.getName();
-            }
-
-            Statement[] m;
-            r.collectUpwards(c, predicateOf!(p), m);
-
-            // [0] for assuming first match
-            if(m.length)
-            {
-                a_s ~= AliasRef((cast(AliasDeclaration[])m)[0], n);
-            }
-        }
-        
-        DEBUG("a_s: ", a_s);
-        return a_s;
-    }
-
-    private void proc(Container c, Expression e)
-    {
-        auto r = tc.getResolver();
-
-        auto a_s = aliasesIn(c, e);
-        if(a_s.length == 0)
-        {
-            DEBUG("no alias refereces found inside of expression: ", e);
-            return;
-        }
-
-        foreach(a_ref; a_s)
-        {
-            DEBUG("a_ref: ", a_ref);
-
-            // variable expression doing the referring
-            auto a_refFrom = a_ref.reff;
-            DEBUG("a_refFrom: ", a_refFrom);
-
-            // the alias referred to
-            auto a_i = a_ref.decl;
-            DEBUG("a decl: ", a_i);
-            auto a_i_e = a_i.getExpr();
-            DEBUG("a_i_e: ", a_i_e);
-            auto a_i_e_p = a_i_e.parentOf();
-            DEBUG("a_i_e_p: ", a_i_e_p);
-            assert(a_i_e_p);
-            proc(a_i_e_p, a_i_e);
-            auto a_i_e_after = a_i.getExpr();
-            DEBUG("a_i_e (before): ", a_i_e);
-            DEBUG("a_i_e_after (after): ", a_i_e_after);
-
-            // Call positionaliza chech here between `a_i` and `a_refFrom`
-            // in order to check use-before-declare
-            if(r.isThizAfterThat(a_i, a_refFrom))
-            {
-                throw new MetaException
-                (
-                    format
-                    (
-                        "Usage of an alias %s in %s prior to its declaration",
-                        a_i,
-                        a_refFrom
-                    )
-                );
-            }
-
-            // TODO: Insert replacement code here
-            DEBUG("e: ", e);// FIXME: Yes, we are replacing things WAY to high
-
-            // Clone the `a_i_e_after` and then use that
-            // for replacement
-            //
-            // We clone and set its parent to the same
-            // parent at the reference site, i.e. `a_refFrom`'s
-            // parent.
-            auto a_i_e_after_cl = cast(MCloneable)a_i_e_after; assert(a_i_e_after);
-            auto r_s = c.replace(a_refFrom, a_i_e_after_cl.clone(a_refFrom.parentOf()));
-            DEBUG("r_s: ", r_s);
-        }
-    }
-
-
-    private bool[AliasDeclaration] _ad_vis;
-
-    private void dothing
-    (
-        Container ctnr,
-        VariableExpression target,
-        AliasDeclaration ad
-    )
-    {
-        // no entry, make one and set to `true`
-        if((ad in _ad_vis) is null)
-        {
-            _ad_vis[ad] = true;
-        }
-        // already visited
-        else if(_ad_vis[ad])
-        {
-            return;
-        }
-
-
-        auto a_exp = ad.getExpr();
-        DEBUG("--------------");
-        DEBUG("ccc reference: ", target);
-        DEBUG("ccc a: ", ad);
-        DEBUG("ccc a_exp: ", a_exp);
-        DEBUG("--------------");
-    }
-
-    private void doAliasExpression(Container container, Statement curStmt)
-    {
-        Resolver resolver = tc.getResolver(); // TODO: Remove from here, make a field
-
-        DEBUG(format("doAliasExpression(cntnr:%s, stmt=%s)", container, curStmt));
-
-        // Find any VariableExpression(s) from curStmt (TODO: should be container or nah?)
-        MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
-        DEBUG("curStmt: ", curStmt);
-        assert(searchableStmt);
-
-        Expression[] foundStmts = cast(Expression[])searchableStmt.search(Expression.classinfo);
-        foreach(e; foundStmts)
-        {
-            DEBUG("eb: ", e);
-            proc(container, e);
-            DEBUG("ea: ", e);
-        }
-
-        WARN("Exit");
     }
 
     /** 
@@ -480,56 +252,7 @@ public class MetaProcessor
 
     private IntegerLiteral sizeOf_Literalize(string typeName)
     {
-        IntegerLiteral literal = new IntegerLiteral("TODO_LITERAL_GOES_HERESIZEOF_REPLACEMENT", IntegerLiteralEncoding.UNSIGNED_INTEGER);
-
-        // TODO: Via typechecker determine size with a lookup
-        Type type = tc.getType(tc.getProgram(), typeName);
-
-        /* Calculated type size */
-        ulong typeSize = 0;
-
-        /**
-         * Calculate stack array size
-         *
-         * Algo: `<componentType>.size * stackArraySize`
-         */
-        if(cast(StackArray)type)
-        {
-            StackArray stackArrayType = cast(StackArray)type;
-            ulong arrayLength = stackArrayType.getAllocatedSize();
-            Type componentType = stackArrayType.getComponentType();
-            ulong componentTypeSize = 0;
-            
-            // FIXME: Later, when the Dependency Genrator supports more advanced component types,
-            // ... we will need to support this - for now assume that `componentType` is primitive
-            if(cast(Number)componentType)
-            {
-                Number numberType = cast(Number)componentType;
-                componentTypeSize = numberType.getSize();
-            }
-
-            typeSize = componentTypeSize*arrayLength;
-        }
-        /**
-         * Calculate the size of `Number`-based types
-         */
-        else if(cast(Number)type)
-        {
-            Number numberType = cast(Number)type;
-            typeSize = numberType.getSize();
-        }
-
-        // TODO: We may eed toupdate Type so have bitwidth or only do this
-        // for basic types - in which case I guess we should throw an exception
-        // here.
-        // ulong typeSize = 
-
-        
-
-        /* Update the `Sizeof` kind-of-`IntegerLiteral` with the new size */
-        literal.setNumber(to!(string)(typeSize));
-
-        return literal;
+        return determineSizeOfLiteral(this.tc, typeName);
     }
 
     /** 
@@ -685,4 +408,62 @@ public class MetaProcessor
             assert(false);
         }
     }
+}
+
+public IntegerLiteral determineSizeOfLiteral
+(
+    TypeChecker tc,
+    string typeName
+)
+{
+    IntegerLiteral literal = new IntegerLiteral("TODO_LITERAL_GOES_HERESIZEOF_REPLACEMENT", IntegerLiteralEncoding.UNSIGNED_INTEGER);
+
+    // TODO: Via typechecker determine size with a lookup
+    Type type = tc.getType(tc.getProgram(), typeName);
+
+    /* Calculated type size */
+    ulong typeSize = 0;
+
+    /**
+        * Calculate stack array size
+        *
+        * Algo: `<componentType>.size * stackArraySize`
+        */
+    if(cast(StackArray)type)
+    {
+        StackArray stackArrayType = cast(StackArray)type;
+        ulong arrayLength = stackArrayType.getAllocatedSize();
+        Type componentType = stackArrayType.getComponentType();
+        ulong componentTypeSize = 0;
+        
+        // FIXME: Later, when the Dependency Genrator supports more advanced component types,
+        // ... we will need to support this - for now assume that `componentType` is primitive
+        if(cast(Number)componentType)
+        {
+            Number numberType = cast(Number)componentType;
+            componentTypeSize = numberType.getSize();
+        }
+
+        typeSize = componentTypeSize*arrayLength;
+    }
+    /**
+        * Calculate the size of `Number`-based types
+        */
+    else if(cast(Number)type)
+    {
+        Number numberType = cast(Number)type;
+        typeSize = numberType.getSize();
+    }
+
+    // TODO: We may eed toupdate Type so have bitwidth or only do this
+    // for basic types - in which case I guess we should throw an exception
+    // here.
+    // ulong typeSize = 
+
+    
+
+    /* Update the `Sizeof` kind-of-`IntegerLiteral` with the new size */
+    literal.setNumber(to!(string)(typeSize));
+
+    return literal;
 }

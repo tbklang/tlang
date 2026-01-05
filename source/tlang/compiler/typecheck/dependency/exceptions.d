@@ -3,6 +3,8 @@ module tlang.compiler.typecheck.dependency.exceptions;
 import tlang.misc.exceptions : TError;
 import std.conv : to;
 
+import tlang.misc.messaging : makeMessage;
+
 // FIXME: Extend TError rather than Exception
 public enum DependencyError
 {
@@ -19,6 +21,16 @@ public final class DependencyException : TError
     {
         super("DependencyException("~occuring~"): We got a "~to!(string)(errTye));
         this.errTye = errTye;
+    }
+
+    this(string m)
+    {
+        super("depgen", m);
+    }
+
+    this(T...)(T args)
+    {
+        this(makeMessage(args));
     }
 
     public DependencyError getErrorType()

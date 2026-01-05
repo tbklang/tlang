@@ -1,6 +1,6 @@
 module tlang.compiler.symbols.aliases;
 
-import tlang.compiler.symbols.data : Statement;
+import tlang.compiler.symbols.data : Statement, Entity;
 import tlang.compiler.symbols.expressions : Expression;
 import std.string : format;
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable;
@@ -11,21 +11,17 @@ import tlang.misc.logging;
 /** 
  * A declaration of an alias expression
  */
-public final class AliasDeclaration : Statement, MStatementSearchable, MStatementReplaceable
+public final class AliasDeclaration : Entity, MStatementSearchable, MStatementReplaceable
 {
-    private string aliasName;
+    // private string aliasName;
     private Expression aliasExpr;
 
     this(string aliasName, Expression aliasExpr)
     {
-        this.aliasName = aliasName;
+        // this.aliasName = aliasName;
+        super(aliasName);
         this.aliasExpr = aliasExpr;
         this.weight = 2;
-    }
-
-    public string getName()
-    {
-        return this.aliasName;
     }
 
     public Expression getExpr()
@@ -35,7 +31,7 @@ public final class AliasDeclaration : Statement, MStatementSearchable, MStatemen
 
     public override string toString()
     {
-        return format("Alias [name: %s, expr: %s]", this.aliasName, this.aliasExpr);
+        return format("Alias [name: %s, expr: %s]", getName(), this.aliasExpr);
     }
 
     public override Statement[] search(TypeInfo_Class clazzType)

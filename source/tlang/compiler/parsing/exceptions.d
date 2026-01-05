@@ -7,11 +7,13 @@ import tlang.compiler.symbols.data;
 import tlang.compiler.lexer.core.tokens : Token;
 import std.conv : to;
 
+import tlang.misc.messaging : makeMessage;
+
 public class ParserException : TError
 {
     this(string message)
     {
-        super("ParserException: "~message);
+        super("parser", message);
     }
 }
 
@@ -27,6 +29,6 @@ public final class SyntaxError : ParserException
         this.provided = getSymbolType(providedToken);
         this.providedToken = providedToken;
 
-        super("Syntax error: Expected "~to!(string)(expected)~" but got "~to!(string)(provided)~", see "~providedToken.toString());
+        super(makeMessage("Syntax error: Expected ", expected, "but got", provided, "see ", providedToken));
     }
 }
