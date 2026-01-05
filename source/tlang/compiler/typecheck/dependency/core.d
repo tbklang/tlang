@@ -867,13 +867,6 @@ public class DNodeGenerator
                     auto ad_expr_cl = cast(MCloneable)ad_expr;
                     assert(ad_expr_cl);
 
-                    // TODO: Do touch()'ing `ad` here to track
-                    // ... it (and maybe make it generic) - and
-                    // ... make the touch mechanism dynamic to
-                    // ... be able to discover and make nice names
-                    // ... `x unused FUNCTIONS/VARIABLES/ALIASES`
-                    // ... (this would have to be in the type checker)
-
                     auto cloned = ad_expr_cl.clone(varExp_p);
                     assert(cloned);
                     DEBUG("cloned: ", cloned);
