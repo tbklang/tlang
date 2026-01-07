@@ -27,17 +27,16 @@ public IntegerLiteral determineSizeOfLiteral
 {
     IntegerLiteral literal = new IntegerLiteral("TODO_LITERAL_GOES_HERESIZEOF_REPLACEMENT", IntegerLiteralEncoding.UNSIGNED_INTEGER);
 
-    // TODO: Via typechecker determine size with a lookup
     Type type = tc.getType(from, typeName);
 
     /* Calculated type size */
     ulong typeSize = 0;
 
     /**
-        * Calculate stack array size
-        *
-        * Algo: `<componentType>.size * stackArraySize`
-        */
+     * Calculate stack array size
+     *
+     * Algo: `<componentType>.size * stackArraySize`
+     */
     if(cast(StackArray)type)
     {
         StackArray stackArrayType = cast(StackArray)type;
@@ -56,8 +55,8 @@ public IntegerLiteral determineSizeOfLiteral
         typeSize = componentTypeSize*arrayLength;
     }
     /**
-        * Calculate the size of `Number`-based types
-        */
+     * Calculate the size of `Number`-based types
+     */
     else if(cast(Number)type)
     {
         Number numberType = cast(Number)type;
