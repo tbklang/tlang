@@ -1,3 +1,6 @@
+/** 
+ * Meta-programming tooling
+ */
 module tlang.compiler.symbols.mcro;
 
 import tlang.compiler.symbols.data;
@@ -32,10 +35,14 @@ public interface MStatementSearchable
     public Statement[] search(TypeInfo_Class clazzType);
 }
 
-/** 
+/**
  * Anything which implements this has the ability
- * to, given an object `x`, return a `ref x` to it
- * hence allowing us to replace it
+ * to replace a given statement within itself with
+ * another statement.
+ *
+ * Obviously this barrs one from replacing the
+ * statement `this` itself, in such a case attempt
+ * replacement via the parent (i.e. `this.parentOf()`).
  */
 public interface MStatementReplaceable
 {
