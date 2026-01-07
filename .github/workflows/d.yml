@@ -625,6 +625,26 @@ jobs:
               exit 1
           fi
 
+      # Type alias
+      - name: Type alias usage
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/type_aliases/simple.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 5 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
+      source//tlang/testing/
+
 ##################################
 ####### Deployment section #######
 ##################################
