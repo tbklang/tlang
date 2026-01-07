@@ -1251,11 +1251,31 @@ public class DNodeGenerator
         {
             TypeAlias ta = cast(TypeAlias)entity;
             auto remappedTypeName = ta.getName();
-            auto referentTypeName = ta.getExpr();
+            auto referentTypeName = ta.getReferentType();
 
             /* Set as visited */
             DNode typeRemapDNode = pool(ta);
             typeRemapDNode.markVisited();
+
+            /**
+             * Lookup the entity at `referentTypeName`
+             * and if the entity exists (we check)
+             * and is a `TypeAlias` then do visitation
+             * check
+             */
+            auto ref_e = resolver.resolveBest(ta.parentOf(), referentTypeName);
+            if(ref_e is null)
+            {
+                expect("Could not find the type '", referentTypeName, "' in type remapping declaration", ta);
+            }
+            else if(cast(TypeAlias)ref_e)
+            {
+                DNode ref_e_dnode = pool(ref_e);
+                if(!ref_e_dnode.isVisisted())
+                {
+                    expect("Cannot declare type remapping", ta, " which refers to type remapping", ref_e, "which is not yet declared");
+                }
+            }
 
             /* Add an entry to the reference counting map */
             tc.touch(ta);
