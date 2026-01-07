@@ -2624,7 +2624,7 @@ public final class Parser
 
         TypeAlias typeAliasDecl;
 
-        /* Pop off the `alias` */
+        /* Pop off the `type` */
         lexer.nextToken();
 
         /* Consume the type alias's name */
@@ -2637,11 +2637,12 @@ public final class Parser
         expect(SymbolType.ASSIGN, lexer.getCurrentToken());
 
         /* Consume the type alias's referent name */
+        lexer.nextToken();
         tok = lexer.getCurrentToken();
         expect(SymbolType.IDENT_TYPE, tok);
         string referentName = tok.getToken();
 
-        /* Now consume an expression */
+        /* Now consume a semi-colon */
         lexer.nextToken();
         expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
         lexer.nextToken();
