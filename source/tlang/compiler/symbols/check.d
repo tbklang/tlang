@@ -311,6 +311,11 @@ public enum SymbolType
     SINGLE_LINE_COMMENT,
 
     /**
+     * `alias` keyword
+     */
+    ALIAS,
+
+    /**
      * `mixin` keyword
      */
     MIXIN,
@@ -730,6 +735,11 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.IMPORT;
     }
+    /* `alias` keyword */
+    else if(cmp("alias", token) == 0)
+    {
+        return SymbolType.ALIAS;
+    }
     /* mixin keyword */
     else if(cmp(token, "mixin") == 0)
     {
@@ -870,6 +880,7 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.SMALLER_THAN_OR_EQUALS;
     }
+    
     
 
     return SymbolType.UNKNOWN;

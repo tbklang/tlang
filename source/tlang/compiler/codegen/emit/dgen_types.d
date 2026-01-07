@@ -8,6 +8,7 @@ module tlang.compiler.codegen.emit.dgen_types;
 
 import tlang.compiler.codegen.emit.types : CodeEmitterException;
 import std.string : format;
+import tlang.misc.messaging : makeMessage;
 
 /** 
  * An error that occurs during the
@@ -17,11 +18,11 @@ public final class DGenException : CodeEmitterException
 {
     this(string m)
     {
-        super(format("DGen: %s", m));
+        super("c generator", m);
     }
 
     this(T...)(string msg, T items)
     {
-        this(format(msg, items));
+        this(makeMessage(msg, items));
     }
 }

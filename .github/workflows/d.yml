@@ -572,6 +572,58 @@ jobs:
           fi
 
 
+      # Alias support
+      - name: Simple alias usage
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/aliases/simple_usage.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 3 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
+      - name: Complex alias usage 1
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/aliases/complex_usage_1.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 10 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
+      - name: Alias capture example
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/aliases/usage_capture.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 4 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
 
 ##################################
 ####### Deployment section #######

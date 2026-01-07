@@ -3,7 +3,7 @@ module tlang.compiler.typecheck.dependency.core;
 import tlang.compiler.symbols.check;
 import tlang.compiler.symbols.data;
 import std.conv : to;
-import std.string;
+import std.string : format;
 import std.stdio;
 import tlang.misc.logging;
 import tlang.compiler.parsing.core;
@@ -12,11 +12,12 @@ import tlang.compiler.typecheck.exceptions;
 import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
+import tlang.compiler.symbols.aliases : AliasDeclaration;
 import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
-
+import tlang.compiler.symbols.mcro : MCloneable, MStatementReplaceable;
 
 /**
 * Passed around
@@ -415,9 +416,9 @@ public class DNodeGenerator
      * Params:
      *   message = the expectation message
      */
-    public void expect(string message)
+    public void expect(T...)(T args)
     {
-        throw new DependencyException(DependencyError.GENERAL_ERROR, message);
+        throw new DependencyException(args);
     }
 
     public DNode generate()
@@ -553,22 +554,154 @@ public class DNodeGenerator
         */
         else if (cast(FunctionCall)exp)
         {
-            /* TODO: Implement argument expression dependency */
             FunctionCall funcCall = cast(FunctionCall)exp;
-            DEBUG("FuncCall: "~funcCall.getName());
+            string funcCall_n = funcCall.getName();
+            DEBUG("FuncCall: ", funcCall_n);
 
-            /* TODO: We need to fetch the cached function definition here and call it */
-            Entity funcEntity = resolver.resolveBest(context.container, funcCall.getName());
-            assert(funcEntity);
+
+            Container funcCall_p = funcCall.parentOf();
+            assert(funcCall_p);
+
+            /** 
+             * In the case we have a function named
+             * `sizeof()` then we want to replace
+             * it in place with a different expression
+             */
+            if(funcCall_n == "sizeof")
+            {
+                // TODO: Get the expression inside
+                Expression[] a = funcCall.getCallArguments();
+                if(a.length != 1)
+                {
+                    // TODO: Make a argString for Expression[] that formats it nicely
+                    expect("sizeof() expects a single argument, not", a);
+                }
+
+                auto a_s = cast(VariableExpression)a[0];
+                if(a_s is null)
+                {
+                    // TODO: Make a argString, sizeof(offendingItem)
+                    expect("sizeof() must contain a type name not ", a_s);
+                }
+
+                string n = a_s.getName();
+                DEBUG("sizeof() type: ", n);
+
+                import tlang.compiler.typecheck.sizeof;
+                IntegerLiteral li = determineSizeOfLiteral(this.tc, n);
+                DEBUG("sizeof() mapped '", n, "' to ", li);
+
+                // Set to use the same parent as `funcCall`
+                li.parentTo(funcCall_p);
+
+                // Replace `funcCall` in `funcCall_p` with `li`
+                auto funcCall_p_cl = cast(MStatementReplaceable)funcCall_p;
+                assert(funcCall_p_cl);
+                funcCall_p_cl.replace(funcCall, li);
+
+                return poolT!(ExpressionDNode, Expression)(li);
+            }
+
+            /* Fetch the referred-to function */
+            Entity entity = resolver.resolveBest(context.container, funcCall.getName());
+
+            // /** 
+            //  * Check if we are calling an alias,
+            //  * then perform replacement
+            //  */
+            // if(cast(AliasDeclaration)entity)
+            // {
+            //     ERROR("Not implemented yet");
+            //     assert(false);
+
+            //     AliasDeclaration ad = cast(AliasDeclaration)entity;
+            //     DEBUG("ad: ", ad);
+            //     auto ad_parent = ad.parentOf();
+            //     DEBUG("ad_parent: ", ad_parent);
+
+
+            //     /* Pool the node */
+            //     DNode aliasDecNode = pool(ad);
+
+            //     /**
+            //      * Check if the alias being referenced has been
+            //      * visited (i.e. declared)
+            //      *
+            //      * If it has not then throw an error
+            //      */
+            //     if(!aliasDecNode.isVisisted())
+            //     {
+            //         expect("Cannot reference alias", ad, "which exists but has not been declared yet");
+            //     }
+
+            //     /**
+            //      * Obtain the expression, perform a clone
+            //      * and parent to `ad_parent`
+            //      */
+            //     auto ad_expr = ad.getExpr();
+            //     DEBUG("ad_expr: ",ad_expr);
+
+            //     // FIXME: Ensure that `ad_expr` is callable
+            //     // ... so _if_ it is a function call itself
+            //     // ... then it must have a return type that
+            //     // ... is callable
+            //     if(tc.isCallable(ad_expr))
+            //     {
+            //         // TODO: Make nicer error
+            //         expect("The expression", ad_expr, "is not callable");
+            //     }
+
+            //     auto ad_expr_cl = cast(MCloneable)ad_expr;
+            //     assert(ad_expr_cl);
+
+            //     // TODO: Do touch()'ing `ad` here to track
+            //     // ... it (and maybe make it generic) - and
+            //     // ... make the touch mechanism dynamic to
+            //     // ... be able to discover and make nice names
+            //     // ... `x unused FUNCTIONS/VARIABLES/ALIASES`
+            //     // ... (this would have to be in the type checker)
+
+            //     auto cloned = ad_expr_cl.clone(funcCall_p);
+            //     assert(cloned);
+            //     DEBUG("cloned: ", cloned);
+
+            //     /**
+            //      * Replace `funcCall` in `funcCall_p`
+            //      * with `cloned`
+            //      */
+            //     auto funcCall_p_rpl = cast(MStatementReplaceable)funcCall_p;
+            //     assert(funcCall_p_rpl);
+            //     funcCall_p_rpl.replace(funcCall, cloned);
+
+            //     auto cloned_as_expr = cast(Expression)cloned;
+            //     return cast(ExpressionDNode)expressionPass(cloned_as_expr, context);
+            // }
+
+
+
+
+
+
+
+
+
+
+
+            Function funcEntity = cast(Function)entity;
+
+            if(entity is null)
+            {
+                // TODO: Render out nicely here
+                expect("Attempting to call function named", funcCall, "which does not exist");
+            }
+            else if(funcEntity is null)
+            {
+                // TODO: Render out nicely here
+                expect("Trying to call", entity, "which is not a function");
+            }
             
-            // FIXME: The below is failing (we probably need a forward look ahead?)
-            // OR use the addFuncDef list?
-            //WAIT! We don't need a funcDefNode actually. No, we lierally do not.
-            //Remmeber, they are done in a seperate pass, what we need is just our FUncCall DNode
-            // WHICH we have below as `dnode`!!!!
-            // DNode funcDefDNode = retrieveFunctionDefinitionNode(tc.getResolver().generateName(tc.getModule(), funcEntity));
-            // gprintln("FuncCall (FuncDefNode): "~to!(string)(funcDefDNode));
-            // dnode.needs(funcDefDNode); /* NOTE: New code as of 4th October 2022 */
+            /* Increment reference count */
+            tc.touch(funcEntity);
 
             /**
             * Go through each argument generating a fresh DNode for each expression
@@ -640,11 +773,16 @@ public class DNodeGenerator
             VariableExpression varExp = cast(VariableExpression)exp;
             string nearestName = varExp.getName();
 
+            DEBUG("varExp: ", varExp);
+            Container varExp_p = varExp.parentOf();
+            DEBUG("varExp_p: ", varExp_p);
+            assert(varExp_p);
+
             // Set the context of the variable expression
             varExp.setContext(context);
            
             // Resolve the entity the name refers to
-            Entity namedEntity = tc.getResolver().resolveBest(context.getContainer(), nearestName);
+            Entity namedEntity = tc.getResolver().resolveBest(varExp_p, nearestName);
 
 
             /* If the entity was found */
@@ -676,7 +814,7 @@ public class DNodeGenerator
                      */
                     if(!varDecNode.isVisisted())
                     {
-                        expect("Cannot reference variable "~nearestName~" which exists but has not been declared yet");
+                        expect("Cannot reference variable", namedEntity, "which exists but has not been declared yet");
                     }
                 }
                 /** 
@@ -694,6 +832,56 @@ public class DNodeGenerator
                     
                     WARN("Muh function handle: "~namedEntity.toString());
                 }
+                else if(cast(AliasDeclaration)namedEntity)
+                {
+                    AliasDeclaration ad = cast(AliasDeclaration)namedEntity;
+                    DEBUG("ad: ", ad);
+                    auto ad_parent = ad.parentOf();
+                    DEBUG("ad_parent: ", ad_parent);
+
+                    /* Increment reference count */
+                    tc.touch(ad);
+
+
+                    /* Pool the node */
+                    DNode aliasDecNode = pool(ad);
+
+                    /**
+                     * Check if the alias being referenced has been
+                     * visited (i.e. declared)
+                     *
+                     * If it has not then throw an error
+                     */
+                    if(!aliasDecNode.isVisisted())
+                    {
+                        expect("Cannot reference alias", ad, "which exists but has not been declared yet");
+                    }
+
+                    /**
+                     * Obtain the expression, perform a clone
+                     * and parent to `varExp_p`
+                     */
+                    auto ad_expr = ad.getExpr();
+                    DEBUG("ad_expr: ",ad_expr);
+
+                    auto ad_expr_cl = cast(MCloneable)ad_expr;
+                    assert(ad_expr_cl);
+
+                    auto cloned = ad_expr_cl.clone(varExp_p);
+                    assert(cloned);
+                    DEBUG("cloned: ", cloned);
+
+                    /**
+                     * Replace `varExp` in `varExp_p`
+                     * with `cloned`
+                     */
+                    auto varExp_p_rpl = cast(MStatementReplaceable)varExp_p;
+                    assert(varExp_p_rpl);
+                    varExp_p_rpl.replace(varExp, cloned);
+
+                    auto cloned_as_expr = cast(Expression)cloned;
+                    dnode = cast(ExpressionDNode)expressionPass(cloned_as_expr, context);
+                }
                 else
                 {
                     /* TODO: Add check ? */
@@ -702,7 +890,7 @@ public class DNodeGenerator
             /* If the entity could not be found */
             else
             {
-                expect("No entity by the name "~nearestName~" exists (at all)");
+                expect("No entity by the name", nearestName, "exists (at all)");
             }
         }
         /**
@@ -798,9 +986,6 @@ public class DNodeGenerator
                 */
                 dnode.needs(lhsNode);
                 lhsNode.needs(rhsNode);
-                
-
-                
             }
             /**
             * Anything else are mutually exlsuive (i.e. not chained)
@@ -1041,7 +1226,23 @@ public class DNodeGenerator
             return variableDNode;
         }
         /**
-        * Variable asignments
+         * Alias declarations
+         */
+        else if(cast(AliasDeclaration)entity)
+        {
+            AliasDeclaration ad = cast(AliasDeclaration)entity;
+            auto aliasName = ad.getName();
+            auto aliasExpr = ad.getExpr();
+
+            /* Set as visited */
+            DNode aliasDNode = pool(ad);
+            aliasDNode.markVisited();
+
+            /* Add an entry to the reference counting map */
+            tc.touch(ad);
+        }
+        /**
+        * Variable assignments
         */
         else if(cast(VariableAssignmentStdAlone)entity)
         {
@@ -1081,7 +1282,7 @@ public class DNodeGenerator
             }
             else
             {
-                expect("Cannot reference variable "~vAsStdAl.getVariableName()~" which exists but has not been declared yet");
+                expect("Cannot reference variable", vAsStdAl, "which exists but has not been declared yet");
                 return null;
             }            
         }
@@ -1140,6 +1341,7 @@ public class DNodeGenerator
             DEBUG("Hello");
             Module owner = cast(Module)tc.getResolver().findContainerOfType(Module.classinfo, func);
             this.funcDefStore.addFunctionDef(owner, func);
+            tc.touch(func);
 
             return null;
         }

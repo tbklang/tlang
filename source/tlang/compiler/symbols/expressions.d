@@ -3,11 +3,13 @@ module tlang.compiler.symbols.expressions;
 import tlang.compiler.symbols.data;
 import std.conv : to;
 
+// Debugging
+import tlang.misc.logging;
+
 // AST manipulation interfaces
-import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
+import tlang.compiler.symbols.mcro;
+
 import std.string : format;
-
-
 
 public class OperatorExpression : Expression
 {
@@ -46,7 +48,7 @@ public class UnaryOperatorExpression : OperatorExpression
     }
 }
 
-public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable, MStatementReplaceable, MCloneable
+public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable, MStatementReplaceable, MCloneable, MPositionable
 {
     private Expression lhs, rhs;
 
@@ -121,23 +123,32 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
             rhs = cast(Expression)that;
             return true;
         }
+
+
         /* If not direct match, then recurse and replace on left-hand side `Expression` (if possible) */
-        else if(cast(MStatementReplaceable)lhs)
+        if(cast(MStatementReplaceable)lhs)
         {
             MStatementReplaceable lhsCasted = cast(MStatementReplaceable)lhs;
-            return lhsCasted.replace(thiz, that);
+            auto i = lhsCasted.replace(thiz, that);
+            if(i)
+            {
+                return i;
+            }
         }
+
         /* If not direct match, then recurse and replace on right-hand side `Expression` (if possible) */
-        else if(cast(MStatementReplaceable)rhs)
+        if(cast(MStatementReplaceable)rhs)
         {
             MStatementReplaceable rhsCasted = cast(MStatementReplaceable)rhs;
-            return rhsCasted.replace(thiz, that);
+            auto i = rhsCasted.replace(thiz, that);
+            if(i)
+            {
+                return i;
+            }
         }
+
         /* If not direct match and not replaceable */
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
     /** 
@@ -160,7 +171,7 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
         if(cast(MCloneable)this.lhs)
         {
             MCloneable cloneableExpression = cast(MCloneable)this.lhs;
-            clonedLeftOperandExpression = cast(Expression)cloneableExpression.clone(); // NOTE: We must parent it if needs be
+            clonedLeftOperandExpression = cast(Expression)cloneableExpression.clone(newParent);
         }
 
         // Clone the left-hand operand expression (if supported, TODO: throw an error if not)
@@ -168,7 +179,7 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
         if(cast(MCloneable)this.rhs)
         {
             MCloneable cloneableExpression = cast(MCloneable)this.rhs;
-            clonedRightOperandExpression = cast(Expression)cloneableExpression.clone(); // NOTE: We must parent it if needs be
+            clonedRightOperandExpression = cast(Expression)cloneableExpression.clone(newParent);
         }
 
         // Clone ourselves
@@ -178,6 +189,45 @@ public class BinaryOperatorExpression : OperatorExpression, MStatementSearchable
         clonedBinaryOp.parentTo(newParent);
 
         return clonedBinaryOp;
+    }
+
+    public override ptrdiff_t position(Statement statement)
+    {
+        // if it is me, then 0
+        if(this == statement)
+        {
+            return 0;
+        }
+    
+        // try searching `lhs`
+        if(cast(MPositionable)lhs)
+        {
+            auto lhs_p = cast(MPositionable)lhs;
+            auto r = lhs_p.position(statement);
+
+            // if found then return 1
+            if(r >= 0)
+            {
+                return 1;
+            }
+        }
+
+        // try searching `rhs`
+        if(cast(MPositionable)rhs)
+        {
+            auto rhs_p = cast(MPositionable)rhs;
+
+            auto r = rhs_p.position(statement);
+
+            // if found then return 1
+            if(r >= 0)
+            {
+                return 1;
+            }
+        }
+
+        // not found
+        return -1;
     }
 }
 

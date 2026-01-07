@@ -17,6 +17,7 @@ import tlang.compiler.parsing.exceptions;
 import tlang.compiler.core : Compiler;
 import std.string : format;
 import tlang.compiler.modman;
+import tlang.compiler.symbols.aliases;
 import tlang.compiler.symbols.comments;
 
 // returns a lexer instance all prepared for
@@ -2367,6 +2368,20 @@ public final class Parser
                         // Share the same parent
                         parentToContainer(container, [innerExp]);
                     }
+                    /** 
+                     * Alias declarations
+                     *
+                     * These have an embedded expression
+                     * within that needs parenting
+                     */
+                    else if(cast(AliasDeclaration)statement)
+                    {
+                        AliasDeclaration aliasDecl = cast(AliasDeclaration)statement;
+                        Expression innerExp = aliasDecl.getExpr();
+
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
+                    }
                     /**
                      * Casted expressions
                      *
@@ -2420,7 +2435,7 @@ public final class Parser
                      */
                     else if(cast(ArrayAssignment)statement)
                     {
-                    	ArrayAssignment aaExpr = cast(ArrayAssignment)statement;
+                        ArrayAssignment aaExpr = cast(ArrayAssignment)statement;
 						Expression arrayIndex = aaExpr.getArrayLeft();
 						Expression assExpr = aaExpr.getAssignmentExpression();
 						
@@ -2564,6 +2579,43 @@ public final class Parser
         WARN("parseComment(): Leave");
     }
 
+    /** 
+     * Parses an alias declaration
+     *
+     * Returns: an `AliasDeclaration`
+     */
+    private AliasDeclaration parseAliasDeclaration()
+    {
+        WARN("parseAliasDeclaration(): Enter");
+
+        AliasDeclaration aliasDecl;
+
+        /* Pop off the `alias` */
+        lexer.nextToken();
+
+        /* Consume the alias's name */
+        Token tok = lexer.getCurrentToken();
+        expect(SymbolType.IDENT_TYPE, tok);
+        string aliasName = tok.getToken();
+
+        /* Next token, expect `=` */
+        lexer.nextToken();
+        expect(SymbolType.ASSIGN, lexer.getCurrentToken());
+
+        /* Now consume an expression */
+        lexer.nextToken();
+        Expression aliasExpr = parseExpression();
+        expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+        lexer.nextToken();
+
+        /* Construct an alias with the name and expression */
+        aliasDecl = new AliasDeclaration(aliasName, aliasExpr);
+
+        WARN("parseAliasDeclaration(): Leave");
+
+        return aliasDecl;
+    }
+
     // TODO: We need to add `parseComment()`
     // support here (see issue #84)
     // TODO: This ic currently dead code and ought to be used/implemented
@@ -2654,6 +2706,11 @@ public final class Parser
         {
             ERROR("COMMENTS NOT YET PROPERLY SUPOORTED");
             parseComment();
+        }
+        /* If it is an alias declaration */
+        else if(symbol == SymbolType.ALIAS)
+        {
+            statement = parseAliasDeclaration();
         }
         /* Error out */
         else
@@ -3052,6 +3109,11 @@ public final class Parser
             {
                 ERROR("COMMENTS NOT YET PROPERLY SUPOORTED");
                 parseComment();
+            }
+            /* If it is an alias declaration */
+            else if(symbol == SymbolType.ALIAS)
+            {
+                modulle.addStatement(parseAliasDeclaration());
             }
             else
             {
