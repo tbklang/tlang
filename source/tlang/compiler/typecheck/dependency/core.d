@@ -1264,10 +1264,13 @@ public class DNodeGenerator
              * check
              */
             auto ref_e = resolver.resolveBest(ta.parentOf(), referentTypeName);
-            if(ref_e is null)
+
+            // nothing found (but could be built-in)
+            if(ref_e is null && tc.getType(ta.parentOf(), referentTypeName) !is null)
             {
-                expect("Could not find the type '", referentTypeName, "' in type remapping declaration", ta);
+                // Do nothing
             }
+            // referent is a type alias itself
             else if(cast(TypeAlias)ref_e)
             {
                 DNode ref_e_dnode = pool(ref_e);
@@ -1275,6 +1278,10 @@ public class DNodeGenerator
                 {
                     expect("Cannot declare type remapping", ta, " which refers to type remapping", ref_e, "which is not yet declared");
                 }
+            }
+            else
+            {
+                expect("Could not find the type '", referentTypeName, "' in type remapping declaration", ta);
             }
 
             /* Add an entry to the reference counting map */
