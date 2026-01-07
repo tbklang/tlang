@@ -3024,6 +3024,16 @@ public final class TypeChecker
         if(!foundType)
         {
             foundType = cast(Type)resolver.resolveBest(c, typeString);
+
+            /* In case of a type alias, recurse */
+            // FIXME: Add visitation tree/map here to prevent us
+            // from going in circles
+            import tlang.compiler.symbols.remaps : TypeAlias;
+            if(cast(TypeAlias)foundType)
+            {
+                TypeAlias ta = cast(TypeAlias)foundType;
+                return getType(ta.parentOf(), ta.getReferentType());
+            }
         }
         
         return foundType;
