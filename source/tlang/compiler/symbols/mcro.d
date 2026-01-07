@@ -58,8 +58,10 @@ public interface MStatementReplaceable
 }
 
 /** 
- * Anything which implements this can make a full
- * deep clone of itself
+ * Anything which implements this should be able
+ * to make a full deep clone of itself and then
+ * also, optionally, allow a new parent to be
+ * set
  */
 public interface MCloneable
 {
