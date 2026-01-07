@@ -1,9 +1,9 @@
 module simple;
 
-type basicIntegerType = uint;
+type basicIntegerType = ubyte;
 type returnType = basicIntegerType;
 
-returnType main()
+int main()
 {
-  return sizeof(returnType)+cast(uint)1;
+  return sizeof(returnType)*cast(uint)2;
 }

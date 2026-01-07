@@ -10,19 +10,26 @@ module tlang.compiler.typecheck.sizeof;
 import tlang.compiler.typecheck.core : TypeChecker;
 import tlang.compiler.symbols.expressions : Expression, IntegerLiteral, IntegerLiteralEncoding;
 import tlang.compiler.symbols.typing.core;
+import tlang.compiler.symbols.containers : Container;
 
 import std.conv : to;
+
+import tlang.misc.logging;
 
 public IntegerLiteral determineSizeOfLiteral
 (
     TypeChecker tc,
+    Container from,
     string typeName
 )
 {
     IntegerLiteral literal = new IntegerLiteral("TODO_LITERAL_GOES_HERESIZEOF_REPLACEMENT", IntegerLiteralEncoding.UNSIGNED_INTEGER);
 
     // TODO: Via typechecker determine size with a lookup
-    Type type = tc.getType(tc.getProgram(), typeName);
+    Type type = tc.getType(from, typeName);
+
+    DEBUG("sizeof() incoming type: ", typeName);
+    DEBUG("sizeof() type: ", type);
 
     /* Calculated type size */
     ulong typeSize = 0;

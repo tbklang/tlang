@@ -591,7 +591,7 @@ public class DNodeGenerator
                 DEBUG("sizeof() type: ", n);
 
                 import tlang.compiler.typecheck.sizeof;
-                IntegerLiteral li = determineSizeOfLiteral(this.tc, n);
+                IntegerLiteral li = determineSizeOfLiteral(this.tc, funcCall_p, n);
                 DEBUG("sizeof() mapped '", n, "' to ", li);
 
                 // Set to use the same parent as `funcCall`
