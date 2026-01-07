@@ -1,7 +1,7 @@
 module tlang.compiler.typecheck.meta;
 
 import tlang.compiler.symbols.data : Statement, TypedEntity, Function, FunctionCall, IdentExpression;
-import tlang.compiler.symbols.expressions : Expression, IntegerLiteral, IntegerLiteralEncoding;
+import tlang.compiler.symbols.expressions : Expression;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.containers : Container;
 import tlang.compiler.symbols.mcro;
@@ -73,50 +73,6 @@ public class MetaProcessor
 
             // Perform replacement of all type alises to concrete types, such as `size_t`
             doTypeAlias(container, curStmt);
-
-            /**
-             * Search for any `sizeof(<ident_type>)` expressions
-             * and replace them with a `NumberLiteral`
-             */
-            if(cast(MStatementSearchable)curStmt && cast(MStatementReplaceable)curStmt)
-            {
-                MStatementSearchable searchableStmt = cast(MStatementSearchable)curStmt;
-                Statement[] foundStmts = searchableStmt.search(FunctionCall.classinfo);
-                DEBUG("Nah fr");
-
-                foreach(Statement curFoundStmt; foundStmts)
-                {
-                    FunctionCall curFuncCall = cast(FunctionCall)curFoundStmt;
-
-                    // if(curFuncCall.getName() == "sizeof")
-                    // {
-                    //     DEBUG("Elo");
-                    //     Expression[] arguments = curFuncCall.getCallArguments();
-                    //     if(arguments.length == 1)
-                    //     {
-                    //         IdentExpression potentialIdentExp = cast(IdentExpression)arguments[0];
-                    //         if(potentialIdentExp)
-                    //         {
-                    //             string typeName = potentialIdentExp.getName();
-                    //             IntegerLiteral replacementStmt = sizeOf_Literalize(typeName);
-                    //             DEBUG("sizeof: Replace '"~curFoundStmt.toString()~"' with '"~replacementStmt.toString()~"'");
-
-                    //             /* Traverse down from the `Container` we are process()'ing and apply the replacement */
-                    //             MStatementReplaceable containerRepl = cast(MStatementReplaceable)container;
-                    //             containerRepl.replace(curFoundStmt, replacementStmt);
-                    //         }
-                    //         else
-                    //         {
-                    //             throw new MetaException("The argument to `sizeof` should be a type");
-                    //         }
-                    //     }
-                    //     else
-                    //     {
-                    //         throw new MetaException("To use the `sizeof` macro you require a single argument to be passed to it");   
-                    //     }
-                    // }
-                }
-            }
 
             /** 
              * If the current statement is a Container then recurse
@@ -248,11 +204,6 @@ public class MetaProcessor
                 }
             }
         }
-    }
-
-    private IntegerLiteral sizeOf_Literalize(string typeName)
-    {
-        return determineSizeOfLiteral(this.tc, typeName);
     }
 
     /** 
@@ -408,62 +359,4 @@ public class MetaProcessor
             assert(false);
         }
     }
-}
-
-public IntegerLiteral determineSizeOfLiteral
-(
-    TypeChecker tc,
-    string typeName
-)
-{
-    IntegerLiteral literal = new IntegerLiteral("TODO_LITERAL_GOES_HERESIZEOF_REPLACEMENT", IntegerLiteralEncoding.UNSIGNED_INTEGER);
-
-    // TODO: Via typechecker determine size with a lookup
-    Type type = tc.getType(tc.getProgram(), typeName);
-
-    /* Calculated type size */
-    ulong typeSize = 0;
-
-    /**
-        * Calculate stack array size
-        *
-        * Algo: `<componentType>.size * stackArraySize`
-        */
-    if(cast(StackArray)type)
-    {
-        StackArray stackArrayType = cast(StackArray)type;
-        ulong arrayLength = stackArrayType.getAllocatedSize();
-        Type componentType = stackArrayType.getComponentType();
-        ulong componentTypeSize = 0;
-        
-        // FIXME: Later, when the Dependency Genrator supports more advanced component types,
-        // ... we will need to support this - for now assume that `componentType` is primitive
-        if(cast(Number)componentType)
-        {
-            Number numberType = cast(Number)componentType;
-            componentTypeSize = numberType.getSize();
-        }
-
-        typeSize = componentTypeSize*arrayLength;
-    }
-    /**
-        * Calculate the size of `Number`-based types
-        */
-    else if(cast(Number)type)
-    {
-        Number numberType = cast(Number)type;
-        typeSize = numberType.getSize();
-    }
-
-    // TODO: We may eed toupdate Type so have bitwidth or only do this
-    // for basic types - in which case I guess we should throw an exception
-    // here.
-    // ulong typeSize = 
-
-    
-
-    /* Update the `Sizeof` kind-of-`IntegerLiteral` with the new size */
-    literal.setNumber(to!(string)(typeSize));
-
-    return literal;
 }

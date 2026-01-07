@@ -587,7 +587,7 @@ public class DNodeGenerator
                 string n = a_s.getName();
                 DEBUG("sizeof() type: ", n);
 
-                import tlang.compiler.typecheck.meta : determineSizeOfLiteral;
+                import tlang.compiler.typecheck.sizeof;
                 IntegerLiteral li = determineSizeOfLiteral(this.tc, n);
                 DEBUG("sizeof() mapped '", n, "' to ", li);
 
