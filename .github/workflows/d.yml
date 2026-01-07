@@ -643,7 +643,6 @@ jobs:
               set -e
               exit 1
           fi
-      source//tlang/testing/
 
 ##################################
 ####### Deployment section #######
