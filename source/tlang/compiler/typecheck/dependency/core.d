@@ -859,7 +859,7 @@ public class DNodeGenerator
 
                     /**
                      * Obtain the expression, perform a clone
-                     * and parent to `ad_parent`
+                     * and parent to `varExp_p`
                      */
                     auto ad_expr = ad.getExpr();
                     DEBUG("ad_expr: ",ad_expr);
