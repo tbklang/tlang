@@ -12,7 +12,10 @@ import tlang.compiler.typecheck.exceptions;
 import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
+
 import tlang.compiler.symbols.aliases : AliasDeclaration;
+import tlang.compiler.symbols.remaps : TypeAlias;
+
 import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
@@ -1240,6 +1243,22 @@ public class DNodeGenerator
 
             /* Add an entry to the reference counting map */
             tc.touch(ad);
+        }
+        /**
+         * Type remapping declarations
+         */
+        else if(cast(TypeAlias)entity)
+        {
+            TypeAlias ta = cast(TypeAlias)entity;
+            auto remappedTypeName = ta.getName();
+            auto referentTypeName = ta.getExpr();
+
+            /* Set as visited */
+            DNode typeRemapDNode = pool(ta);
+            typeRemapDNode.markVisited();
+
+            /* Add an entry to the reference counting map */
+            tc.touch(ta);
         }
         /**
         * Variable assignments
