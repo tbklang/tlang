@@ -3115,6 +3115,11 @@ public final class Parser
             {
                 modulle.addStatement(parseAliasDeclaration());
             }
+            /* If it is a type remapping */
+            else if(symbol == SymbolType.TYPE_REMAP)
+            {
+                modu;le.addStatement(parseTypeRemap());
+            }
             else
             {
                 expect("parse(): Unknown '" ~ tok.getToken() ~ "'");
