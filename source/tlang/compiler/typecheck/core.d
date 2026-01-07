@@ -3025,16 +3025,12 @@ public final class TypeChecker
         if(!foundType)
         {
             foundType = cast(Type)resolver.resolveBest(c, typeString);
-            DEBUG("sizeof: ", foundType, " for", typeString);
 
             /* In case of a type alias, recurse */
             if(cast(TypeAlias)foundType)
             {
                 TypeAlias ta = cast(TypeAlias)foundType;
-                DEBUG("sizeof (recurse from:", ta.getName(), " to ", ta.getReferentType());
-                auto o = getType(ta.parentOf(), ta.getReferentType());
-                DEBUG("sizeof (recurse): ", o);
-                return o;
+                return getType(ta.parentOf(), ta.getReferentType());
             }
         }
         
