@@ -30,10 +30,10 @@ public IntegerLiteral determineSizeOfLiteral
     ulong typeSize = 0;
 
     /**
-        * Calculate stack array size
-        *
-        * Algo: `<componentType>.size * stackArraySize`
-        */
+     * Calculate stack array size
+     *
+     * Algo: `<componentType>.size * stackArraySize`
+     */
     if(cast(StackArray)type)
     {
         StackArray stackArrayType = cast(StackArray)type;
@@ -52,8 +52,8 @@ public IntegerLiteral determineSizeOfLiteral
         typeSize = componentTypeSize*arrayLength;
     }
     /**
-        * Calculate the size of `Number`-based types
-        */
+     * Calculate the size of `Number`-based types
+     */
     else if(cast(Number)type)
     {
         Number numberType = cast(Number)type;
