@@ -16,13 +16,14 @@ import std.conv : to;
 public IntegerLiteral determineSizeOfLiteral
 (
     TypeChecker tc,
+    Container from,
     string typeName
 )
 {
     IntegerLiteral literal = new IntegerLiteral("TODO_LITERAL_GOES_HERESIZEOF_REPLACEMENT", IntegerLiteralEncoding.UNSIGNED_INTEGER);
 
     // TODO: Via typechecker determine size with a lookup
-    Type type = tc.getType(tc.getProgram(), typeName);
+    Type type = tc.getType(from, typeName);
 
     /* Calculated type size */
     ulong typeSize = 0;
