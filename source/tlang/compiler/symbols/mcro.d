@@ -1,5 +1,7 @@
 /** 
  * Meta-programming tooling
+ *
+ * Authors: Tristan Brice Velloza Kildaire
  */
 module tlang.compiler.symbols.mcro;
 
