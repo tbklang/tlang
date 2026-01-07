@@ -12,6 +12,8 @@ import tlang.compiler.symbols.expressions : Expression, IntegerLiteral, IntegerL
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.containers : Container;
 
+import tlang.compiler.symbols.containers : Container;
+
 import std.conv : to;
 
 import tlang.misc.logging;
@@ -27,9 +29,6 @@ public IntegerLiteral determineSizeOfLiteral
 
     // TODO: Via typechecker determine size with a lookup
     Type type = tc.getType(from, typeName);
-
-    DEBUG("sizeof() incoming type: ", typeName);
-    DEBUG("sizeof() type: ", type);
 
     /* Calculated type size */
     ulong typeSize = 0;
