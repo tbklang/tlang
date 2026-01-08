@@ -36,6 +36,11 @@ public class TypeCheckerException : TError
         this(typeChecker, TypecheckError.GENERAL_ERROR);
     }
 
+    this(T...)(TypeChecker typeChecker, T args)
+    {
+        this(typeChecker, TypecheckError.GENERAL_ERROR, makeMessage(args));
+    }
+
     public TypecheckError getError()
     {
         return errType;
