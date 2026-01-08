@@ -396,6 +396,18 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/unused_vars.t --unusedVars true
       - name: Unused variables check (negative case)
         run: ./tlang typecheck source/tlang/testing/unused_vars_none.t --unusedVars true
+
+      # Type aliases
+      - name: Type alias use before declare
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/type_aliases/with_cycle.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
   emit:
     needs: [build, unittests]
