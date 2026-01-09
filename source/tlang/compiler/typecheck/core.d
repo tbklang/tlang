@@ -3079,6 +3079,9 @@ public final class TypeChecker
      *
      * Params:
      *   message = the expectation message
+     * Throws:
+     *   TypeCheckerException = is thrown
+     * when called
      */
     public void expect(T...)(T args)
     {
