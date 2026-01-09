@@ -19,14 +19,11 @@ public class TypeCheckerException : TError
         GENERAL_ERROR
     }
 
-    private TypecheckError errType;
-
     this(TypeChecker typeChecker, TypecheckError errType, string msg = "")
     {
         /* We set it after each child class calls this constructor (which sets it to empty) */
         super("typecheck", "TypeCheck Error ("~to!(string)(errType)~")"~(msg.length > 0 ? ": "~msg : ""));
         this.typeChecker = typeChecker;
-        this.errType = errType;
     }
 
     // TODO: Remove this constructor and make anything that is currently using it 
@@ -39,11 +36,6 @@ public class TypeCheckerException : TError
     this(T...)(TypeChecker typeChecker, T args)
     {
         this(typeChecker, TypecheckError.GENERAL_ERROR, makeMessage(args));
-    }
-
-    public TypecheckError getError()
-    {
-        return errType;
     }
 }
 
