@@ -109,7 +109,7 @@ public final class TypeChecker
      */
     public void expect(string message)
     {
-        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, message);
+        throw new TypeCheckerException(this, message);
     }
 
     /**
@@ -2026,7 +2026,7 @@ public final class TypeChecker
                     }
                     else
                     {
-                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "You cannot dereference a type that is not a pointer type!");
+                        throw new TypeCheckerException(this, "You cannot dereference a type that is not a pointer type!");
                     }
                 }
                 /* If pointer create `&` */
@@ -2497,7 +2497,7 @@ public final class TypeChecker
                  */
                 if(!funcContainer)
                 {
-                    throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "A return statement can only appear in the body of a function");
+                    throw new TypeCheckerException(this, "A return statement can only appear in the body of a function");
                 }
 
                 /**
@@ -2523,7 +2523,7 @@ public final class TypeChecker
                     /* It is an error to have a return expression if function is return void */
                     if(returnStatement.hasReturnExpression())
                     {
-                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Function '"~functionName~"' of type void cannot have a return expression");
+                        throw new TypeCheckerException(this, "Function '"~functionName~"' of type void cannot have a return expression");
                     }
                     /* If we don't have an expression (expected) */
                     else
@@ -2559,7 +2559,7 @@ public final class TypeChecker
                     /* If not then this is an error */
                     else
                     {
-                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Function '"~functionName~"' of has a type therefore it requires an expression in the return statement");
+                        throw new TypeCheckerException(this, "Function '"~functionName~"' of has a type therefore it requires an expression in the return statement");
                     }
                 }
                 
