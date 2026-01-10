@@ -110,7 +110,7 @@ public final class TypeChecker
      */
     public void expect(string message)
     {
-        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, message);
+        throw new TypeCheckerException(this, message);
     }
 
     /**
@@ -2027,7 +2027,7 @@ public final class TypeChecker
                     }
                     else
                     {
-                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "You cannot dereference a type that is not a pointer type!");
+                        expect("You cannot dereference something of type", expType, "as it is not a pointer type");
                     }
                 }
                 /* If pointer create `&` */
@@ -2498,7 +2498,7 @@ public final class TypeChecker
                  */
                 if(!funcContainer)
                 {
-                    throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "A return statement can only appear in the body of a function");
+                    expect("A return statement can only appear in the body of a function, not a", funcContainer);
                 }
 
                 /**
@@ -2524,7 +2524,7 @@ public final class TypeChecker
                     /* It is an error to have a return expression if function is return void */
                     if(returnStatement.hasReturnExpression())
                     {
-                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Function '"~functionName~"' of type void cannot have a return expression");
+                        expect("Function", funcContainer, "of type void cannot have a return expression");
                     }
                     /* If we don't have an expression (expected) */
                     else
@@ -2560,7 +2560,7 @@ public final class TypeChecker
                     /* If not then this is an error */
                     else
                     {
-                        throw new TypeCheckerException(this, TypeCheckerException.TypecheckError.GENERAL_ERROR, "Function '"~functionName~"' of has a type therefore it requires an expression in the return statement");
+                        expect("Function", funcContainer, "has a type", functionReturnType, "and therefore requires an expression in the return statement");
                     }
                 }
                 
@@ -3009,12 +3009,17 @@ public final class TypeChecker
     }
 
     /**
-    * Given a type as a string this
-    * returns the actual type
-    *
-    * If not found then null is returned
-    */
-    public Type getType(Container c, string typeString)
+     * Given a type as a string this
+     * returns the actual type
+     *
+     * If not found then null is returned
+     *
+     * Throws: 
+     *   TypeCheckerException = if an entity
+     * named `typeString` _is_ found but it
+     * isn't of type `Type`
+     */
+    public Type getType0(Container c, string typeString)
     {
         Type foundType;
 
@@ -3024,17 +3029,71 @@ public final class TypeChecker
         /* If it isn't then check for a type (resolve it) */
         if(!foundType)
         {
-            foundType = cast(Type)resolver.resolveBest(c, typeString);
+            Entity _foundType_e = resolver.resolveBest(c, typeString);
+
+            /* Not found */
+            if(_foundType_e is null)
+            {
+                return null;
+            }
+
+            Type _foundType = cast(Type)_foundType_e;
+
+            /* If it exists but it isn't a type */
+            if(_foundType is null)
+            {
+                expect(typeString, "is not a type but rather a", _foundType_e);
+            }
 
             /* In case of a type alias, recurse */
-            if(cast(TypeAlias)foundType)
+            if(cast(TypeAlias)_foundType)
             {
-                TypeAlias ta = cast(TypeAlias)foundType;
+                TypeAlias ta = cast(TypeAlias)_foundType;
                 return getType(ta.parentOf(), ta.getReferentType());
             }
+
+            foundType = _foundType;
         }
         
         return foundType;
+    }
+
+    /**
+     * Given a type as a string this
+     * returns the actual type
+     *
+     * Throws:
+     *   TypeCheckerException = if the lookup fails
+     * because an entity named `typeString` exists
+     * but is not a `Type` object _or_ because the
+     * type right out could not be found
+     */
+    public Type getType(Container c, string typeString)
+    {
+        Type found = getType0(c, typeString);
+
+        if(found is null)
+        {
+            expect("Could not find type", typeString);
+        }
+
+        return found;
+    }
+
+    /** 
+     * Crashes the typechecker with an
+     * expectation message by throwing a new
+     * `TypeCheckerException`.
+     *
+     * Params:
+     *   message = the expectation message
+     * Throws:
+     *   TypeCheckerException = is thrown
+     * when called
+     */
+    public void expect(T...)(T args)
+    {
+        throw new TypeCheckerException(this, args);
     }
 
     // TODO: What actually is the point of this? It literally generates a `Class[]`
@@ -4128,4 +4187,35 @@ unittest
      */
     Variable[] unusedVars = tc.getUnusedVariables();
     assert(unusedVars.length == 0);
+}
+
+/** 
+ * Tests the `getType(Container, string)` lookup
+ * mechanism
+ *
+ * Case: Negative (referent exists but is not a `Type`)
+ * Source file: source/tlang/testing/typecheck/referent_exists_but_not_type.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/typecheck/referent_exists_but_not_type.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException)
+    {
+
+    }
 }
