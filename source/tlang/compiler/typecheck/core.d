@@ -4180,3 +4180,34 @@ unittest
     Variable[] unusedVars = tc.getUnusedVariables();
     assert(unusedVars.length == 0);
 }
+
+/** 
+ * Tests the `getType(Container, string)` lookup
+ * mechanism
+ *
+ * Case: Negative (referent exists but is not a `Type`)
+ * Source file: source/tlang/testing/typecheck/referent_exists_but_not_type.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+
+    string sourceFile = "source/tlang/testing/typecheck/referent_exists_but_not_type.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(TypeCheckerException)
+    {
+
+    }
+}
