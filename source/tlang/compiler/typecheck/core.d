@@ -3021,41 +3021,40 @@ public final class TypeChecker
      */
     public Type getType0(Container c, string typeString)
     {
-        Type foundType;
-
         /* Check if the type is built-in */
-        foundType = getBuiltInType(this, c, typeString);
+        Type builtinType = getBuiltInType(this, c, typeString);
 
         /* If it isn't then check for a type (resolve it) */
-        if(!foundType)
+        if(!builtinType)
         {
-            Entity _foundType_e = resolver.resolveBest(c, typeString);
+            Entity foundEntity = resolver.resolveBest(c, typeString);
 
             /* Not found */
-            if(_foundType_e is null)
+            if(foundEntity is null)
             {
                 return null;
             }
 
-            Type _foundType = cast(Type)_foundType_e;
+            Type foundType = cast(Type)foundEntity;
 
             /* If it exists but it isn't a type */
-            if(_foundType is null)
+            if(foundType is null)
             {
-                expect(typeString, "is not a type but rather a", _foundType_e);
+                expect(typeString, "is not a type but rather a", foundEntity);
             }
 
             /* In case of a type alias, recurse */
-            if(cast(TypeAlias)_foundType)
+            if(cast(TypeAlias)foundType)
             {
-                TypeAlias ta = cast(TypeAlias)_foundType;
+                TypeAlias ta = cast(TypeAlias)foundType;
                 return getType(ta.parentOf(), ta.getReferentType());
             }
 
-            foundType = _foundType;
+            return foundType;
         }
         
-        return foundType;
+        assert(builtinType);
+        return builtinType;
     }
 
     /**
