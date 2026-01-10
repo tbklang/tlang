@@ -3044,7 +3044,7 @@ public final class TypeChecker
                 expect(typeString, "is not a type but rather a", _foundType_e);
             }
 
-            foundType = _foundType;
+            return _foundType;
         }
         
         return foundType;
