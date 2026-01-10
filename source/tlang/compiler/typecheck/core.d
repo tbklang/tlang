@@ -3020,13 +3020,11 @@ public final class TypeChecker
      */
     public Type getType0(Container c, string typeString)
     {
-        Type foundType;
-
         /* Check if the type is built-in */
-        foundType = getBuiltInType(this, c, typeString);
+        Type builtinType = getBuiltInType(this, c, typeString);
 
         /* If it isn't then check for a type (resolve it) */
-        if(!foundType)
+        if(!builtinType)
         {
             Entity _foundType_e = resolver.resolveBest(c, typeString);
 
@@ -3047,7 +3045,8 @@ public final class TypeChecker
             return _foundType;
         }
         
-        return foundType;
+        assert(builtinType);
+        return builtinType;
     }
 
     /**
