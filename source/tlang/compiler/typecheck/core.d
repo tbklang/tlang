@@ -3026,23 +3026,23 @@ public final class TypeChecker
         /* If it isn't then check for a type (resolve it) */
         if(!builtinType)
         {
-            Entity _foundType_e = resolver.resolveBest(c, typeString);
+            Entity foundEntity = resolver.resolveBest(c, typeString);
 
             /* Not found */
-            if(_foundType_e is null)
+            if(foundEntity is null)
             {
                 return null;
             }
 
-            Type _foundType = cast(Type)_foundType_e;
+            Type foundType = cast(Type)foundEntity;
 
             /* If it exists but it isn't a type */
-            if(_foundType is null)
+            if(foundType is null)
             {
-                expect(typeString, "is not a type but rather a", _foundType_e);
+                expect(typeString, "is not a type but rather a", foundEntity);
             }
 
-            return _foundType;
+            return foundType;
         }
         
         assert(builtinType);
