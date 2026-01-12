@@ -3008,51 +3008,18 @@ public final class TypeChecker
         printCodeQueue();
     }
 
-    private struct TypeControl
-    {
-        // Visitation map for type remappings
-        private bool[TypeAlias] _ta_v;
-
-        public void markVisited(TypeAlias ta)
-        {
-            bool* v_ptr = ta in _ta_v;
-            assert(v_ptr !is null); // your usage is wrong then as you should have called `hasVisited(TypeAlias)` first
-
-            *v_ptr = true;
-        }
-
-        public bool hasVisited(TypeAlias ta)
-        {
-            bool* v_ptr = ta in _ta_v;
-            if(v_ptr is null) // create entry if not existing
-            {
-                _ta_v[ta] = false;
-                return hasVisited(ta);
-            }
-
-            return *v_ptr;
-        }
-    }
-
     /**
      * Given a type as a string this
      * returns the actual type
      *
      * If not found then null is returned
      *
-     * Params:
-     *   c = the `Container` to start lookups
-     * within
-     *   typeString = the name of the type to
-     * lookup
-     *   ctl = a pointer to the `TypeControl` 
-     * structure to use
      * Throws: 
      *   TypeCheckerException = if an entity
      * named `typeString` _is_ found but it
      * isn't of type `Type`
      */
-    public Type getType0(Container c, string typeString, TypeControl* ctl)
+    public Type getType0(Container c, string typeString)
     {
         /* Check if the type is built-in */
         Type builtinType = getBuiltInType(this, c, typeString);
@@ -3080,14 +3047,6 @@ public final class TypeChecker
             if(cast(TypeAlias)foundType)
             {
                 TypeAlias ta = cast(TypeAlias)foundType;
-                string ta_referentType = ta.getReferentType();
-
-                if(ctl.hasVisited(ta))
-                {
-
-                }
-
-
                 return getType(ta.parentOf(), ta.getReferentType());
             }
 
@@ -3110,8 +3069,7 @@ public final class TypeChecker
      */
     public Type getType(Container c, string typeString)
     {
-        TypeControl t_ctl = TypeControl();
-        Type found = getType0(c, typeString, &t_ctl);
+        Type found = getType0(c, typeString);
 
         if(found is null)
         {
