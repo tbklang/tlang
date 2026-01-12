@@ -14,6 +14,11 @@
  * and the second being the type to refer
  * to.
  *
+ * The weighting is set to 1 so that this
+ * gets re-ordered to appear before variable
+ * declarations (i.e. where they would be
+ * used for example)
+ *
  * Authors: Tristan Brice Velloza Kildaire (deavmi)
  */
 module tlang.compiler.symbols.remaps;
