@@ -1773,3 +1773,36 @@ public class DNodeGenerator
         return classDNode;
     }
 }
+
+/** 
+ * Tests the use-before-declare mechanism for type aliases
+ *
+ * Case: Negative (
+ * Source file: source/tlang/testing/type_aliases/cycle_usage.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+    import tlang.compiler.typecheck.dependency.exceptions : DependencyException;
+    import std.string : endsWith;
+
+    string sourceFile = "source/tlang/testing/type_aliases/cycle_usage.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(DependencyException e)
+    {
+        auto m = e.msg;
+        assert(m.endsWith("not yet declared"));
+    }
+}
