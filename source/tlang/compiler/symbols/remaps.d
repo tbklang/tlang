@@ -28,7 +28,7 @@ public final class TypeAlias : Type
     this(string remappedName, string mappedTo)
     {
         super(remappedName);
-        this.weight = 2;
+        this.weight = 1;
         this._mt = mappedTo;
     }
 
