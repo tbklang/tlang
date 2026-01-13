@@ -1331,7 +1331,7 @@ public final class Parser
     private Expression parseCharacter()
     {
         ERROR("Please implement me, parseCharacter()");
-        assert(false);
+        // assert(false);
         return null;
     }
 
