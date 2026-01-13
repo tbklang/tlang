@@ -6,6 +6,7 @@ import tlang.compiler.symbols.typing.core;
 
 // AST manipulation interfaces
 import tlang.compiler.symbols.mcro : MStatementSearchable, MStatementReplaceable, MCloneable;
+import tlang.misc.logging;
 
 /**
 * Used so often that we may as well

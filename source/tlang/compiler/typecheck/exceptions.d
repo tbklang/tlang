@@ -12,33 +12,16 @@ public class TypeCheckerException : TError
 {
     private TypeChecker typeChecker;
 
-    // NOTE: See if we use, as we seem to overwrite the `msg` value
-    // ... in sub-classes of this
-    public enum TypecheckError
-    {
-        GENERAL_ERROR
-    }
-
-    private TypecheckError errType;
-
-    this(TypeChecker typeChecker, TypecheckError errType, string msg = "")
+    this(TypeChecker typeChecker, string msg = "")
     {
         /* We set it after each child class calls this constructor (which sets it to empty) */
-        super("TypeCheck Error ("~to!(string)(errType)~")"~(msg.length > 0 ? ": "~msg : ""));
+        super("typecheck", msg);
         this.typeChecker = typeChecker;
-        this.errType = errType;
     }
 
-    // TODO: Remove this constructor and make anything that is currently using it 
-    // ... switch to atleast specifying the errType
-    this(TypeChecker typeChecker)
+    this(T...)(TypeChecker typeChecker, T args)
     {
-        this(typeChecker, TypecheckError.GENERAL_ERROR);
-    }
-
-    public TypecheckError getError()
-    {
-        return errType;
+        this(typeChecker, makeMessage(args));
     }
 }
 
@@ -50,7 +33,7 @@ public final class TypeMismatchException : TypeCheckerException
     {
         super(typeChecker);
 
-        msg = "Type mismatch between type "~originalType.getName()~" and "~attemptedType.getName();
+        msg = makeMessage("Type mismatch between type", originalType, "and", attemptedType);
 
         msg ~= msgIn.length > 0 ? ": "~msgIn : "";
 
@@ -69,6 +52,8 @@ public final class TypeMismatchException : TypeCheckerException
     }
 }
 
+import tlang.misc.messaging : makeMessage;
+
 public final class CoercionException : TypeCheckerException
 {
     private Type toType, fromType;
@@ -77,7 +62,7 @@ public final class CoercionException : TypeCheckerException
     {
         super(typeChecker);
 
-        msg = "Cannot coerce from type '"~fromType.getName()~"' to type '"~toType.getName()~"'";
+        msg = makeMessage("Cannot coerce from", fromType, "to", toType);
 
         msg ~= msgIn.length > 0 ? ": "~msgIn : "";
 
@@ -124,22 +109,17 @@ public final class CollidingNameException : TypeCheckerException
         /* If colliding with the container */
         if(isCollidingWithContainer())
         {
-            string containerPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), defined);
-            string entityPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), attempted);
-            msg = "Cannot have entity \""~entityPath~"\" with same name as container \""~containerPath~"\"";
+            msg = makeMessage("Cannot have entity", attempted, "with same name as container", c);
         }
         /* If colliding with a one of the program's modules */
         else if(isCollidingWithAModule())
         {
-            string entityPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), attempted);
-            msg = "Cannot have entity \""~entityPath~"\" with same name as module \""~getCollidedModule().getName()~"\"";
+            msg = makeMessage("Cannot have entity", attempted, "with same name as module", getCollidedModule());
         }
         /* If colliding with a member within the container */
         else
         {
-            string preExistingEntity = typeChecker.getResolver().generateName(typeChecker.getProgram(), typeChecker.findPrecedence(c, attempted.getName()));
-            string entityPath = typeChecker.getResolver().generateName(typeChecker.getProgram(), attempted);
-            msg = "Cannot have entity \""~entityPath~"\" with same name as entity \""~preExistingEntity~"\" within same container";
+            msg = makeMessage("Cannot have entity", attempted, "with same name as entity", defined, "within same container");
         }
     }
 

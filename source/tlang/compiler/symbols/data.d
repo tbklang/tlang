@@ -2,6 +2,7 @@ module tlang.compiler.symbols.data;
 
 public import tlang.compiler.symbols.check;
 import std.conv : to;
+import std.string : format;
 import tlang.compiler.typecheck.dependency.core : Context;
 
 // For debug printing
@@ -74,8 +75,42 @@ public final class Program : Container
 
     public bool replace(Statement thiz, Statement that)
     {
-        // TODO: Implement me
-        return false;
+        /* We cannot replace ourselves */
+        if(thiz == this)
+        {
+            return false;
+        }
+        /* If not ourselves, then search our body */
+        else
+        {
+            /* Check for module replacement */
+            for(size_t i = 0; i < this.modules.length; i++)
+            {
+                Module mod = this.modules[i];
+
+                /* If we are replacing a module */
+                if(thiz == mod)
+                {
+                    this.modules[i] = cast(Module)that;
+                    that.parentTo(this);
+                    return true;
+                }
+            }
+
+            /* Check for replacement WITHIN each module */
+            for(size_t i = 0; i < this.modules.length; i++)
+            {
+                Module mod = this.modules[i];
+
+                /* If we are replacing WITHIN a module */
+                if(mod.replace(thiz, that))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 
     public void addStatement(Statement statement)
@@ -498,9 +533,11 @@ public final class VariableParameter : Variable
     }
 }
 
+import tlang.compiler.symbols.mcro : MTypeRewritable, MPositionable;
+
 /* TODO: Don't make this a Container, or maybe (make sure I don't rely on COntainer casting for other shit
 * though, also the recent changes) */
-public class Function : TypedEntity, Container
+public class Function : TypedEntity, Container, MPositionable
 {
     private VariableParameter[] params;
     private Statement[] bodyStatements;
@@ -515,7 +552,7 @@ public class Function : TypedEntity, Container
         // such that they are lookup-able.
         addStatements(cast(Statement[])params);
 
-        // Add the funciton's body
+        // Add the function's body
         addStatements(bodyStatements);
 
         // Save a seperate copy of the parameters (to seperate them from the
@@ -538,11 +575,16 @@ public class Function : TypedEntity, Container
 
     public void addStatement(Statement statement)
     {
+        // DEBUG("ccc, adding statement: ", statement);
         this.bodyStatements~=statement;
     }
 
     public void addStatements(Statement[] statements)
     {
+        foreach(s; statements)
+        {
+            // DEBUG("ccc, adding statement: ", s);
+        }
         this.bodyStatements~=statements;
     }
 
@@ -676,9 +718,61 @@ public class Function : TypedEntity, Container
             return false;
         }
     }
+
+    public override ptrdiff_t position(Statement statement)
+    {
+        // DEBUG("ccc (position call) this.bodyStatements: ", this.bodyStatements);
+        // Perform initial level-based direct-match scan
+        for(size_t i = 0; i < this.bodyStatements.length; i++)
+        {
+            auto cs = this.bodyStatements[i];
+            // DEBUG("ccc statement (to): ", statement);
+            // DEBUG("ccc statement (cur): ", cs, " @ pos ", i);
+
+            // if match then return immediately
+            if(statement == cs)
+            {
+                return i;
+            }
+        }
+
+        // continue but now do nested scan on each member
+        // till we find a match
+        lp: for(size_t i = 0; i < this.bodyStatements.length; i++)
+        {
+            auto cs = this.bodyStatements[i];
+
+            // For nested cases, so long as we can find it
+            // ... (that is the `statement`) within `cs`
+            // ... then consider it found and at the position
+            // ... of its containing statement. We consider
+            // ... it found if the position returned is
+            // ... non-negative.
+            if(cast(MPositionable)cs)
+            {
+                auto cs_mp = cast(MPositionable)cs;
+                // DEBUG("ccc cs_mp (to): ", cs_mp);
+                ptrdiff_t p = cs_mp.position(statement) >= 0 ? i : -1;
+
+                // nothing was found, try next one
+                if(p == -1)
+                {
+                    continue lp;
+                }
+                // DEBUG("ccc (to's position relative to cur): ", p);
+
+                // if found _somewhere inside_ this AST node
+                // then return the outer AST node's position
+                return i;
+            }
+        }
+
+        // really, not found
+        return -1;
+    }
 }
 
-public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable, MCloneable
+public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable, MCloneable, MPositionable
 {
     /* TODO: Just make this an Expression */
     private VariableAssignment assignment;
@@ -793,6 +887,26 @@ public class Variable : TypedEntity, MStatementSearchable, MStatementReplaceable
 
         return clonedVarDec;
     }
+
+    public override ptrdiff_t position(Statement statement)
+    {
+        // if we are what was being looked for
+        if(statement == this)
+        {
+            return 0;
+        }
+        // if it occurs within us it can only be because of
+        // our assignment. Any find counts as position 1.
+        else if(this.assignment)
+        {
+            // check within assignment
+            return this.assignment.position(statement) > -1 ? 1 : -1;
+        }
+        else
+        {
+            return -1;
+        }
+    }
 }
 
 
@@ -805,7 +919,7 @@ public import tlang.compiler.symbols.expressions;
 /**
 * TODO: Rename to `VariableDeclarationAssignment`
 */
-public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable, MCloneable
+public class VariableAssignment : Statement, MStatementSearchable, MStatementReplaceable, MCloneable, MPositionable
 {
     private Expression expression;
 
@@ -907,6 +1021,27 @@ public class VariableAssignment : Statement, MStatementSearchable, MStatementRep
 
         return clonedVarAss;
     }
+
+    public override ptrdiff_t position(Statement statement)
+    {
+        // if it is me, then return position zero
+        if(this == statement)
+        {
+            return 0;
+        }
+        // check expression
+        else if(cast(MPositionable)this.expression)
+        {
+            auto exp_mp = cast(MPositionable)this.expression;
+
+            return exp_mp.position(statement) > -1 ? 1 : -1;
+        }
+        // not found
+        else
+        {
+            return -1;
+        }
+    }
 }
 
 public class PointerDereferenceAssignment : Statement
@@ -946,7 +1081,7 @@ public class PointerDereferenceAssignment : Statement
     }
 }
 
-public class IdentExpression : Expression, MStatementSearchable, MStatementReplaceable
+public abstract class IdentExpression : Expression, MStatementSearchable, MStatementReplaceable, MPositionable
 {
     /* name */
     private string name;
@@ -986,9 +1121,23 @@ public class IdentExpression : Expression, MStatementSearchable, MStatementRepla
         // Nothing to replace within us
         return false;
     }
+
+    public override ptrdiff_t position(Statement statement)
+    {
+        // if it is me, then position 0
+        if(this == statement)
+        {
+            return 0;
+        }
+        // not found
+        else
+        {
+            return -1;
+        }
+    }
 }
 
-public class VariableExpression : IdentExpression
+public class VariableExpression : IdentExpression, MCloneable
 {
 
     this(string identifier)
@@ -1000,9 +1149,25 @@ public class VariableExpression : IdentExpression
     {
         return "[varExp: "~getName()~"]";
     }
+
+    /** 
+     * Clones this variable expression
+     *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone(Container newParent = null)
+    {
+        VariableExpression cpy = new VariableExpression(getName());
+        cpy.parentTo(newParent);
+        return cpy;
+    }
 }
 
-public class Call : IdentExpression
+public abstract class Call : IdentExpression
 {
     this(string ident)
     {
@@ -1058,18 +1223,8 @@ public final class ExpressionStatement : Statement, MStatementSearchable
 // and not an ident expression, as it isn't really
 
 // FIXME: Finish adding proper `MStatementSearchable` and `MStatementReplaceable` to `FunctionCall`
-public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable
+public final class FunctionCall : Call, MStatementSearchable, MStatementReplaceable, MCloneable, MPositionable
 {
-    /* Whether this is statement-level function call or not */
-
-    /** 
-     * Function calls either appear as part of an expression
-     * (i.e. from `parseExpression()`) or directly as a statement
-     * in the body of a `Container`. This affects how code generation
-     * works and hence one needs to disambiguate between the two.
-     */
-    private bool isStatementLevel = false;
-
     /* Argument list */
     private Expression[] arguments;
 
@@ -1092,28 +1247,8 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
         return arguments;
     }
 
-    /** 
-     * Mark this function call as statement-level
-     */
-    public void makeStatementLevel()
-    {
-        this.isStatementLevel = true;
-    }
-
-    /** 
-     * Determines if this function call is statement-level
-     *
-     * Returns: true if so, false otherwise
-     */
-    public bool isStatementLevelFuncCall()
-    {
-        return isStatementLevel;
-    }
-
     public override Statement[] search(TypeInfo_Class clazzType)
     {
-        // TODO: Implement me
-
         /* List of returned matches */
         Statement[] matches;
 
@@ -1140,31 +1275,108 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
 
     public override bool replace(Statement thiz, Statement that)
     {
-        // TODO: Implement me
+        /* Cannot replace ourselves directly */
+        if(thiz == this)
+        {
+            return false;
+        }
+        /* Look at the arguments */
+        else
+        {
+            for(size_t i = 0; i < this.arguments.length; i++)
+            {
+                Expression arg = this.arguments[i];
 
-        // /* Check if our `Expression` matches, then replace */
-        // if(expression == thiz)
-        // {
-        //     // NOTE: This legit makes no sense and won't do anything, we could remove this
-        //     // and honestly should probably make this return false
-        //     // FIXME: Make this return `false` (see above)
-        //     expression = cast(Expression)that;
-        //     return true;
-        // }
-        // /* If not direct match, then recurse and replace (if possible) */
-        // else if(cast(MStatementReplaceable)expression)
-        // {
-        //     MStatementReplaceable replStmt = cast(MStatementReplaceable)expression;
-        //     return replStmt.replace(thiz, that);
-        // }
-        // /* If not direct match and not replaceable */
-        // else
-        // {
-        //     return false;
-        // }
-        return true;
+                /* Direct replacement */
+                if(arg == thiz)
+                {
+                    this.arguments[i] = cast(Expression)that;
+                    this.arguments[i].parentTo(arg.parentOf());
+                    return true;
+                }
+            }
+
+            for(size_t i = 0; i < this.arguments.length; i++)
+            {
+                Expression arg = this.arguments[i];
+
+                /* Replacing somewhere within */
+                MStatementReplaceable exprRepl = cast(MStatementReplaceable)arg;
+                if(exprRepl && exprRepl.replace(thiz, that))
+                {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /** 
+     * Clones this function call
+     *
+     * Param:
+     *   newParent = the `Container` to re-parent the
+     *   cloned `Statement`'s self to
+     *
+     * Returns: the cloned `Statement`
+     */
+    public override Statement clone(Container newParent = null)
+    {
+        // Clone arguments
+        Expression[] clonedArgs;
+        foreach(Expression arg; this.arguments)
+        {
+            MCloneable argClonable = cast(MCloneable)arg;
+            DEBUG(typeid(arg));
+            assert(argClonable);
+            if(argClonable)
+            {
+                clonedArgs ~= cast(Expression)argClonable.clone(newParent);
+            }
+        }
+
+        FunctionCall clonedFuncCall = new FunctionCall(this.name, clonedArgs);
+
+        DEBUG("haram");
+
+        // Parent outselves to the given parent
+        clonedFuncCall.parentTo(newParent);
+
+        return clonedFuncCall;
+    }
+
+    public override ptrdiff_t position(Statement statement)
+    {
+        // if it is me, then 0
+        if(this == statement)
+        {
+            return 0;
+        }
+
+        // perhaps within me (directly or within one of
+        // ... the arguments)
+        foreach(Expression e; this.arguments)
+        {
+            auto e_mp = cast(MPositionable)e;
+            DEBUG(e);assert(e_mp);
+
+            ptrdiff_t e_pos = e_mp.position(statement);
+            if(e_pos == -1)
+            {
+                return -1;
+            }
+
+            // if found, then the position is 1
+            return 1;
+        }
+
+        // not found
+        return -1;
     }
 }
+
+import std.string : format;
 
 /** 
  * ReturnStmt
@@ -1172,7 +1384,7 @@ public final class FunctionCall : Call, MStatementSearchable, MStatementReplacea
  * Represents a return statement with an expression
  * to be returned
  */
-public final class ReturnStmt : Statement
+public final class ReturnStmt : Statement, MStatementSearchable, MStatementReplaceable
 {
     // The Expression being returned
     private Expression returnExpression;
@@ -1198,6 +1410,74 @@ public final class ReturnStmt : Statement
     public bool hasReturnExpression()
     {
         return returnExpression !is null;
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on `returnExpression` (if any) */
+        if(returnExpression)
+        {
+            MStatementSearchable innerStmt = cast(MStatementSearchable)returnExpression;
+            if(innerStmt)
+            {
+                matches ~= innerStmt.search(clazzType); 
+            }
+        }
+
+        return matches;
+    }
+
+    public override bool replace(Statement thiz, Statement that)
+    {
+        /* Cannot replace ourselves directly */
+        if(thiz == this)
+        {
+            return false;
+        }
+        /* Replace the expression (if any) */
+        else if(returnExpression !is null && returnExpression == thiz)
+        {
+            auto that_exp = cast(Expression)that;
+            if(that_exp)
+            {
+                returnExpression = that_exp;
+                return true;
+            }
+            // failed to replace with non-`Expression` AST node
+            else
+            {
+                return false;
+            }
+        }
+        /* Attempt replacing something _inside of_ the Expression (if it exists) */
+        else if(returnExpression !is null)
+        {
+            auto ret_exp_repbl = cast(MStatementReplaceable)returnExpression;
+            if(ret_exp_repbl)
+            {
+                return ret_exp_repbl.replace(thiz, that);
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
+        return false;
+    }
+
+    public override string toString()
+    {
+        return format("ReturnStmt [e: %s]", hasReturnExpression() ? getReturnExpression().toString() : "No retExp");
     }
 }
 
@@ -1774,5 +2054,57 @@ public final class ExternStmt : Statement
     public override string toString()
     {
         return "[ExternStatement: (Symbol name: "~getExternalName()~")]";
+    }
+}
+
+/** 
+ * This is a non-expression, so, a normal
+ * statement that contains an expression
+ *
+ * Examples are:
+ * 1. standalone function calls
+ * 2. i++
+ */
+public final class ExpressionStatement : Statement, MStatementSearchable
+{
+    private Expression _e;
+
+    this(Expression exp)
+    {
+        this._e = exp;
+
+        /* Weighted like any other statement */
+        this.weight = 2;
+    }
+
+    public Expression getExpression()
+    {
+        return this._e;
+    }
+
+    public override string toString()
+    {
+        return format("ExpressionStmt [e: %s]", _e);
+    }
+
+    public override Statement[] search(TypeInfo_Class clazzType)
+    {
+        /* List of returned matches */
+        Statement[] matches;
+
+        /* Are we (ourselves) of this type? */
+        if(clazzType.isBaseOf(this.classinfo))
+        {
+            matches ~= [this];
+        }
+
+        /* Recurse on the embedded `Expression` */
+        auto _ems = cast(MStatementSearchable)_e;
+        if(_ems)
+        {
+            matches ~= _ems.search(clazzType);
+        }
+
+        return matches;
     }
 }

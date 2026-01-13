@@ -8,26 +8,64 @@ module tlang.compiler.parsing.strings;
 import tlang.compiler.symbols.strings : StringExpression;
 
 /** 
- * Builds a new `StringExpression` from the
- * given raw token input. This input should
- * start and end with the same character, hence
- * the minimum length is that of 2 characters.
- *
- * These beginning and ending characters will
- * be stripped and the string's raw contents
- * will be stored
+ * Creates a new `StringExpression` with the given
+ * encoding details and the raw string contents
+ * itself.
  *
  * Params:
- *   stringLiteral = the string literal
+ *   contents = the string without the enclosing `""`
+ * characters
+ *   encoding = the encoding to use
  * Returns: a new `StringExpression`
  */
-public static StringExpression buildUTF8FromLiteral(string stringLiteral)
+public static StringExpression createExpression
+(
+    string contents,
+    StrEnc encoding
+)
 {
-    assert(stringLiteral.length >= 2);
-    assert(stringLiteral[0] == stringLiteral[$-1]);
+    StringExpression str_exp;
 
-    // if `""` then it's empty string ``, else it is `<stuff between "">`
-    string str_trimmed = stringLiteral.length > 2 ? stringLiteral[1..$-1] : "";
+    if(encoding == StrEnc.UTF_8)
+    {
+        // the `string` type is UTF-8
+        str_exp = new StringExpression(contents);
+    }
+    else if(encoding == StrEnc.UTF_16)
+    {
+        import std.utf : toUTF16;
+        str_exp = new StringExpression(toUTF16(contents));
+    }
+    else if(encoding == StrEnc.UTF_32)
+    {
+        import std.utf : toUTF32;
+        str_exp = new StringExpression(toUTF32(contents));
+    }
+    else
+    {
+        assert(false);
+    }
 
-    return new StringExpression(str_trimmed);
+    return str_exp;
+}
+
+/** 
+ * String encoding
+ */
+public enum StrEnc : ubyte
+{
+    /**
+     * UTF-8 is 1 byte variadic
+     */
+    UTF_8 = 1,
+
+    /**
+     * UTF-16 is 2 bytes
+     */
+    UTF_16 = 2,
+
+    /**
+     * UTF-32 is 4 bytes
+     */
+    UTF_32 = 4
 }

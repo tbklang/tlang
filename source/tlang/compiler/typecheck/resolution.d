@@ -209,7 +209,7 @@ public final class Resolver
      * indirectly (or if it IS the container `c`)
      * Returns: `true` if so, `false` otherwise
      */
-    public bool isDescendant(Container c, Entity e)
+    public bool isDescendant(Container c, Statement e)
     {
         /**
          * If they are the same
@@ -223,7 +223,7 @@ public final class Resolver
          */
         else
         {
-            Entity currentEntity = e;
+            Statement currentEntity = e;
 
             do
             {
@@ -261,7 +261,7 @@ public final class Resolver
                 // that actually belonged to the same tree as
                 // the starting node. This becomes `null` because
                 // remember that a `Program` is not a kind-of `Entity`
-                currentEntity = cast(Entity)(parentOfCurrent);
+                currentEntity = cast(Statement)(parentOfCurrent);
             }
             while (currentEntity);
 
@@ -389,6 +389,138 @@ public final class Resolver
         DEBUG(format("resolveWithin(cntnr=%s, name=%s) entering with predicate", currentContainer, name));
         return resolveWithin(currentContainer, derive_nameMatch(name));
     }
+
+    public void collectWithin(Container currentContainer, Predicate!(Statement) pred, ref Statement[] collection)
+    {
+        Statement[] statements = currentContainer.getStatements();
+        foreach(Statement statement; statements)
+        {
+            if(pred(statement))
+            {
+                collection ~= statement;
+            }
+        }
+    }
+
+    public void collectUpwards(Container currentContainer, Predicate!(Statement) pred, ref Statement[] collected)
+    {
+        // Collect everything at the current level
+        collectWithin(currentContainer, pred, collected);
+
+        // If the current container a Statement
+        if(cast(Statement)currentContainer)
+        {
+            Statement cntnrStmt = cast(Statement)currentContainer;
+            if(pred(cntnrStmt))
+            {
+                collected ~= cntnrStmt;
+            }
+
+            // Does it have a parent?
+            Container parent = cntnrStmt.parentOf();
+            if(parent)
+            {
+                collectUpwards(parent, pred, collected);
+            }
+        }
+    }
+
+
+    import tlang.compiler.symbols.mcro : MPositionable;
+    private enum Pos
+    {
+        LVL_BEFORE,
+        LVL_AFTER,
+        SAME,
+        LEFT_OUTER,
+        LEFT_INNER,
+        NOT_FOUND
+    }
+
+    private Pos positionalize(Statement thiz, Statement that)
+    {
+        Container thizParent = thiz.parentOf();
+        Container thatParent = that.parentOf();
+
+        Entity thizParentEnt = cast(Entity)thizParent;
+        Entity thatParentEnt = cast(Entity)thatParent;
+
+        /* If sharing a parent */
+        if(thizParent == thatParent)
+        {
+            // Using the parent 
+            MPositionable positionable = cast(MPositionable)thizParent;
+            DEBUG("ccc thizParent (MPositionable): ", positionable);
+
+            if(positionable)
+            {
+                DEBUG("here");
+                ptrdiff_t thizPos = positionable.position(thiz);
+                DEBUG("here2");
+                DEBUG("that: ", that);
+                ptrdiff_t thatPos = positionable.position(that);
+                DEBUG("here3");
+
+                DEBUG("ccc thiz: ", thiz);
+                DEBUG("ccc thizPos=", thizPos);
+                DEBUG("ccc that: ", that);
+                DEBUG("ccc thatPos=", thatPos);
+
+                // If one or other is not found, climb to common position
+                if(thizPos != -1 && thatPos != -1)
+                {
+                    if(thizPos == thatPos)
+                    {
+                        return Pos.SAME;
+                    }
+                    else
+                    {
+                        return thizPos < thatPos ? Pos.LVL_BEFORE : Pos.LVL_AFTER;
+                    }
+                }
+                else
+                {
+                    DEBUG("ccc: we are here");
+                    return Pos.NOT_FOUND;
+                }
+            }
+            else
+            {
+                return Pos.NOT_FOUND;    
+            }
+        }
+        /* If `thiz` is `that` */
+        else if(thiz == that)
+        {
+            return Pos.SAME;
+        }
+        /* If `that` is within `thiz`'s parent */
+        else if(isDescendant(thizParent, that))
+        {
+            return Pos.LEFT_OUTER;
+        }
+        /* If `thiz` is within `that`'s parent */
+        else if(isDescendant(thatParent, thiz))
+        {
+            return Pos.LEFT_INNER;
+        }
+
+        return Pos.NOT_FOUND;
+    }
+
+    public bool isThizBeforeThat(Statement thiz, Statement that)
+    {
+        Pos result = positionalize(thiz, that);
+        return result == Pos.LEFT_OUTER || result == Pos.LVL_BEFORE;
+    }
+
+    public bool isThizAfterThat(Statement thiz, Statement that)
+    {
+        Pos result = positionalize(thiz, that);
+        DEBUG("ccc posResult: ", result, "thiz: ", thiz, "that: ", that);
+        return result == Pos.LEFT_INNER || result == Pos.LVL_AFTER; 
+    }
+
 
     /** 
      * Performs a horizontal-based search of the given
@@ -863,7 +995,7 @@ public final class Resolver
      *   startingNode = the starting AST node (as a `Statement`)
      * Returns: the found `Container`, or `null` if not found
      */
-    public Container findContainerOfType(TypeInfo_Class containerType, Statement startingNode)
+    public static Container findContainerOfType(TypeInfo_Class containerType, Statement startingNode)
     {
         DEBUG
         (

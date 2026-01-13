@@ -31,8 +31,13 @@ import std.string : format;
  */
 public class CodeEmitterException : TError
 {
+    this(string subSystem, string m)
+    {
+        super(subSystem, m);
+    }
+
     this(string m)
     {
-        super(format("CodeEmit: %s", m));
+        this("code emit", m);
     }
 }

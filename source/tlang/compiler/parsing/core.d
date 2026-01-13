@@ -18,8 +18,36 @@ import tlang.compiler.core : Compiler;
 import std.string : format;
 import tlang.compiler.modman;
 import tlang.misc.utils : panic;
+import tlang.compiler.symbols.aliases;
 import tlang.compiler.symbols.comments;
 import tlang.compiler.symbols.strings : StringExpression;
+
+// returns a lexer instance all prepared for
+// tokenizing the given input source
+import tlang.compiler.lexer.core : LexerInterface;
+private LexerInterface getLexerFor(string source)
+{
+    import tlang.compiler.lexer.core : LexerException;
+    LexerInterface l;
+    try
+    {
+        import tlang.compiler.lexer.kinds.basic : BasicLexer;
+        BasicLexer bl = new BasicLexer(source);
+        bl.performLex();
+        l = bl;
+    }
+    catch(LexerException e)
+    {
+        // todo: in future maybe don't wrap as a streaming
+        // lexer will be throwing stuff left right and center
+        throw new ParserException
+        (
+            "Error in quick-instantiation of a new lexer during parse time: "~e.msg
+        );
+    }
+    
+    return l;
+}
 
 /** 
  * The parser
@@ -44,22 +72,37 @@ public final class Parser
      */
     private Compiler compiler;
 
-    /**
-    * Crashes the program if the given token is not a symbol
-    * the same as the givne expected one
-    */
+    /** 
+     * Constructs a new parser with the given lexer
+     * from which tokens can be sourced from
+     *
+     * Params:
+     *   lexer = the token source
+     *   compiler = the compiler to be using
+     */
+    this(LexerInterface lexer, Compiler compiler)
+    {
+        this.lexer = lexer;
+        this.compiler = compiler;
+    }
+
+    /** 
+     * Crashes the program if the given token is
+     * not a symbol the same as the given expected
+     * one
+     *
+     * Params:
+     *   symbol = the expected symbol type
+     *   token = the received token
+     */
     public void expect(SymbolType symbol, Token token)
     {
-        /* TODO: Do checking here to see if token is a type of given symbol */
         SymbolType actualType = getSymbolType(token);
         bool isFine = actualType == symbol;
 
-        /* TODO: Crash program if not */
         if (!isFine)
         {
             throw new SyntaxError(symbol, token);
-            // expect("Expected symbol of type " ~ to!(string)(symbol) ~ " but got " ~ to!(
-                    // string)(actualType) ~ " with " ~ token.toString());
         }
     }
 
@@ -75,22 +118,6 @@ public final class Parser
         ERROR(message);
 
         throw new ParserException(message);
-    }
-
-    /** 
-     * Constructs a new parser with the given lexer
-     * from which tokens can be sourced from
-     *
-     * Params:
-     *   lexer = the token source
-     *   compiler = the compiler to be using
-     *
-     * FIXME: Remove null for `compiler`
-     */
-    this(LexerInterface lexer, Compiler compiler = null)
-    {
-        this.lexer = lexer;
-        this.compiler = compiler;
     }
 
     /** 
@@ -133,7 +160,7 @@ public final class Parser
      * which to search with in. This method will recursively search
      * down the given container and look for any statements which
      * are a kind-of (`isBaseOf`) the requested type. It will return
-     * `true` if any macthes are found.
+     * `true` if any matches are found.
      *
      * The container itself is not considered in this type check.
      *
@@ -217,11 +244,10 @@ public final class Parser
 
 
     /**
-    * Parses if statements
-    *
-    * TODO: Check kanban
-    * TOOD: THis should return something
-    */
+     * Parses if statements
+     *
+     * Returns: an `IfStatement` AST node
+     */
     private IfStatement parseIf()
     {
         WARN("parseIf(): Enter");
@@ -336,6 +362,11 @@ public final class Parser
         return ifStmt;
     }
 
+    /** 
+     * Parses a while loop
+     *
+     * Returns: a `WhileLoop` AST node
+     */
     private WhileLoop parseWhile()
     {
         WARN("parseWhile(): Enter");
@@ -1128,14 +1159,84 @@ public final class Parser
         return castedExpression;
     }
 
+    import tlang.compiler.symbols.strings : StringExpression;
+
     /** 
-     * Parses a numeric literal
+     * Parses a string and returns a new
+     * `StringExpression` with the correct
+     * encoding present
      *
-     * Returns: a `NumericLiteral`
+     * Returns: a `StringExpression`
+     */
+    private StringExpression parseString()
+    {
+        /* Obtain the string token literal (with "") */
+        auto str_tok = getCurrentToken();
+        assert(getSymbolType(str_tok) == SymbolType.STRING_LITERAL);
+        string str_raw = str_tok.getToken();
+        DEBUG("str_raw: ", str_raw);
+
+        // Should at the very least be `""`, `""w` or `""d`
+        assert(str_raw.length >= 2);
+        assert(str_raw[0] == '"');
+        assert(str_raw[$-1] == '"' || str_raw[$-1] == 'w' || str_raw[$-1] == 'd');
+
+        import tlang.compiler.parsing.strings : StrEnc, createExpression;
+
+        // TODO: Add support for "s"w and "s"d
+
+        // TODO: Strlen need to be at least 2, which is guaranteed
+        // here. And there is also possibiity it may be three.
+
+
+        string str_data;
+        StrEnc str_enc;
+
+        // UTF-16
+        if(str_raw[$-1] == 'w')
+        {
+            str_data = str_raw[1..$-2];
+            str_enc = StrEnc.UTF_16;
+        }
+        // UTF-32
+        else if(str_raw[$-1] == 'd')
+        {
+            str_data = str_raw[1..$-2];
+            str_enc = StrEnc.UTF_32;
+        }
+        // UTF-8
+        else
+        {
+            assert(str_raw[$-1] == '"');
+            str_data = str_raw[1..$-1];
+            str_enc = StrEnc.UTF_8;
+        }
+
+        auto str_exp = createExpression(str_data, str_enc);
+        return str_exp;
+    }
+
+    /** 
+     * Parses the number literal
+     *
+     * Throws: ParserException if the
+     * range of the literal is out of
+     * bounds
+     * Returns: a `NumberLiteral`
      */
     private NumberLiteral parseNumber()
     {
-        string numberLiteralStr = lexer.getCurrentToken().getToken();
+        bool isFloatLiteral(string numberLiteral)
+        {
+            import std.string : indexOf;
+            bool isFloat = indexOf(numberLiteral, ".") > -1; 
+            return isFloat;
+        }
+
+        auto num_tok = getCurrentToken();
+        assert(getSymbolType(num_tok) == SymbolType.NUMBER_LITERAL);
+
+        string numberLiteralStr = num_tok.getToken();
         NumberLiteral numberLiteral;
 
         // If floating point literal
@@ -1382,6 +1483,13 @@ public final class Parser
             return retExpression.length != 0;
         }
 
+        Expression peek()
+        {
+            assert(hasExp()); //sanity check: assume you called `hasExp()` prior to this call
+
+            return retExpression[$-1];
+        }
+
         void expressionStackSanityCheck()
         {
             /* If we don't have 1 on the stack */
@@ -1395,8 +1503,6 @@ public final class Parser
         /* TODO: Unless I am wrong we can do a check that retExp should always be length 1 */
         /* TODO: Makes sure that expressions like 1 1 don't wortk */
         /* TODO: It must always be consumed */
-
-        /* TODO: Implement expression parsing */
 
         /**
         * We loop here until we hit something that closes
@@ -1414,6 +1520,7 @@ public final class Parser
             /* If it is a number literal */
             if (symbol == SymbolType.NUMBER_LITERAL)
             { 
+                /* Parse the number literal */
                 NumberLiteral numberLiteral = parseNumber();
                 
                 /* Add expression to stack */
@@ -1421,6 +1528,13 @@ public final class Parser
 
                 /* Get the next token */
                 nextToken();
+            }
+            /* If it is a mixin or embedding */
+            else if(symbol == SymbolType.MIXIN || symbol == SymbolType.EMBED)
+            {
+                parseMixinOrEmbed();
+                Expression exp = parseExpression();
+                addRetExp(exp);
             }
             /* If it is a cast operator */
             else if(symbol == SymbolType.CAST)
@@ -1494,12 +1608,33 @@ public final class Parser
             /* If it is a string literal */
             else if (symbol == SymbolType.STRING_LITERAL)
             {
-                // TODO: Add different string encoding support
-                
+                import tlang.compiler.symbols.strings : StringExpression, combine;
+
+                // If there is something on the stack
+                StringExpression prev_str;
+                if(hasExp())
+                {
+                    // If it isn't a string then that is an error
+                    auto pot_str = peek();
+                    if(!cast(StringExpression)pot_str)
+                    {
+                        expect("Expected a string concatenation but got "~to!(string)(pot_str));
+                    }
+
+                    prev_str = cast(StringExpression)removeExp();
+                }
+
+                /* Parse the current string literal into an expression */
+                StringExpression str_lit = parseString();
+
+                /* Do we need to perform string concatenation? */
+                if(prev_str)
+                {
+                    str_lit = combine(prev_str, str_lit);
+                }
+
                 /* Add the string to the stack */
-                string str_lit = getCurrentToken().getToken();
-                import tlang.compiler.parsing.strings;
-                addRetExp(buildUTF8FromLiteral(str_lit));
+                addRetExp(str_lit);
 
                 /* Get the next token */
                 nextToken();
@@ -2524,6 +2659,94 @@ public final class Parser
 
                         parentToContainer(container, [ass.getName(), ass.getAssignedValue()]);
                     }
+                    /**
+                     * Expression statements
+                     *
+                     * These have an embedded expression
+                     * within that needs parenting
+                     */
+                    else if(cast(ExpressionStatement)statement)
+                    {
+                        ExpressionStatement expStmt = cast(ExpressionStatement)statement;
+                        Expression innerExp = expStmt.getExpression();
+
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
+                    }
+                    /** 
+                     * Alias declarations
+                     *
+                     * These have an embedded expression
+                     * within that needs parenting
+                     */
+                    else if(cast(AliasDeclaration)statement)
+                    {
+                        AliasDeclaration aliasDecl = cast(AliasDeclaration)statement;
+                        Expression innerExp = aliasDecl.getExpr();
+
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
+                    }
+                    /**
+                     * Casted expressions
+                     *
+                     * These have an inner expression
+                     * within that needs parenting
+                     */
+                    else if(cast(CastedExpression)statement)
+                    {
+                    	CastedExpression cstdExpr = cast(CastedExpression)statement;
+                        Expression innerExp = cstdExpr.getEmbeddedExpression();
+                    	
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
+                    }
+                    /**
+                     * Unary operator expression
+                     *
+                     * These have an innser expression
+                     * within that needs parenting
+                     */
+                    else if(cast(UnaryOperatorExpression)statement)
+                    {
+                    	UnaryOperatorExpression cstdExpr = cast(UnaryOperatorExpression)statement;
+                        Expression innerExp = cstdExpr.getExpression();
+                    	
+                        // Share the same parent
+                        parentToContainer(container, [innerExp]);
+                    }
+                    /**
+                     * Array index
+                     *
+                     * These have two inner expressions,
+                     * the `indexTo` and `indexOf` which
+                     * need parenting
+                     */
+                    else if(cast(ArrayIndex)statement)
+                    {
+                    	ArrayIndex aiExpr = cast(ArrayIndex)statement;
+                    	Expression indexToExpr = aiExpr.getIndexed();
+                    	Expression indexExpr = aiExpr.getIndex();
+
+                        // Share the same parent
+                        parentToContainer(container, [indexToExpr, indexExpr]);                    	
+                    }
+                    /**
+                     * Array assignment (stack array)
+                     *
+                     * Contains an `ArrayIndex` expression (left-hand side)
+                     * and a right-hand side expression (the value being assigned)
+                     * which both need parenting
+                     */
+                    else if(cast(ArrayAssignment)statement)
+                    {
+                        ArrayAssignment aaExpr = cast(ArrayAssignment)statement;
+						Expression arrayIndex = aaExpr.getArrayLeft();
+						Expression assExpr = aaExpr.getAssignmentExpression();
+						
+                        // Share the same parent
+                        parentToContainer(container, [arrayIndex, assExpr]);
+                    }
                 }
             }
         }
@@ -2568,6 +2791,84 @@ public final class Parser
         return statement;
     }
     
+    /** 
+     * Parses a mixin or file embedding
+     * leaving the cursor at the place
+     * of the newly inserted tokens
+     * whilst the original `mixin(strLit)`
+     * or `embed(strLit)` tokens are all
+     * removed
+     */
+    private void parseMixinOrEmbed()
+    {
+        WARN("parseMixin(): Enter");
+
+        // save current position (we are ontop of the token `mixin/embed`)
+        auto saved_p = this.lexer.getCursor();
+        SymbolType st = getSymbolType(getCurrentToken());
+
+        nextToken();
+        expect(SymbolType.LBRACE, getCurrentToken());
+
+        nextToken();
+        Token mixin_tok = getCurrentToken();
+        expect(SymbolType.STRING_LITERAL, mixin_tok);
+        import std.string : strip;
+        string mixin_s = mixin_tok.getToken().strip("\"");
+        DEBUG("mixin_s: ", mixin_s);
+
+        nextToken();
+        expect(SymbolType.RBRACE, getCurrentToken());
+
+        // now rewind, then delete our 4 tokens `mixin/embed ( strLit )`
+        this.lexer.setCursor(saved_p);
+        this.lexer.removeToken(saved_p);
+        this.lexer.removeToken(saved_p);
+        this.lexer.removeToken(saved_p);
+        this.lexer.removeToken(saved_p);
+
+        LexerInterface sub_lex;
+        
+        // if `mixin` then interpret the string literal as containing tokens
+        if(st == SymbolType.MIXIN)
+        {
+            sub_lex = getLexerFor(mixin_s); // todo: may throw
+        }
+        // else, if `embed`, then interpret the string literal as
+        // the path to a file which should be read and tokenized
+        else
+        {
+            assert(st == SymbolType.EMBED);
+            alias embed_fp = mixin_s;
+            import std.exception : ErrnoException;
+            
+            try
+            {
+                import tlang.compiler.core : gibFileData;
+                string f_data = gibFileData(embed_fp);
+
+                DEBUG("f_data: ", f_data);
+                sub_lex = getLexerFor(f_data);  // todo: may throw
+            }
+            catch(ErrnoException e)
+            {
+                expect("Error opening file for embedding at '"~embed_fp~"'");
+            }
+        }
+
+        // perform token insertion
+        foreach(Token t; sub_lex.getTokens())
+        {
+            DEBUG("Mixing-in token '", t.getToken(), "'...");
+            this.lexer.insertToken(t, saved_p++);
+        }
+
+
+        DEBUG("Tokens after mixing in: ", this.lexer.getTokens());
+
+        WARN("parseMixin(): Leave");
+    }
+
     private void parseComment()
     {
         WARN("parseComment(): Enter");
@@ -2581,6 +2882,82 @@ public final class Parser
         nextToken(); // Move off comment
 
         WARN("parseComment(): Leave");
+    }
+
+    /** 
+     * Parses an alias declaration
+     *
+     * Returns: an `AliasDeclaration`
+     */
+    private AliasDeclaration parseAliasDeclaration()
+    {
+        WARN("parseAliasDeclaration(): Enter");
+
+        AliasDeclaration aliasDecl;
+
+        /* Pop off the `alias` */
+        lexer.nextToken();
+
+        /* Consume the alias's name */
+        Token tok = lexer.getCurrentToken();
+        expect(SymbolType.IDENT_TYPE, tok);
+        string aliasName = tok.getToken();
+
+        /* Next token, expect `=` */
+        lexer.nextToken();
+        expect(SymbolType.ASSIGN, lexer.getCurrentToken());
+
+        /* Now consume an expression */
+        lexer.nextToken();
+        Expression aliasExpr = parseExpression();
+        expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+        lexer.nextToken();
+
+        /* Construct an alias with the name and expression */
+        aliasDecl = new AliasDeclaration(aliasName, aliasExpr);
+
+        WARN("parseAliasDeclaration(): Leave");
+
+        return aliasDecl;
+    }
+
+    import tlang.compiler.symbols.remaps;
+
+    private TypeAlias parseTypeRemap()
+    {
+        WARN("parseTypeRemap(): Enter");
+
+        TypeAlias typeAliasDecl;
+
+        /* Pop off the `type` */
+        lexer.nextToken();
+
+        /* Consume the type alias's name */
+        Token tok = lexer.getCurrentToken();
+        expect(SymbolType.IDENT_TYPE, tok);
+        string aliasName = tok.getToken();
+
+        /* Next token, expect `=` */
+        lexer.nextToken();
+        expect(SymbolType.ASSIGN, lexer.getCurrentToken());
+
+        /* Consume the type alias's referent name */
+        lexer.nextToken();
+        tok = lexer.getCurrentToken();
+        expect(SymbolType.IDENT_TYPE, tok);
+        string referentName = tok.getToken();
+
+        /* Now consume a semi-colon */
+        lexer.nextToken();
+        expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+        lexer.nextToken();
+
+        /* Construct an alias with the new type and referent type */
+        typeAliasDecl = new TypeAlias(aliasName, referentName);
+
+        WARN("parseTypeRemap(): Leave");
+
+        return typeAliasDecl;
     }
 
     // TODO: We need to add `parseComment()`
@@ -2614,6 +2991,22 @@ public final class Parser
                 true,
                 terminatingSymbol
             );
+        }
+        /* If it is a mixin or embedding */
+        else if(symbol == SymbolType.MIXIN || symbol == SymbolType.EMBED)
+        {
+            // doesn't result in a new node, rather
+            // it just updates the set of available
+            // tokens
+            DEBUG("Cursor BEFORE mixin: ", this.lexer.getCursor());
+            parseMixinOrEmbed();
+            DEBUG("Cursor AFTER mixin: ", this.lexer.getCursor());
+            DEBUG("Token left after leaving mixin: ", getCurrentToken());
+
+            // a mixin is kind-of "fake" in the sense
+            // that now we are ready to ACUTUALLY parse
+            // whatever it mixed-in
+            statement = parseStatement(terminatingSymbol);
         }
         /* If it is an accessor */
         else if(isAccessor(tok))
@@ -2663,6 +3056,11 @@ public final class Parser
             ERROR("COMMENTS NOT YET PROPERLY SUPOORTED");
             parseComment();
         }
+        /* If it is an alias declaration */
+        else if(symbol == SymbolType.ALIAS)
+        {
+            statement = parseAliasDeclaration();
+        }
         /* Error out */
         else
         {
@@ -2677,6 +3075,7 @@ public final class Parser
         // }
         
 
+        DEBUG("statement before leaving: ", statement);
         WARN("parseStatement(): Leave");
 
         return statement;
@@ -3080,6 +3479,16 @@ public final class Parser
             {
                 ERROR("COMMENTS NOT YET PROPERLY SUPOORTED");
                 parseComment();
+            }
+            /* If it is an alias declaration */
+            else if(symbol == SymbolType.ALIAS)
+            {
+                modulle.addStatement(parseAliasDeclaration());
+            }
+            /* If it is a type remapping */
+            else if(symbol == SymbolType.TYPE_REMAP)
+            {
+                modulle.addStatement(parseTypeRemap());
             }
             else
             {
@@ -4064,6 +4473,60 @@ void function(int i, int p)
     }
     catch(TError e)
     {
+        assert(false);
+    }
+}
+
+/**
+ * String concatenation test
+ */
+unittest
+{
+    import tlang.compiler.symbols.strings : StringExpression;
+
+    string sourceCode = `
+module strcat;
+
+ubyte* str = "Hello"     " world";
+`;
+
+    File dummyFile;
+    Compiler compiler = new Compiler(sourceCode, "legitidk.t", dummyFile);
+
+    try
+    {
+        compiler.doLex();
+        assert(true);
+    }
+    catch(LexerException e)
+    {
+        assert(false);
+    }
+    
+    try
+    {
+        compiler.doParse();
+        Program program = compiler.getProgram();
+
+        // There is only a single module in this program
+        Module modulle = program.getModules()[0];
+
+        TypeChecker tc = new TypeChecker(compiler);
+
+        /* Find the variable named `str` */
+        Entity varEnt = tc.getResolver().resolveBest(modulle, "str");
+        Variable var = cast(Variable)varEnt;
+
+        /* Ensure that the string concatenation results in `"Hello world"` */
+        VariableAssignment var_ass = var.getAssignment();
+        Expression e = var_ass.getExpression();
+        StringExpression strExp = cast(StringExpression)e;
+        assert(strExp);
+        assert(strExp.data().utf8() == "Hello world");
+    }
+    catch(TError e)
+    {
+        stderr.write(e);
         assert(false);
     }
 }

@@ -136,8 +136,10 @@ public final class CompilerConfiguration
         // so be very sure before you enable this
         config.addConfig("modman:strict_headers", false);
         
-        /* Always warn about unused variables */
+        /* Always warn about unused variables, functions and aliases */
         config.addConfig("typecheck:warnUnusedVars", true);
+        config.addConfig("typecheck:warnUnusedFuncs", true);
+        config.addConfig("typecheck:warnUnusedAliases", true);
 
         /* Default executable's name is `tlang.out` */
         config.addConfig("emit:executable_output", "tlang.out");

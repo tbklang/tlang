@@ -3,9 +3,12 @@
  */
 module tlang.compiler.lexer.core.exceptions;
 
-import tlang.misc.exceptions : TError;
+
 import tlang.compiler.lexer.core.lexer : LexerInterface;
 import std.conv : to;
+
+import tlang.misc.exceptions : TError;
+import tlang.misc.messaging : makeMessage;
 
 /** 
  * The specified error which occurred
@@ -59,7 +62,7 @@ public final class LexerException : TError
     this(LexerInterface offendingInstance, LexerError errType = LexerError.OTHER, string msg = "")
     {
         string positionString = "("~to!(string)(offendingInstance.getLine())~", "~to!(string)(offendingInstance.getColumn())~")";
-        super("LexerException("~to!(string)(errType)~")"~(msg.length ? ": "~msg : "")~" at "~positionString);
+        super(makeMessage(errType, (msg.length ? ": "~msg : ""), "at", positionString));
         this.offendingInstance = offendingInstance;
         this.errType = errType;
     }

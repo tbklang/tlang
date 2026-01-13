@@ -1,3 +1,8 @@
+/** 
+ * Meta-programming tooling
+ *
+ * Authors: Tristan Brice Velloza Kildaire
+ */
 module tlang.compiler.symbols.mcro;
 
 import tlang.compiler.symbols.data;
@@ -32,10 +37,14 @@ public interface MStatementSearchable
     public Statement[] search(TypeInfo_Class clazzType);
 }
 
-/** 
+/**
  * Anything which implements this has the ability
- * to, given an object `x`, return a `ref x` to it
- * hence allowing us to replace it
+ * to replace a given statement within itself with
+ * another statement.
+ *
+ * Obviously this barrs one from replacing the
+ * statement `this` itself, in such a case attempt
+ * replacement via the parent (i.e. `this.parentOf()`).
  */
 public interface MStatementReplaceable
 {
@@ -51,8 +60,10 @@ public interface MStatementReplaceable
 }
 
 /** 
- * Anything which implements this can make a full
- * deep clone of itself
+ * Anything which implements this should be able
+ * to make a full deep clone of itself and then
+ * also, optionally, allow a new parent to be
+ * set
  */
 public interface MCloneable
 {
@@ -67,4 +78,108 @@ public interface MCloneable
      * Returns: the cloned `Statement`
      */
     public Statement clone(Container newParent = null);
+}
+
+/** 
+ * Any AST type which implements this
+ * then will provide the ability to
+ * compare the AST nodes within itself
+ * (what that means is up to the implementing
+ * node)
+ */
+public interface MComparable
+{
+    /** 
+     * Compares the two nodes and reports
+     * on the position of `thiz` relative
+     * to `that`.
+     *
+     * Params:
+     *   thiz = the first AST node
+     *   that = the second AST node
+     * Returns: a `Pos`
+     */
+    public Pos compare(Statement thiz, Statement that);
+
+    /** 
+     * Compares the two statements and returns
+     * a value depending on which AST node
+     * precedes the other.
+     *
+     * Params:
+     *   thiz = the first AST node 
+     *   that = the second AST node
+     * Returns: `true` if `thiz` comes before
+     * `that`, `false` otherwise
+     */
+    public final bool isBefore(Statement thiz, Statement that)
+    {
+        return compare(thiz, that) == Pos.BEFORE;
+    }
+
+    /** 
+     * Compares the two statements and returns
+     * a value depending on which AST node
+     * proceeds the other.
+     *
+     * Params:
+     *   thiz = the first AST node 
+     *   that = the second AST node
+     * Returns: `true` if `thiz` comes after
+     * `that`, `false` otherwise
+     */
+    public final bool isAfter(Statement thiz, Statement that)
+    {
+        return compare(thiz, that) == Pos.AFTER;
+    }
+
+    public enum Pos
+    {
+        /**
+         * If the position is the
+         * first node coming before
+         * the other
+         */
+        BEFORE,
+
+        /**
+         * If the position is the
+         * first node coming after
+         * the other
+         */
+        AFTER,
+
+        /**
+         * If both nodes are infact
+         * the same node
+         */
+        SAME,
+
+        /** 
+         * To be returned on an error
+         * dependant on implementation
+         */
+        ERROR
+    }
+
+}
+
+/** 
+ * Defines an interface for determining
+ * the position of an AST node nested
+ * within the implementing one
+ */
+public interface MPositionable
+{
+    /** 
+     * Determines the position of the
+     * given AST node within this
+     * node
+     *
+     * Params:
+     *   statement = the statement
+     * Returns: the position or -1
+     * if invalid
+     */
+    public ptrdiff_t position(Statement statement);
 }

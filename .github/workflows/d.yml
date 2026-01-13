@@ -26,7 +26,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       
       
       - name: Install D compiler
@@ -39,7 +39,7 @@ jobs:
         
       
         
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: tbin
           path: tlang
@@ -58,7 +58,7 @@ jobs:
     
     
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install D compiler
         uses: dlang-community/setup-dlang@v1
         with:
@@ -85,7 +85,7 @@ jobs:
         run: |
           dub run doveralls -- -t ${{secrets.COVERALLS_REPO_TOKEN}}
         
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: coverage files
           path: \*.lst
@@ -95,9 +95,9 @@ jobs:
     name: Syntax checking
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download tlang compiler
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tbin
         
@@ -137,14 +137,19 @@ jobs:
       - name: Simple return (expressionless)
         run: ./tlang syntaxcheck source/tlang/testing/return/simple_return_expressionless.t
 
+      - name: Mixin statement and expression
+        run: ./tlang syntaxcheck source/tlang/testing/mixins/str.t
+      - name: Embedding statement
+        run: ./tlang syntaxcheck source/tlang/testing/mixins/file.t
+
   typecheck:
     needs: [build, unittests]
     name: Typechecking tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download tlang compiler
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tbin
         
@@ -391,15 +396,37 @@ jobs:
         run: ./tlang typecheck source/tlang/testing/unused_vars.t --unusedVars true
       - name: Unused variables check (negative case)
         run: ./tlang typecheck source/tlang/testing/unused_vars_none.t --unusedVars true
+
+      # Type aliases
+      - name: Type alias use before declare (1)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/type_aliases/with_cycle.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
+      - name: Type alias use before declare (2)
+        run:
+          set +e
+          ./tlang typecheck source/tlang/testing/type_aliases/cycle_usage.t
+          if [ $? = 255 ]
+          then
+              exit 0
+          else
+              exit 1
+          fi
         
   emit:
     needs: [build, unittests]
     name: Emit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download tlang compiler
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tbin
         
@@ -567,6 +594,77 @@ jobs:
           fi
 
 
+      # Alias support
+      - name: Simple alias usage
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/aliases/simple_usage.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 3 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
+      - name: Complex alias usage 1
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/aliases/complex_usage_1.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 10 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
+      - name: Alias capture example
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/aliases/usage_capture.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 4 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
+
+      # Type alias
+      - name: Type alias usage
+        run: |
+          set -e
+          ./tlang compile source/tlang/testing/type_aliases/simple.t
+
+          set +e
+          ./tlang.out
+
+          
+          if [ $? = 2 ]
+          then
+              set -e
+              exit 0
+          else
+              set -e
+              exit 1
+          fi
 
 ##################################
 ####### Deployment section #######

@@ -25,6 +25,8 @@ import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.datetime.stopwatch : Duration, dur;
 import tlang.compiler.codegen.emit.dgen_types : DGenException;
 
+import tlang.misc.messaging : info;
+
 public final class DCodeEmitter : CodeEmitter
 {
     /** 
@@ -818,10 +820,38 @@ public final class DCodeEmitter : CodeEmitter
             StringInfo* sl_info = sl_instr.str();
             assert(sl_info.width() == 1); // TODO: Add support for other string types
 
+            // TODO: We never needed to ACTUALLY convert the whole
+            // thing. Therefore ensure it is UTF 8.
+
+
+
+            // string str_lit_emit = format("%s%s", )
+
+            // TODO: Should we have ever actually combined the different
+            // strings in different ways earlier, or delayed that till
+            // here where it ultimatey matters?
+
             
             // C-string literal is `"<my content>"`
             string emit = `"`~sl_info.utf8()~`"`;
 
+            emmmmit = emit;
+        }
+        /**
+         * Embedded value instruction
+         *
+         * Treat the `Value`-based
+         * instruction as statement level
+         * by transforming it and then
+         * placing the result before
+         * a single `;`.
+         */
+        else if(cast(EmbeddedValueInstruction)instruction)
+        {
+            auto evi = cast(EmbeddedValueInstruction)instruction;
+
+            string evi_emit = transform(evi.getEmbed());
+            string emit = format("%s;", evi_emit);
             emmmmit = emit;
         }
         /** 
@@ -1731,18 +1761,18 @@ int main()
         try
         {
             string systemCompiler = config.getConfig("dgen:compiler").text();
-            INFO("Using system C compiler '"~systemCompiler~"' for compilation");
+            info("Using system C compiler", systemCompiler, "for compilation");
 
             // Check for object files to be linked in
             string[] objectFilesLink;
             if(config.hasConfig("linker:link_files"))
             {
                 objectFilesLink = config.getConfig("linker:link_files").array();
-                INFO("Object files to be linked in: "~to!(string)(objectFilesLink));
+                info("Object files to be linked in", objectFilesLink);
             }
             else
             {
-                INFO("No files to link in");
+                info("No files to link in");
             }
 
             // Total compilation time
@@ -1763,7 +1793,7 @@ int main()
 
                 string[] args = [systemCompiler, "-c", modFileSrcPath, "-o", modFileObjPath];
 
-                INFO("Compiling now with arguments: "~to!(string)(args));
+                info("Compiling now with arguments", args);
 
                 Pid ccPID = spawnProcess(args);
                 int code = wait(ccPID);
@@ -1773,7 +1803,7 @@ int main()
                 }
 
                 Duration compTime = watch.peek();
-                INFO(format("Compiled %s in %sms", curMod.getName(), compTime.total!("msecs")()));
+                info("Compiled", curMod.getName(), "in", compTime.total!("msecs")(), "ms");
                 total_c = dur!("msecs")(total_c.total!("msecs")()+compTime.total!("msecs")());
 
                 // Only add it to the list of files if it was generated
@@ -1782,7 +1812,7 @@ int main()
                 objectFiles ~= modFileObjPath;
             }
 
-            INFO(format("Total compilation time took %s", total_c));
+            info("Total compilation time took", total_c);
 
             // Now determine the entry point module
             // Module entryModule;
@@ -1820,7 +1850,7 @@ int main()
 
             // Now link all object files (the `.o`'s) together
             // and perform linking
-            INFO("Linking args: ", args);
+            info("Linking args", args);
             Pid ccPID = spawnProcess(args);
             int code = wait(ccPID);
             total_l = watch.peek();
@@ -1830,7 +1860,7 @@ int main()
                 throw new DGenException("The CC exited with a non-zero exit code (%d)", code);
             }
 
-            INFO(format("Total linking time took %s", total_l));
+            info("Total linking time took", total_l);
 
             return EmitResult("./tlang.out", total_c+total_l);
         }

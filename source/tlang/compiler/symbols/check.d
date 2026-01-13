@@ -310,6 +310,26 @@ public enum SymbolType
      */
     SINGLE_LINE_COMMENT,
 
+    /**
+     * `alias` keyword
+     */
+    ALIAS,
+
+    /**
+     * `type` keyword
+     */
+    TYPE_REMAP,
+
+    /**
+     * `mixin` keyword
+     */
+    MIXIN,
+
+    /**
+     * `embed` keyword
+     */
+    EMBED,
+
     /** 
      * Unknown symbol
      */
@@ -720,6 +740,26 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.IMPORT;
     }
+    /* `alias` keyword */
+    else if(cmp("alias", token) == 0)
+    {
+        return SymbolType.ALIAS;
+    }
+    /* `type` keyword */
+    else if(cmp("type", token) == 0)
+    {
+        return SymbolType.TYPE_REMAP;
+    }
+    /* mixin keyword */
+    else if(cmp(token, "mixin") == 0)
+    {
+        return SymbolType.MIXIN;
+    }
+    /* embed keyword */
+    else if(cmp(token, "embed") == 0)
+    {
+        return SymbolType.EMBED;
+    }
     /* An identifier/type  (of some sorts) - further inspection in parser is needed */
     else if(isPathIdentifier(token) || isIdentifier(token))
     {
@@ -850,6 +890,7 @@ public SymbolType getSymbolType(Token tokenIn)
     {
         return SymbolType.SMALLER_THAN_OR_EQUALS;
     }
+    
     
 
     return SymbolType.UNKNOWN;
