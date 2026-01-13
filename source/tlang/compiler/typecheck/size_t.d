@@ -4,6 +4,8 @@
  * This module contains the required lookup
  * mechanisms to support these compile-time-dynamic
  * types
+ *
+ * Authors: Tristan Brice Velloza Kildaire (deavmi)
  */ 
 module tlang.compiler.typecheck.size_t;
 
