@@ -2731,22 +2731,6 @@ public final class Parser
                         // Share the same parent
                         parentToContainer(container, [indexToExpr, indexExpr]);                    	
                     }
-                    /**
-                     * Array assignment (stack array)
-                     *
-                     * Contains an `ArrayIndex` expression (left-hand side)
-                     * and a right-hand side expression (the value being assigned)
-                     * which both need parenting
-                     */
-                    else if(cast(ArrayAssignment)statement)
-                    {
-                        ArrayAssignment aaExpr = cast(ArrayAssignment)statement;
-						Expression arrayIndex = aaExpr.getArrayLeft();
-						Expression assExpr = aaExpr.getAssignmentExpression();
-						
-                        // Share the same parent
-                        parentToContainer(container, [arrayIndex, assExpr]);
-                    }
                 }
             }
         }
