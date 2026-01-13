@@ -121,4 +121,51 @@ public final class ArrLexer : LexerInterface
     {
         return tokens;
     }
+
+    /**
+     * Removes the token at the given position
+     *
+     * Params:
+     *   cursor = the position of the token
+     * to remove
+     */
+    public void removeToken(ulong cursor)
+    {
+        // TODO: Do sanity check
+        Token[] newList;
+        for(ulong i = 0; i < this.tokens.length; i++)
+        {
+            if(i != cursor)
+            {
+                newList ~= this.tokens[i];
+            }
+        }
+        this.tokens = newList;
+    }
+
+    /**
+     * Inserts the given token at the given
+     * position
+     *
+     * Params:
+     *   token = the token to insert
+     *   cursor = the position to insert at
+     */
+    public void insertToken(Token token, ulong cursor)
+    {
+        // TODO: Do sanity check
+        Token[] newList;
+        for(ulong i = 0; i < this.tokens.length; i++)
+        {
+            if(i != cursor)
+            {
+                newList ~= this.tokens[i];
+            }
+            else
+            {
+                newList ~= token;
+            }
+        }
+        this.tokens = newList;
+    }
 }
