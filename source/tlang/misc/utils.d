@@ -59,3 +59,38 @@ template Stack(T)
         }
     }
 }
+
+/** 
+ * Crashes the calling process
+ * with the given message
+ *
+ * Params:
+ *   msg = the message
+ */
+public noreturn panic(string msg = "")
+{
+    // TODO: Add this to niknaks rather
+    // ... and make it have a nice exit
+    import tlang.misc.logging;
+    ERROR("panic!"~(msg.length ? ": "~msg : ""));
+    import core.stdc.stdlib : exit;
+    exit(1);
+}
+
+/** 
+ * Performs an assertion check and
+ * on failure panics, potentially
+ * with an optional custom message
+ *
+ * Params:
+ *   b = the value to test
+ *   msg = (Optional) the message to
+ * crash with if the assertion fails
+ */
+public void ass(bool b, string msg = "")
+{
+    if(!b)
+    {
+        panic(msg);
+    }
+}

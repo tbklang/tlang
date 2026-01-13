@@ -25,10 +25,15 @@ import tlang.compiler.typecheck.dependency.store.interfaces : IFuncDefStore;
 import tlang.compiler.typecheck.dependency.store.impls : FuncDefStore;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
+import tlang.misc.utils : panic;
+import tlang.compiler.typecheck.dependency.variables;
 import tlang.compiler.symbols.strings;
 
 import tlang.compiler.symbols.aliases : AliasDeclaration;
 import tlang.compiler.symbols.remaps : TypeAlias;
+
+import tlang.compiler.typecheck.dependency.variables : StaticVariableDeclaration;
+import tlang.compiler.typecheck.dependency.classes.classStaticDep : ClassStaticNode;
 
 /**
 * The Parser only makes sure syntax
@@ -1638,15 +1643,157 @@ public final class TypeChecker
         }
     }
 
+    /** 
+     * Represents out-of-band
+     * assignment data
+     */
+    private struct AssignmentData
+    {
+        private Value toInstr;
+        private Value ofInstr;
+
+        public void reset()
+        {
+            this.toInstr = null;
+            this.ofInstr = null;
+        }
+
+        public void dbg()
+        {
+            DEBUG
+            (
+                format
+                (
+                    `
+                    AssignmentData:
+                        toInstr: %s
+                        ofInstr: %s
+                    `,
+                    this.toInstr,
+                    this.ofInstr
+                )
+            );
+        }
+
+        // used for assertions
+        public bool isComplete()
+        {
+            return !(this.toInstr is null) &&
+                   !(this.ofInstr is null);
+        }
+    }
+
+    private AssignmentData current_assData;
+
+    /** 
+     * Debug-dumps the current
+     * assignment data
+     */
+    private void debug_assData()
+    {
+        current_assData.dbg();
+    }
+
+    /** 
+     * Resets the assignment 
+     * data
+     */
+    private void reset_assData()
+    {
+        current_assData.reset();
+    }
+
+    /** 
+     * Sets the instruction which represents
+     * the entity being assigned TO
+     *
+     * Params:
+     *   toInstr = the `Value` instruction
+     */
+    private void setAssignment_to(Value toInstr)
+    {
+        current_assData.toInstr = toInstr;
+    }
+
+    /** 
+     * Sets the instruction which reprents
+     * the value being assigned
+     *
+     * Params:
+     *   ofInstr = the `Value` instruction
+     */
+    private void setAssignment_of(Value ofInstr)
+    {
+        current_assData.ofInstr = ofInstr;
+    }
+
+    /** 
+     * Returns the `Value` instruction
+     * representing what is being assigned
+     * to
+     *
+     * Returns: the `Value` instruction
+     */
+    private Value getAssignment_to()
+    {
+        assert(current_assData.isComplete()); // Sanity check
+        return current_assData.toInstr;
+    }
+
+    /** 
+     * Returns the `Value` instruction
+     * representing what is being assigned
+     * (the value/expression) itself
+     *
+     * Returns: the `Value` instruction
+     */
+    private Value getAssignment_of()
+    {
+        assert(current_assData.isComplete()); // Sanity check
+        return current_assData.ofInstr;
+    }
+
+    import niknaks.functional;
+    /** 
+     * Instruction context
+     *
+     * This provides helper
+     * information
+     */
+    private struct InstrCtx
+    {
+        // The container with which
+        // the instruction being validated
+        // is a member of
+        private Container memberOf;
+
+        public void setContainer(Container membersContainer)
+        {
+            this.memberOf = membersContainer;
+        }
+
+        public Optional!(Container) getContainer()
+        {
+            return memberOf is null ? Optional!(Container)() : Optional!(Container)(memberOf);
+        }
+    }
+
+
+    private Instruction completePartial(InstrCtx ctx, Instruction inputInstr)
+    {
+        return null;
+    }
 
     public void typeCheckThing(DNode dnode)
     {
         DEBUG("typeCheckThing(): "~dnode.toString());
 
+        import tlang.compiler.typecheck.dependency.expression : ExpressionDNode;
+
         /* ExpressionDNodes */
-        if(cast(tlang.compiler.typecheck.dependency.expression.ExpressionDNode)dnode)
+        if(cast(ExpressionDNode)dnode)
         {
-            tlang.compiler.typecheck.dependency.expression.ExpressionDNode expDNode = cast(tlang.compiler.typecheck.dependency.expression.ExpressionDNode)dnode;
+            ExpressionDNode expDNode = cast(ExpressionDNode)dnode;
 
             Statement statement = expDNode.getEntity();
             DEBUG("Hdfsfdjfds"~to!(string)(statement));
@@ -1772,9 +1919,27 @@ public final class TypeChecker
                 auto gVar = cast(TypedEntity)resolver.resolveBest(callSite_ctx.getContainer(), g.getName());
                 assert(gVar);
                 string variableName = resolver.generateName(this.program, gVar);
+                variableName = g.getName();
 
-                /* TODO: TYpe needs ansatz too `.updateName()` call */
-                Type variableType = getType(callSite_ctx.getContainer(), gVar.getType());
+                /* Type determined for instruction */
+                Type instrType;
+
+                // If a module is being referred to
+                if(cast(Module)gVar)
+                {
+                    instrType = getType(this.program, "module");
+                }
+                // If it is some kind-of typed entity
+                else if(cast(TypedEntity)gVar)
+                {
+                    TypedEntity typedEntity = cast(TypedEntity)gVar;
+                    instrType = getType(gVar.getContext().getContainer(), typedEntity.getType());
+                }
+                //
+                else
+                {
+                    panic(format("Please add support for VariableExpression typecheck/codegen for handling: %s", gVar.classinfo));
+                }
 
                 /**
                 * Codegen
@@ -1790,12 +1955,18 @@ public final class TypeChecker
                 addInstr(fVV);
 
                 /* The type of a FetchValueInstruction is the type of the variable being fetched */
-                fVV.setInstrType(variableType);
+                fVV.setInstrType(instrType);
             }
             else if(cast(BinaryOperatorExpression)statement)
             {
                 BinaryOperatorExpression binOpExp = cast(BinaryOperatorExpression)statement;
+                Context binOpCtx = binOpExp.getContext();
+                assert(binOpCtx);
                 SymbolType binOperator = binOpExp.getOperator();
+                
+                DEBUG("===========================================");
+                DEBUG(format("BinaryOpExpression: %s", binOpExp));
+                DEBUG("===========================================");
             
 
                 /**
@@ -1806,12 +1977,152 @@ public final class TypeChecker
                 * They would be placed as if they were on stack
                 * hence we need to burger-flip them around (swap)
                 */
+                printCodeQueue();
                 Value vRhsInstr = cast(Value)popInstr();
                 Value vLhsInstr = cast(Value)popInstr();
+                DEBUG("vLhsInstr: ", vLhsInstr);
+                DEBUG("vRhsInstr: ", vRhsInstr);
 
                 Type vRhsType = vRhsInstr.getInstrType();
                 Type vLhsType = vLhsInstr.getInstrType();
+                DEBUG("vLhsType: ", vLhsType);
+                DEBUG("vRhsType: ", vRhsType);
 
+                DEBUG("Sir shitsalot");
+
+                if(binOperator == SymbolType.DOT)
+                {
+                    // panic("Implement dot operator typecheck/codegen");
+
+                    // lhs=FetchValueVar rhs=<undetermined>
+                    
+                    if(cast(FetchValueVar)vLhsInstr)
+                    {
+                        FetchValueVar fetchValVarInstr = cast(FetchValueVar)vLhsInstr;
+                        string targetName = fetchValVarInstr.getTarget();
+                        DEBUG(format("targetName: %s", targetName));
+
+                        Entity leftEntity = resolver.resolveBest(binOpCtx.getContainer(), targetName);
+                        assert(leftEntity); // Should always be true because dependency generator catches bad names (non-existent)
+
+                        Container containerLeft = cast(Container)leftEntity;
+
+                        // TODO: Handle error message nicwer
+                        if(!containerLeft)
+                        {
+                            throw new TypeCheckerException
+                            (
+                                this,
+                                format
+                                (
+                                    "Left-hand operand of '%s' of (%s %s %s) refers to an entity which is not a container",
+                                    vLhsInstr,
+                                    vLhsInstr,
+                                    binOperator,
+                                    vRhsInstr
+                                )
+                            );
+                        }
+                        
+
+
+                        // lhs=<name of Container>
+
+                        // 
+
+                        /** 
+                         * rhs=FetchValueVar
+                         *
+                         * In this case we are trying
+                         * to access a member inside
+                         * our left-hand side. Therefore
+                         * the resultant instruction
+                         * should be to access that
+                         * member field within that
+                         * container
+                         */
+                        if(cast(FetchValueVar)vRhsInstr)
+                        {
+                            FetchValueVar fetchValVarRight = cast(FetchValueVar)vRhsInstr;
+
+                            string member = fetchValVarRight.getTarget();
+                            DEBUG("memba name", member);
+
+                            // Ensure that there is an Entity named `member` within `containerLeft`
+                            Entity memberEnt = resolver.resolveWithin(containerLeft, member);
+                            
+                            if(!memberEnt)
+                            {
+                                throw new TypeCheckerException
+                                (
+                                    this,
+                                    format
+                                    (
+                                        "No member named '%s' within container '%s'",
+                                        member,
+                                        containerLeft
+                                    )
+                                );
+                            }
+
+                            // If member is a container
+                            if(cast(Container)memberEnt)
+                            {
+                                DEBUG("memberEnt is a container");
+
+                                // Create a new FetchValueInstr
+                                // which takes `<leftName>.<rightName>`
+                                // and makes that the new name?
+                                string newName = targetName~"."~member;
+                                FetchValueVar newfetchInstr = new FetchValueVar(newName, 8);
+                                newfetchInstr.setInstrType(getType(this.program, "container"));
+                                addInstr(newfetchInstr);
+
+                                return;
+                            }
+
+                            // If member is a variable
+                            else if(cast(Variable)memberEnt)
+                            {
+                                DEBUG("memberEnt is a variable");
+                                
+                                // Push the right hand side then
+                                // BACK to the top of stack
+                                FetchValueVar rightFetch = cast(FetchValueVar)vRhsInstr;
+                                addInstr(rightFetch);
+                                return;
+                            }
+
+                            panic("Implement");
+                            // panic("yebo");
+                        }
+                        // rhs=FuncCallInstr
+                        /**
+                         * rhs=FuncCallInstr
+                         *
+                         * In this case simply place the
+                         * function call instruction back
+                         * onto the stack.
+                         */
+                        else if(cast(FuncCallInstr)vRhsInstr)
+                        {
+                            FuncCallInstr funcCallRight = cast(FuncCallInstr)vRhsInstr;
+                            addInstr(funcCallRight);
+
+                            return;
+                        }
+                        else
+                        {
+                            panic("fok");
+                        }
+                    }
+                    // lhs=Function rhs=Variable
+                    else
+                    {
+                        panic(format("No handling for %s . %s yet", vLhsInstr, vRhsInstr));
+                    }
+                }
+                
 
                 /** 
                  * ==== Pointer coercion ====
@@ -2074,24 +2385,22 @@ public final class TypeChecker
                 // Find the top-level container of the function being called
                 // and then use this as the container to resolve our function
                 // being-called to (as a starting point)
-                Module belongsTo = cast(Module)resolver.findContainerOfType(Module.classinfo, statement);
+                Module belongsTo = cast(Module)resolver.findContainerOfType(Module.classinfo, funcCall);
                 assert(belongsTo);
 
                 /* TODO: Look up func def to know when popping stops (types-based delimiting) */
+                ERROR("Name of func call: "~funcCall.getName());
                 Function func = cast(Function)resolver.resolveBest(belongsTo, funcCall.getName());
                 assert(func);
                 VariableParameter[] paremeters = func.getParams();
 
-
-                /* TODO: Pass in FUnction, so we get function's body for calling too */
-                DEBUG(format("funcCall.getName() %s", funcCall.getName()));
+                // Create new call instruction
                 FuncCallInstr funcCallInstr = new FuncCallInstr(funcCall.getName(), paremeters.length);
-                ERROR("Name of func call: "~func.getName());
-
+                
                 /* If there are paremeters for this function (as per definition) */
                 if(!paremeters.length)
                 {
-                    ERROR("No parameters for deez nuts: "~func.getName());
+                    ERROR(format("No parameters for function: %s", func.getName()));
                 }
                 /* Pop all args per type */
                 else
@@ -2180,6 +2489,7 @@ public final class TypeChecker
                 * 3. Embed into the FuncCallInstr at the correct index (above)
                 * 4. Push `FuncCallInstr` to top of stack
                 */
+                /* Add instruction to top of stack */
                 funcCallInstr.setContext(callSite_ctx);
                 addInstr(funcCallInstr);
 
@@ -2346,6 +2656,8 @@ public final class TypeChecker
                 // assert(false);
 
                 addInstr(generatedInstruction);
+
+                printCodeQueue();
             }
             else
             {
@@ -2358,7 +2670,7 @@ public final class TypeChecker
         * TODO: We need to emit different code dependeing on variable declaration TYPE
         * We could use context for this, ClassVariableDec vs ModuleVariableDec
         */
-        else if(cast(tlang.compiler.typecheck.dependency.variables.StaticVariableDeclaration)dnode)
+        else if(cast(StaticVariableDeclaration)dnode)
         {
             /* TODO: Add skipping if context is within a class */
             /* We need to wait for class static node, to do an InitInstruction (static init) */
@@ -2414,7 +2726,7 @@ public final class TypeChecker
             addInstrB(varDecInstr);
         }
         /* TODO: Add class init, see #8 */
-        else if(cast(tlang.compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
+        else if(cast(ClassStaticNode)dnode)
         {
             /* Extract the class node and create a static allocation instruction out of it */
             Clazz clazzPNode = cast(Clazz)dnode.getEntity();
@@ -2423,6 +2735,26 @@ public final class TypeChecker
 
             /* Add this static initialization to the list of global allocations required */
             addInit(clazzStaticInitAllocInstr);
+        }
+        /* AssignmentTo dependency node */
+        else if(cast(AssignmentTo)dnode)
+        {
+            Value toInstr = cast(Value)popInstr();
+            DEBUG("toInstr: ", toInstr);
+            assert(toInstr);
+            
+            // Set out-of-band data
+            setAssignment_to(toInstr);
+        }
+        /* AssignmentOf dependency node */
+        else if(cast(AssignmentOf)dnode)
+        {
+            Value ofInstr = cast(Value)popInstr();
+            DEBUG("ofInstr: ", ofInstr);
+            assert(ofInstr);
+
+            // Set out-of-band data
+            setAssignment_of(ofInstr);
         }
         /* It will pop a bunch of shiiit */
         /* TODO: ANy statement */
@@ -2434,48 +2766,100 @@ public final class TypeChecker
             DEBUG("Generic DNode typecheck(): Begin (examine: "~to!(string)(dnode)~" )");
 
 
-            /* VariableAssignmentStdAlone */
-            if(cast(VariableAssignmentStdAlone)statement)
+            /* Assignment_V2 (works in tandum with AssignmentTo and AssignmentOf */
+            if(cast(Assignment_V2)statement)
             {
-                VariableAssignmentStdAlone vasa = cast(VariableAssignmentStdAlone)statement;
-                string variableName = vasa.getVariableName();
+                // Extract out-of-band data
+                debug_assData(); // Debugging
+                Value toEntityInstr = getAssignment_to();
+                Value assignmentInstr = getAssignment_of();
+                reset_assData();
 
-                /* Extract information about the variable declaration of the avriable being assigned to */
-                Context callSite_ctx = new Context(vasa.parentOf());
-                Variable variable = cast(Variable)resolver.resolveBest(callSite_ctx.getContainer(), variableName);
-                Type variableDeclarationType = getType(callSite_ctx.getContainer(), variable.getType());
+                // TODO: Handle `toEntityInstr` which is `FetchValueInstr`
+                // ... and those which are other sorts like `ArrayIndexInstr`
 
-                /**
-                * Codegen
-                *
-                * 1. Get the variable's name
-                * 2. Pop Value-instruction
-                * 3. Generate VarAssignInstruction with Value-instruction
-                */
-                Instruction instr = popInstr();
-                assert(instr);
-                Value assignmentInstr = cast(Value)instr;
-                assert(assignmentInstr);
+                // Assigning to a variable
+                if(cast(FetchValueVar)toEntityInstr)
+                {
+                    // The entity being assigned to
+                    FetchValueVar toEntityInstrVV = cast(FetchValueVar)toEntityInstr;
+                    Context toCtx = toEntityInstr.getContext();
+                    Variable ent = cast(Variable) resolver.resolveBest(toCtx.getContainer(), toEntityInstrVV.getTarget());
+                    assert(ent);
+                    Type variableDeclarationType = getType(toCtx.getContainer(), ent.getType());
 
-                
-                Type assignmentType = assignmentInstr.getInstrType();
-                assert(assignmentType);
+                    // Type of expression being assigned
+                    Type assignmentType = assignmentInstr.getInstrType();
+                    assert(assignmentType);
+
+                    DEBUG(format("Assigning to '%s' of type: %s", ent, variableDeclarationType));
+                    DEBUG(format("Value being assigned: %s", assignmentType));
+
+                    /**
+                    * Here we will do the enforcing of the types
+                    *
+                    * Will will allow coercion of the provided
+                    * type (the value being assigned to our variable)
+                    * to the to-type (our Variable's declared type)
+                    */
+                    typeEnforce(variableDeclarationType, assignmentInstr, assignmentInstr, true);
+                    assert(isSameType(variableDeclarationType, assignmentInstr.getInstrType())); // Sanity check
+
+                    /* Generate a variable assignment instruction and add it to the codequeue */
+                    VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(toEntityInstrVV.getTarget(), assignmentInstr);
+                    vAInstr.setContext(statement.getContext());
+                    addInstrB(vAInstr);
+                }
+                // Stack array indexing
+                else if(cast(StackArrayIndexInstruction)toEntityInstr)
+                {
+                    StackArrayIndexInstruction arrayRefInstruction = cast(StackArrayIndexInstruction)toEntityInstr;
+                    Context arrRefInstrCtx = arrayRefInstruction.getContext();
+
+                    DEBUG("ArrayRefInstruction: ", arrayRefInstruction);
+                    DEBUG("AssigmmentVal instr: ", assignmentInstr);
+
+                    StackArrayIndexAssignmentInstruction stackArrAssInstr = new StackArrayIndexAssignmentInstruction
+                    (
+                        new ArrayIndexInstruction
+                        (
+                            arrayRefInstruction.getIndexedToInstr(),
+                            arrayRefInstruction.getIndexInstr()
+                        ),
+                        assignmentInstr
+                    );
+
+                    /* Set the context */
+                    stackArrAssInstr.setContext(arrRefInstrCtx);
+
+                    /* Add to back of code queue */
+                    addInstrB(stackArrAssInstr);
+                }
+                // Assigning to an index at an array
+                else if(cast(ArrayIndexInstruction)toEntityInstr)
+                {
+                    ArrayIndexInstruction arrayRefInstruction = cast(ArrayIndexInstruction)toEntityInstr;
+
+                    DEBUG("ArrayRefInstruction: ", arrayRefInstruction);
+                    DEBUG("AssigmmentVal instr: ", assignmentInstr);
 
 
-                /**
-                 * Here we will do the enforcing of the types
-                 *
-                 * Will will allow coercion of the provided
-                 * type (the value being assigned to our variable)
-                 * to the to-type (our Variable's declared type)
-                 */
-                typeEnforce(variableDeclarationType, assignmentInstr, assignmentInstr, true);
-                assert(isSameType(variableDeclarationType, assignmentInstr.getInstrType())); // Sanity check
 
-                /* Generate a variable assignment instruction and add it to the codequeue */
-                VariableAssignmentInstr vAInstr = new VariableAssignmentInstr(variableName, assignmentInstr);
-                vAInstr.setContext(callSite_ctx);
-                addInstrB(vAInstr);
+                    /* The type of what is being indexed on */
+                    Type indexingOnType = arrayRefInstruction.getInstrType();
+                    WARN("Indexing-on type: "~indexingOnType.toString());
+                    WARN("Indexing-on type: "~indexingOnType.classinfo.toString());
+
+
+                    ArrayIndexAssignmentInstruction arrDerefAssInstr = new ArrayIndexAssignmentInstruction
+                    (
+                        arrayRefInstruction,
+                        assignmentInstr
+                    );
+
+                    /* Add the instruction */
+                    addInstrB(arrDerefAssInstr);
+                }
             }
             /**
             * Return statement (ReturnStmt)
@@ -2794,131 +3178,32 @@ public final class TypeChecker
                 pointerDereferenceAssignmentInstruction.setContext(callSite_ctx);
                 addInstrB(pointerDereferenceAssignmentInstruction);
             }
-            /**
-            * Array assignments (ArrayAssignment)
-            */
-            else if(cast(ArrayAssignment)statement)
+            else if(cast(ExpressionStatement)statement)
             {
-                ArrayAssignment arrayAssignment = cast(ArrayAssignment)statement;
+                ExpressionStatement exprStmt = cast(ExpressionStatement)statement;
 
-                // Derive call-site context
-   				Context callSite_ctx = new Context(arrayAssignment.parentOf());
-
-                ERROR("Note, dependency processing of ArrayAssignment is not yet implemented, recall seggy");
-                printCodeQueue();
-
-                // TODO: We need to implement this, what should we put here
-                // ... we also should be setting the correct types if need be
+                /* Pop a single `Value`-based instruction off the stack */
+                Value valInstr = cast(Value)popInstr();
 
                 /**
-                 * At this point the code queue top of stack should look like this
-                 * (as a requirement for Array assignments) (top-to-bottom)
-                 *
-                 * 1. Index instruction
-                 * 2. Array name instruction
-                 * 3. Assigment expression instruction
+                 * If it is anything other than a
+                 * direct function call (i.e. a
+                 * `FuncCallInstr`) then warn
+                 * about unused values
                  */
-                Value indexInstruction = cast(Value)popInstr();
-
-                
-                // FIXME: Actually this may not always be the case, the name fetching makes sense
-                // ... for stack arrays but not pointer ones where the arrayRef may be generated
-                // ... from something else.
-                Value arrayRefInstruction = cast(Value)popInstr();
-                Value assignmentInstr = cast(Value)popInstr();
-
-                WARN("indexInstruction: "~indexInstruction.toString());
-                WARN("arrayRefInstruction: "~arrayRefInstruction.toString());
-                WARN("assignmentInstr: "~assignmentInstr.toString());
-
-
-                /* Final Instruction generated */
-                Instruction generatedInstruction;
-
-
-                // TODO: We need to add a check here for if the `arrayRefInstruction` is a name
-                // ... and if so if its type is `StackArray`, else we will enter the wrong thing below
-                bool isStackArray = isStackArrayIndex(arrayRefInstruction);
-                ERROR("isStackArray (being assigned to)?: "~to!(string)(isStackArray));
-
-
-               
-                /* The type of what is being indexed on */
-                Type indexingOnType = arrayRefInstruction.getInstrType();
-                WARN("Indexing-on type: "~indexingOnType.toString());
-                WARN("Indexing-on type: "~indexingOnType.classinfo.toString());
-
-                
-                /* Stack-array type `<compnentType>[<size>]` */
-                if(isStackArray)
+                if(!cast(FuncCallInstr)valInstr)
                 {
-                    // TODO: Crashing here currently with `simple_stack_arrays2.t`
-                    // gprint("arrayRefInstruction: ");
-                    // gprintln(arrayRefInstruction);
-    
-                    // StackArrayIndexInstruction stackArrayIndex = cast(StackArrayIndexInstruction)arrayRefInstruction;
-                    
-                    FetchValueVar arrayFetch = cast(FetchValueVar)arrayRefInstruction;
-
-                    /** 
-                     * Hoist out the declared stack array variable
-                     */
-                    Context stackVarContext = arrayFetch.getContext();
-                    assert(stackVarContext); //TODO: We must set the Context when we make the `StackArrayIndexInstruction`
-                    
-                    Variable arrayVariable = cast(Variable)resolver.resolveBest(stackVarContext.container, arrayFetch.varName);
-                    Type arrayVariableDeclarationType = getType(stackVarContext.container, arrayVariable.getType());
-
-                    ERROR("TODO: We are still working on generating an assignment instruction for assigning to stack arrays");
-                    ERROR("TODO: Implement instruction generation for stack-based arrays");
-
-                    // TODO: Use StackArrayIndexAssignmentInstruction
-                    StackArrayIndexAssignmentInstruction stackAssignmentInstr = new StackArrayIndexAssignmentInstruction(arrayFetch.varName, indexInstruction, assignmentInstr);
-
-                    // TODO: See issue on `Stack-array support` for what to do next
-                    // assert(false);
-                    generatedInstruction = stackAssignmentInstr;
-
-                    // TODO: Set context
-                    /* Set the context */
-                    stackAssignmentInstr.setContext(callSite_ctx);
-
-
-                    DEBUG(">>>>> "~stackAssignmentInstr.toString());
-                    DEBUG("Assigning into this array: "~to!(string)(assignmentInstr));
-                    // assert(false);
-                }
-                /* Array type `<componentType>[]` */
-                else if(cast(Pointer)indexingOnType)
-                {
-                    // TODO: Update this and don't use pointer dereference assignment
-                    /** 
-                     * Create a new pointer dereference assignment instruction
-                     *
-                     * 1. The deref is level 1 (as array index == one `*`)
-                     * 2. The left-hand side is to be `new ArrayIndexInstruction(arrayRefInstruction, indexInstruction)`
-                     * 3. Assignment expression is to be `assignmentInstr`
-                     */
-                    // NOTE: We couple arrBasePtr+offset (index) using an ArrayIndexInstruction (optimization/code-reuse)
-                    ArrayIndexInstruction arrIndex = new ArrayIndexInstruction(arrayRefInstruction, indexInstruction);
-                    ArrayIndexAssignmentInstruction arrDerefAssInstr = new ArrayIndexAssignmentInstruction(arrIndex, assignmentInstr);
-
-                    ERROR("TODO: Implement instruction generation for pointer-based arrays");
-                    generatedInstruction = arrDerefAssInstr;
-                    // assert(false);
-
-                    // TODO: Set context
-                }
-                // TODO: handle this error (if even possible?)
-                else
-                {
-                    assert(false);
+                    WARN(format("You may have unused values in this non-function call statement-level expression: %s", valInstr));
                 }
 
-                assert(generatedInstruction !is null);
+                /* Create new instruction embedding the `valInstr` */
+                ExpressionStatementInstruction instr = new ExpressionStatementInstruction(valInstr);
+
+                /* Copy over nested instruction's context */
+                instr.setContext(valInstr.getContext());
 
                 /* Add the instruction */
-                addInstrB(generatedInstruction);
+                addInstrB(instr);
             }
             /* Expression statement */
             else if(cast(ExpressionStatement)statement)
@@ -3021,6 +3306,10 @@ public final class TypeChecker
      */
     public Type getType0(Container c, string typeString)
     {
+        // TODO: Below is somewhat badly named
+        // as it handles the pointer types `<type>*`
+        // and accounts for more than just built-in
+        // types then
         /* Check if the type is built-in */
         Type builtinType = getBuiltInType(this, c, typeString);
 

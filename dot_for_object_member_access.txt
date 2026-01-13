@@ -1,0 +1,31 @@
+Object access _for_ **OOP**
+===========================
+
+I just got back from a run and realise dhow the `SymbolType.DOT`
+operator processing (`BinaryOp` with `operator == SymbolType.DOT`)
+would easily allow for us to process:
+
+```
+object.func()
+```
+
+We would have (from processing our `BinaryOpInstr` in `dotypecheck()`):
+
+1. `left == IdentExpression("object")`
+	* From this we would already be able to lookup the `Entity`
+	referred to by `"object"` and therefore determine if it
+	is an object or what, then we could continue processing
+	`right` dependant on that
+2. `right == FunctionCall("func")`
+	* We could process this and ensure:
+		1. It _is_ a member of the entity referred to by `"object"`
+
+In this OOP case we could then generate a resultant `ObjectMemberCallInstr`
+which would accept an `Expression` determining _what_ (Or _who_) is
+being accessed and then a `FunctionCall` for the function being called.
+
+**DGen Specific**: DGen would have support for the `ObjectMemberCallInstr`
+and would most likely then process the right-hand side `FunctionCall`
+in a way so as to add the implicit parameter to it and emit
+the calling code as such.
+		

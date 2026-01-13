@@ -147,6 +147,11 @@ public final class FetchValueVar : Value, IRenderable
         addInfo = "fetchVarValName: "~varName~", VarLen: "~to!(string)(length);
     }
 
+    public string getTarget()
+    {
+        return this.varName;
+    }
+    
     public string render()
     {
         return varName;
@@ -477,6 +482,25 @@ public class FuncCallInstr : CallInstr, IRenderable
     }
 }
 
+/** 
+ * An instruction of whom's job
+ * is to execute an arbitrary
+ * `Value`-based instruction
+ */
+public final class ExpressionStatementInstruction : Instruction
+{
+    private Value exprInstr;
+
+    this(Value expressionInstruction)
+    {
+        this.exprInstr = expressionInstruction;
+    }
+
+    public Value getExprInstruction()
+    {
+        return this.exprInstr;
+    }
+}
 
 public final class ReturnInstruction : Instruction, IRenderable
 {
@@ -849,36 +873,29 @@ public final class StackArrayIndexInstruction : Value, IRenderable
     }
 }
 
-// TODO: StackArrayIndexAssignmentInstruction
 public final class StackArrayIndexAssignmentInstruction : Instruction, IRenderable
 {
-    // TODO: We need a `string` field here which is looked up with the 
-    // ... associated context of this instruction and refers to the
-    // ... stack-array being index-assigned into
-    private string arrayName;
+    // Who is being indexed on and the index itself
+    private ArrayIndexInstruction arrAndIndex;
 
-    // TODO: We then also need a `Value` field for the index expression instruction
-    private Value index;
-
-    // TODO: We then also need another `Value` field for the expression instruction
+    // We then also need another `Value` field for the expression instruction
     // ... being assigned into the stack-array at said index
     private Value assignment;
 
-    this(string arrayName, Value index, Value assignment)
+    this(ArrayIndexInstruction arrAndIndex, Value assignment)
     {
-        this.arrayName = arrayName;
-        this.index = index;
+        this.arrAndIndex = arrAndIndex;
         this.assignment = assignment;
     }
 
-    public string getArrayName()
+    public Value getArrayInstr()
     {
-        return arrayName;
+        return arrAndIndex.getIndexedToInstr();
     }
 
-    public Value getIndexInstr()
+    public Value getArrayIndexInstruction()
     {
-        return index;
+        return arrAndIndex.getIndexInstr();
     }
 
     public Value getAssignedValue()
@@ -888,12 +905,19 @@ public final class StackArrayIndexAssignmentInstruction : Instruction, IRenderab
 
     public override string toString()
     {
-        return "StackArrayASSIGN [name: "~arrayName~", index: "~index.toString()~", Assignment: "~assignment.toString()~"]";
+        import std.string : format;
+        return format
+        (
+            "StackArrayASSIGN [to: %s, index: %s, assignment: %s]",
+            getArrayInstr(),
+            getArrayIndexInstruction(),
+            assignment
+        );
     }
 
     public string render()
     {
-        return format("%s[%s] = %s", getArrayName(), tryRender(getIndexInstr()), tryRender(getAssignedValue()));
+        return format("%s = %s", tryRender(arrAndIndex), tryRender(getAssignedValue()));
     }
 }
 

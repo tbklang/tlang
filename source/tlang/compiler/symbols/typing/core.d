@@ -294,3 +294,29 @@ public class StackArray : Type
         return arraySize;
     }
 }
+
+public final class ModuleType : Type
+{
+    this()
+    {
+        super("module");
+    }
+
+    public override string toString()
+    {
+        return "ModuleType";
+    }
+}
+
+public final class ContainerType : Type
+{
+    this()
+    {
+        super("container");
+    }
+
+    public override string toString()
+    {
+        return "ContainerType";
+    }
+}

@@ -17,8 +17,10 @@ import tlang.compiler.parsing.exceptions;
 import tlang.compiler.core : Compiler;
 import std.string : format;
 import tlang.compiler.modman;
+import tlang.misc.utils : panic;
 import tlang.compiler.symbols.aliases;
 import tlang.compiler.symbols.comments;
+import tlang.compiler.symbols.strings : StringExpression;
 
 // returns a lexer instance all prepared for
 // tokenizing the given input source
@@ -527,146 +529,37 @@ public final class Parser
         return forLoop;
     }
 
-    public VariableAssignmentStdAlone parseAssignment(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
+    // x.y.z -> [(x.y) . z]
+    private bool obtainDotPath(ref string path, Expression exp)
     {
-        /* Generated Assignment statement */
-        VariableAssignmentStdAlone assignment;
+        BinaryOperatorExpression binOp = cast(BinaryOperatorExpression)exp;
+        IdentExpression ident = cast(IdentExpression)exp;
 
-        /* The identifier being assigned to */
-        string identifier = getCurrentToken().getToken();
-        nextToken();
-        nextToken();
-        DEBUG(getCurrentToken());
-
-        /* Expression */
-        Expression assignmentExpression = parseExpression();
-
-
-        assignment = new VariableAssignmentStdAlone(identifier, assignmentExpression);
-
-        /* TODO: Support for (a=1)? */
-        /* Expect a the terminating symbol */
-        // expect(SymbolType.SEMICOLON, getCurrentToken());
-        expect(terminatingSymbol, getCurrentToken());
-
-        /* Move off terminating symbol */
-        nextToken();
-        
-
-        return assignment;
-    }
-
-    public Statement parseName(SymbolType terminatingSymbol = SymbolType.SEMICOLON)
-    {
-        Statement ret;
-
-        /* If there are any comments available then pop them off now */
-        Comment potComment;
-        if(getAssociatedComment(potComment))
+        // Recurse on left-and-right operands
+        if(binOp && binOp.getOperator() == SymbolType.DOT)
         {
-            DEBUG(format("Found associated comment: %s", potComment));
-        }
+            string lhsText;
+            obtainDotPath(lhsText, binOp.getLeftExpression());
 
-        scope(exit)
+            string rhsText;
+            obtainDotPath(rhsText, binOp.getRightExpression());
+
+            path ~= lhsText~"."~rhsText;
+
+            return true;
+        }
+        // Found an ident
+        else if(ident)
         {
-            if(potComment)
-            {
-                ret.setComment(potComment);
-            }
+            path = ident.getName();
+            return true;
         }
-
-        /* Save the name or type */
-        string nameTYpe = getCurrentToken().getToken();
-        DEBUG("parseName(): Current token: "~getCurrentToken().toString());
-
-        /* TODO: The problem here is I don't want to progress the token */
-
-        /* Get next token */
-        nextToken();
-        SymbolType type = getSymbolType(getCurrentToken());
-
-        /* If we have `(` then function call */
-        if(type == SymbolType.LBRACE)
-        {
-            previousToken();
-            FunctionCall funcCall = parseFuncCall();
-            ExpressionStatement expStmt = new ExpressionStatement(funcCall);
-
-            // TODO: Here we should, rather, be making
-            // an expression statement. The DNode for
-            // this should be DNode[ExpressionStatement] -(needs)-> FuncCall
-            
-            // then, default behavior is DNode processing for FuncCall
-            // should leave it atop the stack. And if nothing else happens
-            // it remains. However, if expression statement comes
-            // along then it must pop expression off.
-            //
-            // Parsring ensures that nothing can just randomly become
-            // a statement, as this is 1 of the 2 scenarios
-            // where EmbeddedStatement is made, and hence if nowhere
-            // else then those are the only scenarios that can ever
-            // play out
-            ret = expStmt;
-
-            /* Expect a semi-colon */
-            expect(SymbolType.SEMICOLON, getCurrentToken());
-            nextToken();
-        }
-        /**
-        * Either we have:
-        *
-        * 1. `int ptr` (and we looked ahead to `ptr`)
-        * 2. `int* ptr` (and we looked ahead to `*`)
-        * 3. `int[] thing` (and we looked ahead to `[`)
-        */
-        /* If we have an identifier/type then declaration */
-        else if(type == SymbolType.IDENT_TYPE || type == SymbolType.STAR || type == SymbolType.OBRACKET)
-        {
-            previousToken();
-            ret = parseTypedDeclaration();
-
-            /* If it is a function definition, then do nothing */
-            if(cast(Function)ret)
-            {
-                // The ending `}` would have already been consumed
-            }
-            /* If it is a variable declaration then */
-            else if(cast(Variable)ret)
-            {
-                /* Expect a semicolon and consume it */
-                expect(SymbolType.SEMICOLON, getCurrentToken());
-                nextToken();
-            }
-            /* If it is an arrau assignment */
-            else if(cast(ArrayAssignment)ret)
-            {
-                /* Expect a semicolon and consume it */
-                expect(SymbolType.SEMICOLON, getCurrentToken());
-                nextToken();
-            }
-            /* This should never happen */
-            else
-            {
-                assert(false);
-            }
-        }
-        /* Assignment */
-        else if(type == SymbolType.ASSIGN)
-        {
-            previousToken();
-            ret = parseAssignment(terminatingSymbol);
-        }
-        /* Any other case */
+        // Anything else is invalid
         else
         {
-            DEBUG(getCurrentToken());
-            expect("Error expected ( for var/func def");
+            WARN("Found nothing else");
+            return false;
         }
-       
-
-
-
-        return ret;
     }
 
     /* TODO: Implement me, and call me */
@@ -982,7 +875,7 @@ public final class Parser
         else if(symbolType == SymbolType.IDENT_TYPE)
         {
             /* TODO: Set accesor on returned thing */
-            entity = cast(Entity)parseName();
+            entity = cast(Entity)parseTypedDeclaration(true, true, true, false, true, false, false);
 
             if(!entity)
             {
@@ -1032,7 +925,7 @@ public final class Parser
         else if(symbolType == SymbolType.IDENT_TYPE)
         {
             /* TODO: Set accesor on returned thing */
-            entity = cast(Entity)parseName();
+            entity = cast(Entity)parseTypedDeclaration(true, true, true, false, true, false, false);
 
             if(!entity)
             {
@@ -1061,13 +954,60 @@ public final class Parser
         /* TODO: Add support for default values for function arguments */
     }
 
+    /** 
+     * Parses the parameter declaration
+     * of `<type> <name>` and exits on
+     * the token following `<name>`,
+     * returning a `TypedEntity` packaging
+     * together the type and name information
+     * for the parameter.
+     *
+     * Entrance token should be the beginning
+     * of a path (with or without dots)
+     *
+     * Returns: a `TypedEntity`
+     */
+    private TypedEntity parseFunctionParameter()
+    {
+        TypedEntity ent = cast(TypedEntity)parseTypedDeclaration(false, false, false, true);
+        assert(ent);
+        return ent;
+    }
+
+    /** 
+     * Wraps the result in a new `VariableParameter`
+     * 
+     * See_Also: `parseFunctionParameter()`
+     * Returns: a `VariableParameter`
+     */
+    private VariableParameter parseFunctionParameter2()
+    {
+        /* Get the type and name */
+        TypedEntity bogusEntity = parseFunctionParameter();
+        string type = bogusEntity.getType();
+        string name = bogusEntity.getName();
+
+        DEBUG(format("Parameter (type): %s", type));
+        DEBUG(format("Parameter (name): %s", name));
+
+        DEBUG(lexer.getCurrentToken());
+
+        return new VariableParameter(type, name);
+    }
+
+    /** 
+     * Represents the parameters
+     * and statements (which make
+     * up the body) of a function
+     * definition
+     */
     private struct funcDefPair
     {
         Statement[] bodyStatements;
         VariableParameter[] params;
     }
 
-    private funcDefPair parseFuncDef(bool wantsBody = true)
+    private bool parseFuncDef(ref funcDefPair def, bool forgiving = false, bool wantsBody = true)
     {
         WARN("parseFuncDef(): Enter");
 
@@ -1091,25 +1031,12 @@ public final class Parser
             /* Check if the first thing is a type */
             if(getSymbolType(getCurrentToken()) == SymbolType.IDENT_TYPE)
             {
-                /* Get the type */
-                TypedEntity bogusEntity = cast(TypedEntity)parseTypedDeclaration(false, false, false, true);
-                string type = bogusEntity.getType();
-
-                /* Get the identifier (This CAN NOT be dotted) */
-                expect(SymbolType.IDENT_TYPE, getCurrentToken());
-                if(!isIdentifier_NoDot(getCurrentToken()))
-                {
-                    expect("Identifier can not be path");
-                }
-                string identifier = getCurrentToken().getToken();
-                nextToken();
-
+                /* Parse a parameter */
+                VariableParameter parameter = parseFunctionParameter2();
 
                 /* Add the local variable (parameter variable) */
-                parameterList ~= new VariableParameter(type, identifier);
-
+                parameterList ~= parameter;
                 moreArgs = false;
-
                 parameterCount++;
             }
             /* If we get a comma */
@@ -1181,7 +1108,9 @@ public final class Parser
         bruh.bodyStatements = statements;
         bruh.params = parameterList;
 
-        return bruh;
+        def = bruh;
+
+        return true;
     }
 
     private CastedExpression parseCast()
@@ -1209,9 +1138,13 @@ public final class Parser
          * which means we can call `getType()` and extract
          * the type string
          */
-        TypedEntity bogusEntity = cast(TypedEntity)parseTypedDeclaration(false, false, false, true);
-        assert(bogusEntity);
-        string toType = bogusEntity.getType();
+
+        string toType;
+        if(!tryParseType(toType))
+        {
+            expect("Was expecting a type to cast to");
+        }
+        DEBUG(format("parseCast(): Got to-type '%s'", toType));
 
         /* Expect a `)` closing brace */
         expect(SymbolType.RBRACE, getCurrentToken());
@@ -1309,8 +1242,8 @@ public final class Parser
         // If floating point literal
         if(isFloatLiteral(numberLiteralStr))
         {
-            // TODO: Issue #94, similiar to below for integers
-            numberLiteral = new FloatingLiteral(getCurrentToken().getToken());
+            // TODO: Issue #94, siiliar to below for integers
+            numberLiteral = new FloatingLiteral(lexer.getCurrentToken().getToken());
         }
         // Else, then an integer literal
         else
@@ -1395,6 +1328,122 @@ public final class Parser
         return numberLiteral;
     }
 
+    private Expression parseCharacter()
+    {
+        ERROR("Please implement me, parseCharacter()");
+        // assert(false);
+        return null;
+    }
+
+    /** 
+     * Parses an identifier which
+     * means this can lead to
+     * parsing either a standalone
+     * identifier (i.e. a variable
+     * reference) or a function
+     * call
+     *
+     * Returns: an `Expression`
+     */
+    private Expression parseIdent()
+    {
+        string identifier = lexer.getCurrentToken().getToken();
+
+        lexer.nextToken();
+
+        Expression toAdd;
+
+        /* If the symbol is `(` then function call */
+        if (getSymbolType(lexer.getCurrentToken()) == SymbolType.LBRACE)
+        {
+            /* TODO: Implement function call parsing */
+            lexer.previousToken();
+            toAdd = parseFuncCall();
+        }
+        else
+        {
+            /* TODO: Leave the token here */
+            /* TODO: Just leave it, yeah */
+            // expect("poes");
+            toAdd = new VariableExpression(identifier);
+
+            /**
+            * FIXME: To properly support function handles I think we are going to need a new type
+            * Well not here, this should technically be IdentExpression.
+            */
+        }
+
+        return toAdd;
+    }
+
+    /** 
+     * Checks if the provided expression
+     * is one of the following:
+     *
+     * 1. A numeric literal
+     * 2. A string literal
+     * 3. An identifier
+     *
+     * Params:
+     *   expr = 
+     * Returns: `true` if the rules are
+     * satisfied, `false` otherwise
+     */
+    private bool isBasicExpression(Expression expr)
+    {
+        return
+            cast(NumberLiteral)expr ||
+            cast(StringExpression)expr ||
+            cast(IdentExpression)expr;
+    }
+
+    /** 
+     * Parses basic expressions
+     *
+     * See_Also: isBasicExpression
+     * Returns: the `Expression`
+     * parsed
+     */
+    private Expression parseBasic()
+    {
+        Token ct = lexer.getCurrentToken();
+        SymbolType cs = getSymbolType(ct);
+
+        Expression retExpr;
+
+        if(cs == SymbolType.NUMBER_LITERAL)
+        {
+            retExpr = parseNumber();
+        }
+        else if(cs == SymbolType.CHARACTER_LITERAL)
+        {
+            retExpr = parseCharacter();
+        }
+        else if(cs == SymbolType.IDENT_TYPE)
+        {
+            retExpr = parseIdent();
+        }
+        else
+        {
+            expect("Expected either a number literal, character literal or identifier");
+        }
+
+        assert(isBasicExpression(retExpr)); // Sanity check
+        return retExpr;
+    }
+
+    /** 
+     * Helper methods
+     *
+     * (TODO: These should be moved elsewhere)
+     */
+    private bool isFloatLiteral(string numberLiteral)
+    {
+        import std.string : indexOf;
+        bool isFloat = indexOf(numberLiteral, ".") > -1; 
+        return isFloat;
+    }
+
     /**
     * Parses an expression
     *
@@ -1411,6 +1460,7 @@ public final class Parser
     private Expression parseExpression()
     {
         WARN("parseExpression(): Enter");
+
 
         /* The expression to be returned */
         Expression[] retExpression;
@@ -1604,39 +1654,16 @@ public final class Parser
                 // gprintln(getCurrentToken());
 
                 ArrayIndex arrayIndexExpr = new ArrayIndex(indexTo, index);
+                // DEBUG("Created: ", arrayIndexExpr);
+                // panic("Panic!");
                 addRetExp(arrayIndexExpr);
             }
             /* If it is an identifier */
             else if (symbol == SymbolType.IDENT_TYPE)
             {
-                string identifier = getCurrentToken().getToken();
+                Expression identExpr = parseIdent();
 
-                nextToken();
-
-                Expression toAdd;
-
-                /* If the symbol is `(` then function call */
-                if (getSymbolType(getCurrentToken()) == SymbolType.LBRACE)
-                {
-                    /* TODO: Implement function call parsing */
-                    previousToken();
-                    toAdd = parseFuncCall();
-                }
-                else
-                {
-                    /* TODO: Leave the token here */
-                    /* TODO: Just leave it, yeah */
-                    // expect("poes");
-                    toAdd = new VariableExpression(identifier);
-
-                    /**
-                    * FIXME: To properly support function handles I think we are going to need a new type
-                    * Well not here, this should technically be IdentExpression.
-                    */
-                }
-
-                /* TODO: Change this later, for now we doing this */
-                addRetExp(toAdd);
+                addRetExp(identExpr);
             }
             /* Detect if this expression is coming to an end, then return */
             else if (symbol == SymbolType.SEMICOLON || symbol == SymbolType.RBRACE ||
@@ -1695,20 +1722,64 @@ public final class Parser
                 /* Add the expression */
                 addRetExp(toAdd);
             }
-            /* TODO: New addition (UNTESTED, remove if problem causer) */
+            /** 
+             * Dot operator
+             *
+             * <expr>.<expr>
+             */
             else if(symbol == SymbolType.DOT)
             {
                 /* Pop the previous expression */
                 Expression previousExpression = removeExp();
 
-                /* TODO: Get next expression */
-                nextToken();
-                Expression item = parseExpression();
 
-                /* TODO: Construct accessor expression from both and addRetExp */
+                /** 
+                 * Checks to see if the provided expression
+                 * is either a basic expression or, in the
+                 * case it is not, if the expression is a
+                 * binary operation with a dot operator
+                 *
+                 * Params:
+                 *   expr = thye `Expression` to check
+                 * Returns: `true` if the rules are
+                 * satisfied, `false` otherwise
+                 */
+                bool isLeftHandSideValid(Expression expr)
+                {
+                    if(isBasicExpression(expr))
+                    {
+                        return true;
+                    }
+                    else if(cast(BinaryOperatorExpression)expr)
+                    {
+                        BinaryOperatorExpression binOpExpr = cast(BinaryOperatorExpression)expr;
+                        return binOpExpr.getOperator() == SymbolType.DOT;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
 
+                // Validate left-hand operand
+                if(!(isLeftHandSideValid(previousExpression)))
+                {
+                    expect
+                    (
+                        format
+                        (
+                            "The left-hand side expression '%s' is not a basic expresssion or dotted binary operation",
+                            previousExpression
+                        )
+                    );
+                }
+
+                /* Get next expression */
+                lexer.nextToken();
+                Expression item = parseBasic();
+
+                /* Create the binary operator expression */
                 BinaryOperatorExpression binOp = new BinaryOperatorExpression(SymbolType.DOT, previousExpression, item);
-
                 addRetExp(binOp);
             }
             else
@@ -1729,285 +1800,497 @@ public final class Parser
         return retExpression[0];
     }
 
-    
-
-    // TODO: Update to `Statement` as this can return an ArrayAssignment now
-    private Statement parseTypedDeclaration(bool wantsBody = true, bool allowVarDec = true, bool allowFuncDef = true, bool onlyType = false)
+    /** 
+     * Attempts to parse an expression, however,
+     * if there is any error then this is simply
+     * returned as a boolean flag rather than
+     * the entire process crashing
+     *
+     * Params:
+     *   expression = the found expression, in
+     * the case of no errors
+     *   exclusions = optional list of the
+     * types of AST nodes to exclude and,
+     * hence, fail on
+     * Returns: `true` if an expression parsed
+     * successfully, `false` otherwise
+     */
+    private bool tryParseExpression(ref Expression expression, TypeInfo_Class[] exclusions = [])
     {
-        WARN("parseTypedDeclaration(): Enter");
+        try
+        {
+            Expression parsedExpr = parseExpression();
+
+            foreach(TypeInfo_Class e; exclusions)
+            {
+                if(e.isBaseOf(parsedExpr.classinfo))
+                {
+                    return false;
+                }
+            }
+
+            expression = parsedExpr;
+            return true;
+        }
+        catch(ParserException e)
+        {
+            return false;
+        }
+    }
+
+    // FIXME: This should STILL work pre-dot and post-dot fixeup
+    private string parseTypeNameOnly()
+    {
+        string buildUp;
+        Token cur;
+
+        do
+        {
+            /* Ident */
+            cur = this.lexer.getCurrentToken();
+            expect(SymbolType.IDENT_TYPE, cur);
+            buildUp ~= cur.getToken();
+
+            this.lexer.nextToken();
+            cur = this.lexer.getCurrentToken();
+            SymbolType sym = getSymbolType(cur);
+
+            /* (Optional) Dot */
+            if(sym == SymbolType.DOT)
+            {
+                buildUp ~= ".";
+                this.lexer.nextToken();
+                continue;
+            }
+
+            break;
+        }
+        while(true);
+
+        return buildUp;
+    }
+
+    private bool parseStarOrArrayType(ref string typeOut)
+    {
+        string type;
+
+
+        /* Whilst we have an `[` or `*` */
+        while(getSymbolType(lexer.getCurrentToken()) == SymbolType.OBRACKET || getSymbolType(lexer.getCurrentToken()) == SymbolType.STAR)
+        {
+            type ~= lexer.getCurrentToken().getToken();
+
+            /* Accumulate any stars */
+            if(getSymbolType(lexer.getCurrentToken()) == SymbolType.STAR)
+            {
+               lexer.nextToken();
+               continue;
+            }
+            /* Process indice */
+            else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.OBRACKET)
+            {
+                lexer.nextToken();
+
+                Token indexToken = lexer.getCurrentToken();
+
+                /* If it is `]` */
+                if(getSymbolType(indexToken) == SymbolType.CBRACKET)
+                {
+                    type ~= "]";
+                    lexer.nextToken();
+                    continue;
+                }
+                /* If it is not a numeric, then exit with error */
+                else if(getSymbolType(indexToken) != SymbolType.NUMBER_LITERAL)
+                {
+                    return false;
+                }
+                
+                /* Process the `<numeric> ]` */
+                type ~= indexToken.getToken();
+
+                lexer.nextToken();
+                expect(SymbolType.CBRACKET, lexer.getCurrentToken());
+                type ~= "]";
+
+                lexer.nextToken();
+                continue;
+            }
+        }
+
+        typeOut = type;
+
+        return true;
+    }
+
+    /** 
+     * Tries to parse a type signature
+     * such as `k.int*[][6]`
+     *
+     * Params:
+     *   typeOut = the found type
+     * Returns: `true` if successfully
+     * parsed, `false` otherwise
+     */
+    private bool tryParseType(ref string typeOut)
+    {
+        string type;
+
+        WARN("tryParseType(): Enter");
+
+        // Obtain the named part
+        type = parseTypeNameOnly();
+
+        DEBUG(format("tryParseType(): named part %s", type));
+        DEBUG(lexer.getCurrentToken());
+
+        // Optional `*`, `[]` and `[<numeric>]`
+        if(getSymbolType(lexer.getCurrentToken()) == SymbolType.OBRACKET || getSymbolType(lexer.getCurrentToken()) == SymbolType.STAR)
+        {
+            DEBUG("Arry time");
+            string arrType;
+            if(parseStarOrArrayType(arrType))
+            {
+                type ~= arrType;
+            }
+            // In the case this ISN'T a array/pointer type
+            else
+            {
+                return false;
+            }
+        }
+        
+
+        typeOut = type;
+        
+        WARN(format("tryParseType(): Exit with type = '%s'", type));
+
+        return true;
+    }
+
+    private Statement parseTypedDeclaration
+    (
+        bool wantsBody = true,
+        bool allowVarDec = true,
+        bool allowFuncDef = true,
+        bool onlySignature = false,
+        bool allowVarDecWithAssignment = true,
+        bool allowAssignments = true,
+        bool allowFuncCall = true,
+        SymbolType terminatingSymbol = SymbolType.SEMICOLON
+    )
+    {
+        WARN
+        (
+            format
+            (
+                "parseTypedDeclaration(): Enter with terminating symbol '%s'",
+                terminatingSymbol
+            )
+        );
 
 
         /* Generated object */
         Statement generated;
 
-
-        /* TODO: Save type */
-        string type = getCurrentToken().getToken();
-        string identifier;
-        nextToken();
-
-      
-
-        /* Potential array index expressions (assignment) */
-        // Think myArray[i][1] -> [`i`, `1`]
-        Expression[] arrayIndexExprs;
-
-        // We are currently 1 past the "type" (the identifier) so go back one
-        ulong arrayAssignTokenBeginPos = lexer.getCursor()-1;
-
-        /* Potential stack-array type size (declaration) */
-        string potentialStackSize;
-
-        /* Handling of pointer and array types */
-        while(getSymbolType(getCurrentToken()) == SymbolType.STAR || getSymbolType(getCurrentToken()) == SymbolType.OBRACKET)
+        /* If there are any comments available then pop them off now */
+        Comment potComment;
+        if(getAssociatedComment(potComment))
         {
-            /* If we have `[` then expect a number and/or a `]` */
-            if(getSymbolType(getCurrentToken()) == SymbolType.OBRACKET)
+            DEBUG(format("Found associated comment: %s", potComment));
+        }
+
+        scope(exit)
+        {
+            if(potComment)
             {
-                nextToken();
-                SymbolType nextType = getSymbolType(getCurrentToken());
-                
+                generated.setComment(potComment);
+            }
+        }
 
-                /* Check if the next symbol is NOT a `]` */
-                if(nextType != SymbolType.CBRACKET)
+        /* Save the position of the entrance token (for potential rollback) */
+        ulong entrancePos = lexer.getCursor();
+
+        /* The type (if declaration) */
+        string type;
+
+        /* Array indices (if any) */
+        // Expression[] arrayIndices;
+
+        /* Try parse type of `<type> <name> ...` */
+        if(tryParseType(type))
+        {
+            DEBUG(format("Now we are at %s", lexer.getCurrentToken()));
+
+            /* Expect eitg */
+
+            /** 
+             * Expect either:
+             *
+             * A name: i.e. <type> <name> ... (where we are at `<name>`)
+             * An assignment: <name> = (where we are at `=`) [rollback and do expression parse]
+             */
+            string name;
+            if(parseNamePath(name, true))
+            {
+                DEBUG(format("Got name: %s", name));
+                DEBUG(onlySignature);
+
+                /* If `onlyType` is requested then stop right now */
+                if(onlySignature)
                 {
-                    
+                    return new TypedEntity(name, type);
+                }
 
-                    arrayIndexExprs ~= parseExpression();
+                /* Now decide on whether we have `;` or `=` or `(` */
+                DEBUG(lexer.getCurrentToken());
 
-                    /**
-                     * If it is the case it is a number literal then save it
-                     * anyways just for the case whereby we may be declaring
-                     * a stack-array type
-                     *
-                     * TODO: Double check any error checking here which should be deferred to later
-                     */
-                    if(nextType == SymbolType.NUMBER_LITERAL)
+                /* If followed by a `;` then we have a declaration-without-assignment */
+                if(getSymbolType(lexer.getCurrentToken()) == SymbolType.SEMICOLON)
+                {
+                    // Consume the semi-colon
+                    lexer.nextToken();
+
+                    // Only continue if variable declarations are allowed
+                    if(allowVarDec)
                     {
-                        // TODO: Ensure the returned thing is a number
-                        // TODO: Ensure said number is non-negative
-                        // TODO: May as well now start adding `]` as a seperator or stopper or something
-                        IntegerLiteral stackArraySize = cast(IntegerLiteral)arrayIndexExprs[$-1];
+                        WARN("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ name ~ ")");
 
-                        // If the expression is an integer (which it should be)
-                        if(stackArraySize)
+                        generated = new Variable(type, name);
+                        return generated;
+                    }
+                    else
+                    {
+                        expect("Variables declarations are not allowed.");
+                    }
+                }
+                /* If followed by `=` then we have a declaration-with-assignment */
+                else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.ASSIGN)
+                {
+                    DEBUG("HJHHHH");
+                    // Only continue if variable declarations are allowed
+                    if(allowVarDec)
+                    {
+                        // Only continue if assignments are allowed
+                        if(allowVarDecWithAssignment)
                         {
-                            DEBUG("StackArraySize: "~stackArraySize.toString());
-                            potentialStackSize = stackArraySize.getNumber();
+                            /* Consume the `=` token */
+                            lexer.nextToken();
+
+                            /* Now parse an expression */
+                            Expression expression = parseExpression();
+
+                            /* Consume the `;` */
+                            lexer.nextToken();
+
+                            VariableAssignment varAssign = new VariableAssignment(expression);
+
+                            WARN("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
+                                    ~ type ~ ", Identifier: " ~ name ~ ")");
+                            
+                            Variable variable = new Variable(type, name);
+                            variable.addAssignment(varAssign);
+
+                            generated = variable;
+
+                            return generated;
                         }
-                        // If not, then error
                         else
                         {
-                            ERROR("Expected an integer as stack-array size but got iets ander");
-                            // TODO: Rather throw a parsing error
-                            assert(false);
+                            expect("Variable assignments+declarations are not allowed.");
                         }
                     }
-                }
-
-                
-
-                expect(SymbolType.CBRACKET, getCurrentToken());
-                type=type~"["~potentialStackSize~"]";
-            }
-            /* If we have `*` */
-            else
-            {
-                type=type~"*";
-            }
-            
-            nextToken();
-        }
-
-        /* If were requested to only find a type, then stop here and return it */
-        if(onlyType)
-        {
-            /* Create a bogus TypedEntity for the sole purpose of returning the type */
-            generated = new TypedEntity("BOGUS_NAME_STOP_SHORT_OF_IDENTIFIER_TYPE_FETCH", type);
-
-            return generated;
-        }
-
-        /* If we are going to be assigning into an array (indexed) */
-        bool arrayIndexing = false;
-
-
-        /* If the current token is ASSIGN then array indexing is occuring */
-        if(getSymbolType(getCurrentToken()) == SymbolType.ASSIGN)
-        {
-            // Then we are doing an array-indexed assignment
-            arrayIndexing = true;
-        }
-        /* If we have an identifier the a declaration is occuring */
-        else if(getSymbolType(getCurrentToken()) == SymbolType.IDENT_TYPE)
-        {
-            /* Expect an identifier (CAN NOT be dotted) */
-            expect(SymbolType.IDENT_TYPE, getCurrentToken());
-            if(!isIdentifier_NoDot(getCurrentToken()))
-            {
-                expect("Identifier cannot be dotted");
-            }
-            identifier = getCurrentToken().getToken();
-
-            nextToken();
-            DEBUG("ParseTypedDec: DecisionBtwn FuncDef/VarDef: " ~ getCurrentToken().getToken());
-        }
-        /* Anything else is an error */
-        else
-        {
-            expect("Either a identity or an assignment symbol is expected");
-        }
-
-
-       
-
-        /* Check if it is `(` (func dec) */
-        SymbolType symbolType = getSymbolType(getCurrentToken());
-        DEBUG("ParseTypedDec: SymbolType=" ~ to!(string)(symbolType));
-        if (symbolType == SymbolType.LBRACE)
-        {
-            // Only continue is function definitions are allowed
-            if(allowFuncDef)
-            {
-                /* Will consume the `}` (or `;` if wantsBody-false) */
-                funcDefPair pair = parseFuncDef(wantsBody);
-
-                
-
-                generated = new Function(identifier, type, pair.bodyStatements, pair.params);
-
-                /**
-                 * If this function definition has a body (i.e. `wantsBody == true`)
-                 * and if the return type is non-void, THEN ensure we have a `ReturnStmt`
-                 * (return statement)
-                 */
-                if(wantsBody && type != "void")
-                {
-                    /* Recurse down to find a `ReturnStmt` */
-                    bool hasReturn = existsWithin(typeid(ReturnStmt), cast(Container)generated);
-
-                    // Error if no return statement exists
-                    if(!hasReturn)
+                    else
                     {
-                        expect("Function '"~identifier~"' declared with return type does not contain a return statement");
+                        expect("Variables declarations are not allowed.");
                     }
                 }
-                
-                import std.stdio;
-                writeln(to!(string)((cast(Function)generated).getVariables()));
-
-                // Parent the parameters of the function to the Function
-                parentToContainer(cast(Container)generated, cast(Statement[])pair.params);
-
-                // Parent the statements that make up the function to the Function
-                parentToContainer(cast(Container)generated, pair.bodyStatements);
-            }
-            else
-            {
-                expect("Function definitions not allowed");
-            }
-        }
-        /* Check for semi-colon (var dec) */
-        else if (symbolType == SymbolType.SEMICOLON)
-        {
-            // Only continue if variable declarations are allowed
-            if(allowVarDec)
-            {
-                DEBUG("Semi: "~to!(string)(getCurrentToken()));
-                DEBUG("Semi: "~to!(string)(getCurrentToken()));
-                WARN("ParseTypedDec: VariableDeclaration: (Type: " ~ type ~ ", Identifier: " ~ identifier ~ ")");
-
-                generated = new Variable(type, identifier);
-            }
-            else
-            {
-                expect("Variables declarations are not allowed.");
-            }
-        }
-        /* Check for `=` (var dec) */
-        else if (symbolType == SymbolType.ASSIGN && (arrayIndexing == false))
-        {
-            // Only continue if variable declarations are allowed
-            if(allowVarDec)
-            {
-                // Only continue if assignments are allowed
-                if(wantsBody)
+                /**
+                * If followed by a `(` then we have a a fork
+                *
+                * Either we are going to have: `(int i, int k)` (a function definition)
+                * or a function call: `(1,2)`
+                */
+                else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.LBRACE)
                 {
-                    /* Consume the `=` token */
-                    nextToken();
+                    DEBUG("parseTypedDecl(): begin func def outer");
 
-                    /* Now parse an expression */
-                    Expression expression = parseExpression();
+                    /* Try to parse a function definition and fail gracefully if it wasn't one */
+                    funcDefPair potFuncDef;
+                    if(parseFuncDef(potFuncDef, true, wantsBody))
+                    {
+                        DEBUG(format("Got function definition for '%s': %s", name, potFuncDef));
 
-                    VariableAssignment varAssign = new VariableAssignment(expression);
+                        /* Function definitions - are they allowed here? */
+                        if(allowFuncDef)
+                        {
+                            generated = new Function(name, type, potFuncDef.bodyStatements, potFuncDef.params);
 
-                    WARN("ParseTypedDec: VariableDeclarationWithAssingment: (Type: "
-                            ~ type ~ ", Identifier: " ~ identifier ~ ")");
-                    
-                    Variable variable = new Variable(type, identifier);
-                    variable.addAssignment(varAssign);
+                            /**
+                            * If this function definition has a body (i.e. `wantsBody == true`)
+                            * and if the return type is non-void, THEN ensure we have a `ReturnStmt`
+                            * (return statement)
+                            */
+                            if(wantsBody && type != "void")
+                            {
+                                /* Recurse down to find a `ReturnStmt` */
+                                bool hasReturn = existsWithin(typeid(ReturnStmt), cast(Container)generated);
 
-                    generated = variable;
+                                // Error if no return statement exists
+                                if(!hasReturn)
+                                {
+                                    expect("Function '"~name~"' declared with return type does not contain a return statement");
+                                }
+                            }
+                            
+                            import std.stdio;
+                            writeln(to!(string)((cast(Function)generated).getVariables()));
+
+                            // Parent the parameters of the function to the Function
+                            parentToContainer(cast(Container)generated, cast(Statement[])potFuncDef.params);
+
+                            // Parent the statements that make up the function to the Function
+                            parentToContainer(cast(Container)generated, potFuncDef.bodyStatements);
+
+                            return generated;
+                        }
+                        else
+                        {
+                            expect("Function definitions not allowed");
+                        }
+                    }
+                    else
+                    {
+                        WARN("We tried parsing a function definition, but it must be a call, rewinding");
+                        lexer.setCursor(entrancePos);
+                    }
                 }
+                /**
+                * We may have hit a case wher: `<type/exprPot> = <expr>`
+                * and where type=<type>, name=`=` and now we are on <expr>
+                */
                 else
                 {
-                    expect("Variable assignments+declarations are not allowed.");
+                    // TODO: Should we reind here in case ONLY of `=`? or what
+
+                    
+                    DEBUG(format("Type is '%s'", type));
+                    DEBUG(format("name is '%s'", name));
+                    DEBUG(format("We are on '%s'", lexer.getCurrentToken()));
+
+                    // expect("Was expecting either an `=`, `;` or `(`");
+                    lexer.setCursor(entrancePos);
                 }
             }
             else
             {
-                expect("Variables declarations are not allowed.");
+                WARN("parseNamePath(): Rolling back as we have some sort of standalone assignment");
+                lexer.setCursor(entrancePos);
             }
         }
-        /* Check for `=` (array indexed assignment) */
-        else if (symbolType == SymbolType.ASSIGN && (arrayIndexing == true))
+        /* On failure, rollback */
+        else
         {
-            // Set the token pointer back to the beginning
-            lexer.setCursor(arrayAssignTokenBeginPos);
-            DEBUG("Looking at: "~to!(string)(getCurrentToken()));
+            lexer.setCursor(entrancePos);
+            DEBUG("Cursor rewind as failed to find a valid type");
+        }
 
-            // TODO: Move all below code to the branch below that handles this case
-            WARN("We have an array assignment, here is the indexers: "~to!(string)(arrayIndexExprs));
+        /** 
+         * In this case then parse an expression
+         *
+         * Standalone assignment: `arr[0] = ... ;`
+         * Function call: `x.y.z();`
+         *
+         * In both cases we want an expression
+         * and want to halt when we get a `;`
+         * or `=``
+         *
+         * Note that `*ptr = 1` is never
+         * considered within this function
+         * because the starting symbol
+         * creates a call to `parseDerefAssignment()`
+         * instead
+         */
+        Expression lhsExpr = parseExpression();
+        DEBUG(format("lhsExpr: %s", lhsExpr));
 
-            // Our identifier will be some weird malformed-looking `mrArray[][1]` (because os atck array size declarations no-number literal)
-            // ... expressions don't make it in (we have arrayIndexExprs for that). Therefore what we must do is actually
-            // strip the array bracket syntax away to get the name
-            import std.string : indexOf;
-            long firstBracket = indexOf(type, "[");
-            assert(firstBracket > -1);
-            identifier = type[0..firstBracket];
-            DEBUG("Then identifier is type actually: "~identifier);
+        DEBUG(format("Current token (rewind) case pre-enter: %s", lexer.getCurrentToken()));
 
+        // If next token is `=` then it is some standalone array-index assignment
+        // FIXME: No, it could be ANYTHING actually, like a avriable assignment too
+        if(getSymbolType(lexer.getCurrentToken()) == SymbolType.ASSIGN)
+        {
+            // Are standalone assignments allowed?
+            if(!allowAssignments)
+            {
+                expect("Assignments are not allowed here");
+            }
 
-            ERROR("We are still implenenting array assignments");
+            // Now we make a kind-of assigbnment depending on the left-hand
+            // ... side ish?
+            //
+            // Or just store it as is?
 
-            ArrayIndex muhIndex = cast(ArrayIndex)parseExpression();
-            DEBUG("Expback: "~muhIndex.toString());
+            /* The entity being assigned to */
+            Expression toEntity = lhsExpr;
 
-            /* Expect a `=` and consume it */
-            DEBUG(getCurrentToken());
-            expect(SymbolType.ASSIGN, getCurrentToken());
-            nextToken();
+            /* Consume the `=` */
+            lexer.nextToken();
 
-            /* Parse the expression being assigned followed by a semi-colon `;` */
-            Expression expressionBeingAssigned = parseExpression();
-            expect(SymbolType.SEMICOLON, getCurrentToken());
+            /* Parse the expression being assigned followed by the terminating symbol */
+            Expression assExpr = parseExpression();
+            expect(terminatingSymbol, lexer.getCurrentToken());
 
-            // TODO: Get the expression after the `=`
-            ArrayAssignment arrayAssignment = new ArrayAssignment(muhIndex, expressionBeingAssigned);
-            DEBUG("Created array assignment: "~arrayAssignment.toString());
-            // assert(false);
+            /* Consume the `;` */
+            lexer.nextToken();
 
-            generated = arrayAssignment;
+            DEBUG(format("Assigning to: %s", toEntity));
+            DEBUG(format("Assigning of: %s", assExpr));
+
+            /* Create the assignment */
+            Assignment_V2 assignment = new Assignment_V2(toEntity, assExpr);
+            DEBUG("Created assignment: "~assignment.toString());
+            return assignment;
+        }
+        // If next token is `;` then it is some standalone expression (like a function call)
+        else if(getSymbolType(lexer.getCurrentToken()) == SymbolType.SEMICOLON)
+        {
+            // Are function calls allowed? (standalone expressions)
+            if(!allowFuncCall)
+            {
+                expect("Function calls not allowed here");
+            }
+
+            // FIXME: Implement me; currently nothing gets catched here
+            // because this entire fucntion isn't called for function
+            // calls
+            DEBUG("ExpressionStatement");
+
+            /* The statement-level expression */
+            Expression stmtLvlExpr = lhsExpr;
+
+            /** 
+             * Create a new statement
+             * that holds our expression
+             */
+            ExpressionStatement exprStmt = new ExpressionStatement(stmtLvlExpr);
+            DEBUG(format("Constructed a ExpressionStatement %s", exprStmt));
+
+            /* Expect a semi-colon */
+            expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+
+            /* Consume the `;` */
+            lexer.nextToken();
+
+            return exprStmt;
         }
         else
         {
-            expect("Expected one of the following: (, ; or =");
-        }
-
-        WARN("parseTypedDeclaration(): Leave");
-
-        return generated;
+            // FIXME: Add better message here
+            DEBUG(format("Terminating symbol: '%s' but we have? '%s'", terminatingSymbol, lexer.getCurrentToken()));
+            expect("Unknown typed declaration");
+            assert(false);
+        }       
     }
 
     /**
@@ -2110,11 +2393,16 @@ public final class Parser
             if (symbolType == SymbolType.IDENT_TYPE)
             {
                 /* Might be a function definition or variable declaration */
-                structMember = parseTypedDeclaration();
-                
-                /* Should have a semi-colon and consume it */
-                expect(SymbolType.SEMICOLON, getCurrentToken());
-                nextToken();
+                structMember = parseTypedDeclaration
+                (
+                    true,
+                    true,
+                    true,
+                    false,
+                    true,
+                    false,
+                    false
+                );
             }
             /* If it is a class */
             else if(symbolType == SymbolType.CLASS)
@@ -2231,17 +2519,11 @@ public final class Parser
 
                         parentToContainer(container, [binOpExp.getLeftExpression(), binOpExp.getRightExpression()]);
                     }
-                    /** 
-                     * If we have a `VariableAssignmentStdAlone`
-                     * then we must parent its expression
-                     * (the assignment) to the same `Container`
-                     */
-                    else if(cast(VariableAssignmentStdAlone)statement)
+                    else if(cast(ExpressionStatement)statement)
                     {
-                        VariableAssignmentStdAlone varAss = cast(VariableAssignmentStdAlone)statement;
-                        Expression varAssExp = varAss.getExpression();
-                        
-                        parentToContainer(container, [varAssExp]);
+                        ExpressionStatement exprStmt = cast(ExpressionStatement)statement;
+
+                        parentToContainer(container, [exprStmt.getExpr()]);
                     }
                     /**
                      * If we have a `PointerDereferenceAssignment`
@@ -2354,6 +2636,29 @@ public final class Parser
                         // done so above
                         parentToContainer(branch, branchBody);
                     }
+                    /** 
+                     * An expresison such as `<expr>[<expr>]`
+                     * where both the item BEING indexed-ON
+                     * and the index ITSELF should be recursively
+                     * parented
+                     */
+                    else if(cast(ArrayIndex)statement)
+                    {
+                        ArrayIndex arrIndex = cast(ArrayIndex)statement;
+
+                        parentToContainer(container, [arrIndex.getIndexed(), arrIndex.getIndex()]);
+                    }
+                    /** 
+                     * Any sort of assignment, we must paint
+                     * the entity being assigned-to and
+                     * the assigned expression
+                     */
+                    else if(cast(Assignment_V2)statement)
+                    {
+                        Assignment_V2 ass = cast(Assignment_V2)statement;
+
+                        parentToContainer(container, [ass.getName(), ass.getAssignedValue()]);
+                    }
                     /**
                      * Expression statements
                      *
@@ -2425,22 +2730,6 @@ public final class Parser
 
                         // Share the same parent
                         parentToContainer(container, [indexToExpr, indexExpr]);                    	
-                    }
-                    /**
-                     * Array assignment (stack array)
-                     *
-                     * Contains an `ArrayIndex` expression (left-hand side)
-                     * and a right-hand side expression (the value being assigned)
-                     * which both need parenting
-                     */
-                    else if(cast(ArrayAssignment)statement)
-                    {
-                        ArrayAssignment aaExpr = cast(ArrayAssignment)statement;
-						Expression arrayIndex = aaExpr.getArrayLeft();
-						Expression assExpr = aaExpr.getAssignmentExpression();
-						
-                        // Share the same parent
-                        parentToContainer(container, [arrayIndex, assExpr]);   
                     }
                 }
             }
@@ -2674,7 +2963,18 @@ public final class Parser
         if(symbol == SymbolType.IDENT_TYPE)
         {
             /* Might be a function, might be a variable, or assignment */
-            statement = parseName(terminatingSymbol);
+            DEBUG("kek");
+            statement = parseTypedDeclaration
+            (
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                terminatingSymbol
+            );
         }
         /* If it is a mixin or embedding */
         else if(symbol == SymbolType.MIXIN || symbol == SymbolType.EMBED)
@@ -2721,12 +3021,6 @@ public final class Parser
         else if(symbol == SymbolType.FOR)
         {
             statement = parseFor();
-        }
-        /* If it is a function call (further inspection needed) */
-        else if(symbol == SymbolType.IDENT_TYPE)
-        {
-            /* Function calls can have dotted identifiers */
-            parseFuncCall();
         }
         /* If it is the return keyword */
         //TODO: We should add a flag to prevent return being used in generla bodies? or wait we have a non parseBiody already
@@ -2846,11 +3140,18 @@ public final class Parser
         /* External function symbol */
         if(externType == SymbolType.EXTERN_EFUNC)
         {
-            // TODO: (For one below)(we should also disallow somehow assignment) - evar
-
             // We now parse function definition but with `wantsBody` set to false
             // indicating no body should be allowed.
-            pseudoEntity = cast(TypedEntity)parseTypedDeclaration(false, false, true);
+            pseudoEntity = cast(TypedEntity)parseTypedDeclaration
+            (
+                false,
+                false,
+                true,
+                true,
+                false,
+                false,
+                false
+            );
 
             // TODO: Add a check for this cast (AND parse wise if it is evan possible)
             assert(pseudoEntity);
@@ -2858,9 +3159,18 @@ public final class Parser
         /* External variable symbol */
         else if(externType == SymbolType.EXTERN_EVAR)
         {
-            // We now parse a variable declaration but with the `wantsBody` set to false
-            // indicating no assignment should be allowed.
-            pseudoEntity = cast(TypedEntity)parseTypedDeclaration(false, true, false);
+            // We now parse a variable declaration but indicating
+            // that no assignments to it should be allowed.
+            pseudoEntity = cast(TypedEntity)parseTypedDeclaration
+            (
+                false,
+                true,
+                false,
+                true,
+                false,
+                false,
+                false
+            );
 
             // TODO: Add a check for this cast (AND parse wise if it is evan possible)
             assert(pseudoEntity);
@@ -2957,11 +3267,7 @@ public final class Parser
         nextToken();
 
         /* Get the module's name */
-        expect(SymbolType.IDENT_TYPE, getCurrentToken());
-        string moduleName = getCurrentToken().getToken();
-
-        /* Consume the token */
-        nextToken();
+        string moduleName = parseNamePathDotted();
 
         /* All modules to be imported */
         string[] collectedModuleNames = [moduleName];
@@ -2973,12 +3279,8 @@ public final class Parser
             nextToken();
 
             /* Get the module's name */
-            expect(SymbolType.IDENT_TYPE, getCurrentToken());
-            string curModuleName = getCurrentToken().getToken();
+            string curModuleName = parseNamePathDotted();
             collectedModuleNames ~= curModuleName;
-
-            /* Consume the name */
-            nextToken();
         }
 
         /* Expect a semi-colon and consume it */
@@ -3009,9 +3311,9 @@ public final class Parser
         nextToken();
 
         /* Module name may NOT be dotted (TODO: Maybe it should be yeah) */
-        expect(SymbolType.IDENT_TYPE, getCurrentToken());
-        string moduleName = getCurrentToken().getToken();
-        nextToken();
+        // expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
+        string moduleName = parseNamePathDotted();
+        // lexer.nextToken();
 
         expect(SymbolType.SEMICOLON, getCurrentToken());
         nextToken();
@@ -3083,13 +3385,26 @@ public final class Parser
             /* If it is a type */
             if (symbol == SymbolType.IDENT_TYPE)
             {
-                /* Might be a function, might be a variable, or assignment */
-                Statement statement = parseName();
+                /** 
+                 * Might be a function, might be a variable
+                 * but definately not a standalone assignment
+                 * and no function calls
+                 */
+                Statement statement = parseTypedDeclaration
+                (
+                    true,
+                    true,
+                    true,
+                    false,
+                    true,
+                    false,
+                    false
+                );
                 
                 /**
-                * If it is an Entity then mark it as static
-                * as all Entities at module-level are static
-                */
+                 * If it is an Entity then mark it as static
+                 * as all Entities at module-level are static
+                 */
                 if(cast(Entity)statement)
                 {
                     Entity entity = cast(Entity)statement;
@@ -3174,6 +3489,65 @@ public final class Parser
         DEBUG("Done parsing module '"~modulle.getName()~"' from file '"~modulle.getFilePath()~"'");
 
         return modulle;
+    }
+
+    private bool parseNamePath(ref string pathOut, bool forgiving = false)
+    {
+        /* Expect an IDENT_TYPE */
+        if(!getSymbolType(lexer.getCurrentToken()) == SymbolType.IDENT_TYPE)
+        {
+            /* If forgiving return gracefully */
+            if(forgiving)
+            {
+                return false;
+            }
+
+            /* Else: Error out */
+            expect(SymbolType.IDENT_TYPE, lexer.getCurrentToken());
+        }
+        
+
+        /* Consume the name and move to next token */
+        string name = lexer.getCurrentToken().getToken();
+        lexer.nextToken();
+
+        pathOut = name;
+        return true;
+    }
+
+    private string parseNamePathDotted()
+    {
+        string buildUp;
+        Token curTok;
+        do
+        {
+            /* Get current token, expect an ident and build up */
+            curTok = lexer.getCurrentToken();
+            DEBUG("curTok: ", curTok);
+            expect(SymbolType.IDENT_TYPE, curTok);
+            buildUp ~= curTok.getToken();
+
+            lexer.nextToken();
+            curTok = lexer.getCurrentToken();
+
+            /* Optional */
+            if(getSymbolType(curTok) == SymbolType.DOT)
+            {
+                buildUp ~= ".";
+                lexer.nextToken();
+            }
+            /* Anything else, then exit */
+            else
+            {
+                break;
+            }
+        }
+        while(true);
+
+        DEBUG("Ret with: ", buildUp);
+        DEBUG("Curtok (on leave): ", lexer.getCurrentToken());
+
+        return buildUp;
     }
 }
 
@@ -3752,7 +4126,7 @@ void function()
         assert(outerLoopBranchBody.length == 3);
 
         /* Check for [varAssStdAlone, ] */
-        VariableAssignmentStdAlone outerLoopBranchBodyStmt1 = cast(VariableAssignmentStdAlone)outerLoopBranchBody[0];
+        Assignment_V2 outerLoopBranchBodyStmt1 = cast(Assignment_V2)outerLoopBranchBody[0];
         assert(outerLoopBranchBodyStmt1);
 
         /* Check for [, forLoop, ] */
@@ -3760,7 +4134,7 @@ void function()
         assert(innerLoop);
 
         /* Check for [, postIteration] */
-        VariableAssignmentStdAlone outerLoopBranchBodyStmt3 = cast(VariableAssignmentStdAlone)outerLoopBranchBody[2];
+        Assignment_V2 outerLoopBranchBodyStmt3 = cast(Assignment_V2)outerLoopBranchBody[2];
         assert(outerLoopBranchBodyStmt3);
 
         /* Start examining the inner for-loop */
@@ -3981,7 +4355,7 @@ unittest
         Function c_func = cast(Function)resolver.resolveBest(module_c, "k");
         assert(c_func);
     }
-    catch(TError e)
+    catch(TError)
     {
         assert(false);
     }
