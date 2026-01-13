@@ -17,8 +17,6 @@ public interface LexerInterface
      * Returns the token at the current cursor
      * position
      *
-     * Throws: LexerException if the cursor
-     * is out-of-bounds
      * Returns: the `Token`
      */
     public Token getCurrentToken();
@@ -39,14 +37,33 @@ public interface LexerInterface
      * Params:
      *   cursor = the new position
      */
-    public void setCursor(ulong cursor);
+    public void setCursor(ulong cursor) nothrow;
 
     /** 
      * Retrieves the cursor's current position
      *
      * Returns: the position
      */
-    public ulong getCursor();
+    public ulong getCursor() nothrow;
+
+    /**
+     * Removes the token at the given position
+     *
+     * Params:
+     *   cursor = the position of the token
+     * to remove
+     */
+    public void removeToken(ulong cursor);
+
+    /**
+     * Inserts the given token at the given
+     * position
+     *
+     * Params:
+     *   token = the token to insert
+     *   cursor = the position to insert at
+     */
+    public void insertToken(Token token, ulong cursor);
 
     /** 
      * Checks whether more tokens are available
@@ -54,7 +71,7 @@ public interface LexerInterface
      *
      * Returns: true if more tokens are available, false otherwise
      */
-    public bool hasTokens();
+    public bool hasTokens() nothrow;
 
     /** 
      * Get the line position of the lexer in the source text
@@ -166,23 +183,6 @@ public bool isSplitter(char c)
            c == LS.PERCENT || c == LS.L_BRACE || c == LS.R_BRACE ||
            c == LS.EQUALS || c == LS.DOT || c == LS.COLON ||
            isOperator(c) || isWhite(c);
-}
-
-/** 
- * Checks if the provided character is a splitter excluding whitespace
- *
- * Params:
- *   c = the character to check
- * Returns: `true` if it is a splitter, `false`
- * otherwise
- */
-public bool isSplitterNoWhite(char c)
-{
-    return c == LS.SEMI_COLON || c == LS.COMMA || c == LS.L_PAREN ||
-           c == LS.R_PAREN || c == LS.L_BRACK || c == LS.R_BRACK ||
-           c == LS.PERCENT || c == LS.L_BRACE || c == LS.R_BRACE ||
-           c == LS.EQUALS || c == LS.DOT || c == LS.COLON ||
-           isOperator(c);
 }
 
 /** 
