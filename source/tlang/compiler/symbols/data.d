@@ -1175,22 +1175,36 @@ public abstract class Call : IdentExpression
     }
 }
 
-
+/** 
+ * This is a non-expression, so, a normal
+ * statement that contains an expression
+ *
+ * Examples are:
+ * 1. standalone function calls
+ * 2. i++
+ */
 public final class ExpressionStatement : Statement, MStatementSearchable
 {
-    private Expression path;
+    private Expression _e;
 
-    this(Expression path)
+    this(Expression exp)
     {
-        this.path = path;
+        this._e = exp;
 
-        /* Weighted as 2 */
-        weight = 2;
+        /* Weighted like any other statement */
+        this.weight = 2;
     }
 
-    public Expression getExpr()
+    public Expression getExpression()
     {
-        return this.path;
+        return this._e;
+    }
+
+    public alias getExpr = getExpression;
+
+    public override string toString()
+    {
+        return format("ExpressionStmt [e: %s]", _e);
     }
 
     public override Statement[] search(TypeInfo_Class clazzType)
@@ -1204,14 +1218,11 @@ public final class ExpressionStatement : Statement, MStatementSearchable
             matches ~= [this];
         }
 
-        /**
-         * Recurse on the path `Expression` (if possible)
-         */
-
-        MStatementSearchable innerStmt = cast(MStatementSearchable)this.path;
-        if(innerStmt)
+        /* Recurse on the embedded `Expression` */
+        auto _ems = cast(MStatementSearchable)_e;
+        if(_ems)
         {
-            matches ~= innerStmt.search(clazzType); 
+            matches ~= _ems.search(clazzType);
         }
 
         return matches;
@@ -2054,57 +2065,5 @@ public final class ExternStmt : Statement
     public override string toString()
     {
         return "[ExternStatement: (Symbol name: "~getExternalName()~")]";
-    }
-}
-
-/** 
- * This is a non-expression, so, a normal
- * statement that contains an expression
- *
- * Examples are:
- * 1. standalone function calls
- * 2. i++
- */
-public final class ExpressionStatement : Statement, MStatementSearchable
-{
-    private Expression _e;
-
-    this(Expression exp)
-    {
-        this._e = exp;
-
-        /* Weighted like any other statement */
-        this.weight = 2;
-    }
-
-    public Expression getExpression()
-    {
-        return this._e;
-    }
-
-    public override string toString()
-    {
-        return format("ExpressionStmt [e: %s]", _e);
-    }
-
-    public override Statement[] search(TypeInfo_Class clazzType)
-    {
-        /* List of returned matches */
-        Statement[] matches;
-
-        /* Are we (ourselves) of this type? */
-        if(clazzType.isBaseOf(this.classinfo))
-        {
-            matches ~= [this];
-        }
-
-        /* Recurse on the embedded `Expression` */
-        auto _ems = cast(MStatementSearchable)_e;
-        if(_ems)
-        {
-            matches ~= _ems.search(clazzType);
-        }
-
-        return matches;
     }
 }
