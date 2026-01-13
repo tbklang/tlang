@@ -316,6 +316,11 @@ public enum SymbolType
     ALIAS,
 
     /**
+     * `type` keyword
+     */
+    TYPE_REMAP,
+
+    /**
      * `mixin` keyword
      */
     MIXIN,
@@ -739,6 +744,11 @@ public SymbolType getSymbolType(Token tokenIn)
     else if(cmp("alias", token) == 0)
     {
         return SymbolType.ALIAS;
+    }
+    /* `type` keyword */
+    else if(cmp("type", token) == 0)
+    {
+        return SymbolType.TYPE_REMAP;
     }
     /* mixin keyword */
     else if(cmp(token, "mixin") == 0)

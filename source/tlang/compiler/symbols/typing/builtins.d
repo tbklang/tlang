@@ -11,6 +11,7 @@ import tlang.misc.logging;
 import tlang.compiler.typecheck.core;
 import std.conv : to;
 import tlang.compiler.symbols.data : Container;
+import tlang.compiler.typecheck.size_t;
 
 /**
 * TODO: We should write spec here like I want int and stuff of proper size so imma hard code em
@@ -154,6 +155,18 @@ public Type getBuiltInType(TypeChecker tc, Container container, string typeStrin
     }
     
     
+
+
+    /* `size_t` and `ssize_t` system types */
+    else if(isSystemType(typeString))
+    {
+        // map it (`size_t`/`ssize_t`) to a typeString
+        // containing a concrete type
+        string ts_rmp = getSystemType(tc.getConfig(), typeString);
+        
+        // recurse with concrete type
+        return getBuiltInType(tc, container, ts_rmp);
+    }
     
     /* TODO: Add all remaining types, BUGS probabloy occur on failed looks ups when hitting this */
     /* If unknown, return null */

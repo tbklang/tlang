@@ -28,6 +28,7 @@ import tlang.compiler.typecheck.dependency.pool.impls;
 import tlang.compiler.symbols.strings;
 
 import tlang.compiler.symbols.aliases : AliasDeclaration;
+import tlang.compiler.symbols.remaps : TypeAlias;
 
 /**
 * The Parser only makes sure syntax
@@ -3042,10 +3043,16 @@ public final class TypeChecker
                 expect(typeString, "is not a type but rather a", foundEntity);
             }
 
+            /* In case of a type alias, recurse */
+            if(cast(TypeAlias)foundType)
+            {
+                TypeAlias ta = cast(TypeAlias)foundType;
+                return getType(ta.parentOf(), ta.getReferentType());
+            }
+
             return foundType;
         }
         
-        assert(builtinType);
         return builtinType;
     }
 

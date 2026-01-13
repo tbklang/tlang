@@ -2616,6 +2616,45 @@ public final class Parser
         return aliasDecl;
     }
 
+    import tlang.compiler.symbols.remaps;
+
+    private TypeAlias parseTypeRemap()
+    {
+        WARN("parseTypeRemap(): Enter");
+
+        TypeAlias typeAliasDecl;
+
+        /* Pop off the `type` */
+        lexer.nextToken();
+
+        /* Consume the type alias's name */
+        Token tok = lexer.getCurrentToken();
+        expect(SymbolType.IDENT_TYPE, tok);
+        string aliasName = tok.getToken();
+
+        /* Next token, expect `=` */
+        lexer.nextToken();
+        expect(SymbolType.ASSIGN, lexer.getCurrentToken());
+
+        /* Consume the type alias's referent name */
+        lexer.nextToken();
+        tok = lexer.getCurrentToken();
+        expect(SymbolType.IDENT_TYPE, tok);
+        string referentName = tok.getToken();
+
+        /* Now consume a semi-colon */
+        lexer.nextToken();
+        expect(SymbolType.SEMICOLON, lexer.getCurrentToken());
+        lexer.nextToken();
+
+        /* Construct an alias with the new type and referent type */
+        typeAliasDecl = new TypeAlias(aliasName, referentName);
+
+        WARN("parseTypeRemap(): Leave");
+
+        return typeAliasDecl;
+    }
+
     // TODO: We need to add `parseComment()`
     // support here (see issue #84)
     // TODO: This ic currently dead code and ought to be used/implemented
@@ -3114,6 +3153,11 @@ public final class Parser
             else if(symbol == SymbolType.ALIAS)
             {
                 modulle.addStatement(parseAliasDeclaration());
+            }
+            /* If it is a type remapping */
+            else if(symbol == SymbolType.TYPE_REMAP)
+            {
+                modulle.addStatement(parseTypeRemap());
             }
             else
             {

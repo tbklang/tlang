@@ -10,10 +10,13 @@ module tlang.compiler.typecheck.sizeof;
 import tlang.compiler.typecheck.core : TypeChecker;
 import tlang.compiler.symbols.expressions : Expression, IntegerLiteral, IntegerLiteralEncoding;
 import tlang.compiler.symbols.typing.core;
+import tlang.compiler.symbols.containers : Container;
 
 import tlang.compiler.symbols.containers : Container;
 
 import std.conv : to;
+
+import tlang.misc.logging;
 
 public IntegerLiteral determineSizeOfLiteral
 (

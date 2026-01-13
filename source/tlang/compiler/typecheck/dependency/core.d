@@ -12,7 +12,10 @@ import tlang.compiler.typecheck.exceptions;
 import tlang.compiler.typecheck.core;
 import tlang.compiler.symbols.typing.core;
 import tlang.compiler.symbols.typing.builtins;
+
 import tlang.compiler.symbols.aliases : AliasDeclaration;
+import tlang.compiler.symbols.remaps : TypeAlias;
+
 import tlang.compiler.typecheck.dependency.exceptions : DependencyException, DependencyError;
 import tlang.compiler.typecheck.dependency.pool.interfaces;
 import tlang.compiler.typecheck.dependency.pool.impls;
@@ -1242,6 +1245,49 @@ public class DNodeGenerator
             tc.touch(ad);
         }
         /**
+         * Type remapping declarations
+         */
+        else if(cast(TypeAlias)entity)
+        {
+            TypeAlias ta = cast(TypeAlias)entity;
+            auto remappedTypeName = ta.getName();
+            auto referentTypeName = ta.getReferentType();
+
+            /* Set as visited */
+            DNode typeRemapDNode = pool(ta);
+            typeRemapDNode.markVisited();
+
+            /**
+             * Lookup the entity at `referentTypeName`
+             * and if the entity exists (we check)
+             * and is a `TypeAlias` then do visitation
+             * check
+             */
+            auto ref_e = resolver.resolveBest(ta.parentOf(), referentTypeName);
+
+            // nothing found (but could be built-in)
+            if(ref_e is null && tc.getType(ta.parentOf(), referentTypeName) !is null)
+            {
+                // Do nothing
+            }
+            // referent is a type alias itself
+            else if(cast(TypeAlias)ref_e)
+            {
+                DNode ref_e_dnode = pool(ref_e);
+                if(!ref_e_dnode.isVisisted())
+                {
+                    expect("Cannot declare type remapping", ta, " which refers to type remapping", ref_e, "which is not yet declared");
+                }
+            }
+            else
+            {
+                expect("Could not find the type '", referentTypeName, "' in type remapping declaration", ta);
+            }
+
+            /* Add an entry to the reference counting map */
+            tc.touch(ta);
+        }
+        /**
         * Variable assignments
         */
         else if(cast(VariableAssignmentStdAlone)entity)
@@ -1725,5 +1771,71 @@ public class DNodeGenerator
         generalPass(clazz, new Context(clazz, InitScope.STATIC));
 
         return classDNode;
+    }
+}
+
+/** 
+ * Tests the use-before-declare mechanism for type aliases
+ *
+ * Case: Negative (
+ * Source file: source/tlang/testing/type_aliases/with_cycle.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+    import tlang.compiler.typecheck.dependency.exceptions : DependencyException;
+    import std.string : endsWith;
+
+    string sourceFile = "source/tlang/testing/type_aliases/with_cycle.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(DependencyException e)
+    {
+        auto m = e.msg;
+        assert(m.endsWith("not yet declared"));
+    }
+}
+
+/** 
+ * Tests the use-before-declare mechanism for type aliases
+ *
+ * Case: Negative (
+ * Source file: source/tlang/testing/type_aliases/cycle_usage.t
+ */
+unittest
+{
+    // Dummy field out
+    File fileOutDummy;
+    import tlang.compiler.core;
+    import tlang.compiler.typecheck.dependency.exceptions : DependencyException;
+    import std.string : endsWith;
+
+    string sourceFile = "source/tlang/testing/type_aliases/cycle_usage.t";
+
+
+    Compiler compiler = new Compiler(gibFileData(sourceFile), sourceFile, fileOutDummy);
+    compiler.doLex();
+    compiler.doParse();
+
+    try
+    {
+        compiler.doTypeCheck();
+        assert(false);
+    }
+    catch(DependencyException e)
+    {
+        auto m = e.msg;
+        assert(m.endsWith("not yet declared"));
     }
 }
