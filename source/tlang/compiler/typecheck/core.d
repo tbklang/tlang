@@ -32,6 +32,8 @@ import tlang.compiler.symbols.strings;
 import tlang.compiler.symbols.aliases : AliasDeclaration;
 import tlang.compiler.symbols.remaps : TypeAlias;
 
+import tlang.compiler.typecheck.dependency.variables : StaticVariableDeclaration;
+
 /**
 * The Parser only makes sure syntax
 * is adhered to (and, well, partially)
@@ -2667,7 +2669,7 @@ public final class TypeChecker
         * TODO: We need to emit different code dependeing on variable declaration TYPE
         * We could use context for this, ClassVariableDec vs ModuleVariableDec
         */
-        else if(cast(tlang.compiler.typecheck.dependency.variables.StaticVariableDeclaration)dnode)
+        else if(cast(StaticVariableDeclaration)dnode)
         {
             /* TODO: Add skipping if context is within a class */
             /* We need to wait for class static node, to do an InitInstruction (static init) */
