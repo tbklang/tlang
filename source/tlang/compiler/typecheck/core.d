@@ -2008,7 +2008,6 @@ public final class TypeChecker
                             throw new TypeCheckerException
                             (
                                 this,
-                                TypeCheckerException.TypecheckError.GENERAL_ERROR,
                                 format
                                 (
                                     "Left-hand operand of '%s' of (%s %s %s) refers to an entity which is not a container",
@@ -2052,7 +2051,6 @@ public final class TypeChecker
                                 throw new TypeCheckerException
                                 (
                                     this,
-                                    TypeCheckerException.TypecheckError.GENERAL_ERROR,
                                     format
                                     (
                                         "No member named '%s' within container '%s'",
@@ -3303,8 +3301,6 @@ public final class TypeChecker
      */
     public Type getType0(Container c, string typeString)
     {
-        Type foundType;
-
         // TODO: Below is somewhat badly named
         // as it handles the pointer types `<type>*`
         // and accounts for more than just built-in
