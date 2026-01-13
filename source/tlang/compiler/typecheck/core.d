@@ -3053,7 +3053,6 @@ public final class TypeChecker
             return foundType;
         }
         
-        assert(builtinType);
         return builtinType;
     }
 
