@@ -1785,10 +1785,12 @@ public final class TypeChecker
     {
         DEBUG("typeCheckThing(): "~dnode.toString());
 
+        import tlang.compiler.typecheck.dependency.expression : ExpressionDNode;
+
         /* ExpressionDNodes */
-        if(cast(tlang.compiler.typecheck.dependency.expression.ExpressionDNode)dnode)
+        if(cast(ExpressionDNode)dnode)
         {
-            tlang.compiler.typecheck.dependency.expression.ExpressionDNode expDNode = cast(tlang.compiler.typecheck.dependency.expression.ExpressionDNode)dnode;
+            ExpressionDNode expDNode = cast(ExpressionDNode)dnode;
 
             Statement statement = expDNode.getEntity();
             DEBUG("Hdfsfdjfds"~to!(string)(statement));
