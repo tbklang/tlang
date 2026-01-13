@@ -33,6 +33,7 @@ import tlang.compiler.symbols.aliases : AliasDeclaration;
 import tlang.compiler.symbols.remaps : TypeAlias;
 
 import tlang.compiler.typecheck.dependency.variables : StaticVariableDeclaration;
+import tlang.compiler.typecheck.dependency.classes.classStaticDep : ClassStaticNode;
 
 /**
 * The Parser only makes sure syntax
@@ -2725,7 +2726,7 @@ public final class TypeChecker
             addInstrB(varDecInstr);
         }
         /* TODO: Add class init, see #8 */
-        else if(cast(tlang.compiler.typecheck.dependency.classes.classStaticDep.ClassStaticNode)dnode)
+        else if(cast(ClassStaticNode)dnode)
         {
             /* Extract the class node and create a static allocation instruction out of it */
             Clazz clazzPNode = cast(Clazz)dnode.getEntity();
